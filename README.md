@@ -16,6 +16,7 @@ Monorepo starter for the class project.
 - `backend/` Express API
 - `infrastructure/` Docker, Nginx, scripts
 - `.github/workflows/` CI/CD workflows
+- `docs/` Team documentation and contribution log
 
 ## Environment files
 
@@ -68,3 +69,8 @@ docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.y
 - `feature/*`: feature branches
 
 Use pull requests to merge into `develop`, then `main`.
+
+## Team documentation
+
+- Activity log: `docs/TEAM_LOG.md`
+- Entry template: `docs/TEAM_LOG_TEMPLATE.md`
