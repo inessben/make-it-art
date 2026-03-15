@@ -1,0 +1,13 @@
+{
+  "name": "make-it-art",
+  "private": true,
+  "workspaces": ["frontend", "backend"],
+  "scripts": {
+    "dev": "docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d",
+    "dev:build": "docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d --build",
+    "dev:down": "docker compose -f infrastructure/docker-compose.yml down",
+    "dev:logs": "docker compose -f infrastructure/docker-compose.yml logs -f",
+    "ci": "npm --prefix backend run lint && npm --prefix frontend run lint"
+  }
+}
+
