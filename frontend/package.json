@@ -14,7 +14,6 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "make-it-art": "file:..",
     "nuxt": "^3.15.4"
   },
   "devDependencies": {

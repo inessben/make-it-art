@@ -6,6 +6,9 @@ on:
   push:
     branches: [develop]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   frontend:
     runs-on: ubuntu-latest
@@ -20,11 +23,11 @@ jobs:
         with:
           node-version: 22
       - name: Install frontend deps
-        run: npm install --legacy-peer-deps
+        run: npm install --legacy-peer-deps --include=optional --workspaces=false
       - name: Frontend lint
-        run: npm run lint
+        run: npm run lint --workspaces=false
       - name: Frontend format check
-        run: npm run format:check
+        run: npm run format:check --workspaces=false
 
   backend:
     runs-on: ubuntu-latest
@@ -39,16 +42,18 @@ jobs:
         with:
           node-version: 22
       - name: Install backend deps
-        run: npm install
+        run: npm install --include=optional --workspaces=false
       - name: Backend lint
-        run: npm run lint
+        run: npm run lint --workspaces=false
       - name: Backend format check
-        run: npm run format:check
+        run: npm run format:check --workspaces=false
 
   compose_config:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Prepare env file for compose
+        run: cp infrastructure/.env.example infrastructure/.env
       - name: Validate compose syntax
-        run: docker compose --env-file infrastructure/.env.example -f infrastructure/docker-compose.yml config > /dev/null
+        run: docker compose -f infrastructure/docker-compose.yml config > /dev/null
