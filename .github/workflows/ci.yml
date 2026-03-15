@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: 22
       - name: Install frontend deps
-        run: npm install --legacy-peer-deps --include=optional --workspaces=false
+        run: npm install --legacy-peer-deps --include=optional --workspaces=false --ignore-scripts --no-audit --no-fund
       - name: Frontend lint
         run: npm run lint --workspaces=false
       - name: Frontend format check
@@ -42,7 +42,7 @@ jobs:
         with:
           node-version: 22
       - name: Install backend deps
-        run: npm install --include=optional --workspaces=false
+        run: npm install --include=optional --workspaces=false --ignore-scripts --no-audit --no-fund
       - name: Backend lint
         run: npm run lint --workspaces=false
       - name: Backend format check
