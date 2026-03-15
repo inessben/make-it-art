@@ -1,0 +1,30 @@
+name: CD Staging
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Skip if secrets are missing
+        if: ${{ secrets.STAGING_SSH_HOST == '' || secrets.STAGING_SSH_USER == '' || secrets.STAGING_SSH_KEY == '' }}
+        run: echo "Missing staging secrets. Set STAGING_SSH_HOST, STAGING_SSH_USER, STAGING_SSH_KEY."
+
+      - name: Deploy to staging via SSH
+        if: ${{ secrets.STAGING_SSH_HOST != '' && secrets.STAGING_SSH_USER != '' && secrets.STAGING_SSH_KEY != '' }}
+        env:
+          SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+          SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          ssh "$SSH_USER@$SSH_HOST" "cd /opt/make-it-art && git pull && docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d --build"
+

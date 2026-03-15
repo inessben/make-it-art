@@ -1,98 +1,114 @@
 # Make It Art
 
-> **Marketplace d'art digital immersive — Univers cyberpunk 3D**
+Monorepo starter for the class project.
 
-![Version](https://img.shields.io/badge/version-2.0--dev-purple)
-![Nuxt](https://img.shields.io/badge/Nuxt-4.x-00DC82)
-![Express](https://img.shields.io/badge/Express-4.x-000000)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791)
-![License](https://img.shields.io/badge/license-MIT-blue)
+## Stack
 
----
+- Frontend: Nuxt 3 + Tailwind CSS + Sass
+- Backend: Node.js 22 + Express
+- Data services: PostgreSQL 16 + Redis 7
+- Infra: Docker Compose + Nginx reverse proxy
+- CI/CD: GitHub Actions templates
 
-## Le Projet
+## Project structure
 
-Plateforme de vente d'art digital avec une expérience 3D immersive. Les artistes exposent et vendent leurs oeuvres, les collectionneurs découvrent et achètent dans un environnement cyberpunk unique.
+- `frontend/` Nuxt app
+- `backend/` Express API
+- `infrastructure/` Docker, Nginx, scripts
+- `.github/workflows/` CI/CD workflows
+- `docs/` Team documentation and contribution log
 
-**Équipe** : Ethan, Iness, Théa, Mimi (équipe polyvalente, chacun contribue à toutes les parties du projet)
+## Docker compose location
 
----
+This is intentional: the compose file is in `infrastructure/` to keep all infra files together.
 
-## Stack Technique
+Main file:
 
-| Couche | Technologie |
-|--------|-------------|
-| **Frontend** | Nuxt 4, Vue 3, Three.js, TypeScript |
-| **Backend** | Node.js 20, Express.js, Prisma |
-| **Base de données** | PostgreSQL 16, Redis |
-| **Infra** | Docker, Nginx, VPS Linux |
-| **CI/CD** | GitHub Actions |
+- `infrastructure/docker-compose.yml`
 
----
+## Environment files
 
-## Installation
+Use this file for local Docker runs:
 
-1. Cloner le projet depuis GitHub
-2. Lancer avec Docker Compose (recommandé) ou manuellement avec npm install && npm run dev
+- `infrastructure/.env`
 
-**Accès** : http://localhost:3000 (frontend) | http://localhost:4000 (API)
+Setup:
 
----
+1. Copy `infrastructure/.env.example` to `infrastructure/.env`
+2. Keep default values for local test, or update if needed
 
-## Structure
+## Run local (Docker)
 
-| Dossier | Description |
-|---------|-------------|
-| **frontend/** | Application Nuxt.js (Vue 3 + Three.js) |
-| **backend/** | API Express.js avec Prisma |
-| **infrastructure/** | Docker, Nginx, scripts de déploiement |
-| **.github/workflows/** | Pipelines CI/CD |
+```bash
+docker compose -f infrastructure/docker-compose.yml down -v --remove-orphans
+docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml build --no-cache
+docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d
+```
 
----
+## Verify
 
-## Roadmap
+```bash
+docker compose -f infrastructure/docker-compose.yml ps
+curl -i http://localhost:4000/health
+curl -i http://localhost/api/health
+curl -I http://localhost
+```
 
-| Phase | Contenu |
-|-------|---------|
-| **1. Fondations** | Infra Docker, BDD PostgreSQL, API Express |
-| **2. Auth** | OAuth2 (Google/GitHub), JWT, 2FA TOTP |
-| **3. Core** | CRUD Artworks, Profils artistes, Favoris |
-| **4. E-Commerce** | Panier, Stripe, Téléchargements |
-| **5. Finalisation** | RGPD, Tests, Monitoring, Go-live |
+Expected result: all responses are `200 OK` (or `301/302` for frontend depending on Nuxt redirect), and no `502`.
 
----
+## Lint and format
 
-## Documentation
+From repo root:
 
-| Document | Description |
-|----------|-------------|
-| [CAHIER_DES_CHARGES.md](./CAHIER_DES_CHARGES.md) | Architecture, BDD, Auth, Infra, RGPD — **Document complet** |
-| [ROADMAP_TRELLO.md](./ROADMAP_TRELLO.md) | Tâches détaillées avec assignations |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | Guidelines de contribution |
+```bash
+npm install
+npm run lint
+npm run lint:fix
+npm run format
+npm run format:check
+```
 
----
+## Automation
 
-## Commandes
+Quality is automated at 3 levels:
 
-- **Dev frontend** : npm run dev (port 3000)
-- **Build production** : npm run build
-- **Linter** : npm run lint
+- `npm run dev` and `npm run dev:build` run `quality:fix` automatically before Docker
+- `pre-commit` git hook runs `npm run precommit` (strict check)
+- `pre-push` git hook runs `npm run prepush` (same quality gate as CI)
+- GitHub Actions CI runs lint + format check on `develop/main`
 
----
+To enable hooks locally (one time):
 
-## Équipe & Workflow
+```bash
+npm install
+```
 
-- **Branches** : `main` (prod) <- `develop` <- `feature/*`
-- **Commits** : Conventional Commits (`feat:`, `fix:`, `docs:`)
-- **Reviews** : PR obligatoire, 1 approval minimum
-- **Sprints** : 2 semaines
+Hooks are managed with Husky in `.husky/`.
 
----
+## Troubleshooting network during npm install in Docker build
 
-<div align="center">
+If npm registry times out, set a mirror in `infrastructure/.env`:
 
-**Where art meets the future**
+```bash
+NPM_REGISTRY=https://registry.npmmirror.com
+```
 
-[Cahier des charges](./CAHIER_DES_CHARGES.md) | [Roadmap](./ROADMAP_TRELLO.md) | [Discord](https://discord.gg/37T53Q6FSU)
+Then rebuild:
 
-</div>
+```bash
+docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml build --no-cache
+```
+
+## Branch strategy
+
+- `main`: production
+- `develop`: integration
+- `feature/*`: feature branches
+
+Use pull requests to merge into `develop`, then `main`.
+
+## Team documentation
+
+- Activity log: `docs/TEAM_LOG.md`
+- Entry template: `docs/TEAM_LOG_TEMPLATE.md`
+- Technical decisions: `docs/DECISIONS.md`

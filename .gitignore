@@ -51,3 +51,4 @@ contracts/ethereum/coverage/
 *.key
 *-keypair.json
 wallet.json
+tmp/

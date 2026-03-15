@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+$color-bg: #020617;
+$color-card: #0f172a;
+$color-brand: #22d3ee;
+
+.page-home {
+  background:
+    radial-gradient(circle at top right, rgba(34, 211, 238, 0.16), transparent 42%), $color-bg;
+
+  &__title {
+    color: $color-brand;
+  }
+
+  &__card {
+    background-color: $color-card;
+  }
+}
+
+.btn-primary {
+  @apply inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-slate-950 transition;
+  background-color: $color-brand;
+
+  &:hover {
+    background-color: #67e8f9;
+  }
+}

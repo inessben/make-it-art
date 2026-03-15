@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install frontend deps
+        run: npm install --legacy-peer-deps --include=optional --workspaces=false --ignore-scripts --no-audit --no-fund
+      - name: Frontend lint
+        run: npm run lint --workspaces=false
+      - name: Frontend format check
+        run: npm run format:check --workspaces=false
+
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install backend deps
+        run: npm install --include=optional --workspaces=false --ignore-scripts --no-audit --no-fund
+      - name: Backend lint
+        run: npm run lint --workspaces=false
+      - name: Backend format check
+        run: npm run format:check --workspaces=false
+
+  compose_config:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Prepare env file for compose
+        run: cp infrastructure/.env.example infrastructure/.env
+      - name: Validate compose syntax
+        run: docker compose -f infrastructure/docker-compose.yml config > /dev/null

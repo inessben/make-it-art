@@ -1,0 +1,13 @@
+### YYYY-MM-DD - Prenom
+
+- Branche: `feature/xxx`
+- Tache: ...
+- Fichiers modifies:
+  - `path/file1`
+  - `path/file2`
+- Impact: ...
+- Verification:
+  - `commande 1` -> resultat
+  - `commande 2` -> resultat
+- Prochaine etape: ...
+- Blocages: ...
