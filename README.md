@@ -18,6 +18,14 @@ Monorepo starter for the class project.
 - `.github/workflows/` CI/CD workflows
 - `docs/` Team documentation and contribution log
 
+## Docker compose location
+
+This is intentional: the compose file is in `infrastructure/` to keep all infra files together.
+
+Main file:
+
+- `infrastructure/docker-compose.yml`
+
 ## Environment files
 
 Use this file for local Docker runs:
@@ -48,6 +56,35 @@ curl -I http://localhost
 
 Expected result: all responses are `200 OK` (or `301/302` for frontend depending on Nuxt redirect), and no `502`.
 
+## Lint and format
+
+From repo root:
+
+```bash
+npm install
+npm run lint
+npm run lint:fix
+npm run format
+npm run format:check
+```
+
+## Automation
+
+Quality is automated at 3 levels:
+
+- `npm run dev` and `npm run dev:build` run `quality:fix` automatically before Docker
+- `pre-commit` git hook runs `npm run precommit` (strict check)
+- `pre-push` git hook runs `npm run prepush` (same quality gate as CI)
+- GitHub Actions CI runs lint + format check on `develop/main`
+
+To enable hooks locally (one time):
+
+```bash
+npm install
+```
+
+Hooks are managed with Husky in `.husky/`.
+
 ## Troubleshooting network during npm install in Docker build
 
 If npm registry times out, set a mirror in `infrastructure/.env`:
@@ -74,3 +111,4 @@ Use pull requests to merge into `develop`, then `main`.
 
 - Activity log: `docs/TEAM_LOG.md`
 - Entry template: `docs/TEAM_LOG_TEMPLATE.md`
+- Technical decisions: `docs/DECISIONS.md`

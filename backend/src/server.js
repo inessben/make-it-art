@@ -17,4 +17,3 @@ process.on("unhandledRejection", (reason) => {
   logError("Unhandled rejection", reason);
   process.exit(1);
 });
-

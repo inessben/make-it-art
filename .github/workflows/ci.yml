@@ -21,8 +21,10 @@ jobs:
           node-version: 22
       - name: Install frontend deps
         run: npm install --legacy-peer-deps
-      - name: Frontend lint placeholder
+      - name: Frontend lint
         run: npm run lint
+      - name: Frontend format check
+        run: npm run format:check
 
   backend:
     runs-on: ubuntu-latest
@@ -38,8 +40,10 @@ jobs:
           node-version: 22
       - name: Install backend deps
         run: npm install
-      - name: Backend lint placeholder
+      - name: Backend lint
         run: npm run lint
+      - name: Backend format check
+        run: npm run format:check
 
   compose_config:
     runs-on: ubuntu-latest

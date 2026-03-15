@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+if [ -n "$WINDIR" ]; then
+  npm.cmd run precommit
+else
+  npm run precommit
+fi

@@ -3,11 +3,24 @@
   "private": true,
   "workspaces": ["frontend", "backend"],
   "scripts": {
-    "dev": "docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d",
-    "dev:build": "docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d --build",
+    "prepare": "husky install",
+    "dev:up": "docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d",
+    "dev:up:build": "docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d --build",
+    "dev": "npm run quality:fix && npm run dev:up",
+    "dev:build": "npm run quality:fix && npm run dev:up:build",
     "dev:down": "docker compose -f infrastructure/docker-compose.yml down",
     "dev:logs": "docker compose -f infrastructure/docker-compose.yml logs -f",
-    "ci": "npm --prefix backend run lint && npm --prefix frontend run lint"
+    "lint": "npm --prefix backend run lint && npm --prefix frontend run lint",
+    "lint:fix": "npm --prefix backend run lint:fix && npm --prefix frontend run lint:fix",
+    "format": "npm --prefix backend run format && npm --prefix frontend run format",
+    "format:check": "npm --prefix backend run format:check && npm --prefix frontend run format:check",
+    "quality": "npm run lint && npm run format:check",
+    "quality:fix": "npm run lint:fix && npm run format",
+    "ci": "npm run quality",
+    "precommit": "npm run quality",
+    "prepush": "npm run ci"
+  },
+  "devDependencies": {
+    "husky": "^8.0.3"
   }
 }
-

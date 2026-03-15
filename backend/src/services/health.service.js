@@ -9,4 +9,3 @@ function getHealthPayload() {
 module.exports = {
   getHealthPayload
 };
-

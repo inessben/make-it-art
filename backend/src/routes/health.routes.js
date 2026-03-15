@@ -8,4 +8,3 @@ router.get("/health", (_req, res) => {
 });
 
 module.exports = router;
-

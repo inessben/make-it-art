@@ -1,30 +1,30 @@
 # Documentation d'equipe
 
-Ce dossier centralise ce que chaque personne a fait pour garder une vision claire du projet.
+Ce dossier centralise tout ce qui a ete mis en place sur le projet.
+
+## Fichiers
+
+- `docs/TEAM_LOG.md`: journal des changements (obligatoire apres chaque session)
+- `docs/TEAM_LOG_TEMPLATE.md`: template d'entree a copier
+- `docs/DECISIONS.md`: decisions techniques et conventions
 
 ## Regle simple
 
-Apres chaque session de travail, ajoute une entree dans `docs/TEAM_LOG.md`.
+Apres chaque session de travail:
 
-## Format obligatoire
+1. Ajoute une entree dans `docs/TEAM_LOG.md`
+2. Indique les fichiers modifies
+3. Indique comment tu as verifie
+4. Indique la prochaine etape et les blocages
 
-Utilise le template de `docs/TEAM_LOG_TEMPLATE.md`.
+## Automatisation en place
 
-Champs a remplir:
+- Hook `pre-commit`: execute `npm run precommit`
+- Hook `pre-push`: execute `npm run prepush`
+- CI GitHub Actions: lint + format check
+- Commande `npm run dev`: quality gate avant lancement Docker
 
-- Date (YYYY-MM-DD)
-- Membre
-- Branche
-- Tache
-- Fichiers modifies
-- Impact
-- Verification
-- Prochaine etape
-- Blocages (si present)
+## Notes
 
-## Bonnes pratiques
-
-- Une entree courte mais precise.
-- Cite les fichiers exacts touches.
-- Indique comment tu as verifie.
-- Si bug/incident, note la cause et la correction.
+Les warnings npm `deprecated` vus pendant `npm install` ne bloquent pas le projet.
+Ils sont a surveiller, mais tant que `lint`, `format:check` et les tests HTTP sont OK, le setup est valide.

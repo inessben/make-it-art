@@ -5,11 +5,20 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "lint": "echo \"TODO: add eslint for backend\""
+    "lint": "eslint \"src/**/*.js\" --max-warnings=0",
+    "lint:fix": "eslint \"src/**/*.js\" --fix",
+    "format": "prettier \"src/**/*.js\" --write",
+    "format:check": "prettier \"src/**/*.js\" --check"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "make-it-art": "file:.."
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.0.1",
+    "prettier": "^3.5.3"
   }
 }
