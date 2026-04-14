@@ -1,7 +1,10 @@
 {
   "name": "make-it-art",
   "private": true,
-  "workspaces": ["frontend", "backend"],
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
     "prepare": "husky install",
     "dev:up": "docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d",
@@ -21,6 +24,10 @@
     "prepush": "npm run ci"
   },
   "devDependencies": {
-    "husky": "^8.0.3"
+    "husky": "^8.0.3",
+    "prisma": "^7.7.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.7.0"
   }
 }
