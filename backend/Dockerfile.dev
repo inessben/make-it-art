@@ -19,9 +19,6 @@ RUN npm config set registry ${NPM_REGISTRY} \
       sleep 10; \
     done
 
-COPY . .
-RUN npx prisma generate --config prisma.config.ts
-
 EXPOSE 4000
 
-CMD ["npm", "run", "dev"]
+CMD ["sh", "-c", "npx prisma generate --config prisma.config.ts && npm run dev"]

@@ -6,12 +6,19 @@ module.exports = {
     es2022: true
   },
   globals: {
+    $fetch: "readonly",
     defineNuxtConfig: "readonly",
-    useRuntimeConfig: "readonly",
-    useFetch: "readonly",
+    computed: "readonly",
+    onMounted: "readonly",
+    reactive: "readonly",
+    ref: "readonly",
     useAsyncData: "readonly",
+    useFetch: "readonly",
+    useNuxtApp: "readonly",
     useRoute: "readonly",
     useRouter: "readonly",
+    useRuntimeConfig: "readonly",
+    watch: "readonly",
     definePageMeta: "readonly",
     navigateTo: "readonly"
   },

@@ -7,15 +7,60 @@ datasource db {
 }
 
 model user {
-  id              Int       @id
+  id Int @id @default(autoincrement())
   username        String?   @db.VarChar
-  email           String?   @db.VarChar
+  email           String?   @unique @db.VarChar
   password_hash   String?
   role            String?   @db.VarChar
   created_at      DateTime? @db.Timestamp(6)
   bio             String?
-  is_active       Boolean?
+  is_active       Boolean? @default(false)
   wallet_addresse String?
-  verified        Boolean?
+  verified        Boolean? @default(false)
   phone           String?   @db.VarChar
+  email_verification_tokens email_verification_token[]
+  password_reset_tokens password_reset_token[]
+  login_verification_codes login_verification_code[]
+  remembered_devices       remembered_device[]
+}
+
+model email_verification_token {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  token_hash String
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime  @default(now())
+
+  user user @relation(fields: [user_id], references: [id])
+}
+model password_reset_token {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  token_hash String
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime  @default(now())
+
+  user user @relation(fields: [user_id], references: [id])
+}
+model login_verification_code {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  code_hash  String
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime  @default(now())
+
+  user user @relation(fields: [user_id], references: [id])
+}
+model remembered_device {
+  id           Int      @id @default(autoincrement())
+  user_id      Int
+  token_hash   String   @unique
+  user_agent   String?
+  expires_at   DateTime
+  created_at   DateTime @default(now())
+
+  user user @relation(fields: [user_id], references: [id])
 }

@@ -36,6 +36,15 @@ services:
     networks:
       - app_net
 
+  mailpit:
+    image: axllent/mailpit:v1.21
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - app_net
+
   backend:
     build:
       context: ../backend
@@ -50,8 +59,17 @@ services:
       NODE_ENV: development
       PORT: 4000
       CORS_ORIGIN: http://localhost
+      APP_BASE_URL: http://localhost
+      JWT_SECRET: ${JWT_SECRET:-dev_secret_change_me}
+      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-mia_session}
+      LOGIN_CODE_COOKIE_NAME: ${LOGIN_CODE_COOKIE_NAME:-mia_login_challenge}
+      REMEMBER_DEVICE_COOKIE_NAME: ${REMEMBER_DEVICE_COOKIE_NAME:-mia_remember_device}
       DATABASE_URL: postgresql://${POSTGRES_USER:-mia}:${POSTGRES_PASSWORD:-mia_dev_password}@db:5432/${POSTGRES_DB:-makeitart}
       REDIS_URL: redis://redis:6379
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_SECURE: "false"
+      SMTP_FROM: Make It Art <no-reply@make-it-art.local>
     ports:
       - "4000:4000"
     depends_on:
@@ -59,6 +77,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     healthcheck:
       test:
         [
