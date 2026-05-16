@@ -37,6 +37,7 @@ async function handleRegister() {
   try {
     const response = await $fetch("/api/auth/register", {
       method: "POST",
+      credentials: "include",
       body: {
         username: form.username,
         email: form.email,

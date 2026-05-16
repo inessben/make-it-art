@@ -18,27 +18,21 @@
 </template>
 
 <script setup>
-const user = ref(null);
-const loading = ref(true);
-const message = ref("");
+import { navigateTo } from "#app";
+import { storeToRefs } from "pinia";
+import { ref } from "vue";
+import { useAuthStore } from "~/stores/auth";
 
-onMounted(async () => {
-  try {
-    const response = await $fetch("/api/auth/me");
-    user.value = response.user;
-  } catch (error) {
-    message.value = error?.data?.message || "Not authenticated";
-    await navigateTo("/login");
-  } finally {
-    loading.value = false;
-  }
+definePageMeta({
+  middleware: "auth"
 });
 
-async function handleLogout() {
-  await $fetch("/api/auth/logout", {
-    method: "POST"
-  });
+const auth = useAuthStore();
+const { user, loading } = storeToRefs(auth);
+const message = ref("");
 
+async function handleLogout() {
+  await auth.logout();
   await navigateTo("/login");
 }
 </script>

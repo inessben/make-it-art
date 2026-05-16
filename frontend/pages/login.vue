@@ -58,6 +58,11 @@
 </template>
 
 <script setup>
+import { navigateTo } from "#app";
+import { onMounted, ref } from "vue";
+import { useAuthStore } from "~/stores/auth";
+
+const auth = useAuthStore();
 const email = ref("");
 const password = ref("");
 const code = ref("");
@@ -67,6 +72,18 @@ const loading = ref(false);
 const resending = ref(false);
 const canResendVerification = ref(false);
 const requiresCode = ref(false);
+
+onMounted(async () => {
+  try {
+    await auth.fetchCurrentUser();
+
+    if (auth.isAuthenticated) {
+      await navigateTo("/profile", { replace: true });
+    }
+  } catch {
+    auth.user = null;
+  }
+});
 
 async function handleSubmit() {
   if (requiresCode.value) {
@@ -78,13 +95,19 @@ async function handleSubmit() {
 }
 
 async function handleLogin() {
+  if (loading.value) {
+    return;
+  }
+
   loading.value = true;
   message.value = "";
   canResendVerification.value = false;
+  let shouldNavigateToProfile = false;
 
   try {
     const response = await $fetch("/api/auth/login", {
       method: "POST",
+      credentials: "include",
       body: {
         email: email.value,
         password: password.value
@@ -97,33 +120,51 @@ async function handleLogin() {
       return;
     }
 
-    await navigateTo("/profile");
+    shouldNavigateToProfile = true;
   } catch (error) {
     message.value = error?.data?.message || "Login failed";
     canResendVerification.value = error?.statusCode === 403;
   } finally {
     loading.value = false;
   }
+
+  if (shouldNavigateToProfile) {
+    await navigateTo("/profile", { replace: true });
+  }
 }
 
 async function handleVerifyCode() {
+  if (loading.value) {
+    return;
+  }
+
   loading.value = true;
   message.value = "";
+  let verifiedUser = null;
 
   try {
-    await $fetch("/api/auth/verify-login-code", {
+    const response = await $fetch("/api/auth/verify-login-code", {
       method: "POST",
+      credentials: "include",
       body: {
         code: code.value,
         rememberDevice: rememberDevice.value
       }
     });
 
-    await navigateTo("/profile");
+    verifiedUser = response.user;
   } catch (error) {
-    message.value = error?.data?.message || "Invalid or expired login code.";
+    message.value =
+      error?.statusCode === 400
+        ? "Login session expired. Please request a new code."
+        : error?.data?.message || "Invalid or expired login code.";
   } finally {
     loading.value = false;
+  }
+
+  if (verifiedUser) {
+    auth.user = verifiedUser;
+    await navigateTo("/profile", { replace: true });
   }
 }
 
@@ -134,6 +175,7 @@ async function handleResendVerification() {
   try {
     const response = await $fetch("/api/auth/resend-verification-email", {
       method: "POST",
+      credentials: "include",
       body: {
         email: email.value
       }

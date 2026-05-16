@@ -5,7 +5,7 @@ const userRepository = require("../repositories/user.repository");
 const loginCodeRepository = require("../repositories/login-verification-code.repository");
 const rememberedDeviceRepository = require("../repositories/remembered-device.repository");
 const { sendLoginCodeEmail } = require("./mail.service");
-const { createSessionToken } = require("./session.service");
+const { createSession } = require("./session.service");
 
 const LOGIN_CODE_EXPIRES_MS = 1000 * 60 * 10;
 const REMEMBER_DEVICE_EXPIRES_MS = 1000 * 60 * 60 * 24 * 30;
@@ -100,7 +100,7 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
       return {
         bypassCode: true,
         user,
-        sessionToken: createSessionToken(user)
+        ...(await createSession(user))
       };
     }
   }
@@ -142,7 +142,7 @@ async function verifyLoginCode({ challengeToken, code, rememberDevice, userAgent
 
   await loginCodeRepository.markCodeAsUsed(loginCode.id);
 
-  const sessionToken = createSessionToken(loginCode.user);
+  const session = await createSession(loginCode.user);
   let rememberDeviceToken = null;
 
   if (rememberDevice) {
@@ -158,7 +158,8 @@ async function verifyLoginCode({ challengeToken, code, rememberDevice, userAgent
 
   return {
     user: loginCode.user,
-    sessionToken,
+    accessToken: session.accessToken,
+    refreshToken: session.refreshToken,
     rememberDeviceToken
   };
 }
