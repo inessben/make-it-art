@@ -18,16 +18,7 @@ async function findValidDeviceByHash(tokenHash) {
   });
 }
 
-async function deleteDeviceByHash(tokenHash) {
-  return prisma.remembered_device.deleteMany({
-    where: {
-      token_hash: tokenHash
-    }
-  });
-}
-
 module.exports = {
   createDevice,
-  findValidDeviceByHash,
-  deleteDeviceByHash
+  findValidDeviceByHash
 };

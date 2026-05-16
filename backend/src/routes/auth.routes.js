@@ -6,13 +6,19 @@ const {
   resetPassword,
   verifyEmail
 } = require("../services/auth.service");
-
-const env = require("../config/env");
 const {
   getSessionCookieOptions,
+  getRefreshCookieOptions,
   getClearSessionCookieOptions,
-  getUserFromRequest
+  getClearRefreshCookieOptions,
+  rotateRefreshToken,
+  revokeRefreshToken
 } = require("../services/session.service");
+const { authRateLimit, strictAuthRateLimit } = require("../middlewares/rate-limit.middleware");
+const { authRequired } = require("../middlewares/auth-required.middleware");
+
+const env = require("../config/env");
+
 const {
   startLoginWithCode,
   verifyLoginCode,
@@ -23,7 +29,7 @@ const {
 } = require("../services/two-factor-login.service");
 const router = express.Router();
 
-router.post("/auth/login", async (req, res) => {
+router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -40,7 +46,8 @@ router.post("/auth/login", async (req, res) => {
     });
 
     if (result.bypassCode) {
-      res.cookie(env.sessionCookieName, result.sessionToken, getSessionCookieOptions());
+      res.cookie(env.sessionCookieName, result.accessToken, getSessionCookieOptions());
+      res.cookie(env.refreshCookieName, result.refreshToken, getRefreshCookieOptions());
 
       return res.status(200).json({
         message: "Login successful",
@@ -72,7 +79,7 @@ router.post("/auth/login", async (req, res) => {
   }
 });
 
-router.post("/auth/register", async (req, res) => {
+router.post("/auth/register", authRateLimit, async (req, res) => {
   try {
     const { username, email, phone, password } = req.body;
 
@@ -111,7 +118,7 @@ router.post("/auth/register", async (req, res) => {
   }
 });
 
-router.post("/auth/resend-verification-email", async (req, res) => {
+router.post("/auth/resend-verification-email", authRateLimit, async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -161,33 +168,31 @@ router.get("/auth/verify-email", async (req, res) => {
   }
 });
 
-router.get("/auth/me", async (req, res) => {
-  const user = await getUserFromRequest(req);
-
-  if (!user) {
-    return res.status(401).json({
-      message: "Not authenticated"
-    });
-  }
-
+router.get("/auth/me", authRequired, async (req, res) => {
   return res.status(200).json({
     user: {
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      phone: user.phone
+      id: req.user.id,
+      email: req.user.email,
+      username: req.user.username,
+      phone: req.user.phone
     }
   });
 });
-router.post("/auth/logout", (_req, res) => {
+
+router.post("/auth/logout", async (req, res) => {
+  await revokeRefreshToken(req.cookies?.[env.refreshCookieName]);
+
   res.clearCookie(env.sessionCookieName, getClearSessionCookieOptions());
+  res.clearCookie(env.refreshCookieName, getClearRefreshCookieOptions());
   res.clearCookie(env.loginCodeCookieName, getClearLoginChallengeCookieOptions());
   res.clearCookie(env.rememberDeviceCookieName, getClearRememberDeviceCookieOptions());
+
   return res.status(200).json({
     message: "Logged out"
   });
 });
-router.post("/auth/forgot-password", async (req, res) => {
+
+router.post("/auth/forgot-password", authRateLimit, async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -240,7 +245,7 @@ router.post("/auth/reset-password", async (req, res) => {
   }
 });
 
-router.post("/auth/verify-login-code", async (req, res) => {
+router.post("/auth/verify-login-code", strictAuthRateLimit, async (req, res) => {
   try {
     const { code, rememberDevice } = req.body;
     const challengeToken = req.cookies?.[env.loginCodeCookieName];
@@ -260,7 +265,8 @@ router.post("/auth/verify-login-code", async (req, res) => {
 
     res.clearCookie(env.loginCodeCookieName, getClearLoginChallengeCookieOptions());
 
-    res.cookie(env.sessionCookieName, result.sessionToken, getSessionCookieOptions());
+    res.cookie(env.sessionCookieName, result.accessToken, getSessionCookieOptions());
+    res.cookie(env.refreshCookieName, result.refreshToken, getRefreshCookieOptions());
 
     if (result.rememberDeviceToken) {
       res.cookie(
@@ -278,11 +284,43 @@ router.post("/auth/verify-login-code", async (req, res) => {
         username: result.user.username
       }
     });
-  } catch (_error) {
+  } catch (error) {
+    if (env.nodeEnv !== "production") {
+      console.error("Login code verification failed:", error);
+    }
+
     return res.status(401).json({
       message: "Invalid or expired login code"
     });
   }
+});
+
+router.post("/auth/refresh", async (req, res) => {
+  const refreshToken = req.cookies?.[env.refreshCookieName];
+
+  if (!refreshToken) {
+    return res.status(401).json({
+      message: "Not authenticated"
+    });
+  }
+
+  const session = await rotateRefreshToken(refreshToken);
+
+  if (!session) {
+    res.clearCookie(env.sessionCookieName, getClearSessionCookieOptions());
+    res.clearCookie(env.refreshCookieName, getClearRefreshCookieOptions());
+
+    return res.status(401).json({
+      message: "Invalid or expired session"
+    });
+  }
+
+  res.cookie(env.sessionCookieName, session.accessToken, getSessionCookieOptions());
+  res.cookie(env.refreshCookieName, session.refreshToken, getRefreshCookieOptions());
+
+  return res.status(200).json({
+    message: "Session refreshed"
+  });
 });
 
 module.exports = router;

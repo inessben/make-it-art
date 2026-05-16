@@ -7,6 +7,7 @@ module.exports = {
   appBaseUrl: process.env.APP_BASE_URL || "http://localhost",
   jwtSecret: process.env.JWT_SECRET || "dev_secret_change_me",
   sessionCookieName: process.env.SESSION_COOKIE_NAME || "mia_session",
+  refreshCookieName: process.env.REFRESH_COOKIE_NAME || "mia_refresh",
   loginCodeCookieName: process.env.LOGIN_CODE_COOKIE_NAME || "mia_login_challenge",
   rememberDeviceCookieName: process.env.REMEMBER_DEVICE_COOKIE_NAME || "mia_remember_device",
   smtp: {

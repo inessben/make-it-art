@@ -1,19 +1,19 @@
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
 
 const app = require("./app");
 const env = require("./config/env");
-const { logInfo, logError } = require("./utils/logger");
+const { connectRedis } = require("./lib/redis");
 
-app.listen(env.port, "0.0.0.0", () => {
-  logInfo(`Backend running on port ${env.port}`);
-});
+async function startServer() {
+  await connectRedis();
 
-process.on("uncaughtException", (error) => {
-  logError("Uncaught exception", error);
-  process.exit(1);
-});
+  app.listen(env.port, () => {
+    console.log(`Backend listening on port ${env.port}`);
+  });
+}
 
-process.on("unhandledRejection", (reason) => {
-  logError("Unhandled rejection", reason);
+startServer().catch((error) => {
+  console.error("Failed to start server:", error);
   process.exit(1);
 });
