@@ -111,6 +111,7 @@ services:
       NUXT_HOST: 0.0.0.0
       NUXT_PORT: 3000
       NUXT_PUBLIC_API_BASE: /api
+      NUXT_API_PROXY_TARGET: http://backend:4000
     ports:
       - "3000:3000"
     depends_on:
