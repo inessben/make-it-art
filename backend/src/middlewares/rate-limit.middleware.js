@@ -1,3 +1,4 @@
+const { ipKeyGenerator } = require("express-rate-limit");
 const rateLimit = require("express-rate-limit");
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -13,6 +14,10 @@ const authRateLimit = asExpressMiddleware(
     skipSuccessfulRequests: true,
     standardHeaders: true,
     legacyHeaders: false,
+    skip: (req, res) => {
+      return false;
+    },
+    keyGenerator: ipKeyGenerator,
     message: {
       message: "Too many authentication attempts. Please try again later."
     }
@@ -26,6 +31,10 @@ const strictAuthRateLimit = asExpressMiddleware(
     skipSuccessfulRequests: true,
     standardHeaders: true,
     legacyHeaders: false,
+    skip: (req, res) => {
+      return false;
+    },
+    keyGenerator: ipKeyGenerator,
     message: {
       message: "Too many attempts. Please try again later."
     }
