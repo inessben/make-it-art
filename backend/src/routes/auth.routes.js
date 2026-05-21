@@ -112,8 +112,12 @@ router.post("/auth/register", authRateLimit, async (req, res) => {
       });
     }
 
+    if (env.nodeEnv !== "production") {
+      console.error("Registration failed:", error);
+    }
+
     return res.status(500).json({
-      message: "Registration failed"
+      message: env.nodeEnv !== "production" ? error.message : "Registration failed"
     });
   }
 });
