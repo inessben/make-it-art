@@ -6,61 +6,278 @@ datasource db {
   provider = "postgresql"
 }
 
-model user {
-  id Int @id @default(autoincrement())
-  username        String?   @db.VarChar
-  email           String?   @unique @db.VarChar
-  password_hash   String?
-  role            String?   @db.VarChar
-  created_at      DateTime? @db.Timestamp(6)
-  bio             String?
-  is_active       Boolean? @default(false)
-  wallet_addresse String?
-  verified        Boolean? @default(false)
-  phone           String?   @db.VarChar
-  email_verification_tokens email_verification_token[]
-  password_reset_tokens password_reset_token[]
-  login_verification_codes login_verification_code[]
-  remembered_devices       remembered_device[]
+model User {
+  id                      Int                      @id @default(autoincrement())
+  username                String?
+  email                   String?                  @unique
+  passwordHash            String?                  @map("password_hash")
+  role                    String?
+  createdAt               DateTime?                @map("created_at")
+  bio                     String?
+  isActive                Boolean?                 @map("is_active")
+  walletAddress           String?                  @map("wallet_addresse")
+  verified                Boolean?
+  phone                   String?
+  admin                   Admin?
+  artist                  Artist?
+  auditLogs               AuditLog[]
+  consents                ConsentRGPD[]
+  emailVerificationTokens EmailVerificationToken[] @relation("emailVerificationTokens")
+  favorites               Favorite[]
+  follows                 Follow[]
+  loginVerificationCodes  LoginVerificationCode[]  @relation("loginVerificationCodes")
+  orders                  Order[]
+  ownershipTokens         OwnershipToken[]
+  passwordResetTokens     PasswordResetToken[]     @relation("passwordResetTokens")
+  refreshTokens           RefreshToken[]
+  rememberedDevices       RememberedDevice[]       @relation("rememberedDevices")
+  galleries               UserGallery[]
+
+  @@map("user")
 }
 
-model email_verification_token {
+model Artist {
+  id          Int          @id @default(autoincrement())
+  userId      Int          @unique @map("user_id")
+  displayName String?      @map("display_name")
+  verified    Boolean?
+  createdAt   DateTime?    @map("created_at")
+  user        User         @relation(fields: [userId], references: [id])
+  artworks    Artwork[]
+  collections Collection[]
+  followers   Follow[]
+
+  @@map("artist")
+}
+
+model Admin {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+
+  @@map("admin")
+}
+
+model Artwork {
+  id              Int              @id @default(autoincrement())
+  artistId        Int              @map("artist_id")
+  title           String?
+  description     String?
+  categoryId      Int?             @map("category_id")
+  priceTokens     String?          @map("price_tokens")
+  favoriteCount   Int?             @map("favorite_count")
+  createdAt       DateTime?        @map("created_at")
+  protection      Boolean?
+  protectionId    Int?             @map("protection_id")
+  price           String?
+  artist          Artist           @relation(fields: [artistId], references: [id])
+  category        Category?        @relation(fields: [categoryId], references: [id])
+  collections     CollectionItem[]
+  favorites       Favorite[]
+  orderItems      OrderItem[]
+  ownershipTokens OwnershipToken[]
+  galleries       UserGallery[]
+
+  @@map("artwork")
+}
+
+model OwnershipToken {
+  id              Int           @id @default(autoincrement())
+  artworkId       Int           @map("artwork_id")
+  ownerId         Int           @map("owner_id")
+  tokenId         Int?          @map("token_id")
+  acquiredAt      DateTime?     @map("acquired_at")
+  transactionHash String?       @map("transaction_hash")
+  isCurrentOwner  Boolean?      @map("is_current_owner")
+  artwork         Artwork       @relation(fields: [artworkId], references: [id])
+  owner           User          @relation(fields: [ownerId], references: [id])
+  galleries       UserGallery[]
+
+  @@map("ownership_token")
+}
+
+model UserGallery {
+  id               Int             @id @default(autoincrement())
+  userId           Int             @map("user_id")
+  artworkId        Int             @map("artwork_id")
+  ownershipTokenId Int?            @map("ownership_token_id")
+  artwork          Artwork         @relation(fields: [artworkId], references: [id])
+  ownershipToken   OwnershipToken? @relation(fields: [ownershipTokenId], references: [id])
+  user             User            @relation(fields: [userId], references: [id])
+
+  @@map("user_gallery")
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String?
+  artworks Artwork[]
+
+  @@map("category")
+}
+
+model Collection {
+  id          Int              @id @default(autoincrement())
+  artistId    Int              @map("artist_id")
+  title       String?
+  description String?
+  createdAt   DateTime?        @map("created_at")
+  artist      Artist           @relation(fields: [artistId], references: [id])
+  items       CollectionItem[]
+
+  @@map("collection")
+}
+
+model CollectionItem {
+  id           Int        @id @default(autoincrement())
+  collectionId Int        @map("collection_id")
+  artworkId    Int        @map("artwork_id")
+  artwork      Artwork    @relation(fields: [artworkId], references: [id])
+  collection   Collection @relation(fields: [collectionId], references: [id])
+
+  @@map("collection_item")
+}
+
+model Order {
+  id         Int         @id @default(autoincrement())
+  userId     Int         @map("user_id")
+  status     String?
+  totalToken Int?        @map("total_token")
+  createdAt  DateTime?   @map("created_at")
+  user       User        @relation(fields: [userId], references: [id])
+  items      OrderItem[]
+  payments   Payment[]
+
+  @@map("order")
+}
+
+model OrderItem {
+  id          Int     @id @default(autoincrement())
+  orderId     Int     @map("order_id")
+  artworkId   Int     @map("artwork_id")
+  priceTokens String? @map("price_tokens")
+  artwork     Artwork @relation(fields: [artworkId], references: [id])
+  order       Order   @relation(fields: [orderId], references: [id])
+
+  @@map("order_item")
+}
+
+model Payment {
+  id            Int       @id @default(autoincrement())
+  orderId       Int       @map("order_id")
+  method        String?
+  transactionId Int?      @map("transaction_id")
+  price         String?
+  status        String?
+  createdAt     DateTime? @map("created_at")
+  order         Order     @relation(fields: [orderId], references: [id])
+
+  @@map("payment")
+}
+
+model Favorite {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  artworkId Int       @map("artwork_id")
+  createdAt DateTime? @map("created_at")
+  artwork   Artwork   @relation(fields: [artworkId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, artworkId])
+  @@map("favorite")
+}
+
+model Follow {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  artistId  Int       @map("artist_id")
+  createdAt DateTime? @map("created_at")
+  artist    Artist    @relation(fields: [artistId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, artistId])
+  @@map("follow")
+}
+
+model RefreshToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  tokenHash String?   @map("token_hash")
+  expiresAt DateTime? @map("expires_at")
+  createdAt DateTime? @map("created_at")
+  revoked   Boolean?
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@map("refresh_token")
+}
+
+model AuditLog {
   id         Int       @id @default(autoincrement())
-  user_id    Int
-  token_hash String
-  expires_at DateTime
-  used_at    DateTime?
-  created_at DateTime  @default(now())
+  userId     Int?      @map("user_id")
+  action     String?
+  entityType String?   @map("entity_type")
+  entityId   String?   @map("entity_id")
+  ipAddress  String?   @map("ip_address")
+  createdAt  DateTime? @map("created_at")
+  user       User?     @relation(fields: [userId], references: [id])
 
-  user user @relation(fields: [user_id], references: [id])
+  @@map("audit_logs")
 }
-model password_reset_token {
-  id         Int       @id @default(autoincrement())
-  user_id    Int
-  token_hash String
-  expires_at DateTime
-  used_at    DateTime?
-  created_at DateTime  @default(now())
 
-  user user @relation(fields: [user_id], references: [id])
+model ConsentRGPD {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  consentType String?   @map("consent_type")
+  accepted    Boolean?
+  createdAt   DateTime? @map("created_at")
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@map("consent_RGPD")
 }
-model login_verification_code {
-  id         Int       @id @default(autoincrement())
-  user_id    Int
-  code_hash  String
-  expires_at DateTime
-  used_at    DateTime?
-  created_at DateTime  @default(now())
 
-  user user @relation(fields: [user_id], references: [id])
+model EmailVerificationToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamp(6)
+  usedAt    DateTime? @map("used_at") @db.Timestamp(6)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  user      User      @relation("emailVerificationTokens", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("email_verification_token")
 }
-model remembered_device {
-  id           Int      @id @default(autoincrement())
-  user_id      Int
-  token_hash   String   @unique
-  user_agent   String?
-  expires_at   DateTime
-  created_at   DateTime @default(now())
 
-  user user @relation(fields: [user_id], references: [id])
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamp(6)
+  usedAt    DateTime? @map("used_at") @db.Timestamp(6)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  user      User      @relation("passwordResetTokens", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("password_reset_token")
+}
+
+model LoginVerificationCode {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamp(6)
+  usedAt    DateTime? @map("used_at") @db.Timestamp(6)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  user      User      @relation("loginVerificationCodes", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("login_verification_code")
+}
+
+model RememberedDevice {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamp(6)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  user      User      @relation("rememberedDevices", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("remembered_device")
 }

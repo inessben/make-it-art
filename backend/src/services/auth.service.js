@@ -11,6 +11,7 @@ async function loginWithEmail(email, password) {
   const user = await userRepository.findByEmail(normalizedEmail);
 
   if (!user) {
+    console.log(email, password, normalizedEmail);
     throw new Error("Invalid credentials");
   }
   if (!user.verified || !user.is_active) {
@@ -18,7 +19,7 @@ async function loginWithEmail(email, password) {
   }
   const isValid = await argon2.verify(user.password_hash, password);
   if (!isValid) {
-    throw new Error("Invalid credentials");
+    throw new Error("Invalid credentials.");
   }
 
   return user;
@@ -39,9 +40,9 @@ async function sendUserVerificationEmail(user) {
   await emailVerificationTokenRepository.markUnusedTokensAsUsed(user.id);
 
   await emailVerificationTokenRepository.createToken({
-    user_id: user.id,
-    token_hash: tokenHash,
-    expires_at: new Date(Date.now() + 1000 * 60 * 60)
+    userId: user.id,
+    tokenHash,
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60)
   });
 
   const verificationUrl = `${env.appBaseUrl}/verify-email?token=${verificationToken}`;
@@ -68,7 +69,7 @@ async function registerUser({ username, email, phone, password }) {
     email: normalizedEmail,
     phone,
     password_hash: passwordHash,
-    created_at: new Date(),
+    createdAt: new Date(),
     verified: false,
     is_active: false
   });
@@ -103,7 +104,7 @@ async function verifyEmail(token) {
     throw new Error("Invalid or expired verification token");
   }
 
-  await userRepository.verifyEmail(verificationToken.user_id);
+  await userRepository.verifyEmail(verificationToken.userId);
   await emailVerificationTokenRepository.markTokenAsUsed(verificationToken.id);
 
   return verificationToken.user;
@@ -122,9 +123,9 @@ async function requestPasswordReset(email) {
   await passwordResetTokenRepository.markUnusedTokensAsUsed(user.id);
 
   await passwordResetTokenRepository.createToken({
-    user_id: user.id,
-    token_hash: tokenHash,
-    expires_at: new Date(Date.now() + 1000 * 60 * 60)
+    userId: user.id,
+    tokenHash,
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60)
   });
 
   const resetUrl = `${env.appBaseUrl}/reset-password?token=${resetToken}`;
@@ -148,7 +149,7 @@ async function resetPassword({ token, password }) {
 
   const passwordHash = await argon2.hash(password);
 
-  await userRepository.updatePassword(resetToken.user_id, passwordHash);
+  await userRepository.updatePassword(resetToken.userId, passwordHash);
   await passwordResetTokenRepository.markTokenAsUsed(resetToken.id);
 
   return resetToken.user;

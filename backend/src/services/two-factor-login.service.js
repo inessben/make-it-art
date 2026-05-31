@@ -76,11 +76,11 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
     throw new Error("Invalid credentials");
   }
 
-  if (!user.verified || !user.is_active) {
+  if (!user.verified || !user.isActive) {
     throw new Error("Email not verified");
   }
 
-  const isValidPassword = await argon2.verify(user.password_hash, password);
+  const isValidPassword = await argon2.verify(user.passwordHash, password);
 
   if (!isValidPassword) {
     throw new Error("Invalid credentials");
@@ -93,9 +93,9 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
 
     if (
       rememberedDevice &&
-      rememberedDevice.user_id === user.id &&
+      rememberedDevice.userId === user.id &&
       rememberedDevice.user.verified &&
-      rememberedDevice.user.is_active
+      rememberedDevice.user.isActive
     ) {
       return {
         bypassCode: true,
@@ -111,9 +111,9 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
   await loginCodeRepository.markUnusedCodesAsUsed(user.id);
 
   await loginCodeRepository.createCode({
-    user_id: user.id,
-    code_hash: hashValue(`${challengeToken}:${code}`),
-    expires_at: new Date(Date.now() + LOGIN_CODE_EXPIRES_MS)
+    userId: user.id,
+    codeHash: hashValue(`${challengeToken}:${code}`),
+    expiresAt: new Date(Date.now() + LOGIN_CODE_EXPIRES_MS)
   });
 
   await sendLoginCodeEmail({
@@ -149,10 +149,9 @@ async function verifyLoginCode({ challengeToken, code, rememberDevice, userAgent
     rememberDeviceToken = createRememberDeviceToken();
 
     await rememberedDeviceRepository.createDevice({
-      user_id: loginCode.user.id,
-      token_hash: hashValue(rememberDeviceToken),
-      user_agent: userAgent,
-      expires_at: new Date(Date.now() + REMEMBER_DEVICE_EXPIRES_MS)
+      userId: loginCode.user.id,
+      tokenHash: hashValue(rememberDeviceToken),
+      expiresAt: new Date(Date.now() + REMEMBER_DEVICE_EXPIRES_MS)
     });
   }
 

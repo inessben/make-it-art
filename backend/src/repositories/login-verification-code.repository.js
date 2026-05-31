@@ -1,15 +1,15 @@
 const prisma = require("../lib/prisma");
 
 async function createCode(data) {
-  return prisma.login_verification_code.create({ data });
+  return prisma.loginVerificationCode.create({ data });
 }
 
 async function findValidCodeByHash({ codeHash }) {
-  return prisma.login_verification_code.findFirst({
+  return prisma.loginVerificationCode.findFirst({
     where: {
-      code_hash: codeHash,
-      used_at: null,
-      expires_at: {
+      codeHash,
+      usedAt: null,
+      expiresAt: {
         gt: new Date()
       }
     },
@@ -20,22 +20,22 @@ async function findValidCodeByHash({ codeHash }) {
 }
 
 async function markCodeAsUsed(id) {
-  return prisma.login_verification_code.update({
+  return prisma.loginVerificationCode.update({
     where: { id },
     data: {
-      used_at: new Date()
+      usedAt: new Date()
     }
   });
 }
 
 async function markUnusedCodesAsUsed(userId) {
-  return prisma.login_verification_code.updateMany({
+  return prisma.loginVerificationCode.updateMany({
     where: {
-      user_id: userId,
-      used_at: null
+      userId,
+      usedAt: null
     },
     data: {
-      used_at: new Date()
+      usedAt: new Date()
     }
   });
 }

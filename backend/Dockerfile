@@ -20,7 +20,13 @@ RUN npm config set registry ${NPM_REGISTRY} \
     done
 
 COPY . .
+
+# Génère le client Prisma
 RUN npx prisma generate --config prisma.config.ts
+
+
+# Applique les migrations Prisma au démarrage du conteneur
+CMD npx prisma migrate deploy && npm run dev
 
 EXPOSE 4000
 
