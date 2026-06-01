@@ -11,14 +11,31 @@ async function loginWithEmail(email, password) {
   const user = await userRepository.findByEmail(normalizedEmail);
 
   if (!user) {
+    console.log("[auth] login attempt for unknown email:", normalizedEmail);
     throw new Error("Invalid credentials");
   }
-  if (!user.verified || !user.is_active) {
+  if (!user.verified || !user.isActive) {
     throw new Error("Email not verified");
   }
-  const isValid = await argon2.verify(user.password_hash, password);
-  if (!isValid) {
-    throw new Error("Invalid credentials");
+  try {
+    console.log("[auth] verifying password for user:", user.email);
+    console.log(
+      "[auth] stored passwordHash (prefix):",
+      user.passwordHash ? user.passwordHash.slice(0, 20) : null,
+      "length:",
+      user.passwordHash ? user.passwordHash.length : 0
+    );
+    const isValid = await argon2.verify(user.passwordHash, password);
+    if (!isValid) {
+      console.log("[auth] password verification failed for:", user.email);
+      throw new Error("Invalid credentials.");
+    }
+  } catch (err) {
+    if (err.message && err.message.includes("Invalid credentials")) {
+      throw err;
+    }
+    console.error("[auth] error during password verification:", err);
+    throw new Error("Invalid credentials.");
   }
 
   return user;
@@ -39,9 +56,9 @@ async function sendUserVerificationEmail(user) {
   await emailVerificationTokenRepository.markUnusedTokensAsUsed(user.id);
 
   await emailVerificationTokenRepository.createToken({
-    user_id: user.id,
-    token_hash: tokenHash,
-    expires_at: new Date(Date.now() + 1000 * 60 * 60)
+    userId: user.id,
+    tokenHash,
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60)
   });
 
   const verificationUrl = `${env.appBaseUrl}/verify-email?token=${verificationToken}`;
@@ -67,10 +84,10 @@ async function registerUser({ username, email, phone, password }) {
     username,
     email: normalizedEmail,
     phone,
-    password_hash: passwordHash,
-    created_at: new Date(),
+    passwordHash: passwordHash,
+    createdAt: new Date(),
     verified: false,
-    is_active: false
+    isActive: false
   });
 
   await sendUserVerificationEmail(user);
@@ -86,7 +103,7 @@ async function resendVerificationEmail(email) {
     throw new Error("User not found");
   }
 
-  if (user.verified && user.is_active) {
+  if (user.verified && user.isActive) {
     throw new Error("Email already verified");
   }
 
@@ -103,7 +120,7 @@ async function verifyEmail(token) {
     throw new Error("Invalid or expired verification token");
   }
 
-  await userRepository.verifyEmail(verificationToken.user_id);
+  await userRepository.verifyEmail(verificationToken.userId);
   await emailVerificationTokenRepository.markTokenAsUsed(verificationToken.id);
 
   return verificationToken.user;
@@ -122,9 +139,9 @@ async function requestPasswordReset(email) {
   await passwordResetTokenRepository.markUnusedTokensAsUsed(user.id);
 
   await passwordResetTokenRepository.createToken({
-    user_id: user.id,
-    token_hash: tokenHash,
-    expires_at: new Date(Date.now() + 1000 * 60 * 60)
+    userId: user.id,
+    tokenHash,
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60)
   });
 
   const resetUrl = `${env.appBaseUrl}/reset-password?token=${resetToken}`;
@@ -148,7 +165,7 @@ async function resetPassword({ token, password }) {
 
   const passwordHash = await argon2.hash(password);
 
-  await userRepository.updatePassword(resetToken.user_id, passwordHash);
+  await userRepository.updatePassword(resetToken.userId, passwordHash);
   await passwordResetTokenRepository.markTokenAsUsed(resetToken.id);
 
   return resetToken.user;

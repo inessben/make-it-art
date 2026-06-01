@@ -1,14 +1,14 @@
 const prisma = require("../lib/prisma");
 
 async function createDevice(data) {
-  return prisma.remembered_device.create({ data });
+  return prisma.rememberedDevice.create({ data });
 }
 
 async function findValidDeviceByHash(tokenHash) {
-  return prisma.remembered_device.findFirst({
+  return prisma.rememberedDevice.findFirst({
     where: {
-      token_hash: tokenHash,
-      expires_at: {
+      tokenHash,
+      expiresAt: {
         gt: new Date()
       }
     },

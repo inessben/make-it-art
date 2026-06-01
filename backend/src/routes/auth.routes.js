@@ -112,8 +112,10 @@ router.post("/auth/register", authRateLimit, async (req, res) => {
       });
     }
 
+    console.error("Registration error:", error);
     return res.status(500).json({
-      message: "Registration failed"
+      message: "Registration failed",
+      error: error.message
     });
   }
 });
