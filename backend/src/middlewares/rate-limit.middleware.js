@@ -14,7 +14,7 @@ const authRateLimit = asExpressMiddleware(
     skipSuccessfulRequests: true,
     standardHeaders: true,
     legacyHeaders: false,
-    skip: (req, res) => {
+    skip: (_req, _res) => {
       return false;
     },
     keyGenerator: ipKeyGenerator,
@@ -31,7 +31,7 @@ const strictAuthRateLimit = asExpressMiddleware(
     skipSuccessfulRequests: true,
     standardHeaders: true,
     legacyHeaders: false,
-    skip: (req, res) => {
+    skip: (_req, _res) => {
       return false;
     },
     keyGenerator: ipKeyGenerator,

@@ -6,7 +6,7 @@ const { getHealthPayload } = require("./services/health.service");
 const cookieParser = require("cookie-parser");
 
 const app = express();
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 app.use(
   cors({

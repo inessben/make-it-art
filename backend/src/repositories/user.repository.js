@@ -16,7 +16,7 @@ async function verifyEmail(userId) {
     where: { id: userId },
     data: {
       verified: true,
-      is_active: true
+      isActive: true
     }
   });
 }
@@ -29,7 +29,7 @@ async function updatePassword(userId, passwordHash) {
   return prisma.user.update({
     where: { id: userId },
     data: {
-      password_hash: passwordHash
+      passwordHash: passwordHash
     }
   });
 }

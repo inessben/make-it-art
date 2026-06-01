@@ -63,7 +63,7 @@ async function rotateRefreshToken(refreshToken) {
 
   const user = await userRepository.findById(Number(userId));
 
-  if (!user || !user.verified || !user.is_active) {
+  if (!user || !user.verified || !user.isActive) {
     return null;
   }
 
@@ -127,7 +127,7 @@ async function getUserFromRequest(req) {
     const payload = jwt.verify(token, env.jwtSecret);
     const user = await userRepository.findById(Number(payload.sub));
 
-    if (!user || !user.verified || !user.is_active) {
+    if (!user || !user.verified || !user.isActive) {
       return null;
     }
 

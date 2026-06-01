@@ -11,14 +11,30 @@ async function loginWithEmail(email, password) {
   const user = await userRepository.findByEmail(normalizedEmail);
 
   if (!user) {
-    console.log(email, password, normalizedEmail);
+    console.log("[auth] login attempt for unknown email:", normalizedEmail);
     throw new Error("Invalid credentials");
   }
-  if (!user.verified || !user.is_active) {
+  if (!user.verified || !user.isActive) {
     throw new Error("Email not verified");
   }
-  const isValid = await argon2.verify(user.password_hash, password);
-  if (!isValid) {
+  try {
+    console.log("[auth] verifying password for user:", user.email);
+    console.log(
+      "[auth] stored passwordHash (prefix):",
+      user.passwordHash ? user.passwordHash.slice(0, 20) : null,
+      "length:",
+      user.passwordHash ? user.passwordHash.length : 0
+    );
+    const isValid = await argon2.verify(user.passwordHash, password);
+    if (!isValid) {
+      console.log("[auth] password verification failed for:", user.email);
+      throw new Error("Invalid credentials.");
+    }
+  } catch (err) {
+    if (err.message && err.message.includes("Invalid credentials")) {
+      throw err;
+    }
+    console.error("[auth] error during password verification:", err);
     throw new Error("Invalid credentials.");
   }
 
@@ -68,10 +84,10 @@ async function registerUser({ username, email, phone, password }) {
     username,
     email: normalizedEmail,
     phone,
-    password_hash: passwordHash,
+    passwordHash: passwordHash,
     createdAt: new Date(),
     verified: false,
-    is_active: false
+    isActive: false
   });
 
   await sendUserVerificationEmail(user);
@@ -87,7 +103,7 @@ async function resendVerificationEmail(email) {
     throw new Error("User not found");
   }
 
-  if (user.verified && user.is_active) {
+  if (user.verified && user.isActive) {
     throw new Error("Email already verified");
   }
 

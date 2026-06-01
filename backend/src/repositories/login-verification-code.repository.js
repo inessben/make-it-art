@@ -1,18 +1,30 @@
 const prisma = require("../lib/prisma");
 
 async function createCode(data) {
-  return prisma.loginVerificationCode.create({ data });
+  // Accept either `codeHash` (used in service) or `tokenHash` (Prisma model).
+  const payload = { ...data };
+  if (payload.codeHash && !payload.tokenHash) {
+    payload.tokenHash = payload.codeHash;
+    delete payload.codeHash;
+  }
+  return prisma.loginVerificationCode.create({ data: payload });
 }
 
-async function findValidCodeByHash({ codeHash }) {
+async function findValidCodeByHash({ codeHash, userId } = {}) {
+  const where = {
+    tokenHash: codeHash,
+    usedAt: null,
+    expiresAt: {
+      gt: new Date()
+    }
+  };
+
+  if (userId) {
+    where.userId = userId;
+  }
+
   return prisma.loginVerificationCode.findFirst({
-    where: {
-      codeHash,
-      usedAt: null,
-      expiresAt: {
-        gt: new Date()
-      }
-    },
+    where,
     include: {
       user: true
     }

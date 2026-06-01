@@ -128,7 +128,7 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
   };
 }
 
-async function verifyLoginCode({ challengeToken, code, rememberDevice, userAgent }) {
+async function verifyLoginCode({ challengeToken, code, rememberDevice, _userAgent }) {
   const codeHash = hashValue(`${challengeToken}:${code}`);
 
   const loginCode = await loginCodeRepository.findValidCodeByHash({
