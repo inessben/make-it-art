@@ -7,7 +7,7 @@ Monorepo starter for the class project.
 - Frontend: Nuxt 3 + Tailwind CSS + Sass
 - Backend: Node.js 22 + Express
 - Data services: PostgreSQL 16 + Redis 7
-- Infra: Docker Compose + Nginx reverse proxy
+- Infra: Docker Compose + Nginx for local dev + Caddy for production TLS
 - CI/CD: GitHub Actions templates
 
 ## Project structure
@@ -74,6 +74,88 @@ Useful local URLs:
 - Frontend direct: `http://localhost:3000`
 - Backend health: `http://localhost:4000/health`
 - Mailpit inbox: `http://localhost:8025`
+
+## Production deployment
+
+The repository now includes a dedicated production stack for `https://www.makeitart.io`:
+
+- `backend/Dockerfile.prod`
+- `frontend/Dockerfile.prod`
+- `infrastructure/docker-compose.prod.yml`
+- `infrastructure/Caddyfile`
+- `infrastructure/.env.production.example`
+
+Production uses Caddy as the public reverse proxy so HTTPS certificates for `makeitart.io` and `www.makeitart.io` can be issued automatically once DNS points to the VPS and ports `80` and `443` are open.
+
+### VPS prerequisites
+
+On the Debian VPS:
+
+1. Install Docker Engine and Docker Compose plugin
+2. Install Git
+3. Point both `makeitart.io` and `www.makeitart.io` to the VPS public IP
+4. Open ports `80` and `443` in the VPS firewall / security group
+
+### Production environment
+
+Create the production env file on the server:
+
+```bash
+cp infrastructure/.env.production.example infrastructure/.env.production
+```
+
+Then update at least these values:
+
+- `POSTGRES_PASSWORD`
+- `JWT_SECRET`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_SECURE`
+- `SMTP_USER`
+- `SMTP_PASS`
+- `SMTP_FROM`
+
+Important production defaults:
+
+- `APP_BASE_URL=https://www.makeitart.io`
+- `CORS_ORIGIN=https://www.makeitart.io`
+- `NUXT_PUBLIC_API_BASE=/api`
+
+### Deploy on the VPS
+
+From the repo root on the server:
+
+```bash
+npm run prod:build
+npm run prod:up
+```
+
+Or without npm scripts:
+
+```bash
+docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml build --no-cache
+docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml up -d
+```
+
+The backend production container runs Prisma migrations automatically on startup before launching the API.
+
+### Production verify
+
+```bash
+docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml ps
+docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml logs -f proxy
+```
+
+Then verify:
+
+- `https://www.makeitart.io`
+- `https://www.makeitart.io/api/health`
+
+Notes:
+
+- First HTTPS certificate issuance can take a short time right after the first boot
+- Production no longer uses Mailpit; email verification requires a real SMTP provider
+- The production stack does not expose PostgreSQL or Redis publicly
 
 ## Lint and format
 
