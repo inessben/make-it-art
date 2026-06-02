@@ -68,6 +68,104 @@ npm run format
 npm run format:check
 ```
 
+## Prisma
+
+Prisma uses the schema file below as the single source of truth:
+
+- `backend/prisma/schema.prisma`
+
+The PostgreSQL database used by Prisma in local development is the Docker database defined in `infrastructure/docker-compose.yml`, exposed on `localhost:5432`.
+
+### Local Prisma setup
+
+1. Start Docker services:
+
+```bash
+docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d
+```
+
+2. In the same terminal where you run Prisma commands, set `DATABASE_URL` to the local Docker Postgres instance:
+
+PowerShell:
+
+```powershell
+$env:DATABASE_URL="postgresql://mia:mia_dev_password@localhost:5432/makeitart"
+```
+
+Bash:
+
+```bash
+export DATABASE_URL="postgresql://mia:mia_dev_password@localhost:5432/makeitart"
+```
+
+3. Verify the connection string if needed:
+
+PowerShell:
+
+```powershell
+echo $env:DATABASE_URL
+```
+
+Bash:
+
+```bash
+echo $DATABASE_URL
+```
+
+Expected value:
+
+```text
+postgresql://mia:mia_dev_password@localhost:5432/makeitart
+```
+
+### Common Prisma commands
+
+Read the existing database schema into Prisma:
+
+```bash
+npx prisma db pull --schema backend/prisma/schema.prisma
+```
+
+Generate the Prisma client:
+
+```bash
+npx prisma generate --schema backend/prisma/schema.prisma
+```
+
+Create and apply a local migration:
+
+```bash
+npx prisma migrate dev --schema backend/prisma/schema.prisma
+```
+
+Apply existing migrations:
+
+```bash
+npx prisma migrate deploy --schema backend/prisma/schema.prisma
+```
+
+### Team conventions
+
+- Use only `backend/prisma/schema.prisma`
+- Do not recreate `prisma/schema.prisma`
+- Use the local Docker Postgres database for Prisma commands
+- If tables were created manually in pgAdmin, use `db pull`
+- If the Prisma schema becomes the source of truth, use `migrate dev`
+
+### pgAdmin connection
+
+Use these values in pgAdmin:
+
+- Host: `localhost`
+- Port: `5432`
+- Database: `makeitart`
+- Username: `mia`
+- Password: `mia_dev_password`
+
+### Troubleshooting Prisma connection
+
+If Prisma tries to connect to `localhost:51214` or uses a `prisma+postgres://` URL, the wrong `DATABASE_URL` is being used. Redefine `DATABASE_URL` in the current terminal before running Prisma commands.
+
 ## Automation
 
 Quality is automated at 3 levels:
