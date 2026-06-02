@@ -79,6 +79,9 @@ services:
       timeout: 5s
       retries: 20
       start_period: 45s
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     networks:
       - app_net
 
@@ -112,12 +115,19 @@ services:
       timeout: 5s
       retries: 30
       start_period: 60s
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     networks:
       - app_net
 
   proxy:
     image: caddy:2-alpine
     restart: unless-stopped
+    env_file:
+      - ./.env.production
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:-contact@makeitart.io}
     depends_on:
       backend:
         condition: service_healthy
@@ -130,6 +140,9 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     networks:
       - app_net
 

@@ -1,3 +1,7 @@
+{
+  email {$ACME_EMAIL}
+}
+
 makeitart.io {
   redir https://www.makeitart.io{uri} permanent
 }
