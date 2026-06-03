@@ -10,10 +10,15 @@
             Manage your account preferences
           </h1>
           <p class="mt-4 max-w-2xl text-[#A0ADB4] leading-7">
-            Mettez à jour vos informations, changez votre mot de passe et gérez la sécurité de votre
-            compte.
+            Update your information, change your password, and manage your account security.
           </p>
         </div>
+        <NuxtLink
+          to="/profile"
+          class="inline-flex items-center justify-center rounded-2xl border border-[#4A6CF7] bg-transparent px-6 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:border-[#6d8bff] hover:text-[#ffffff]"
+        >
+          Back to profile
+        </NuxtLink>
       </div>
 
       <div class="mt-6 flex flex-col gap-3">
@@ -40,7 +45,7 @@
             <div>
               <h2 class="text-lg font-semibold text-[#E6EDF7]">Profile Information</h2>
               <p class="mt-2 text-sm text-[#A0ADB4]">
-                Mettez à jour vos informations personnelles.
+                Update your personal information.
               </p>
             </div>
             <button
@@ -102,7 +107,7 @@
             <div>
               <h2 class="text-lg font-semibold text-[#E6EDF7]">Change Password</h2>
               <p class="mt-2 text-sm text-[#A0ADB4]">
-                Modifiez votre mot de passe pour renforcer la sécurité.
+                Change your password to improve security.
               </p>
             </div>
             <button
@@ -146,7 +151,7 @@
             <div>
               <h2 class="text-lg font-semibold text-[#E6EDF7]">Danger Zone</h2>
               <p class="mt-2 max-w-2xl text-sm text-[#A0ADB4] leading-7">
-                Une fois votre compte supprimé, il n’y a pas de retour en arrière. Soyez certain.
+                Once your account is deleted, there is no turning back. Be sure.
               </p>
             </div>
             <button
@@ -208,9 +213,9 @@ async function saveProfile() {
     });
 
     auth.user = response.user;
-    successMessage.value = "Profil mis à jour avec succès.";
+    successMessage.value = "Profile updated successfully.";
   } catch (error) {
-    errorMessage.value = error?.data?.message || "Impossible de mettre à jour le profil.";
+    errorMessage.value = error?.data?.message || "Unable to update profile.";
   }
 }
 
@@ -219,22 +224,22 @@ async function updatePassword() {
   errorMessage.value = "";
 
   if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
-    errorMessage.value = "Veuillez renseigner tous les champs du mot de passe.";
+    errorMessage.value = "Please fill in all password fields.";
     return;
   }
 
   if (newPassword.value.length < 8) {
-    errorMessage.value = "Le nouveau mot de passe doit contenir au moins 8 caractères.";
+    errorMessage.value = "The new password must be at least 8 characters.";
     return;
   }
 
   if (newPassword.value === currentPassword.value) {
-    errorMessage.value = "Le nouveau mot de passe doit être différent de l’actuel.";
+    errorMessage.value = "The new password must be different from the current one.";
     return;
   }
 
   if (newPassword.value !== confirmPassword.value) {
-    errorMessage.value = "La confirmation du mot de passe doit correspondre.";
+    errorMessage.value = "Password confirmation must match.";
     return;
   }
 
@@ -249,12 +254,12 @@ async function updatePassword() {
       }
     });
 
-    successMessage.value = "Mot de passe mis à jour avec succès.";
+    successMessage.value = "Password updated successfully.";
     currentPassword.value = "";
     newPassword.value = "";
     confirmPassword.value = "";
   } catch (error) {
-    errorMessage.value = error?.data?.message || "Impossible de mettre à jour le mot de passe.";
+    errorMessage.value = error?.data?.message || "Unable to update password.";
   }
 }
 
