@@ -252,6 +252,12 @@ router.patch("/auth/password", authRequired, async (req, res) => {
       });
     }
 
+    if (newPassword === currentPassword) {
+      return res.status(400).json({
+        message: "New password must be different from current password"
+      });
+    }
+
     const isValid = await argon2.verify(req.user.passwordHash, currentPassword);
 
     if (!isValid) {

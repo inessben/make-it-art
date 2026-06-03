@@ -218,6 +218,21 @@ async function updatePassword() {
   successMessage.value = "";
   errorMessage.value = "";
 
+  if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
+    errorMessage.value = "Veuillez renseigner tous les champs du mot de passe.";
+    return;
+  }
+
+  if (newPassword.value.length < 8) {
+    errorMessage.value = "Le nouveau mot de passe doit contenir au moins 8 caractères.";
+    return;
+  }
+
+  if (newPassword.value === currentPassword.value) {
+    errorMessage.value = "Le nouveau mot de passe doit être différent de l’actuel.";
+    return;
+  }
+
   if (newPassword.value !== confirmPassword.value) {
     errorMessage.value = "La confirmation du mot de passe doit correspondre.";
     return;
