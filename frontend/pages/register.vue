@@ -20,6 +20,12 @@
 </template>
 
 <script setup>
+import { reactive, ref } from "vue";
+
+definePageMeta({
+  middleware: "guest"
+});
+
 const form = reactive({
   username: "",
   email: "",
