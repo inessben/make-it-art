@@ -34,10 +34,18 @@ async function updatePassword(userId, passwordHash) {
   });
 }
 
+async function updateUser(userId, data) {
+  return prisma.user.update({
+    where: { id: userId },
+    data
+  });
+}
+
 module.exports = {
   findByEmail,
   createUser,
   verifyEmail,
   findById,
-  updatePassword
+  updatePassword,
+  updateUser
 };

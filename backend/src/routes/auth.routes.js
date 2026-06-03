@@ -1,4 +1,5 @@
 const express = require("express");
+const argon2 = require("argon2");
 const {
   registerUser,
   resendVerificationEmail,
@@ -16,6 +17,7 @@ const {
 } = require("../services/session.service");
 const { authRateLimit, strictAuthRateLimit } = require("../middlewares/rate-limit.middleware");
 const { authRequired } = require("../middlewares/auth-required.middleware");
+const userRepository = require("../repositories/user.repository");
 
 const env = require("../config/env");
 
@@ -176,9 +178,100 @@ router.get("/auth/me", authRequired, async (req, res) => {
       id: req.user.id,
       email: req.user.email,
       username: req.user.username,
+      bio: req.user.bio,
       phone: req.user.phone
     }
   });
+});
+
+router.patch("/auth/me", authRequired, async (req, res) => {
+  try {
+    const { username, email, bio } = req.body;
+    const updates = {};
+
+    if (username !== undefined) {
+      updates.username = username;
+    }
+    if (email !== undefined) {
+      updates.email = email.trim().toLowerCase();
+    }
+    if (bio !== undefined) {
+      updates.bio = bio;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        message: "No profile fields provided to update"
+      });
+    }
+
+    const updatedUser = await userRepository.updateUser(req.user.id, updates);
+
+    return res.status(200).json({
+      user: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        username: updatedUser.username,
+        bio: updatedUser.bio,
+        phone: updatedUser.phone
+      }
+    });
+  } catch (error) {
+    if (error.code === "P2002") {
+      return res.status(409).json({
+        message: "Email is already in use"
+      });
+    }
+
+    console.error("Profile update error:", error);
+    return res.status(500).json({
+      message: "Unable to update profile"
+    });
+  }
+});
+
+router.patch("/auth/password", authRequired, async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({
+        message: "Current password, new password and confirmation are required"
+      });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        message: "Password confirmation does not match"
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        message: "New password must be at least 8 characters"
+      });
+    }
+
+    const isValid = await argon2.verify(req.user.passwordHash, currentPassword);
+
+    if (!isValid) {
+      return res.status(401).json({
+        message: "Current password is incorrect"
+      });
+    }
+
+    const newPasswordHash = await argon2.hash(newPassword);
+    await userRepository.updatePassword(req.user.id, newPasswordHash);
+
+    return res.status(200).json({
+      message: "Password updated successfully"
+    });
+  } catch (error) {
+    console.error("Password update error:", error);
+    return res.status(500).json({
+      message: "Unable to update password"
+    });
+  }
 });
 
 router.post("/auth/logout", async (req, res) => {
