@@ -1,19 +1,77 @@
 <template>
-  <main class="profile-page">
-    <section class="profile-panel">
-      <h1>Profile</h1>
+  <!-- Pas fan du main si qlq peut le modif svp  -->
+  <main class="min-h-screen grid place-items-center px-6 py-10 bg-[#000000] text-[#E6EDF7]">
+    <div
+      class="w-full max-w-[1120px] grid gap-7 rounded-[32px] border border-[#1A1F2A] bg-[#01050E] p-7 shadow-[0_32px_90px_rgba(0,0,0,0.22)]"
+    >
+      <header class="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+        <div class="max-w-3xl">
+          <p class="mb-3 text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Mon compte</p>
+          <h1 class="text-[clamp(2rem,2.5vw,2.8rem)] leading-[1.05] font-semibold">
+            Gérez votre compte et vos préférences
+          </h1>
+          <p class="mt-4 max-w-2xl text-[#A0ADB4]">
+            Accédez à vos informations de compte, vos préférences et vos services.
+          </p>
+        </div>
 
-      <p v-if="loading">Loading...</p>
+        <button
+          type="button"
+          class="inline-flex items-center justify-center min-w-[140px] rounded-2xl border border-[#1A1F2A] bg-[#10150E]/90 px-6 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1A1F2E]"
+          @click="handleLogout"
+        >
+          Se déconnecter
+        </button>
+      </header>
 
-      <template v-else-if="user">
-        <p>{{ user.username }}</p>
-        <p>{{ user.email }}</p>
+      <section
+        v-if="loading"
+        class="rounded-[24px] border border-[#1A1F2A] bg-[#01050E] p-6 text-[#A0ADB4]"
+      >
+        <p>Chargement du profil...</p>
+      </section>
 
-        <button type="button" @click="handleLogout">Logout</button>
-      </template>
+      <section
+        v-else-if="user"
+        class="flex flex-col gap-6 rounded-[24px] border border-[#1A1F2A] bg-[#01050E] p-6 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div class="grid gap-3">
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Bienvenue</p>
+          <h2 class="text-3xl font-semibold">{{ user.username || "Utilisateur" }}</h2>
+          <p class="text-[#A0ADB4]">{{ user.email }}</p>
+        </div>
+        <span
+          class="inline-flex items-center rounded-full bg-[#4A6CF7]/10 px-4 py-2 text-sm font-semibold text-[#4A6CF7]"
+          >Membre</span
+        >
+      </section>
 
-      <p v-else>{{ message }}</p>
-    </section>
+      <section
+        v-else
+        class="rounded-[24px] border border-[#1A1F2A] bg-[#01050E] p-6 text-[#A0ADB4]"
+      >
+        <p>{{ message }}</p>
+      </section>
+
+      <section v-if="user" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <article
+          v-for="card in cards"
+          :key="card.title"
+          class="group cursor-pointer grid gap-4 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-5 transition duration-200 hover:-translate-y-1 hover:border-[#262D30]"
+          @click="goTo(card.route)"
+        >
+          <div
+            class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#4A6CF7]/10 text-2xl text-[#4A6CF7]"
+          >
+            {{ card.icon }}
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-[#E6EDF7]">{{ card.title }}</h3>
+            <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">{{ card.description }}</p>
+          </div>
+        </article>
+      </section>
+    </div>
   </main>
 </template>
 
@@ -31,49 +89,72 @@ const auth = useAuthStore();
 const { user, loading } = storeToRefs(auth);
 const message = ref("");
 
+// !!!!!! A FAIRE !!!!
+// Recup icones du figma pour ajouter aux cards IMPORTANT !!!!!!
+
+const cards = [
+  {
+    icon: "",
+    title: "Paramètres du profil",
+    route: "/account-settings",
+    description: "Mettez à jour vos informations personnelles"
+  },
+  {
+    icon: "",
+    title: "Profil artiste",
+    route: "/artist-profile",
+    description: "Gérez votre portfolio artistique"
+  },
+  {
+    icon: "",
+    title: "Liste de souhaits",
+    route: "/wishlist",
+    description: "Œuvres sauvegardées et favoris"
+  },
+  {
+    icon: "",
+    title: "Historique des commandes",
+    route: "/orders",
+    description: "Consultez vos commandes passées"
+  },
+  {
+    icon: "",
+    title: "Moyens de paiement",
+    route: "/payment-methods",
+    description: "Gérez vos options de paiement"
+  },
+  {
+    icon: "",
+    title: "Portefeuille",
+    route: "/wallet",
+    description: "Consultez votre solde et vos transactions"
+  },
+  {
+    icon: "",
+    title: "Adresses",
+    route: "/addresses",
+    description: "Gérez vos adresses de livraison"
+  },
+  {
+    icon: "",
+    title: "Notifications",
+    route: "/notifications",
+    description: "Gérez vos préférences de notification"
+  },
+  {
+    icon: "",
+    title: "Paramètres",
+    route: "/settings",
+    description: "Préférences du compte"
+  }
+];
+
 async function handleLogout() {
   await auth.logout();
   await navigateTo("/login");
 }
+
+function goTo(route) {
+  return navigateTo(route);
+}
 </script>
-
-<style scoped>
-.profile-page {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background:
-    radial-gradient(circle at top left, rgba(50, 115, 220, 0.12), transparent 34%),
-    linear-gradient(135deg, #f7f8fb 0%, #eef2f7 100%);
-  color: #172033;
-}
-
-.profile-panel {
-  width: 100%;
-  max-width: 420px;
-  display: grid;
-  gap: 12px;
-  padding: 28px;
-  border: 1px solid #dfe5ef;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 18px 45px rgba(23, 32, 51, 0.12);
-}
-
-h1,
-p {
-  margin: 0;
-}
-
-button {
-  min-height: 44px;
-  border: 0;
-  border-radius: 6px;
-  background: #172033;
-  color: #ffffff;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-</style>
