@@ -44,9 +44,7 @@
           <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 class="text-lg font-semibold text-[#E6EDF7]">Profile Information</h2>
-              <p class="mt-2 text-sm text-[#A0ADB4]">
-                Update your personal information.
-              </p>
+              <p class="mt-2 text-sm text-[#A0ADB4]">Update your personal information.</p>
             </div>
             <button
               type="submit"
@@ -106,9 +104,7 @@
           <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 class="text-lg font-semibold text-[#E6EDF7]">Change Password</h2>
-              <p class="mt-2 text-sm text-[#A0ADB4]">
-                Change your password to improve security.
-              </p>
+              <p class="mt-2 text-sm text-[#A0ADB4]">Change your password to improve security.</p>
             </div>
             <button
               type="submit"
