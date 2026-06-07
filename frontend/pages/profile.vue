@@ -58,7 +58,7 @@
           v-for="card in cards"
           :key="card.title"
           class="group cursor-pointer grid gap-4 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-5 transition duration-200 hover:-translate-y-1 hover:border-[#262D30]"
-          @click="card.title === 'Paramètres du profil' && handleSettings()"
+          @click="goTo(card.route)"
         >
           <div
             class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#4A6CF7]/10 text-2xl text-[#4A6CF7]"
@@ -96,16 +96,57 @@ const cards = [
   {
     icon: "",
     title: "Paramètres du profil",
+    route: "/account-settings",
     description: "Mettez à jour vos informations personnelles"
   },
-  { icon: "", title: "Profil artiste", description: "Gérez votre portfolio artistique" },
-  { icon: "", title: "Liste de souhaits", description: "Œuvres sauvegardées et favoris" },
-  { icon: "", title: "Historique des commandes", description: "Consultez vos commandes passées" },
-  { icon: "", title: "Moyens de paiement", description: "Gérez vos options de paiement" },
-  { icon: "", title: "Portefeuille", description: "Consultez votre solde et vos transactions" },
-  { icon: "", title: "Adresses", description: "Gérez vos adresses de livraison" },
-  { icon: "", title: "Notifications", description: "Gérez vos préférences de notification" },
-  { icon: "", title: "Paramètres", description: "Préférences du compte" }
+  {
+    icon: "",
+    title: "Profil artiste",
+    route: "/artist-profile",
+    description: "Gérez votre portfolio artistique"
+  },
+  {
+    icon: "",
+    title: "Liste de souhaits",
+    route: "/wishlist",
+    description: "Œuvres sauvegardées et favoris"
+  },
+  {
+    icon: "",
+    title: "Historique des commandes",
+    route: "/orders",
+    description: "Consultez vos commandes passées"
+  },
+  {
+    icon: "",
+    title: "Moyens de paiement",
+    route: "/payment-methods",
+    description: "Gérez vos options de paiement"
+  },
+  {
+    icon: "",
+    title: "Portefeuille",
+    route: "/wallet",
+    description: "Consultez votre solde et vos transactions"
+  },
+  {
+    icon: "",
+    title: "Adresses",
+    route: "/addresses",
+    description: "Gérez vos adresses de livraison"
+  },
+  {
+    icon: "",
+    title: "Notifications",
+    route: "/notifications",
+    description: "Gérez vos préférences de notification"
+  },
+  {
+    icon: "",
+    title: "Paramètres",
+    route: "/settings",
+    description: "Préférences du compte"
+  }
 ];
 
 async function handleLogout() {
@@ -113,7 +154,7 @@ async function handleLogout() {
   await navigateTo("/login");
 }
 
-function handleSettings() {
-  return navigateTo("/account-settings");
+function goTo(route) {
+  return navigateTo(route);
 }
 </script>
