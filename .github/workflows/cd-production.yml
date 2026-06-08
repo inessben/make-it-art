@@ -54,8 +54,9 @@ jobs:
           : "${SSH_PORT:=22}"
           : "${APP_DIR:=/root/make-it-art}"
           mkdir -p ~/.ssh
-          printf "%s" "$SSH_KEY" > ~/.ssh/id_ed25519
+          printf "%s\n" "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
+          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
           ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
           ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" <<EOF
           set -eu
@@ -66,4 +67,3 @@ jobs:
           docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml up -d
           docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml ps
           EOF
-
