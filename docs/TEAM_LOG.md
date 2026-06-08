@@ -4,7 +4,50 @@ Chaque membre ajoute une entree apres son travail.
 
 ## Entrees
 
-### 2026-03-15 - Mimi
+### 2026-06-08 - Mariam
+
+- Branche: `feature/env-prod`
+- Tache: Preparation de la mise en production sur VPS Hostinger avec domaine `makeitart.io`
+- Fichiers modifies:
+  - `backend/Dockerfile.prod`
+  - `frontend/Dockerfile.prod`
+  - `infrastructure/docker-compose.prod.yml`
+  - `infrastructure/Caddyfile`
+  - `infrastructure/.env.production.example`
+  - `package.json`
+  - `README.md`
+- Impact:
+  - Ajout d'une stack Docker de production separee de l'environnement local
+  - Configuration du reverse proxy HTTPS avec Caddy pour `makeitart.io` et `www.makeitart.io`
+  - Prise en charge d'un vrai SMTP Hostinger pour les emails de verification
+  - Ajout de scripts `prod:*` pour build, lancement, logs et arret
+- Verification:
+  - Deploiement manuel sur le VPS Debian avec `docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml up -d`
+  - Caddy a obtenu les certificats Let's Encrypt pour `makeitart.io` et `www.makeitart.io`
+  - Backend `healthy` et endpoint `https://www.makeitart.io/api/health` accessible
+- Prochaine etape: stabiliser le flux de redeploiement automatique depuis GitHub Actions
+- Blocages: conflit initial avec Nginx sur le port 80 et configuration DNS Docker a corriger pour l'emission des certificats
+
+### 2026-06-08 - Mariam
+
+- Branche: `feature/env-prod`
+- Tache: Mise en place du deploiement automatique GitHub Actions vers le VPS de production
+- Fichiers modifies:
+  - `.github/workflows/ci.yml`
+  - `.github/workflows/cd-production.yml`
+  - `README.md`
+- Impact:
+  - La CI tourne sur `develop` et `main`
+  - Ajout d'un workflow `CD Production` pour deployer la branche `main` sur le VPS via SSH
+  - Le workflow cible `/root/make-it-art` et relance la stack prod avec `infrastructure/.env.production`
+- Verification:
+  - Generation d'une cle SSH dediee `github-actions-deploy`
+  - Cle publique ajoutee sur le VPS et test de connexion SSH reussi avec `root@187.77.169.141`
+  - Secrets GitHub `PRODUCTION_SSH_HOST`, `PRODUCTION_SSH_USER`, `PRODUCTION_SSH_KEY`, `PRODUCTION_SSH_PORT` et variable `PRODUCTION_APP_DIR` configures sur le bon repo
+- Prochaine etape: merger la version corrigee du workflow sur `main` puis valider un premier deploiement automatique complet
+- Blocages: ancien workflow encore present sur GitHub, conflit de merge dans `cd-production.yml` et format de cle SSH a fiabiliser dans le runner GitHub
+
+### 2026-03-15 - Mariam
 
 - Branche: `develop`
 - Tache: Correction des hooks Husky pour Git Bash + nvm4w (fallback `npm.cmd`)
@@ -18,7 +61,7 @@ Chaque membre ajoute une entree apres son travail.
 - Prochaine etape: commit de la base projet
 - Blocages: Aucun
 
-### 2026-03-15 - Mimi
+### 2026-03-15 - Mariam
 
 - Branche: `develop`
 - Tache: Automatisation du quality gate avant demarrage + correction cross-platform Prettier
@@ -34,7 +77,7 @@ Chaque membre ajoute une entree apres son travail.
 - Prochaine etape: relancer `npm run dev:build` puis verifier endpoints
 - Blocages: Aucun
 
-### 2026-03-15 - Mimi
+### 2026-03-15 - Mariam
 
 - Branche: `develop`
 - Tache: Correction ESLint Nuxt pour permettre `npm run dev:build` sans faux positifs
@@ -48,7 +91,7 @@ Chaque membre ajoute une entree apres son travail.
 - Prochaine etape: Relancer `npm run dev:build` puis tests HTTP
 - Blocages: Aucun
 
-### 2026-03-15 - Mimi
+### 2026-03-15 - Mariam
 
 - Branche: `develop`
 - Tache: Ajout de l'automatisation qualite et documentation complete
@@ -73,7 +116,7 @@ Chaque membre ajoute une entree apres son travail.
 - Prochaine etape: Installer dependances root (`npm install`) pour activer Husky sur chaque poste
 - Blocages: warnings npm `deprecated` non bloquants
 
-### 2026-03-15 - Mimi
+### 2026-03-15 - Mariam
 
 - Branche: `develop`
 - Tache: Stabilisation complete du lancement local Docker/Nginx
@@ -97,7 +140,7 @@ Chaque membre ajoute une entree apres son travail.
 - Prochaine etape: Protection des branches GitHub (`main`, `develop`) + premiers PR features
 - Blocages: ETIMEDOUT npm resolu avec retries + NPM_REGISTRY configurable
 
-### 2026-03-15 - Mimi
+### 2026-03-15 - Mariam
 
 - Branche: `develop`
 - Tache: Bootstrap monorepo et infra locale
