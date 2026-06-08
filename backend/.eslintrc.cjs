@@ -9,6 +9,15 @@ module.exports = {
     ecmaVersion: "latest"
   },
   rules: {
-    "no-console": "off"
+    "no-console": "off",
+    "no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^_",
+          "caughtErrorsIgnorePattern": "^_"
+        }
+      ]
   }
+
 };
