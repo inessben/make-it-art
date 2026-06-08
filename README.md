@@ -157,6 +157,51 @@ Notes:
 - Production no longer uses Mailpit; email verification requires a real SMTP provider
 - The production stack does not expose PostgreSQL or Redis publicly
 
+### Automatic deploy from `main`
+
+The repository includes a production deployment workflow in `.github/workflows/cd-production.yml`.
+
+Behavior:
+
+- `CI` now runs on pushes to `develop` and `main`
+- production deploy starts automatically only after `CI` succeeds on `main`
+- production deploy can also be triggered manually from GitHub Actions with `workflow_dispatch`
+
+Required GitHub environment secrets for the `production` environment:
+
+- `PRODUCTION_SSH_HOST`
+- `PRODUCTION_SSH_USER`
+- `PRODUCTION_SSH_KEY`
+
+Optional production secret:
+
+- `PRODUCTION_SSH_PORT`
+
+Optional GitHub environment variable:
+
+- `PRODUCTION_APP_DIR`
+  Default used by the workflow: `/root/make-it-art`
+
+VPS prerequisites for automatic deploy:
+
+1. The repository is already cloned on the VPS at `/root/make-it-art` or at the path configured in `PRODUCTION_APP_DIR`
+2. The VPS user from `PRODUCTION_SSH_USER` can run `docker compose`
+3. `infrastructure/.env.production` already exists on the server
+4. `git pull` works on the server for the deployment branch
+
+If the repository is private, the server itself must also have access to pull from GitHub. Common options:
+
+- add a deploy key on the VPS SSH account used for GitHub
+- or configure Git on the VPS with a PAT over HTTPS
+
+First-time production deploy over GitHub Actions:
+
+1. Add the production secrets in `Settings > Environments > production`
+2. Ensure the VPS repo is on the `main` branch
+3. Push to `main`
+4. Check the `CI` workflow
+5. Check the `CD Production` workflow after `CI` succeeds
+
 ## Lint and format
 
 From repo root:
