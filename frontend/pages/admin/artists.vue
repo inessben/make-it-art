@@ -65,6 +65,12 @@
         >
           {{ errorMessage }}
         </div>
+        <div
+          v-if="successMessage"
+          class="mt-6 rounded-2xl border border-[#1A1F2A] bg-[#11243a] px-5 py-4 text-sm text-[#B9E3FF]"
+        >
+          {{ successMessage }}
+        </div>
 
         <div
           v-else-if="loading"
@@ -94,7 +100,9 @@
               </div>
               <span
                 class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
-                :class="artist.verified ? 'bg-[#4A6CF7]/10 text-[#4A6CF7]' : 'bg-[#3F2A11] text-[#F2C97D]'"
+                :class="
+                  artist.verified ? 'bg-[#4A6CF7]/10 text-[#4A6CF7]' : 'bg-[#3F2A11] text-[#F2C97D]'
+                "
               >
                 {{ artist.verified ? "Verified" : "Pending" }}
               </span>
@@ -106,13 +114,34 @@
               <span>{{ artist.collectionsCount }} collections</span>
               <span>{{ formatDate(artist.createdAt) }}</span>
             </div>
+
+            <div class="mt-5 flex flex-wrap gap-3">
+              <button
+                v-if="!artist.verified"
+                type="button"
+                class="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#4A6CF7] px-5 text-sm font-semibold text-black transition hover:bg-[#6d8bff] disabled:cursor-not-allowed disabled:opacity-50"
+                :disabled="verificationLoadingId === artist.id"
+                @click="updateArtistVerification(artist, true)"
+              >
+                {{ verificationLoadingId === artist.id ? "Validation..." : "Valider le profil" }}
+              </button>
+              <button
+                v-else
+                type="button"
+                class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-5 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A] disabled:cursor-not-allowed disabled:opacity-50"
+                :disabled="verificationLoadingId === artist.id"
+                @click="updateArtistVerification(artist, false)"
+              >
+                {{ verificationLoadingId === artist.id ? "Mise a jour..." : "Remettre en attente" }}
+              </button>
+            </div>
           </div>
         </div>
       </article>
 
       <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-        <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Future actions</p>
-        <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Ce qu'on branchera apres</h2>
+        <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Verification</p>
+        <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Gestion des profils</h2>
 
         <div class="mt-6 grid gap-4">
           <div
@@ -139,9 +168,11 @@ definePageMeta({
 
 const loading = ref(true);
 const errorMessage = ref("");
+const successMessage = ref("");
 const searchTerm = ref("");
 const verificationFilter = ref("all");
 const artists = ref([]);
+const verificationLoadingId = ref(null);
 const summary = ref({
   totalArtists: 0,
   verifiedArtists: 0,
@@ -197,6 +228,7 @@ onMounted(async () => {
 async function loadArtists() {
   loading.value = true;
   errorMessage.value = "";
+  successMessage.value = "";
 
   try {
     const response = await $fetch("/api/admin/artists", {
@@ -225,17 +257,64 @@ async function loadArtists() {
 const actions = [
   {
     title: "Verification artiste",
-    description: "Afficher les demandes en attente avec pieces et infos utiles."
+    description: "Validez un profil quand ses informations publiques sont suffisantes."
   },
   {
-    title: "Historique public",
-    description: "Suivre les oeuvres publiees, ventes et collections par artiste."
+    title: "Retour en attente",
+    description: "Repassez un profil en attente si une correction est necessaire."
   },
   {
-    title: "Actions admin",
-    description: "Verifier, suspendre ou demander une mise a jour de profil."
+    title: "Effet visible",
+    description: "Le badge du profil artiste passe de Pending a Verified."
   }
 ];
+
+function replaceArtist(updatedArtist) {
+  artists.value = artists.value.map((artist) =>
+    artist.id === updatedArtist.id ? updatedArtist : artist
+  );
+  summary.value = {
+    totalArtists: artists.value.length,
+    verifiedArtists: artists.value.filter((artist) => artist.verified).length,
+    pendingArtists: artists.value.filter((artist) => !artist.verified).length,
+    totalArtworks: artists.value.reduce((sum, artist) => sum + artist.artworksCount, 0)
+  };
+}
+
+async function updateArtistVerification(artist, verified) {
+  errorMessage.value = "";
+  successMessage.value = "";
+  verificationLoadingId.value = artist.id;
+
+  try {
+    const response = await $fetch(`/api/admin/artists/${artist.id}/verification`, {
+      method: "PATCH",
+      credentials: "include",
+      body: {
+        verified
+      }
+    });
+
+    replaceArtist(response.artist);
+    successMessage.value = verified
+      ? `${response.artist.name} est maintenant verifie.`
+      : `${response.artist.name} est repasse en attente.`;
+  } catch (error) {
+    if (error?.statusCode === 401) {
+      await navigateTo("/login");
+      return;
+    }
+
+    if (error?.statusCode === 403) {
+      await navigateTo("/forbidden");
+      return;
+    }
+
+    errorMessage.value = error?.data?.message || "Unable to update artist verification.";
+  } finally {
+    verificationLoadingId.value = null;
+  }
+}
 
 function formatDate(value) {
   if (!value) {

@@ -165,8 +165,7 @@ const filteredPayments = computed(() => {
       payment.orderReference.toLowerCase().includes(normalizedSearch) ||
       payment.customer.toLowerCase().includes(normalizedSearch);
 
-    const matchesStatus =
-      statusFilter.value === "all" || payment.status === statusFilter.value;
+    const matchesStatus = statusFilter.value === "all" || payment.status === statusFilter.value;
 
     return matchesSearch && matchesStatus;
   });

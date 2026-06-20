@@ -191,8 +191,7 @@ const filteredArtworks = computed(() => {
       artwork.title.toLowerCase().includes(normalizedSearch) ||
       artwork.artistName.toLowerCase().includes(normalizedSearch);
 
-    const matchesStatus =
-      statusFilter.value === "all" || artwork.status === statusFilter.value;
+    const matchesStatus = statusFilter.value === "all" || artwork.status === statusFilter.value;
 
     return matchesSearch && matchesStatus;
   });

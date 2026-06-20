@@ -4,7 +4,8 @@ async function findByEmail(email) {
   return prisma.user.findFirst({
     where: { email },
     include: {
-      admin: true
+      admin: true,
+      artist: true
     }
   });
 }
@@ -27,7 +28,8 @@ async function findById(id) {
   return prisma.user.findUnique({
     where: { id },
     include: {
-      admin: true
+      admin: true,
+      artist: true
     }
   });
 }
@@ -45,7 +47,8 @@ async function updateUser(userId, data) {
     where: { id: userId },
     data,
     include: {
-      admin: true
+      admin: true,
+      artist: true
     }
   });
 }

@@ -170,8 +170,7 @@ const filteredUsers = computed(() => {
       user.username.toLowerCase().includes(normalizedSearch) ||
       user.email.toLowerCase().includes(normalizedSearch);
 
-    const matchesStatus =
-      statusFilter.value === "all" || user.status === statusFilter.value;
+    const matchesStatus = statusFilter.value === "all" || user.status === statusFilter.value;
 
     return matchesSearch && matchesStatus;
   });
