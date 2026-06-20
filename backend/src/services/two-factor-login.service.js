@@ -14,6 +14,10 @@ function normalizeEmail(email) {
   return email.trim().toLowerCase();
 }
 
+function isDefaultAdminBypassUser(email) {
+  return env.defaultAdmin.bypassLoginCode && normalizeEmail(env.defaultAdmin.email) === email;
+}
+
 function hashValue(value) {
   return crypto.createHash("sha256").update(value).digest("hex");
 }
@@ -84,6 +88,14 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
 
   if (!isValidPassword) {
     throw new Error("Invalid credentials");
+  }
+
+  if (isDefaultAdminBypassUser(normalizedEmail)) {
+    return {
+      bypassCode: true,
+      user,
+      ...(await createSession(user))
+    };
   }
 
   if (rememberDeviceToken) {
