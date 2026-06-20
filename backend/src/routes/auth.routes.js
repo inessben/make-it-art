@@ -17,6 +17,7 @@ const {
 } = require("../services/session.service");
 const { authRateLimit, strictAuthRateLimit } = require("../middlewares/rate-limit.middleware");
 const { authRequired } = require("../middlewares/auth-required.middleware");
+const { isAdminUser } = require("../middlewares/admin-required.middleware");
 const userRepository = require("../repositories/user.repository");
 
 const env = require("../config/env");
@@ -30,6 +31,18 @@ const {
   getClearRememberDeviceCookieOptions
 } = require("../services/two-factor-login.service");
 const router = express.Router();
+
+function serializeAuthUser(user) {
+  return {
+    id: user.id,
+    email: user.email,
+    username: user.username,
+    bio: user.bio,
+    phone: user.phone,
+    role: user.role || null,
+    isAdmin: isAdminUser(user)
+  };
+}
 
 router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
   try {
@@ -54,11 +67,7 @@ router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
       return res.status(200).json({
         message: "Login successful",
         requiresCode: false,
-        user: {
-          id: result.user.id,
-          email: result.user.email,
-          username: result.user.username
-        }
+        user: serializeAuthUser(result.user)
       });
     }
 
@@ -174,13 +183,7 @@ router.get("/auth/verify-email", async (req, res) => {
 
 router.get("/auth/me", authRequired, async (req, res) => {
   return res.status(200).json({
-    user: {
-      id: req.user.id,
-      email: req.user.email,
-      username: req.user.username,
-      bio: req.user.bio,
-      phone: req.user.phone
-    }
+    user: serializeAuthUser(req.user)
   });
 });
 
@@ -208,13 +211,7 @@ router.patch("/auth/me", authRequired, async (req, res) => {
     const updatedUser = await userRepository.updateUser(req.user.id, updates);
 
     return res.status(200).json({
-      user: {
-        id: updatedUser.id,
-        email: updatedUser.email,
-        username: updatedUser.username,
-        bio: updatedUser.bio,
-        phone: updatedUser.phone
-      }
+      user: serializeAuthUser(updatedUser)
     });
   } catch (error) {
     if (error.code === "P2002") {
@@ -379,11 +376,7 @@ router.post("/auth/verify-login-code", strictAuthRateLimit, async (req, res) => 
 
     return res.status(200).json({
       message: "Login successful",
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        username: result.user.username
-      }
+      user: serializeAuthUser(result.user)
     });
   } catch (error) {
     if (env.nodeEnv !== "production") {

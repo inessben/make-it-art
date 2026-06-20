@@ -1,5 +1,15 @@
+const nodeEnv = process.env.NODE_ENV || "development";
+
+const defaultAdminEnabled = process.env.SEED_DEFAULT_ADMIN
+  ? process.env.SEED_DEFAULT_ADMIN === "true"
+  : nodeEnv !== "production";
+
+const defaultAdminBypassLoginCode = process.env.DEFAULT_ADMIN_BYPASS_LOGIN_CODE
+  ? process.env.DEFAULT_ADMIN_BYPASS_LOGIN_CODE === "true"
+  : nodeEnv !== "production";
+
 module.exports = {
-  nodeEnv: process.env.NODE_ENV || "development",
+  nodeEnv,
   port: Number(process.env.PORT || 4000),
   corsOrigin: process.env.CORS_ORIGIN || "*",
   databaseUrl: process.env.DATABASE_URL || "",
@@ -10,6 +20,12 @@ module.exports = {
   refreshCookieName: process.env.REFRESH_COOKIE_NAME || "mia_refresh",
   loginCodeCookieName: process.env.LOGIN_CODE_COOKIE_NAME || "mia_login_challenge",
   rememberDeviceCookieName: process.env.REMEMBER_DEVICE_COOKIE_NAME || "mia_remember_device",
+  defaultAdmin: {
+    enabled: defaultAdminEnabled,
+    email: process.env.DEFAULT_ADMIN_EMAIL || "admin@art.com",
+    password: process.env.DEFAULT_ADMIN_PASSWORD || "admin123",
+    bypassLoginCode: defaultAdminBypassLoginCode && nodeEnv !== "production"
+  },
   smtp: {
     host: process.env.SMTP_HOST || "",
     port: Number(process.env.SMTP_PORT || 587),

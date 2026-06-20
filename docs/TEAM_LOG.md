@@ -4,6 +4,60 @@ Chaque membre ajoute une entree apres son travail.
 
 ## Entrees
 
+### 2026-06-20 - Mariam
+
+- Branche: `feature/admin`
+- Tache: Mise en place du backoffice admin complet (UI + protection d'acces + pages branchees sur vraies donnees + compte admin de test)
+- Fichiers modifies:
+  - `frontend/data/admin-navigation.js`
+  - `frontend/components/admin/AdminSidebar.vue`
+  - `frontend/components/admin/AdminHeader.vue`
+  - `frontend/components/admin/AdminShell.vue`
+  - `frontend/pages/admin/index.vue`
+  - `frontend/pages/admin/users.vue`
+  - `frontend/pages/admin/artists.vue`
+  - `frontend/pages/admin/artworks.vue`
+  - `frontend/pages/admin/orders.vue`
+  - `frontend/pages/admin/payments.vue`
+  - `frontend/pages/forbidden.vue`
+  - `frontend/middleware/admin.js`
+  - `frontend/stores/auth.js`
+  - `frontend/pages/[section].vue`
+  - `backend/src/middlewares/admin-required.middleware.js`
+  - `backend/src/routes/admin.routes.js`
+  - `backend/src/routes/index.js`
+  - `backend/src/routes/auth.routes.js`
+  - `backend/src/repositories/user.repository.js`
+  - `backend/src/repositories/artist.repository.js`
+  - `backend/src/repositories/artwork.repository.js`
+  - `backend/src/repositories/order.repository.js`
+  - `backend/src/repositories/payment.repository.js`
+  - `backend/src/services/default-admin.service.js`
+  - `backend/src/services/two-factor-login.service.js`
+  - `backend/src/server.js`
+  - `backend/src/config/env.js`
+  - `infrastructure/.env.example`
+  - `infrastructure/.env.production.example`
+- Impact:
+  - Creation d'une vraie structure backoffice reutilisable a `/admin` avec sidebar, header et pages dediees
+  - Protection d'acces admin cote frontend et backend avec redirection vers `/forbidden` pour les utilisateurs non admin
+  - Correction de la route dynamique `[section].vue` qui capturait a tort `/admin`
+  - Ajout des endpoints admin backend pour `dashboard`, `users`, `artists`, `artworks`, `orders` et `payments`
+  - Branchement de toutes les pages admin sur les vraies donnees Prisma avec etats `loading`, `error`, `empty`, recherche simple et filtres de statut
+  - Ajout d'un compte admin de test cree automatiquement en dev/test: `admin@art.com` / `admin123`
+  - Activation d'un bypass du code email uniquement pour ce compte admin de test en environnement non production
+  - Desactivation explicite du seed admin par defaut et du bypass login code dans l'exemple de config production
+- Verification:
+  - Test utilisateur normal: acces refuse a `/admin`
+  - Test utilisateur admin: acces autorise a `/admin`
+  - Verification des routes admin frontend: `/admin`, `/admin/users`, `/admin/artists`, `/admin/artworks`, `/admin/orders`, `/admin/payments`
+  - Verification backend par `node --check` sur les nouveaux fichiers backend
+  - Verification frontend par `eslint` sur les pages admin branchees
+  - Verification Docker apres restart/rebuild: les pages admin sont bien chargees dans le conteneur frontend
+  - Verification des logs backend: `[bootstrap] default admin ready: admin@art.com`
+- Prochaine etape: ajouter les vraies actions admin (verification artiste, suspension user, moderation artwork, traitement remboursements/paiements) et affiner les permissions
+- Blocages: le schema actuel ne porte pas encore de vrais statuts de moderation ni d'actions admin metier, donc certaines actions restent pour l'instant en lecture seule
+
 ### 2026-06-08 - Mariam
 
 - Branche: `feature/env-prod`
