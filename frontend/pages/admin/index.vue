@@ -33,9 +33,7 @@
             <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Activite recente</p>
             <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Derniers signaux utiles</h2>
           </div>
-          <span
-            class="rounded-full bg-[#4A6CF7]/10 px-4 py-2 text-sm font-semibold text-[#4A6CF7]"
-          >
+          <span class="rounded-full bg-[#4A6CF7]/10 px-4 py-2 text-sm font-semibold text-[#4A6CF7]">
             Live data
           </span>
         </div>

@@ -17,8 +17,8 @@ const {
 } = require("../services/session.service");
 const { authRateLimit, strictAuthRateLimit } = require("../middlewares/rate-limit.middleware");
 const { authRequired } = require("../middlewares/auth-required.middleware");
-const { isAdminUser } = require("../middlewares/admin-required.middleware");
 const userRepository = require("../repositories/user.repository");
+const { serializeAuthUser } = require("../utils/serialize-auth-user");
 
 const env = require("../config/env");
 
@@ -31,18 +31,6 @@ const {
   getClearRememberDeviceCookieOptions
 } = require("../services/two-factor-login.service");
 const router = express.Router();
-
-function serializeAuthUser(user) {
-  return {
-    id: user.id,
-    email: user.email,
-    username: user.username,
-    bio: user.bio,
-    phone: user.phone,
-    role: user.role || null,
-    isAdmin: isAdminUser(user)
-  };
-}
 
 router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
   try {

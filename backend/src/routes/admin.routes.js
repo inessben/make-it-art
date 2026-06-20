@@ -82,7 +82,9 @@ function parseAmount(value) {
     return Number.isFinite(value) ? value : 0;
   }
 
-  const normalizedValue = String(value).replace(",", ".").replace(/[^0-9.-]/g, "");
+  const normalizedValue = String(value)
+    .replace(",", ".")
+    .replace(/[^0-9.-]/g, "");
   const parsedValue = Number.parseFloat(normalizedValue);
 
   return Number.isFinite(parsedValue) ? parsedValue : 0;
@@ -90,6 +92,23 @@ function parseAmount(value) {
 
 function formatCurrencyAmount(value) {
   return `EUR ${value.toFixed(2)}`;
+}
+
+function serializeAdminArtist(artist) {
+  return {
+    id: artist.id,
+    userId: artist.userId,
+    name: artist.displayName || artist.user?.username || "Artiste sans nom",
+    email: artist.user?.email || "Email non renseigne",
+    bio: artist.user?.bio || "Aucune bio pour le moment.",
+    verified: Boolean(artist.verified),
+    isActive: Boolean(artist.user?.isActive),
+    isAdmin: isAdminUser(artist.user),
+    artworksCount: artist._count.artworks,
+    followersCount: artist._count.followers,
+    collectionsCount: artist._count.collections,
+    createdAt: artist.createdAt || artist.user?.createdAt || null
+  };
 }
 
 router.get("/admin/users", authRequired, adminRequired, async (_req, res) => {
@@ -132,20 +151,7 @@ router.get("/admin/artists", authRequired, adminRequired, async (_req, res) => {
   try {
     const artists = await artistRepository.listArtistsForAdmin();
 
-    const payload = artists.map((artist) => ({
-      id: artist.id,
-      userId: artist.userId,
-      name: artist.displayName || artist.user?.username || "Artiste sans nom",
-      email: artist.user?.email || "Email non renseigne",
-      bio: artist.user?.bio || "Aucune bio pour le moment.",
-      verified: Boolean(artist.verified),
-      isActive: Boolean(artist.user?.isActive),
-      isAdmin: isAdminUser(artist.user),
-      artworksCount: artist._count.artworks,
-      followersCount: artist._count.followers,
-      collectionsCount: artist._count.collections,
-      createdAt: artist.createdAt || artist.user?.createdAt || null
-    }));
+    const payload = artists.map(serializeAdminArtist);
 
     return res.status(200).json({
       summary: {
@@ -165,6 +171,46 @@ router.get("/admin/artists", authRequired, adminRequired, async (_req, res) => {
   }
 });
 
+router.patch("/admin/artists/:id/verification", authRequired, adminRequired, async (req, res) => {
+  try {
+    const artistId = Number(req.params.id);
+    const { verified } = req.body;
+
+    if (!Number.isInteger(artistId) || artistId < 1) {
+      return res.status(400).json({
+        message: "Invalid artist id"
+      });
+    }
+
+    if (typeof verified !== "boolean") {
+      return res.status(400).json({
+        message: "Verified must be a boolean"
+      });
+    }
+
+    const artist = await artistRepository.updateArtistVerification({
+      artistId,
+      verified
+    });
+
+    return res.status(200).json({
+      message: verified ? "Artist profile verified" : "Artist profile moved to pending",
+      artist: serializeAdminArtist(artist)
+    });
+  } catch (error) {
+    if (error.code === "P2025") {
+      return res.status(404).json({
+        message: "Artist profile not found"
+      });
+    }
+
+    console.error("Admin artist verification update error:", error);
+    return res.status(500).json({
+      message: "Unable to update artist verification"
+    });
+  }
+});
+
 router.get("/admin/artworks", authRequired, adminRequired, async (_req, res) => {
   try {
     const artworks = await artworkRepository.listArtworksForAdmin();
@@ -172,8 +218,7 @@ router.get("/admin/artworks", authRequired, adminRequired, async (_req, res) => 
     const payload = artworks.map((artwork) => ({
       id: artwork.id,
       title: artwork.title || "Untitled artwork",
-      artistName:
-        artwork.artist?.displayName || artwork.artist?.user?.username || "Unknown artist",
+      artistName: artwork.artist?.displayName || artwork.artist?.user?.username || "Unknown artist",
       category: artwork.category?.name || "No category",
       price: artwork.price || artwork.priceTokens || "Price not set",
       protection: Boolean(artwork.protection),
@@ -207,7 +252,10 @@ router.get("/admin/orders", authRequired, adminRequired, async (_req, res) => {
     const orders = await orderRepository.listOrdersForAdmin();
 
     const payload = orders.map((order) => {
-      const amountValue = order.payments.reduce((sum, payment) => sum + parseAmount(payment.price), 0);
+      const amountValue = order.payments.reduce(
+        (sum, payment) => sum + parseAmount(payment.price),
+        0
+      );
 
       return {
         id: order.id,
@@ -285,15 +333,16 @@ router.get("/admin/payments", authRequired, adminRequired, async (_req, res) => 
 
 router.get("/admin/dashboard", authRequired, adminRequired, async (_req, res) => {
   try {
-    const [users, artists, artworks, orders, payments] = await Promise.all([
+    const [users, artists, orders, payments] = await Promise.all([
       userRepository.listUsersForAdmin(),
       artistRepository.listArtistsForAdmin(),
-      artworkRepository.listArtworksForAdmin(),
       orderRepository.listOrdersForAdmin(),
       paymentRepository.listPaymentsForAdmin()
     ]);
 
-    const succeededPayments = payments.filter((payment) => buildPaymentStatus(payment) === "Succeeded");
+    const succeededPayments = payments.filter(
+      (payment) => buildPaymentStatus(payment) === "Succeeded"
+    );
     const grossRevenue = succeededPayments.reduce((sum, payment) => {
       return sum + parseAmount(payment.price);
     }, 0);
