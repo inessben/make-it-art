@@ -13,6 +13,8 @@
     "dev:build": "npm run quality:fix && npm run dev:up:build",
     "dev:down": "docker compose -f infrastructure/docker-compose.yml down",
     "dev:logs": "docker compose -f infrastructure/docker-compose.yml logs -f",
+    "test": "npm --prefix backend run test && npm --prefix frontend run test",
+    "test:coverage": "npm --prefix backend run test:coverage && npm --prefix frontend run test:coverage",
     "prod:build": "docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml build --no-cache",
     "prod:up": "docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml up -d",
     "prod:down": "docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml down",

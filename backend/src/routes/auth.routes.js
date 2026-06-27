@@ -18,6 +18,10 @@ const {
 const { authRateLimit, strictAuthRateLimit } = require("../middlewares/rate-limit.middleware");
 const { authRequired } = require("../middlewares/auth-required.middleware");
 const userRepository = require("../repositories/user.repository");
+const {
+  getPasswordConfirmationError,
+  getPasswordValidationError
+} = require("../utils/password-validation");
 const { serializeAuthUser } = require("../utils/serialize-auth-user");
 
 const env = require("../config/env");
@@ -80,11 +84,21 @@ router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
 
 router.post("/auth/register", authRateLimit, async (req, res) => {
   try {
-    const { username, email, phone, password } = req.body;
+    const { username, email, phone, password, confirmPassword } = req.body;
 
-    if (!username || !email || !phone || !password) {
+    if (!username || !email || !phone || !password || !confirmPassword) {
       return res.status(400).json({
-        message: "Username, email, phone and password are required"
+        message: "Username, email, phone, password and confirmation are required"
+      });
+    }
+
+    const passwordError =
+      getPasswordValidationError(password) ||
+      getPasswordConfirmationError(password, confirmPassword);
+
+    if (passwordError) {
+      return res.status(400).json({
+        message: passwordError
       });
     }
 
@@ -227,13 +241,15 @@ router.patch("/auth/password", authRequired, async (req, res) => {
 
     if (newPassword !== confirmPassword) {
       return res.status(400).json({
-        message: "Password confirmation does not match"
+        message: getPasswordConfirmationError(newPassword, confirmPassword)
       });
     }
 
-    if (newPassword.length < 8) {
+    const passwordError = getPasswordValidationError(newPassword);
+
+    if (passwordError) {
       return res.status(400).json({
-        message: "New password must be at least 8 characters"
+        message: passwordError
       });
     }
 
@@ -302,17 +318,21 @@ router.post("/auth/forgot-password", authRateLimit, async (req, res) => {
 
 router.post("/auth/reset-password", async (req, res) => {
   try {
-    const { token, password } = req.body;
+    const { token, password, confirmPassword } = req.body;
 
-    if (!token || !password) {
+    if (!token || !password || !confirmPassword) {
       return res.status(400).json({
-        message: "Token and password are required"
+        message: "Token, password and confirmation are required"
       });
     }
 
-    if (password.length < 8) {
+    const passwordError =
+      getPasswordValidationError(password) ||
+      getPasswordConfirmationError(password, confirmPassword);
+
+    if (passwordError) {
       return res.status(400).json({
-        message: "Password must be at least 8 characters"
+        message: passwordError
       });
     }
 

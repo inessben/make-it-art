@@ -168,6 +168,10 @@
 import { ref, watchEffect } from "vue";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "~/stores/auth";
+import {
+  getPasswordConfirmationError,
+  getPasswordValidationError
+} from "~/utils/password-validation";
 
 const auth = useAuthStore();
 const { user } = storeToRefs(auth);
@@ -224,18 +228,17 @@ async function updatePassword() {
     return;
   }
 
-  if (newPassword.value.length < 8) {
-    errorMessage.value = "The new password must be at least 8 characters.";
+  const passwordError =
+    getPasswordValidationError(newPassword.value) ||
+    getPasswordConfirmationError(newPassword.value, confirmPassword.value);
+
+  if (passwordError) {
+    errorMessage.value = passwordError;
     return;
   }
 
   if (newPassword.value === currentPassword.value) {
     errorMessage.value = "The new password must be different from the current one.";
-    return;
-  }
-
-  if (newPassword.value !== confirmPassword.value) {
-    errorMessage.value = "Password confirmation must match.";
     return;
   }
 
