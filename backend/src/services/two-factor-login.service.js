@@ -84,6 +84,10 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
     throw new Error("Email not verified");
   }
 
+  if (!user.passwordHash) {
+    throw new Error("Invalid credentials");
+  }
+
   const isValidPassword = await argon2.verify(user.passwordHash, password);
 
   if (!isValidPassword) {

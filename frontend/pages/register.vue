@@ -13,6 +13,15 @@
       autocomplete="new-password"
     />
 
+    <PasswordStrengthFeedback :password="form.password" />
+
+    <PasswordField
+      id="confirm-password"
+      v-model="form.confirmPassword"
+      label="Confirm password"
+      autocomplete="new-password"
+    />
+
     <SubmitButton label="Create account" loading-label="Creating account..." :loading="loading" />
 
     <FormMessage :message="message" />
@@ -21,6 +30,10 @@
 
 <script setup>
 import { reactive, ref } from "vue";
+import {
+  getPasswordConfirmationError,
+  getPasswordValidationError
+} from "~/utils/password-validation";
 
 definePageMeta({
   middleware: "guest"
@@ -30,15 +43,26 @@ const form = reactive({
   username: "",
   email: "",
   phone: "",
-  password: ""
+  password: "",
+  confirmPassword: ""
 });
 
 const message = ref("");
 const loading = ref(false);
 
 async function handleRegister() {
-  loading.value = true;
   message.value = "";
+
+  const passwordError =
+    getPasswordValidationError(form.password) ||
+    getPasswordConfirmationError(form.password, form.confirmPassword);
+
+  if (passwordError) {
+    message.value = passwordError;
+    return;
+  }
+
+  loading.value = true;
 
   try {
     const response = await $fetch("/api/auth/register", {
@@ -48,7 +72,8 @@ async function handleRegister() {
         username: form.username,
         email: form.email,
         phone: form.phone,
-        password: form.password
+        password: form.password,
+        confirmPassword: form.confirmPassword
       }
     });
 

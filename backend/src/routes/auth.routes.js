@@ -18,10 +18,24 @@ const {
 const { authRateLimit, strictAuthRateLimit } = require("../middlewares/rate-limit.middleware");
 const { authRequired } = require("../middlewares/auth-required.middleware");
 const userRepository = require("../repositories/user.repository");
+const {
+  getPasswordConfirmationError,
+  getPasswordValidationError
+} = require("../utils/password-validation");
 const { serializeAuthUser } = require("../utils/serialize-auth-user");
 
 const env = require("../config/env");
 
+const {
+  GoogleOAuthError,
+  authenticateGoogleCode,
+  getClearGoogleOAuthLinkCookieOptions,
+  getClearGoogleOAuthStateCookieOptions,
+  getGoogleAuthorizationUrl,
+  getGoogleOAuthLinkCookieOptions,
+  getGoogleOAuthStateCookieOptions,
+  linkGoogleAccountWithPassword
+} = require("../services/google-oauth.service");
 const {
   startLoginWithCode,
   verifyLoginCode,
@@ -31,6 +45,23 @@ const {
   getClearRememberDeviceCookieOptions
 } = require("../services/two-factor-login.service");
 const router = express.Router();
+
+function buildAppRedirect(path, searchParams = {}) {
+  const url = new URL(path, env.appBaseUrl);
+
+  Object.entries(searchParams).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      url.searchParams.set(key, value);
+    }
+  });
+
+  return url.toString();
+}
+
+function setAuthCookies(res, result) {
+  res.cookie(env.sessionCookieName, result.accessToken, getSessionCookieOptions());
+  res.cookie(env.refreshCookieName, result.refreshToken, getRefreshCookieOptions());
+}
 
 router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
   try {
@@ -49,8 +80,7 @@ router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
     });
 
     if (result.bypassCode) {
-      res.cookie(env.sessionCookieName, result.accessToken, getSessionCookieOptions());
-      res.cookie(env.refreshCookieName, result.refreshToken, getRefreshCookieOptions());
+      setAuthCookies(res, result);
 
       return res.status(200).json({
         message: "Login successful",
@@ -78,13 +108,116 @@ router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
   }
 });
 
+router.get("/auth/google", authRateLimit, (req, res) => {
+  try {
+    const { authorizationUrl, state } = getGoogleAuthorizationUrl();
+
+    res.cookie(env.googleOAuth.stateCookieName, state, getGoogleOAuthStateCookieOptions());
+
+    return res.redirect(authorizationUrl);
+  } catch (_error) {
+    return res.redirect(buildAppRedirect("/login", { google: "unavailable" }));
+  }
+});
+
+router.get("/auth/google/callback", authRateLimit, async (req, res) => {
+  const { code, error, state } = req.query;
+  const stateCookie = req.cookies?.[env.googleOAuth.stateCookieName];
+
+  res.clearCookie(env.googleOAuth.stateCookieName, getClearGoogleOAuthStateCookieOptions());
+
+  if (error) {
+    return res.redirect(
+      buildAppRedirect("/login", {
+        google: error === "access_denied" ? "cancelled" : "error"
+      })
+    );
+  }
+
+  if (!code || !state || !stateCookie || state !== stateCookie) {
+    return res.redirect(buildAppRedirect("/login", { google: "error" }));
+  }
+
+  try {
+    const result = await authenticateGoogleCode(String(code));
+
+    if (result.status === "requires_password") {
+      res.cookie(
+        env.googleOAuth.linkCookieName,
+        result.linkToken,
+        getGoogleOAuthLinkCookieOptions()
+      );
+
+      return res.redirect(
+        buildAppRedirect("/login", {
+          googleLink: "required",
+          email: result.email
+        })
+      );
+    }
+
+    setAuthCookies(res, result);
+    res.clearCookie(env.googleOAuth.linkCookieName, getClearGoogleOAuthLinkCookieOptions());
+
+    return res.redirect(buildAppRedirect("/profile"));
+  } catch (_error) {
+    return res.redirect(buildAppRedirect("/login", { google: "error" }));
+  }
+});
+
+router.post("/auth/google/link", authRateLimit, async (req, res) => {
+  try {
+    const { password } = req.body;
+    const linkToken = req.cookies?.[env.googleOAuth.linkCookieName];
+
+    if (!password || !linkToken) {
+      return res.status(400).json({
+        message: "Google sign-in session and password are required"
+      });
+    }
+
+    const result = await linkGoogleAccountWithPassword({
+      linkToken,
+      password
+    });
+
+    setAuthCookies(res, result);
+    res.clearCookie(env.googleOAuth.linkCookieName, getClearGoogleOAuthLinkCookieOptions());
+
+    return res.status(200).json({
+      message: "Google account linked successfully",
+      user: serializeAuthUser(result.user)
+    });
+  } catch (error) {
+    if (error instanceof GoogleOAuthError && error.code === "GOOGLE_LINK_INVALID_PASSWORD") {
+      return res.status(401).json({
+        message: "Password is incorrect"
+      });
+    }
+
+    return res.status(400).json({
+      message: "Unable to complete Google sign-in"
+    });
+  }
+});
+
 router.post("/auth/register", authRateLimit, async (req, res) => {
   try {
-    const { username, email, phone, password } = req.body;
+    const { username, email, phone, password, confirmPassword } = req.body;
 
-    if (!username || !email || !phone || !password) {
+    if (!username || !email || !phone || !password || !confirmPassword) {
       return res.status(400).json({
-        message: "Username, email, phone and password are required"
+        message: "Username, email, phone, password and confirmation are required"
+      });
+    }
+
+    const passwordError =
+      getPasswordValidationError(password) ||
+      getPasswordConfirmationError(password, confirmPassword);
+
+    if (passwordError) {
+      return res.status(400).json({
+        message: passwordError
       });
     }
 
@@ -227,13 +360,15 @@ router.patch("/auth/password", authRequired, async (req, res) => {
 
     if (newPassword !== confirmPassword) {
       return res.status(400).json({
-        message: "Password confirmation does not match"
+        message: getPasswordConfirmationError(newPassword, confirmPassword)
       });
     }
 
-    if (newPassword.length < 8) {
+    const passwordError = getPasswordValidationError(newPassword);
+
+    if (passwordError) {
       return res.status(400).json({
-        message: "New password must be at least 8 characters"
+        message: passwordError
       });
     }
 
@@ -302,17 +437,21 @@ router.post("/auth/forgot-password", authRateLimit, async (req, res) => {
 
 router.post("/auth/reset-password", async (req, res) => {
   try {
-    const { token, password } = req.body;
+    const { token, password, confirmPassword } = req.body;
 
-    if (!token || !password) {
+    if (!token || !password || !confirmPassword) {
       return res.status(400).json({
-        message: "Token and password are required"
+        message: "Token, password and confirmation are required"
       });
     }
 
-    if (password.length < 8) {
+    const passwordError =
+      getPasswordValidationError(password) ||
+      getPasswordConfirmationError(password, confirmPassword);
+
+    if (passwordError) {
       return res.status(400).json({
-        message: "Password must be at least 8 characters"
+        message: passwordError
       });
     }
 
@@ -351,8 +490,7 @@ router.post("/auth/verify-login-code", strictAuthRateLimit, async (req, res) => 
 
     res.clearCookie(env.loginCodeCookieName, getClearLoginChallengeCookieOptions());
 
-    res.cookie(env.sessionCookieName, result.accessToken, getSessionCookieOptions());
-    res.cookie(env.refreshCookieName, result.refreshToken, getRefreshCookieOptions());
+    setAuthCookies(res, result);
 
     if (result.rememberDeviceToken) {
       res.cookie(

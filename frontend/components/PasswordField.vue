@@ -12,14 +12,24 @@
         @input="$emit('update:modelValue', $event.target.value)"
       />
 
-      <button type="button" class="password-toggle" @click="showPassword = !showPassword">
-        {{ showPassword ? "Hide" : "Show" }}
+      <button
+        type="button"
+        class="password-toggle"
+        :aria-label="showPassword ? 'Hide password' : 'Show password'"
+        :title="showPassword ? 'Hide password' : 'Show password'"
+        @click="showPassword = !showPassword"
+      >
+        <EyeIcon v-if="!showPassword" />
+        <EyeOffIcon v-else />
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
+import EyeIcon from "~/components/icons/EyeIcon.vue";
+import EyeOffIcon from "~/components/icons/EyeOffIcon.vue";
+
 defineProps({
   id: {
     type: String,
@@ -57,14 +67,10 @@ label {
 }
 
 .password-control {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-  align-items: center;
+  position: relative;
 }
 
-input,
-button {
+input {
   min-height: 44px;
   border-radius: 6px;
   font: inherit;
@@ -73,7 +79,7 @@ button {
 input {
   min-width: 0;
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px 46px 10px 12px;
   border: 1px solid #c8d2e2;
   background: #ffffff;
   color: #172033;
@@ -89,20 +95,39 @@ input:focus {
 }
 
 .password-toggle {
-  margin-top: 0;
-  padding: 0 14px;
-  border: 1px solid #c8d2e2;
-  background: #ffffff;
-  color: #172033;
-  font-weight: 700;
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #5b6578;
   cursor: pointer;
   transition:
     background 0.18s ease,
-    border-color 0.18s ease;
+    color 0.18s ease;
+  transform: translateY(-50%);
 }
 
-.password-toggle:hover {
+.password-toggle:hover,
+.password-toggle:focus-visible {
   background: #f3f6fb;
-  border-color: #aebbd0;
+  color: #172033;
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid rgba(50, 115, 220, 0.42);
+  outline-offset: 2px;
+}
+
+.password-toggle svg {
+  width: 18px;
+  height: 18px;
 }
 </style>

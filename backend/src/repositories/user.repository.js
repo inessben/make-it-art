@@ -10,11 +10,35 @@ async function findByEmail(email) {
   });
 }
 
+async function findByOAuthProvider(oauthProvider, oauthSubject) {
+  return prisma.user.findFirst({
+    where: {
+      oauthProvider,
+      oauthSubject
+    },
+    include: {
+      admin: true,
+      artist: true
+    }
+  });
+}
+
 async function createUser(data) {
   return prisma.user.create({
     data
   });
 }
+
+async function createOAuthUser(data) {
+  return prisma.user.create({
+    data,
+    include: {
+      admin: true,
+      artist: true
+    }
+  });
+}
+
 async function verifyEmail(userId) {
   return prisma.user.update({
     where: { id: userId },
@@ -53,6 +77,23 @@ async function updateUser(userId, data) {
   });
 }
 
+async function linkOAuthProvider(userId, { oauthProvider, oauthSubject }) {
+  return prisma.user.update({
+    where: { id: userId },
+    data: {
+      oauthProvider,
+      oauthSubject,
+      oauthLinkedAt: new Date(),
+      verified: true,
+      isActive: true
+    },
+    include: {
+      admin: true,
+      artist: true
+    }
+  });
+}
+
 async function listUsersForAdmin() {
   return prisma.user.findMany({
     orderBy: [
@@ -77,10 +118,13 @@ async function listUsersForAdmin() {
 
 module.exports = {
   findByEmail,
+  findByOAuthProvider,
+  createOAuthUser,
   createUser,
   verifyEmail,
   findById,
   updatePassword,
   updateUser,
+  linkOAuthProvider,
   listUsersForAdmin
 };
