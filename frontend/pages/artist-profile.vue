@@ -38,7 +38,9 @@
                   </div>
                   <div>
                     <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Profil artiste</p>
-                    <h1 class="mt-4 text-[clamp(2.5rem,3vw,3.8rem)] font-semibold leading-[1.02] text-white">
+                    <h1
+                      class="mt-4 text-[clamp(2.5rem,3vw,3.8rem)] font-semibold leading-[1.02] text-white"
+                    >
                       {{ artist.displayName || user?.username || "Artiste" }}
                     </h1>
                     <p class="mt-4 max-w-2xl text-[#A0ADB4] leading-7">
@@ -65,11 +67,15 @@
               <div class="grid gap-4">
                 <div class="rounded-[28px] bg-[#0F1220] p-6 text-center">
                   <p class="text-sm uppercase tracking-[0.18em] text-[#4A6CF7]">Artworks</p>
-                  <p class="mt-4 text-[2.5rem] font-semibold text-white">{{ artist.artworkCount }}</p>
+                  <p class="mt-4 text-[2.5rem] font-semibold text-white">
+                    {{ artist.artworkCount }}
+                  </p>
                 </div>
                 <div class="rounded-[28px] bg-[#0F1220] p-6 text-center">
                   <p class="text-sm uppercase tracking-[0.18em] text-[#4A6CF7]">Followers</p>
-                  <p class="mt-4 text-[2.5rem] font-semibold text-white">{{ artist.followerCount }}</p>
+                  <p class="mt-4 text-[2.5rem] font-semibold text-white">
+                    {{ artist.followerCount }}
+                  </p>
                 </div>
                 <div class="rounded-[28px] bg-[#0F1220] p-6 text-center">
                   <p class="text-sm uppercase tracking-[0.18em] text-[#4A6CF7]">Artworks sold</p>
@@ -157,7 +163,9 @@
                 <div class="aspect-[4/5] bg-[#1E253A]" />
                 <div class="p-4">
                   <p class="text-sm text-[#A0ADB4]">Oeuvre</p>
-                  <h3 class="mt-2 text-lg font-semibold text-[#E6EDF7]">{{ artwork.title || "Untitled" }}</h3>
+                  <h3 class="mt-2 text-lg font-semibold text-[#E6EDF7]">
+                    {{ artwork.title || "Untitled" }}
+                  </h3>
                 </div>
               </article>
               <article

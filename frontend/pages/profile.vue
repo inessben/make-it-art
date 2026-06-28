@@ -56,9 +56,11 @@
       <section v-if="user" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <article
           v-for="card in cards"
+          :disabled="!canAccessCard(card)"
           :key="card.title"
+          :class="{ 'opacity-50 cursor-not-allowed': !canAccessCard(card) }"
           class="group cursor-pointer grid gap-4 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-5 transition duration-200 hover:-translate-y-1 hover:border-[#262D30]"
-          @click="goTo(card.route)"
+          @click="canAccessCard(card) ? goTo(card.route) : null"
         >
           <div
             class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#4A6CF7]/10 text-2xl text-[#4A6CF7]"
@@ -89,6 +91,14 @@ const auth = useAuthStore();
 const { user, loading } = storeToRefs(auth);
 const message = ref("");
 
+function canAccessCard(card) {
+  if (card.requiresArtistContract) {
+    return user.value?.artistContract === true;
+  }
+
+  return true;
+}
+
 // !!!!!! A FAIRE !!!!
 // Recup icones du figma pour ajouter aux cards IMPORTANT !!!!!!
 
@@ -103,7 +113,8 @@ const cards = [
     icon: "",
     title: "Profil artiste",
     route: "/artist-profile",
-    description: "Gérez votre portfolio artistique"
+    description: "Gérez votre portfolio artistique",
+    requiresArtistContract: true
   },
   {
     icon: "",
