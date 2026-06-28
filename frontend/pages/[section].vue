@@ -74,8 +74,26 @@ const sections = {
   }
 };
 
+const allowedSections = [
+  "artist-profile",
+  "wishlist",
+  "orders",
+  "payment-methods",
+  "wallet",
+  "addresses",
+  "notifications",
+  "settings"
+];
+
 definePageMeta({
-  middleware: "auth"
+  middleware: "auth",
+  validate: (route) => {
+    const routeSection = Array.isArray(route.params.section)
+      ? route.params.section[0]
+      : route.params.section;
+
+    return allowedSections.includes(routeSection);
+  }
 });
 
 const sectionData = computed(() => {

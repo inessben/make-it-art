@@ -59,8 +59,12 @@
 
 <script setup>
 import { navigateTo } from "#app";
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 import { useAuthStore } from "~/stores/auth";
+
+definePageMeta({
+  middleware: "guest"
+});
 
 const auth = useAuthStore();
 const email = ref("");
@@ -72,18 +76,6 @@ const loading = ref(false);
 const resending = ref(false);
 const canResendVerification = ref(false);
 const requiresCode = ref(false);
-
-onMounted(async () => {
-  try {
-    await auth.fetchCurrentUser();
-
-    if (auth.isAuthenticated) {
-      await navigateTo("/profile", { replace: true });
-    }
-  } catch {
-    auth.user = null;
-  }
-});
 
 async function handleSubmit() {
   if (requiresCode.value) {

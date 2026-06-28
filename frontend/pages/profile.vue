@@ -15,13 +15,21 @@
           </p>
         </div>
 
-        <button
-          type="button"
-          class="inline-flex items-center justify-center min-w-[140px] rounded-2xl border border-[#1A1F2A] bg-[#10150E]/90 px-6 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1A1F2E]"
-          @click="handleLogout"
-        >
-          Se déconnecter
-        </button>
+        <div class="flex flex-col gap-3 sm:flex-row">
+          <NuxtLink
+            :to="artistActionRoute"
+            class="inline-flex min-w-[170px] items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 py-3 text-sm font-semibold text-black transition hover:bg-[#6d8bff]"
+          >
+            {{ artistActionLabel }}
+          </NuxtLink>
+          <button
+            type="button"
+            class="inline-flex min-w-[140px] items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10150E]/90 px-6 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1A1F2E]"
+            @click="handleLogout"
+          >
+            Se déconnecter
+          </button>
+        </div>
       </header>
 
       <section
@@ -80,7 +88,7 @@
 <script setup>
 import { navigateTo } from "#app";
 import { storeToRefs } from "pinia";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useAuthStore } from "~/stores/auth";
 
 definePageMeta({
@@ -90,6 +98,10 @@ definePageMeta({
 const auth = useAuthStore();
 const { user, loading } = storeToRefs(auth);
 const message = ref("");
+const artistActionRoute = computed(() => (auth.isArtist ? "/artist-profile" : "/become-artist"));
+const artistActionLabel = computed(() =>
+  auth.isArtist ? "Voir profil artiste" : "Become an artist"
+);
 
 function canAccessCard(card) {
   if (card.requiresArtistContract) {
@@ -102,7 +114,7 @@ function canAccessCard(card) {
 // !!!!!! A FAIRE !!!!
 // Recup icones du figma pour ajouter aux cards IMPORTANT !!!!!!
 
-const cards = [
+const cards = computed(() => [
   {
     icon: "",
     title: "Paramètres du profil",
@@ -111,10 +123,11 @@ const cards = [
   },
   {
     icon: "",
-    title: "Profil artiste",
-    route: "/artist-profile",
-    description: "Gérez votre portfolio artistique",
-    requiresArtistContract: true
+    title: auth.isArtist ? "Profil artiste" : "Become an artist",
+    route: artistActionRoute.value,
+    description: auth.isArtist
+      ? "Gérez votre portfolio artistique"
+      : "Créez votre profil artiste MVP"
   },
   {
     icon: "",
@@ -158,7 +171,7 @@ const cards = [
     route: "/settings",
     description: "Préférences du compte"
   }
-];
+]);
 
 async function handleLogout() {
   await auth.logout();

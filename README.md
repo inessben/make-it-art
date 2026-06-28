@@ -7,7 +7,7 @@ Monorepo starter for the class project.
 - Frontend: Nuxt 3 + Tailwind CSS + Sass
 - Backend: Node.js 22 + Express
 - Data services: PostgreSQL 16 + Redis 7
-- Infra: Docker Compose + Nginx reverse proxy
+- Infra: Docker Compose + Nginx for local dev + Caddy for production TLS
 - CI/CD: GitHub Actions templates
 
 ## Project structure
@@ -35,26 +35,172 @@ Use this file for local Docker runs:
 Setup:
 
 1. Copy `infrastructure/.env.example` to `infrastructure/.env`
-2. Keep default values for local test, or update if needed
+2. Keep the default Docker values for local test, or update if needed
+3. For the standard Docker workflow below, no extra host `.env` file is required
 
 ## Run local (Docker)
 
+Recommended clean start for first setup, stale containers, missing dependencies, or after package changes:
+
 ```bash
-docker compose -f infrastructure/docker-compose.yml down -v --remove-orphans
-docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml build --no-cache
+docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml down -v --remove-orphans
+docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml build --no-cache backend frontend
 docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d
 ```
+
+The project also exposes workspace scripts:
+
+```bash
+npm run dev:up
+npm run dev:up:build
+```
+
+Note: `npm run dev` and `npm run dev:build` run `quality:fix` before Docker, so they may rewrite files.
 
 ## Verify
 
 ```bash
-docker compose -f infrastructure/docker-compose.yml ps
+docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml ps
 curl -i http://localhost:4000/health
 curl -i http://localhost/api/health
 curl -I http://localhost
 ```
 
 Expected result: all responses are `200 OK` (or `301/302` for frontend depending on Nuxt redirect), and no `502`.
+
+Useful local URLs:
+
+- App through Nginx: `http://localhost`
+- Frontend direct: `http://localhost:3000`
+- Backend health: `http://localhost:4000/health`
+- Mailpit inbox: `http://localhost:8025`
+
+## Production deployment
+
+The repository now includes a dedicated production stack for `https://www.makeitart.io`:
+
+- `backend/Dockerfile.prod`
+- `frontend/Dockerfile.prod`
+- `infrastructure/docker-compose.prod.yml`
+- `infrastructure/Caddyfile`
+- `infrastructure/.env.production.example`
+
+Production uses Caddy as the public reverse proxy so HTTPS certificates for `makeitart.io` and `www.makeitart.io` can be issued automatically once DNS points to the VPS and ports `80` and `443` are open.
+
+### VPS prerequisites
+
+On the Debian VPS:
+
+1. Install Docker Engine and Docker Compose plugin
+2. Install Git
+3. Point both `makeitart.io` and `www.makeitart.io` to the VPS public IP
+4. Open ports `80` and `443` in the VPS firewall / security group
+
+### Production environment
+
+Create the production env file on the server:
+
+```bash
+cp infrastructure/.env.production.example infrastructure/.env.production
+```
+
+Then update at least these values:
+
+- `POSTGRES_PASSWORD`
+- `JWT_SECRET`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_SECURE`
+- `SMTP_USER`
+- `SMTP_PASS`
+- `SMTP_FROM`
+
+Important production defaults:
+
+- `APP_BASE_URL=https://www.makeitart.io`
+- `CORS_ORIGIN=https://www.makeitart.io`
+- `NUXT_PUBLIC_API_BASE=/api`
+
+### Deploy on the VPS
+
+From the repo root on the server:
+
+```bash
+npm run prod:build
+npm run prod:up
+```
+
+Or without npm scripts:
+
+```bash
+docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml build --no-cache
+docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml up -d
+```
+
+The backend production container runs Prisma migrations automatically on startup before launching the API.
+
+### Production verify
+
+```bash
+docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml ps
+docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml logs -f proxy
+```
+
+Then verify:
+
+- `https://www.makeitart.io`
+- `https://www.makeitart.io/api/health`
+
+Notes:
+
+- First HTTPS certificate issuance can take a short time right after the first boot
+- Production no longer uses Mailpit; email verification requires a real SMTP provider
+- The production stack does not expose PostgreSQL or Redis publicly
+
+### Automatic deploy from `main`
+
+The repository includes a production deployment workflow in `.github/workflows/cd-production.yml`.
+
+Behavior:
+
+- `CI` now runs on pushes to `develop` and `main`
+- production deploy starts automatically only after `CI` succeeds on `main`
+- production deploy can also be triggered manually from GitHub Actions with `workflow_dispatch`
+
+Required GitHub environment secrets for the `production` environment:
+
+- `PRODUCTION_SSH_HOST`
+- `PRODUCTION_SSH_USER`
+- `PRODUCTION_SSH_KEY`
+
+Optional production secret:
+
+- `PRODUCTION_SSH_PORT`
+
+Optional GitHub environment variable:
+
+- `PRODUCTION_APP_DIR`
+  Default used by the workflow: `/root/make-it-art`
+
+VPS prerequisites for automatic deploy:
+
+1. The repository is already cloned on the VPS at `/root/make-it-art` or at the path configured in `PRODUCTION_APP_DIR`
+2. The VPS user from `PRODUCTION_SSH_USER` can run `docker compose`
+3. `infrastructure/.env.production` already exists on the server
+4. `git pull` works on the server for the deployment branch
+
+If the repository is private, the server itself must also have access to pull from GitHub. Common options:
+
+- add a deploy key on the VPS SSH account used for GitHub
+- or configure Git on the VPS with a PAT over HTTPS
+
+First-time production deploy over GitHub Actions:
+
+1. Add the production secrets in `Settings > Environments > production`
+2. Ensure the VPS repo is on the `main` branch
+3. Push to `main`
+4. Check the `CI` workflow
+5. Check the `CD Production` workflow after `CI` succeeds
 
 ## Lint and format
 
@@ -76,7 +222,7 @@ Prisma uses the schema file below as the single source of truth:
 
 The PostgreSQL database used by Prisma in local development is the Docker database defined in `infrastructure/docker-compose.yml`, exposed on `localhost:5432`.
 
-### Local Prisma setup
+### Recommended local Prisma workflow
 
 1. Start Docker services:
 
@@ -84,7 +230,37 @@ The PostgreSQL database used by Prisma in local development is the Docker databa
 docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d
 ```
 
-2. In the same terminal where you run Prisma commands, set `DATABASE_URL` to the local Docker Postgres instance:
+2. Apply migrations from inside the backend container:
+
+```bash
+docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml exec backend sh -lc "npx prisma migrate deploy --schema prisma/schema.prisma"
+```
+
+3. Check migration status if needed:
+
+```bash
+docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml exec backend sh -lc "npx prisma migrate status --schema prisma/schema.prisma"
+```
+
+4. Generate Prisma client if needed:
+
+```bash
+docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml exec backend sh -lc "npx prisma generate --schema prisma/schema.prisma"
+```
+
+This Docker-based Prisma flow is the most reliable local setup because it uses the backend container's own database connection and schema path.
+
+### Host Prisma commands (optional)
+
+If you prefer to run Prisma from the host machine instead of inside Docker:
+
+1. Install the repo-root dependencies once:
+
+```bash
+npm install
+```
+
+2. Set `DATABASE_URL` in the same terminal:
 
 PowerShell:
 
@@ -120,6 +296,9 @@ postgresql://mia:mia_dev_password@localhost:5432/makeitart
 
 ### Common Prisma commands
 
+From the host machine, use the repo-root schema path `backend/prisma/schema.prisma`.
+Inside the backend container, use `prisma/schema.prisma`.
+
 Read the existing database schema into Prisma:
 
 ```bash
@@ -148,7 +327,7 @@ npx prisma migrate deploy --schema backend/prisma/schema.prisma
 
 - Use only `backend/prisma/schema.prisma`
 - Do not recreate `prisma/schema.prisma`
-- Use the local Docker Postgres database for Prisma commands
+- Prefer Prisma commands inside the backend container for local Docker development
 - If tables were created manually in pgAdmin, use `db pull`
 - If the Prisma schema becomes the source of truth, use `migrate dev`
 
@@ -165,6 +344,20 @@ Use these values in pgAdmin:
 ### Troubleshooting Prisma connection
 
 If Prisma tries to connect to `localhost:51214` or uses a `prisma+postgres://` URL, the wrong `DATABASE_URL` is being used. Redefine `DATABASE_URL` in the current terminal before running Prisma commands.
+
+If Prisma returns `P1000`, the database credentials do not match the running local Postgres instance. In local Docker development, the fastest clean reset is:
+
+```bash
+docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml down -v --remove-orphans
+docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml build --no-cache backend frontend
+docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d
+```
+
+If the app starts but registration fails on first use, apply Prisma migrations before testing auth flows:
+
+```bash
+docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml exec backend sh -lc "npx prisma migrate deploy --schema prisma/schema.prisma"
+```
 
 ## Automation
 
@@ -194,8 +387,10 @@ NPM_REGISTRY=https://registry.npmmirror.com
 Then rebuild:
 
 ```bash
-docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml build --no-cache
+docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml build --no-cache backend frontend
 ```
+
+Warnings such as `npm warn deprecated ...` during Docker build are usually non-blocking. Focus on actual build failures such as `ERROR`, `failed to solve`, or non-zero exit codes.
 
 ## Branch strategy
 

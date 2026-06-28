@@ -1,106 +1,149 @@
 const express = require("express");
 const { authRequired } = require("../middlewares/auth-required.middleware");
-const prisma = require("../lib/prisma");
+const artistApplicationDraftRepository = require("../repositories/artist-application-draft.repository");
+const artistRepository = require("../repositories/artist.repository");
+const { serializeAuthUser } = require("../utils/serialize-auth-user");
 
 const router = express.Router();
 
-async function getArtistProfile(user) {
-  const artist = await prisma.artist.findUnique({
-    where: { userId: user.id },
-    include: {
-      artworks: {
-        orderBy: { createdAt: "desc" },
-        take: 10
-      },
-      collections: true,
-      followers: true
-    }
-  });
+function serializeApplicationDraft(draft) {
+  if (!draft) {
+    return null;
+  }
 
+  return {
+    id: draft.id,
+    currentStep: draft.currentStep,
+    payload: draft.payload || {},
+    completedAt: draft.completedAt,
+    lastReminderSentAt: draft.lastReminderSentAt,
+    createdAt: draft.createdAt,
+    updatedAt: draft.updatedAt
+  };
+}
+
+function serializeArtistProfile(artist) {
   if (!artist) {
     return null;
   }
 
   return {
     id: artist.id,
-    displayName: artist.displayName || user.username || "Artiste",
+    userId: artist.userId,
+    displayName: artist.displayName,
     verified: Boolean(artist.verified),
-    artworkCount: artist.artworks.length,
-    collectionCount: artist.collections.length,
-    followerCount: artist.followers.length,
-    about: user.bio || "",
-    artworks: artist.artworks.map((artwork) => ({
-      id: artwork.id,
-      title: artwork.title || "Untitled",
-      priceTokens: artwork.priceTokens || "0",
-      createdAt: artwork.createdAt,
-      favoriteCount: artwork.favoriteCount || 0
-    }))
+    createdAt: artist.createdAt,
+    bio: artist.user?.bio || "",
+    email: artist.user?.email || "",
+    username: artist.user?.username || "",
+    stats: {
+      artworks: artist._count?.artworks || 0,
+      followers: artist._count?.followers || 0,
+      collections: artist._count?.collections || 0
+    }
   };
 }
 
-router.get("/artist/me", authRequired, async (req, res) => {
+router.get("/artists/me", authRequired, async (req, res) => {
   try {
-    let artistProfile = await getArtistProfile(req.user);
+    const artist = await artistRepository.findByUserId(req.user.id);
 
-    if (!artistProfile) {
-      await prisma.artist.create({
-        data: {
-          userId: req.user.id,
-          displayName: req.user.username || null
-        }
+    if (!artist) {
+      return res.status(404).json({
+        message: "Artist profile not found"
       });
-
-      artistProfile = await getArtistProfile(req.user);
     }
 
-    return res.status(200).json({ artist: artistProfile });
+    return res.status(200).json({
+      artist: serializeArtistProfile(artist)
+    });
   } catch (error) {
-    console.error("Artist profile load error:", error);
-    return res.status(500).json({ message: "Unable to load artist profile" });
+    console.error("Artist profile fetch error:", error);
+    return res.status(500).json({
+      message: "Unable to load artist profile"
+    });
   }
 });
 
-router.patch("/artist/me", authRequired, async (req, res) => {
+router.get("/artists/me/application-draft", authRequired, async (req, res) => {
   try {
-    const { displayName, bio } = req.body;
-    const updates = {};
+    const draft = await artistApplicationDraftRepository.findByUserId(req.user.id);
 
-    if (displayName !== undefined) {
-      updates.displayName = displayName;
-    }
+    return res.status(200).json({
+      draft: serializeApplicationDraft(draft)
+    });
+  } catch (error) {
+    console.error("Artist application draft fetch error:", error);
+    return res.status(500).json({
+      message: "Unable to load artist application draft"
+    });
+  }
+});
 
-    if (bio !== undefined) {
-      await prisma.user.update({
-        where: { id: req.user.id },
-        data: { bio }
+router.patch("/artists/me/application-draft", authRequired, async (req, res) => {
+  try {
+    const currentStep = Number(req.body.currentStep || 1);
+    const payload = req.body.payload || {};
+
+    if (!Number.isInteger(currentStep) || currentStep < 1 || currentStep > 3) {
+      return res.status(400).json({
+        message: "Current step must be between 1 and 3"
       });
     }
 
-    let artist = await prisma.artist.findUnique({
-      where: { userId: req.user.id }
+    const draft = await artistApplicationDraftRepository.saveDraft({
+      userId: req.user.id,
+      currentStep,
+      payload
     });
 
-    if (!artist) {
-      artist = await prisma.artist.create({
-        data: {
-          userId: req.user.id,
-          displayName: updates.displayName || req.user.username || null
-        }
-      });
-    } else if (Object.keys(updates).length > 0) {
-      await prisma.artist.update({
-        where: { id: artist.id },
-        data: updates
+    return res.status(200).json({
+      message: "Artist application draft saved",
+      draft: serializeApplicationDraft(draft)
+    });
+  } catch (error) {
+    console.error("Artist application draft save error:", error);
+    return res.status(500).json({
+      message: "Unable to save artist application draft"
+    });
+  }
+});
+
+router.post("/artists/me", authRequired, async (req, res) => {
+  try {
+    const { displayName, bio, termsAccepted } = req.body;
+    const normalizedDisplayName = String(displayName || "").trim();
+    const normalizedBio = String(bio || "").trim();
+
+    if (!normalizedDisplayName || !normalizedBio) {
+      return res.status(400).json({
+        message: "Artist name and biography are required"
       });
     }
 
-    const artistProfile = await getArtistProfile(req.user);
+    if (!termsAccepted) {
+      return res.status(400).json({
+        message: "Terms and privacy policy must be accepted"
+      });
+    }
 
-    return res.status(200).json({ artist: artistProfile });
+    const artist = await artistRepository.saveArtistApplication({
+      userId: req.user.id,
+      displayName: normalizedDisplayName,
+      bio: normalizedBio
+    });
+    await artistApplicationDraftRepository.markCompleted(req.user.id);
+
+    return res.status(200).json({
+      message: "Artist profile submitted",
+      artist: serializeArtistProfile(artist),
+      user: serializeAuthUser(artist.user)
+    });
   } catch (error) {
-    console.error("Artist profile update error:", error);
-    return res.status(500).json({ message: "Unable to update artist profile" });
+    console.error("Artist profile submit error:", error);
+    return res.status(500).json({
+      message: "Unable to submit artist profile"
+    });
   }
 });
 

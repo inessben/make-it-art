@@ -2,7 +2,11 @@ const prisma = require("../lib/prisma");
 
 async function findByEmail(email) {
   return prisma.user.findFirst({
-    where: { email }
+    where: { email },
+    include: {
+      admin: true,
+      artist: true
+    }
   });
 }
 
@@ -22,7 +26,11 @@ async function verifyEmail(userId) {
 }
 async function findById(id) {
   return prisma.user.findUnique({
-    where: { id }
+    where: { id },
+    include: {
+      admin: true,
+      artist: true
+    }
   });
 }
 async function updatePassword(userId, passwordHash) {
@@ -37,7 +45,33 @@ async function updatePassword(userId, passwordHash) {
 async function updateUser(userId, data) {
   return prisma.user.update({
     where: { id: userId },
-    data
+    data,
+    include: {
+      admin: true,
+      artist: true
+    }
+  });
+}
+
+async function listUsersForAdmin() {
+  return prisma.user.findMany({
+    orderBy: [
+      {
+        createdAt: "desc"
+      },
+      {
+        id: "desc"
+      }
+    ],
+    include: {
+      admin: true,
+      artist: true,
+      _count: {
+        select: {
+          orders: true
+        }
+      }
+    }
   });
 }
 
@@ -47,5 +81,6 @@ module.exports = {
   verifyEmail,
   findById,
   updatePassword,
-  updateUser
+  updateUser,
+  listUsersForAdmin
 };

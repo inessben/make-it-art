@@ -18,6 +18,7 @@ const {
 const { authRateLimit, strictAuthRateLimit } = require("../middlewares/rate-limit.middleware");
 const { authRequired } = require("../middlewares/auth-required.middleware");
 const userRepository = require("../repositories/user.repository");
+const { serializeAuthUser } = require("../utils/serialize-auth-user");
 
 const env = require("../config/env");
 
@@ -54,11 +55,7 @@ router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
       return res.status(200).json({
         message: "Login successful",
         requiresCode: false,
-        user: {
-          id: result.user.id,
-          email: result.user.email,
-          username: result.user.username
-        }
+        user: serializeAuthUser(result.user)
       });
     }
 
@@ -174,13 +171,7 @@ router.get("/auth/verify-email", async (req, res) => {
 
 router.get("/auth/me", authRequired, async (req, res) => {
   return res.status(200).json({
-    user: {
-      id: req.user.id,
-      email: req.user.email,
-      username: req.user.username,
-      bio: req.user.bio,
-      phone: req.user.phone
-    }
+    user: serializeAuthUser(req.user)
   });
 });
 
@@ -208,13 +199,7 @@ router.patch("/auth/me", authRequired, async (req, res) => {
     const updatedUser = await userRepository.updateUser(req.user.id, updates);
 
     return res.status(200).json({
-      user: {
-        id: updatedUser.id,
-        email: updatedUser.email,
-        username: updatedUser.username,
-        bio: updatedUser.bio,
-        phone: updatedUser.phone
-      }
+      user: serializeAuthUser(updatedUser)
     });
   } catch (error) {
     if (error.code === "P2002") {
@@ -379,11 +364,7 @@ router.post("/auth/verify-login-code", strictAuthRateLimit, async (req, res) => 
 
     return res.status(200).json({
       message: "Login successful",
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        username: result.user.username
-      }
+      user: serializeAuthUser(result.user)
     });
   } catch (error) {
     if (env.nodeEnv !== "production") {

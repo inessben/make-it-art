@@ -4,7 +4,104 @@ Chaque membre ajoute une entree apres son travail.
 
 ## Entrees
 
-### 2026-03-15 - Mimi
+### 2026-06-20 - Mariam
+
+- Branche: `feature/admin`
+- Tache: Mise en place du backoffice admin complet (UI + protection d'acces + pages branchees sur vraies donnees + compte admin de test)
+- Fichiers modifies:
+  - `frontend/data/admin-navigation.js`
+  - `frontend/components/admin/AdminSidebar.vue`
+  - `frontend/components/admin/AdminHeader.vue`
+  - `frontend/components/admin/AdminShell.vue`
+  - `frontend/pages/admin/index.vue`
+  - `frontend/pages/admin/users.vue`
+  - `frontend/pages/admin/artists.vue`
+  - `frontend/pages/admin/artworks.vue`
+  - `frontend/pages/admin/orders.vue`
+  - `frontend/pages/admin/payments.vue`
+  - `frontend/pages/forbidden.vue`
+  - `frontend/middleware/admin.js`
+  - `frontend/stores/auth.js`
+  - `frontend/pages/[section].vue`
+  - `backend/src/middlewares/admin-required.middleware.js`
+  - `backend/src/routes/admin.routes.js`
+  - `backend/src/routes/index.js`
+  - `backend/src/routes/auth.routes.js`
+  - `backend/src/repositories/user.repository.js`
+  - `backend/src/repositories/artist.repository.js`
+  - `backend/src/repositories/artwork.repository.js`
+  - `backend/src/repositories/order.repository.js`
+  - `backend/src/repositories/payment.repository.js`
+  - `backend/src/services/default-admin.service.js`
+  - `backend/src/services/two-factor-login.service.js`
+  - `backend/src/server.js`
+  - `backend/src/config/env.js`
+  - `infrastructure/.env.example`
+  - `infrastructure/.env.production.example`
+- Impact:
+  - Creation d'une vraie structure backoffice reutilisable a `/admin` avec sidebar, header et pages dediees
+  - Protection d'acces admin cote frontend et backend avec redirection vers `/forbidden` pour les utilisateurs non admin
+  - Correction de la route dynamique `[section].vue` qui capturait a tort `/admin`
+  - Ajout des endpoints admin backend pour `dashboard`, `users`, `artists`, `artworks`, `orders` et `payments`
+  - Branchement de toutes les pages admin sur les vraies donnees Prisma avec etats `loading`, `error`, `empty`, recherche simple et filtres de statut
+  - Ajout d'un compte admin de test cree automatiquement en dev/test: `admin@art.com` / `admin123`
+  - Activation d'un bypass du code email uniquement pour ce compte admin de test en environnement non production
+  - Desactivation explicite du seed admin par defaut et du bypass login code dans l'exemple de config production
+- Verification:
+  - Test utilisateur normal: acces refuse a `/admin`
+  - Test utilisateur admin: acces autorise a `/admin`
+  - Verification des routes admin frontend: `/admin`, `/admin/users`, `/admin/artists`, `/admin/artworks`, `/admin/orders`, `/admin/payments`
+  - Verification backend par `node --check` sur les nouveaux fichiers backend
+  - Verification frontend par `eslint` sur les pages admin branchees
+  - Verification Docker apres restart/rebuild: les pages admin sont bien chargees dans le conteneur frontend
+  - Verification des logs backend: `[bootstrap] default admin ready: admin@art.com`
+- Prochaine etape: ajouter les vraies actions admin (verification artiste, suspension user, moderation artwork, traitement remboursements/paiements) et affiner les permissions
+- Blocages: le schema actuel ne porte pas encore de vrais statuts de moderation ni d'actions admin metier, donc certaines actions restent pour l'instant en lecture seule
+
+### 2026-06-08 - Mariam
+
+- Branche: `feature/env-prod`
+- Tache: Preparation de la mise en production sur VPS Hostinger avec domaine `makeitart.io`
+- Fichiers modifies:
+  - `backend/Dockerfile.prod`
+  - `frontend/Dockerfile.prod`
+  - `infrastructure/docker-compose.prod.yml`
+  - `infrastructure/Caddyfile`
+  - `infrastructure/.env.production.example`
+  - `package.json`
+  - `README.md`
+- Impact:
+  - Ajout d'une stack Docker de production separee de l'environnement local
+  - Configuration du reverse proxy HTTPS avec Caddy pour `makeitart.io` et `www.makeitart.io`
+  - Prise en charge d'un vrai SMTP Hostinger pour les emails de verification
+  - Ajout de scripts `prod:*` pour build, lancement, logs et arret
+- Verification:
+  - Deploiement manuel sur le VPS Debian avec `docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml up -d`
+  - Caddy a obtenu les certificats Let's Encrypt pour `makeitart.io` et `www.makeitart.io`
+  - Backend `healthy` et endpoint `https://www.makeitart.io/api/health` accessible
+- Prochaine etape: stabiliser le flux de redeploiement automatique depuis GitHub Actions
+- Blocages: conflit initial avec Nginx sur le port 80 et configuration DNS Docker a corriger pour l'emission des certificats
+
+### 2026-06-08 - Mariam
+
+- Branche: `feature/env-prod`
+- Tache: Mise en place du deploiement automatique GitHub Actions vers le VPS de production
+- Fichiers modifies:
+  - `.github/workflows/ci.yml`
+  - `.github/workflows/cd-production.yml`
+  - `README.md`
+- Impact:
+  - La CI tourne sur `develop` et `main`
+  - Ajout d'un workflow `CD Production` pour deployer la branche `main` sur le VPS via SSH
+  - Le workflow cible `/root/make-it-art` et relance la stack prod avec `infrastructure/.env.production`
+- Verification:
+  - Generation d'une cle SSH dediee `github-actions-deploy`
+  - Cle publique ajoutee sur le VPS et test de connexion SSH reussi avec `root@187.77.169.141`
+  - Secrets GitHub `PRODUCTION_SSH_HOST`, `PRODUCTION_SSH_USER`, `PRODUCTION_SSH_KEY`, `PRODUCTION_SSH_PORT` et variable `PRODUCTION_APP_DIR` configures sur le bon repo
+- Prochaine etape: merger la version corrigee du workflow sur `main` puis valider un premier deploiement automatique complet
+- Blocages: ancien workflow encore present sur GitHub, conflit de merge dans `cd-production.yml` et format de cle SSH a fiabiliser dans le runner GitHub
+
+### 2026-03-15 - Mariam
 
 - Branche: `develop`
 - Tache: Correction des hooks Husky pour Git Bash + nvm4w (fallback `npm.cmd`)
@@ -18,7 +115,7 @@ Chaque membre ajoute une entree apres son travail.
 - Prochaine etape: commit de la base projet
 - Blocages: Aucun
 
-### 2026-03-15 - Mimi
+### 2026-03-15 - Mariam
 
 - Branche: `develop`
 - Tache: Automatisation du quality gate avant demarrage + correction cross-platform Prettier
@@ -34,7 +131,7 @@ Chaque membre ajoute une entree apres son travail.
 - Prochaine etape: relancer `npm run dev:build` puis verifier endpoints
 - Blocages: Aucun
 
-### 2026-03-15 - Mimi
+### 2026-03-15 - Mariam
 
 - Branche: `develop`
 - Tache: Correction ESLint Nuxt pour permettre `npm run dev:build` sans faux positifs
@@ -48,7 +145,7 @@ Chaque membre ajoute une entree apres son travail.
 - Prochaine etape: Relancer `npm run dev:build` puis tests HTTP
 - Blocages: Aucun
 
-### 2026-03-15 - Mimi
+### 2026-03-15 - Mariam
 
 - Branche: `develop`
 - Tache: Ajout de l'automatisation qualite et documentation complete
@@ -73,7 +170,7 @@ Chaque membre ajoute une entree apres son travail.
 - Prochaine etape: Installer dependances root (`npm install`) pour activer Husky sur chaque poste
 - Blocages: warnings npm `deprecated` non bloquants
 
-### 2026-03-15 - Mimi
+### 2026-03-15 - Mariam
 
 - Branche: `develop`
 - Tache: Stabilisation complete du lancement local Docker/Nginx
@@ -97,7 +194,7 @@ Chaque membre ajoute une entree apres son travail.
 - Prochaine etape: Protection des branches GitHub (`main`, `develop`) + premiers PR features
 - Blocages: ETIMEDOUT npm resolu avec retries + NPM_REGISTRY configurable
 
-### 2026-03-15 - Mimi
+### 2026-03-15 - Mariam
 
 - Branche: `develop`
 - Tache: Bootstrap monorepo et infra locale
