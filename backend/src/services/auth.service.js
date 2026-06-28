@@ -17,6 +17,9 @@ async function loginWithEmail(email, password) {
   if (!user.verified || !user.isActive) {
     throw new Error("Email not verified");
   }
+  if (!user.passwordHash) {
+    throw new Error("Invalid credentials.");
+  }
   try {
     console.log("[auth] verifying password for user:", user.email);
     console.log(

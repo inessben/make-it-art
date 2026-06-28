@@ -7,6 +7,8 @@
       autocomplete="new-password"
     />
 
+    <PasswordStrengthFeedback :password="password" />
+
     <PasswordField
       id="confirm-password"
       v-model="confirmPassword"
