@@ -152,6 +152,7 @@ async function handleGoogleLink() {
   loading.value = true;
   message.value = "";
   let linkedUser = null;
+  let redirectTo = "";
 
   try {
     const response = await $fetch("/api/auth/google/link", {
@@ -163,6 +164,7 @@ async function handleGoogleLink() {
     });
 
     linkedUser = response.user;
+    redirectTo = response.redirectTo || "";
   } catch (error) {
     message.value = error?.data?.message || "Unable to complete Google sign-in.";
   } finally {
@@ -171,7 +173,7 @@ async function handleGoogleLink() {
 
   if (linkedUser) {
     auth.user = linkedUser;
-    await navigateTo("/profile", { replace: true });
+    await navigateTo(redirectTo || auth.defaultAuthenticatedRoute, { replace: true });
   }
 }
 
@@ -183,7 +185,7 @@ async function handleLogin() {
   loading.value = true;
   message.value = "";
   canResendVerification.value = false;
-  let shouldNavigateToProfile = false;
+  let redirectTo = "";
 
   try {
     const response = await $fetch("/api/auth/login", {
@@ -201,7 +203,8 @@ async function handleLogin() {
       return;
     }
 
-    shouldNavigateToProfile = true;
+    auth.user = response.user;
+    redirectTo = response.redirectTo || auth.defaultAuthenticatedRoute;
   } catch (error) {
     message.value = error?.data?.message || "Login failed";
     canResendVerification.value = error?.statusCode === 403;
@@ -209,8 +212,8 @@ async function handleLogin() {
     loading.value = false;
   }
 
-  if (shouldNavigateToProfile) {
-    await navigateTo("/profile", { replace: true });
+  if (redirectTo) {
+    await navigateTo(redirectTo, { replace: true });
   }
 }
 
@@ -222,6 +225,7 @@ async function handleVerifyCode() {
   loading.value = true;
   message.value = "";
   let verifiedUser = null;
+  let redirectTo = "";
 
   try {
     const response = await $fetch("/api/auth/verify-login-code", {
@@ -234,6 +238,7 @@ async function handleVerifyCode() {
     });
 
     verifiedUser = response.user;
+    redirectTo = response.redirectTo || "";
   } catch (error) {
     message.value =
       error?.statusCode === 400
@@ -245,7 +250,7 @@ async function handleVerifyCode() {
 
   if (verifiedUser) {
     auth.user = verifiedUser;
-    await navigateTo("/profile", { replace: true });
+    await navigateTo(redirectTo || auth.defaultAuthenticatedRoute, { replace: true });
   }
 }
 

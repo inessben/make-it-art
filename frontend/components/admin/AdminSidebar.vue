@@ -4,7 +4,7 @@
       <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Backoffice</p>
       <h2 class="mt-3 text-2xl font-semibold text-[#E6EDF7]">Admin panel</h2>
       <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
-        Base visuelle de l'interface admin en attendant les vraies donnees et permissions.
+        Interface reservee a l'administration avec un parcours separe de l'espace membre.
       </p>
     </div>
 
@@ -48,26 +48,42 @@
     </nav>
 
     <div class="mt-5 rounded-[24px] border border-[#1A1F2A] bg-[#01050E] p-5">
-      <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Navigation</p>
-      <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
-        Cette etape sert surtout a valider les routes, la structure et le style du backoffice.
+      <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Compte admin</p>
+      <p class="mt-3 text-sm font-semibold text-[#E6EDF7]">
+        {{ user?.username || "Administrateur" }}
+      </p>
+      <p class="mt-1 break-all text-sm leading-6 text-[#A0ADB4]">
+        {{ user?.email || "Compte connecte" }}
       </p>
 
-      <NuxtLink
-        to="/profile"
-        class="mt-5 inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-5 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
-      >
-        Retour au profil
-      </NuxtLink>
+      <div class="mt-5 grid gap-3">
+        <NuxtLink
+          to="/admin/settings"
+          class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-5 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+        >
+          Parametres admin
+        </NuxtLink>
+        <button
+          type="button"
+          class="inline-flex items-center justify-center rounded-2xl border border-[#3A1620] bg-[#1B0D13] px-5 py-3 text-sm font-semibold text-[#FFD7DE] transition hover:bg-[#271019]"
+          @click="handleLogout"
+        >
+          Se deconnecter
+        </button>
+      </div>
     </div>
   </aside>
 </template>
 
 <script setup>
-import { useRoute } from "#app";
+import { navigateTo, useRoute } from "#app";
+import { storeToRefs } from "pinia";
 import { adminNavigation } from "~/data/admin-navigation";
+import { useAuthStore } from "~/stores/auth";
 
 const route = useRoute();
+const auth = useAuthStore();
+const { user } = storeToRefs(auth);
 
 function isActive(targetRoute) {
   if (targetRoute === "/admin") {
@@ -75,5 +91,10 @@ function isActive(targetRoute) {
   }
 
   return route.path.startsWith(targetRoute);
+}
+
+async function handleLogout() {
+  await auth.logout();
+  await navigateTo("/login");
 }
 </script>

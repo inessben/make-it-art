@@ -14,10 +14,10 @@
 
       <div class="mt-8 grid gap-4 sm:grid-cols-2">
         <NuxtLink
-          to="/profile"
+          :to="primaryRoute"
           class="inline-flex items-center justify-center rounded-2xl border border-[#4A6CF7] bg-[#4A6CF7]/10 px-6 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#4A6CF7]/20"
         >
-          Retour au profil
+          {{ primaryLabel }}
         </NuxtLink>
 
         <NuxtLink
@@ -30,3 +30,47 @@
     </section>
   </main>
 </template>
+
+<script setup>
+import { navigateTo } from "#app";
+import { computed, onMounted } from "vue";
+import { useAuthStore } from "~/stores/auth";
+
+const auth = useAuthStore();
+
+const primaryRoute = computed(() => {
+  if (auth.isAdmin) {
+    return "/admin";
+  }
+
+  if (auth.isAuthenticated) {
+    return "/profile";
+  }
+
+  return "/login";
+});
+
+const primaryLabel = computed(() => {
+  if (auth.isAdmin) {
+    return "Aller au dashboard admin";
+  }
+
+  if (auth.isAuthenticated) {
+    return "Retour au profil";
+  }
+
+  return "Aller a la connexion";
+});
+
+onMounted(async () => {
+  try {
+    await auth.fetchCurrentUser();
+
+    if (auth.isAdmin) {
+      await navigateTo("/admin", { replace: true });
+    }
+  } catch {
+    auth.user = null;
+  }
+});
+</script>

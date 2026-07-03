@@ -9,7 +9,33 @@ export const useAuthStore = defineStore("auth", {
   getters: {
     isAuthenticated: (state) => Boolean(state.user),
     isAdmin: (state) => state.user?.isAdmin === true || state.user?.role === "admin",
-    isArtist: (state) => state.user?.isArtist === true || Boolean(state.user?.artist)
+    isArtist(state) {
+      if (this.isAdmin) {
+        return false;
+      }
+
+      return state.user?.isArtist === true || Boolean(state.user?.artist);
+    },
+    hasArtistApplication(state) {
+      if (this.isAdmin) {
+        return false;
+      }
+
+      return Boolean(state.user?.artistApplication);
+    },
+    artistApplicationStatus(state) {
+      if (this.isAdmin) {
+        return null;
+      }
+
+      return state.user?.artistApplication?.status || null;
+    },
+    defaultAuthenticatedRoute() {
+      return this.isAdmin ? "/admin" : "/profile";
+    },
+    settingsRoute() {
+      return this.isAdmin ? "/admin/settings" : "/account-settings";
+    }
   },
 
   actions: {

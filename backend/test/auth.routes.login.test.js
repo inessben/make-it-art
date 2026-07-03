@@ -231,6 +231,7 @@ test("POST /auth/login creates session cookies when code is bypassed", async (t)
   assert.deepEqual(response.body, {
     message: "Login successful",
     requiresCode: false,
+    redirectTo: "/profile",
     user
   });
   assert.ok(cookies.some((cookie) => cookie.startsWith("mia_session=access-token")));
@@ -308,6 +309,7 @@ test("POST /auth/verify-login-code creates session cookies and a remembered devi
   assert.equal(response.status, 200);
   assert.deepEqual(response.body, {
     message: "Login successful",
+    redirectTo: "/profile",
     user
   });
   assert.equal(calls.verifyLoginCode[0].challengeToken, "challenge-token");
@@ -338,4 +340,28 @@ test("POST /auth/verify-login-code maps invalid codes to 401", async (t) => {
 
   assert.equal(response.status, 401);
   assert.equal(response.body.message, "Invalid or expired login code");
+});
+
+test("POST /auth/login redirects admin users to the admin dashboard", async (t) => {
+  const adminUser = {
+    id: 7,
+    email: "admin@example.com",
+    role: "admin"
+  };
+  const { baseUrl } = await startAuthRoutesApp(t, {
+    startLoginResult: {
+      accessToken: "access-token",
+      bypassCode: true,
+      refreshToken: "refresh-token",
+      user: adminUser
+    }
+  });
+
+  const response = await postJson(baseUrl, "/auth/login", {
+    email: adminUser.email,
+    password: "Password1!"
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.redirectTo, "/admin");
 });

@@ -23,7 +23,7 @@
         v-if="loading"
         class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6 text-[#A0ADB4]"
       >
-        Chargement du profil artiste...
+        Chargement de votre espace artiste...
       </section>
 
       <section
@@ -45,6 +45,89 @@
         >
           Become an artist
         </NuxtLink>
+      </section>
+
+      <section
+        v-else-if="pendingApplication"
+        class="grid gap-6 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-7"
+      >
+        <div>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Demande artiste</p>
+          <h1 class="mt-4 text-3xl font-semibold text-white">Votre dossier est en cours</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-6 text-[#A0ADB4]">
+            Votre contrat a bien ete signe et transmis a l'administration. Vous aurez acces au
+            profil artiste actif des que la demande sera approuvee.
+          </p>
+        </div>
+
+        <dl class="grid gap-3 rounded-[24px] border border-[#1A1F2A] bg-[#050916] p-5 text-sm">
+          <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
+            <dt class="text-[#A0ADB4]">Nom d'artiste</dt>
+            <dd class="font-semibold text-white">
+              {{ pendingApplication.payload?.displayName || userNameFallback }}
+            </dd>
+          </div>
+          <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
+            <dt class="text-[#A0ADB4]">Statut</dt>
+            <dd class="font-semibold text-[#F2C97D]">En attente de validation admin</dd>
+          </div>
+          <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
+            <dt class="text-[#A0ADB4]">Date de soumission</dt>
+            <dd class="font-semibold text-white">{{ formatDate(pendingApplication.submittedAt) }}</dd>
+          </div>
+        </dl>
+
+        <div class="flex flex-wrap gap-3">
+          <a
+            href="/api/artists/me/contract.pdf"
+            target="_blank"
+            rel="noreferrer"
+            class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6d8bff]"
+          >
+            Ouvrir le contrat PDF
+          </a>
+          <NuxtLink
+            to="/become-artist"
+            class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-6 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+          >
+            Voir la demande
+          </NuxtLink>
+        </div>
+      </section>
+
+      <section
+        v-else-if="rejectedApplication"
+        class="grid gap-6 rounded-[24px] border border-[#5A2C14] bg-[#28150A] p-7"
+      >
+        <div>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#F2C97D]">Demande refusee</p>
+          <h1 class="mt-4 text-3xl font-semibold text-white">Votre candidature doit etre corrigee</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-6 text-[#F7C9A8]">
+            L'administration n'a pas active votre profil artiste. Vous pouvez modifier vos
+            informations, relire le contrat puis renvoyer une nouvelle demande.
+          </p>
+          <p v-if="rejectedApplication.reviewNote" class="mt-4 text-sm leading-6 text-[#FFDDBA]">
+            Motif admin : {{ rejectedApplication.reviewNote }}
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+          <NuxtLink
+            to="/become-artist"
+            class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6d8bff]"
+          >
+            Corriger et renvoyer
+          </NuxtLink>
+          <a
+            v-if="rejectedApplication.hasContractPdf"
+            href="/api/artists/me/contract.pdf"
+            target="_blank"
+            rel="noreferrer"
+            class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-6 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+          >
+            Revoir le contrat PDF
+          </a>
+        </div>
       </section>
 
       <section
@@ -118,8 +201,8 @@
             <h2 class="mt-4 text-2xl font-semibold text-white">Prochaines etapes</h2>
             <ul class="mt-4 grid gap-3 text-sm leading-6 text-[#A0ADB4]">
               <li>Ajouter les premieres oeuvres.</li>
-              <li>Relier les styles et liens sociaux au schema DB.</li>
-              <li>Faire valider le profil artiste par un admin.</li>
+              <li>Relier les styles et liens sociaux aux contenus publics du profil.</li>
+              <li>Conserver votre contrat signe a disposition dans l'espace admin.</li>
             </ul>
           </div>
         </section>
@@ -136,9 +219,20 @@ definePageMeta({
 });
 
 const artist = ref(null);
+const application = ref(null);
 const loading = ref(true);
 const missingArtist = ref(false);
 const errorMessage = ref("");
+
+const pendingApplication = computed(() =>
+  application.value?.status === "pending" ? application.value : null
+);
+const rejectedApplication = computed(() =>
+  application.value?.status === "rejected" ? application.value : null
+);
+const userNameFallback = computed(
+  () => artist.value?.username || application.value?.payload?.displayName || "Artiste"
+);
 
 const initials = computed(() => {
   const name = artist.value?.displayName || artist.value?.username || "Artist";
@@ -158,15 +252,25 @@ onMounted(async () => {
     });
 
     artist.value = response.artist;
-  } catch (error) {
-    if (error?.statusCode === 404) {
-      missingArtist.value = true;
-      return;
-    }
+    application.value = response.application;
 
+    if (!response.artist && !response.application) {
+      missingArtist.value = true;
+    }
+  } catch (error) {
     errorMessage.value = error?.data?.message || "Impossible de charger le profil artiste.";
   } finally {
     loading.value = false;
   }
 });
+
+function formatDate(value) {
+  if (!value) {
+    return "Date inconnue";
+  }
+
+  return new Intl.DateTimeFormat("fr-FR", {
+    dateStyle: "medium"
+  }).format(new Date(value));
+}
 </script>

@@ -268,6 +268,29 @@ test("GET /auth/google/callback logs in successful OAuth users", async (t) => {
   assert.ok(cookies.some((cookie) => cookie.startsWith("mia_refresh=refresh-token")));
 });
 
+test("GET /auth/google/callback redirects admins to the admin dashboard", async (t) => {
+  const { baseUrl } = await startAuthRoutesApp(t, {
+    authenticateGoogleCodeResult: {
+      accessToken: "access-token",
+      refreshToken: "refresh-token",
+      status: "authenticated",
+      user: {
+        ...authUser,
+        role: "admin"
+      }
+    }
+  });
+
+  const response = await request(baseUrl, "/auth/google/callback?code=code&state=state-token", {
+    headers: {
+      cookie: "mia_google_oauth_state=state-token"
+    }
+  });
+
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get("location"), "http://localhost/admin");
+});
+
 test("GET /auth/google/callback redirects to password linking when required", async (t) => {
   const { baseUrl } = await startAuthRoutesApp(t, {
     authenticateGoogleCodeResult: {
@@ -352,6 +375,7 @@ test("POST /auth/google/link links the account and creates session cookies", asy
 
   assert.equal(response.status, 200);
   assert.equal(body.message, "Google account linked successfully");
+  assert.equal(body.redirectTo, "/profile");
   assert.deepEqual(body.user, {
     id: authUser.id,
     email: authUser.email

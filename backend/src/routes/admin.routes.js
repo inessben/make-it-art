@@ -1,11 +1,20 @@
 const express = require("express");
 const { authRequired } = require("../middlewares/auth-required.middleware");
 const { adminRequired, isAdminUser } = require("../middlewares/admin-required.middleware");
+const { ARTIST_APPLICATION_STATUS } = require("../constants/artist-application-status");
+const artistApplicationDraftRepository = require("../repositories/artist-application-draft.repository");
 const userRepository = require("../repositories/user.repository");
 const artistRepository = require("../repositories/artist.repository");
 const artworkRepository = require("../repositories/artwork.repository");
 const orderRepository = require("../repositories/order.repository");
 const paymentRepository = require("../repositories/payment.repository");
+const { ensureBuffer } = require("../utils/ensure-buffer");
+const {
+  CONTRACT_VERSION,
+  extractArtistApplicationPayload,
+  resolveContractSignedAt,
+  generateArtistContractPdf
+} = require("../services/artist-contract.service");
 
 const router = express.Router();
 
@@ -73,6 +82,52 @@ function buildPaymentStatus(payment) {
   return "Pending";
 }
 
+async function resolveApplicationContractPdf(application) {
+  const payload = extractArtistApplicationPayload(application);
+  const existingPdf = ensureBuffer(application?.contractPdf);
+  const needsRegeneration =
+    application?.contractVersion !== CONTRACT_VERSION || !existingPdf || existingPdf.length === 0;
+
+  if (!needsRegeneration) {
+    return {
+      payload,
+      pdfBuffer: existingPdf
+    };
+  }
+
+  if (!application?.signatureDataUrl) {
+    if (!existingPdf || existingPdf.length === 0) {
+      throw new Error("Artist contract signature data is unavailable");
+    }
+
+    return {
+      payload,
+      pdfBuffer: existingPdf
+    };
+  }
+
+  const signedAt = resolveContractSignedAt(application);
+  const regeneratedContract = await generateArtistContractPdf({
+    user: application.user,
+    payload,
+    signatureDataUrl: application.signatureDataUrl,
+    signedAt
+  });
+
+  await artistApplicationDraftRepository.updateStoredContract({
+    applicationId: application.id,
+    contractVersion: regeneratedContract.contractVersion,
+    contractPdf: regeneratedContract.pdfBuffer,
+    contractSignedAt: signedAt,
+    contractAcceptedAt: application.contractAcceptedAt || signedAt
+  });
+
+  return {
+    payload,
+    pdfBuffer: regeneratedContract.pdfBuffer
+  };
+}
+
 function parseAmount(value) {
   if (value === null || value === undefined || value === "") {
     return 0;
@@ -108,6 +163,45 @@ function serializeAdminArtist(artist) {
     followersCount: artist._count.followers,
     collectionsCount: artist._count.collections,
     createdAt: artist.createdAt || artist.user?.createdAt || null
+  };
+}
+
+function serializeAdminArtistApplication(application) {
+  const payload = application.payload && typeof application.payload === "object"
+    ? application.payload
+    : {};
+  const applicantName = [payload.firstName, payload.lastName].filter(Boolean).join(" ").trim();
+  const displayName = payload.displayName || application.user?.username || "Artiste sans nom";
+
+  return {
+    id: application.id,
+    userId: application.userId,
+    applicantName: applicantName || application.user?.username || "Utilisateur",
+    displayName,
+    email: application.user?.email || "Email non renseigne",
+    phone: application.user?.phone || "Telephone non renseigne",
+    status: application.status || ARTIST_APPLICATION_STATUS.DRAFT,
+    bio: payload.bio || application.user?.bio || "",
+    artType: payload.artType || "Non renseigne",
+    styles: Array.isArray(payload.styles) ? payload.styles : [],
+    portfolioUrl: payload.portfolioUrl || "",
+    socialHandle: payload.socialHandle || "",
+    addressLine1: payload.addressLine1 || "",
+    addressLine2: payload.addressLine2 || "",
+    city: payload.city || "",
+    region: payload.region || "",
+    postalCode: payload.postalCode || "",
+    country: payload.country || "",
+    taxId: payload.taxId || "",
+    hasContractPdf: Boolean(application.contractPdf),
+    contractVersion: application.contractVersion || null,
+    submittedAt: application.submittedAt || application.completedAt || application.updatedAt,
+    reviewedAt: application.reviewedAt || null,
+    reviewNote: application.reviewNote || "",
+    reviewerName:
+      application.reviewedByAdmin?.username || application.reviewedByAdmin?.email || "",
+    artistActivated: Boolean(application.user?.artist),
+    verified: Boolean(application.user?.artist?.verified)
   };
 }
 
@@ -210,6 +304,142 @@ router.patch("/admin/artists/:id/verification", authRequired, adminRequired, asy
     });
   }
 });
+
+router.get("/admin/artist-applications", authRequired, adminRequired, async (_req, res) => {
+  try {
+    const applications = await artistApplicationDraftRepository.listSubmittedApplications();
+    const payload = applications.map(serializeAdminArtistApplication);
+
+    return res.status(200).json({
+      summary: {
+        totalApplications: payload.length,
+        pendingApplications: payload.filter(
+          (application) => application.status === ARTIST_APPLICATION_STATUS.PENDING
+        ).length,
+        approvedApplications: payload.filter(
+          (application) => application.status === ARTIST_APPLICATION_STATUS.APPROVED
+        ).length,
+        rejectedApplications: payload.filter(
+          (application) => application.status === ARTIST_APPLICATION_STATUS.REJECTED
+        ).length
+      },
+      applications: payload
+    });
+  } catch (error) {
+    console.error("Admin artist applications fetch error:", error);
+
+    return res.status(500).json({
+      message: "Unable to load artist applications"
+    });
+  }
+});
+
+router.patch("/admin/artist-applications/:id", authRequired, adminRequired, async (req, res) => {
+  try {
+    const applicationId = Number(req.params.id);
+    const status = String(req.body.status || "").trim().toLowerCase();
+    const reviewNote = String(req.body.reviewNote || "").trim();
+
+    if (!Number.isInteger(applicationId) || applicationId < 1) {
+      return res.status(400).json({
+        message: "Invalid artist application id"
+      });
+    }
+
+    if (
+      ![ARTIST_APPLICATION_STATUS.APPROVED, ARTIST_APPLICATION_STATUS.REJECTED].includes(status)
+    ) {
+      return res.status(400).json({
+        message: "Status must be approved or rejected"
+      });
+    }
+
+    const application =
+      status === ARTIST_APPLICATION_STATUS.APPROVED
+        ? await artistApplicationDraftRepository.markApproved({
+            applicationId,
+            reviewedByAdminId: req.user.id,
+            reviewNote
+          })
+        : await artistApplicationDraftRepository.markRejected({
+            applicationId,
+            reviewedByAdminId: req.user.id,
+            reviewNote
+          });
+
+    return res.status(200).json({
+      message:
+        status === ARTIST_APPLICATION_STATUS.APPROVED
+          ? "Artist application approved"
+          : "Artist application rejected",
+      application: serializeAdminArtistApplication(application)
+    });
+  } catch (error) {
+    if (error.code === "P2025") {
+      return res.status(404).json({
+        message: "Artist application not found"
+      });
+    }
+
+    console.error("Admin artist application review error:", error);
+    return res.status(500).json({
+      message: "Unable to review artist application"
+    });
+  }
+});
+
+router.get(
+  "/admin/artist-applications/:id/contract.pdf",
+  authRequired,
+  adminRequired,
+  async (req, res) => {
+    try {
+      const applicationId = Number(req.params.id);
+
+      if (!Number.isInteger(applicationId) || applicationId < 1) {
+        return res.status(400).json({
+          message: "Invalid artist application id"
+        });
+      }
+
+      const application = await artistApplicationDraftRepository.findById(applicationId);
+
+      if (!application || (!application.contractPdf && !application.signatureDataUrl)) {
+        return res.status(404).json({
+          message: "Artist contract not found"
+        });
+      }
+
+      const { payload, pdfBuffer } = await resolveApplicationContractPdf(application);
+      const nameSource =
+        payload.displayName || application.user?.username || application.user?.email || "artiste";
+      const safeName = String(nameSource)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+      
+      if (!pdfBuffer || pdfBuffer.length === 0) {
+        throw new Error("Stored artist contract PDF is unreadable");
+      }
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `inline; filename="make-it-art-artist-contract-${safeName || "artiste"}.pdf"`
+      );
+      res.setHeader("Content-Length", pdfBuffer.length);
+      res.setHeader("Cache-Control", "no-store, max-age=0");
+      res.setHeader("Pragma", "no-cache");
+
+      return res.status(200).send(pdfBuffer);
+    } catch (error) {
+      console.error("Admin artist contract download error:", error);
+      return res.status(500).json({
+        message: "Unable to load artist contract"
+      });
+    }
+  }
+);
 
 router.get("/admin/artworks", authRequired, adminRequired, async (_req, res) => {
   try {
@@ -420,6 +650,11 @@ router.get("/admin/dashboard", authRequired, adminRequired, async (_req, res) =>
           label: "Aller vers payments",
           description: "Suivre les transactions et le revenu observe.",
           route: "/admin/payments"
+        },
+        {
+          label: "Aller vers settings",
+          description: "Mettre a jour le compte admin et sa securite.",
+          route: "/admin/settings"
         }
       ]
     });
