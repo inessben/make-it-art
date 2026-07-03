@@ -5,7 +5,8 @@ async function findByEmail(email) {
     where: { email },
     include: {
       admin: true,
-      artist: true
+      artist: true,
+      artistApplicationDraft: true
     }
   });
 }
@@ -18,7 +19,8 @@ async function findByOAuthProvider(oauthProvider, oauthSubject) {
     },
     include: {
       admin: true,
-      artist: true
+      artist: true,
+      artistApplicationDraft: true
     }
   });
 }
@@ -34,7 +36,8 @@ async function createOAuthUser(data) {
     data,
     include: {
       admin: true,
-      artist: true
+      artist: true,
+      artistApplicationDraft: true
     }
   });
 }
@@ -53,7 +56,8 @@ async function findById(id) {
     where: { id },
     include: {
       admin: true,
-      artist: true
+      artist: true,
+      artistApplicationDraft: true
     }
   });
 }
@@ -72,7 +76,8 @@ async function updateUser(userId, data) {
     data,
     include: {
       admin: true,
-      artist: true
+      artist: true,
+      artistApplicationDraft: true
     }
   });
 }
@@ -89,7 +94,8 @@ async function linkOAuthProvider(userId, { oauthProvider, oauthSubject }) {
     },
     include: {
       admin: true,
-      artist: true
+      artist: true,
+      artistApplicationDraft: true
     }
   });
 }
@@ -107,6 +113,7 @@ async function listUsersForAdmin() {
     include: {
       admin: true,
       artist: true,
+      artistApplicationDraft: true,
       _count: {
         select: {
           orders: true

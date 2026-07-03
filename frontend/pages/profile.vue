@@ -96,10 +96,25 @@ definePageMeta({
 const auth = useAuthStore();
 const { user, loading } = storeToRefs(auth);
 const message = ref("");
-const artistActionRoute = computed(() => (auth.isArtist ? "/artist-profile" : "/become-artist"));
-const artistActionLabel = computed(() =>
-  auth.isArtist ? "Voir profil artiste" : "Become an artist"
+const artistApplicationStatus = computed(() => auth.artistApplicationStatus);
+const artistActionRoute = computed(() =>
+  auth.isArtist || artistApplicationStatus.value ? "/artist-profile" : "/become-artist"
 );
+const artistActionLabel = computed(() => {
+  if (auth.isArtist) {
+    return "Voir profil artiste";
+  }
+
+  if (artistApplicationStatus.value === "pending") {
+    return "Suivre ma demande artiste";
+  }
+
+  if (artistApplicationStatus.value === "rejected") {
+    return "Corriger ma demande artiste";
+  }
+
+  return "Become an artist";
+});
 
 // !!!!!! A FAIRE !!!!
 // Recup icones du figma pour ajouter aux cards IMPORTANT !!!!!!
@@ -113,7 +128,7 @@ const cards = computed(() => [
   },
   {
     icon: "",
-    title: auth.isArtist ? "Profil artiste" : "Become an artist",
+    title: auth.isArtist ? "Profil artiste" : artistActionLabel.value,
     route: artistActionRoute.value,
     description: auth.isArtist
       ? "Gérez votre portfolio artistique"

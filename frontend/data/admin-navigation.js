@@ -34,5 +34,11 @@ export const adminNavigation = [
     description: "Transactions et revenus",
     route: "/admin/payments",
     icon: "PY"
+  },
+  {
+    label: "Settings",
+    description: "Compte admin et securite",
+    route: "/admin/settings",
+    icon: "ST"
   }
 ];

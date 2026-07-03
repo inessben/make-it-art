@@ -15,6 +15,6 @@ export default defineNuxtRouteMiddleware(async () => {
   }
 
   if (!auth.isAdmin) {
-    return navigateTo("/forbidden", { replace: true });
+    return navigateTo(auth.defaultAuthenticatedRoute, { replace: true });
   }
 });

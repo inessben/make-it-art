@@ -10,6 +10,7 @@ coverage/
 dist/
 build/
 .output/
+output/
 .nuxt/
 .next/
 

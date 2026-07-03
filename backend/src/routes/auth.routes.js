@@ -23,6 +23,7 @@ const {
   getPasswordValidationError
 } = require("../utils/password-validation");
 const { serializeAuthUser } = require("../utils/serialize-auth-user");
+const { isAdminUser } = require("../middlewares/admin-required.middleware");
 
 const env = require("../config/env");
 
@@ -63,6 +64,10 @@ function setAuthCookies(res, result) {
   res.cookie(env.refreshCookieName, result.refreshToken, getRefreshCookieOptions());
 }
 
+function getAuthenticatedAppPath(user) {
+  return isAdminUser(user) ? "/admin" : "/profile";
+}
+
 router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -85,6 +90,7 @@ router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
       return res.status(200).json({
         message: "Login successful",
         requiresCode: false,
+        redirectTo: getAuthenticatedAppPath(result.user),
         user: serializeAuthUser(result.user)
       });
     }
@@ -159,7 +165,7 @@ router.get("/auth/google/callback", authRateLimit, async (req, res) => {
     setAuthCookies(res, result);
     res.clearCookie(env.googleOAuth.linkCookieName, getClearGoogleOAuthLinkCookieOptions());
 
-    return res.redirect(buildAppRedirect("/profile"));
+    return res.redirect(buildAppRedirect(getAuthenticatedAppPath(result.user)));
   } catch (_error) {
     return res.redirect(buildAppRedirect("/login", { google: "error" }));
   }
@@ -186,6 +192,7 @@ router.post("/auth/google/link", authRateLimit, async (req, res) => {
 
     return res.status(200).json({
       message: "Google account linked successfully",
+      redirectTo: getAuthenticatedAppPath(result.user),
       user: serializeAuthUser(result.user)
     });
   } catch (error) {
@@ -502,6 +509,7 @@ router.post("/auth/verify-login-code", strictAuthRateLimit, async (req, res) => 
 
     return res.status(200).json({
       message: "Login successful",
+      redirectTo: getAuthenticatedAppPath(result.user),
       user: serializeAuthUser(result.user)
     });
   } catch (error) {

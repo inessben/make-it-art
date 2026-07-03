@@ -24,6 +24,7 @@ model User {
   admin                   Admin?
   artistApplicationDraft  ArtistApplicationDraft?
   artist                  Artist?
+  reviewedArtistApplications ArtistApplicationDraft[] @relation("artist_application_reviewed_by")
   auditLogs               AuditLog[]
   consents                ConsentRGPD[]
   emailVerificationTokens EmailVerificationToken[] @relation("emailVerificationTokens")
@@ -45,12 +46,23 @@ model ArtistApplicationDraft {
   id                 Int       @id @default(autoincrement())
   userId             Int       @unique @map("user_id")
   currentStep        Int       @default(1) @map("current_step")
+  status             String    @default("draft")
   payload            Json?
   completedAt        DateTime? @map("completed_at")
+  submittedAt        DateTime? @map("submitted_at")
+  reviewedAt         DateTime? @map("reviewed_at")
+  reviewedByAdminId  Int?      @map("reviewed_by_admin_id")
+  reviewNote         String?   @map("review_note")
+  contractAcceptedAt DateTime? @map("contract_accepted_at")
+  contractSignedAt   DateTime? @map("contract_signed_at")
+  contractVersion    String?   @map("contract_version")
+  signatureDataUrl   String?   @map("signature_data_url")
+  contractPdf        Bytes?    @map("contract_pdf")
   lastReminderSentAt DateTime? @map("last_reminder_sent_at")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
   user               User      @relation(fields: [userId], references: [id])
+  reviewedByAdmin    User?     @relation("artist_application_reviewed_by", fields: [reviewedByAdminId], references: [id])
 
   @@map("artist_application_draft")
 }

@@ -13,7 +13,26 @@ function serializeArtist(artist) {
   };
 }
 
+function serializeArtistApplication(application) {
+  if (!application) {
+    return null;
+  }
+
+  return {
+    id: application.id,
+    status: application.status || "draft",
+    currentStep: application.currentStep,
+    submittedAt: application.submittedAt || null,
+    reviewedAt: application.reviewedAt || null,
+    reviewNote: application.reviewNote || "",
+    contractSignedAt: application.contractSignedAt || null,
+    contractVersion: application.contractVersion || null
+  };
+}
+
 function serializeAuthUser(user) {
+  const admin = isAdminUser(user);
+
   return {
     id: user.id,
     email: user.email,
@@ -21,13 +40,15 @@ function serializeAuthUser(user) {
     bio: user.bio,
     phone: user.phone,
     role: user.role || null,
-    isAdmin: isAdminUser(user),
-    isArtist: Boolean(user.artist),
-    artist: serializeArtist(user.artist)
+    isAdmin: admin,
+    isArtist: admin ? false : Boolean(user.artist),
+    artist: admin ? null : serializeArtist(user.artist),
+    artistApplication: admin ? null : serializeArtistApplication(user.artistApplicationDraft)
   };
 }
 
 module.exports = {
   serializeArtist,
+  serializeArtistApplication,
   serializeAuthUser
 };
