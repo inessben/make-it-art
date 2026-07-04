@@ -1,0 +1,101 @@
+École Supérieure de Génie Informatique
+Projet Annuel
+Spécialisation Ingénierie du Web
+Année scolaire 2025 2026
+Introduction
+L'objectif de ce projet annuel est de réaliser une application web complète et fonctionnelle
+en partant de zéro. Le sujet de l'application est libre, vous permettant de laisser libre cours à
+votre créativité. Cependant, l'évaluation portera principalement sur le respect d'un cahier des
+charges technique et organisationnel strict, conçu pour vous faire monter en compétence sur
+les technologies et les pratiques les plus pertinentes du développement web moderne.
+Chaque contrainte du cahier des charges représente une compétence clé à acquérir et à
+démontrer.
+Le Sujet Libre
+Vous devez proposer un concept d'application web. Celui-ci devra être validé par le directeur
+pédagogique avant le début du développement. L'application doit être suffisamment
+complexe pour justifier l'utilisation des technologies imposées.
+Cahier des Charges Technique (Barème sur 15 points)
+Le respect de ce cahier des charges est le cœur de l'évaluation.
+1. Gestion de Projet et Organisation
+2. Client-Side (Frontend)
+Outil de suivi : Utilisation obligatoire d'un outil de gestion de projet comme Trello, Jira,
+ou GitHub Projects. Le board devra être maintenu à jour (sprints, user stories, tâches).
+Versionning : Le code source devra être hébergé sur GitHub ou GitLab, avec un
+historique de commits clair et des branches de fonctionnalités (feature branches).
+Une participation équilibrée de tous les membres de l'équipe est attendue et sera vérifiée
+à travers l'historique des commits.
+Framework : Le client devra être une Single Page Application (SPA) ou une application
+rendue côté serveur (SSR) développée avec Nuxt.js (v3+).
+Styling : L'interface devra être stylisée avec TailwindCSS.
+
+===== PAGE BREAK =====
+
+3. Server-Side (Backend)
+4. Base de Données
+5. DevOps & Déploiement
+6. Qualité et Tests
+7. Légal et Analyse
+UI/UX & Accessibilité : Une attention particulière sera portée à la qualité des interfaces,
+à l'expérience utilisateur (fluidité, intuitivité) et au respect des normes d'accessibilité web
+(WCAG).
+Technologie : Le serveur devra être développé en Node.js avec un framework au choix
+(Express.js, Fastify, etc.).
+Authentification : Le système d'authentification devra implémenter :
+Une connexion via un fournisseur tiers avec OAuth2 (Google, GitHub, etc.).
+Une authentification à deux facteurs (2FA) avec TOTP (Time-based One-Time
+Password).
+Modélisation et Requêtes : La modélisation des données devra être réalisée en SQL.
+Une attention particulière sera portée à l'optimisation des requêtes (index, requêtes
+complexes, etc.). Le choix du SGBD (PostgreSQL, MariaDB, etc.) est libre mais doit être
+justifié.
+Environnements : L'application devra fonctionner dans deux environnements distincts
+gérés par Docker et Docker Compose :
+Un environnement de développement local.
+Un environnement de production.
+Hébergement : L'application en production devra être déployée sur un VPS Linux
+(fournisseur au choix : OVH, Scaleway, DigitalOcean...).
+Sécurité du serveur : Le VPS devra être sécurisé (pare-feu, mises à jour, configuration
+SSH renforcée, etc.).
+Intégration et Déploiement Continus (CI/CD) : Une pipeline de CI/CD (avec GitHub
+Actions, GitLab CI...) devra automatiser :
+L'exécution des tests à chaque push.
+Le déploiement automatique sur le VPS en production après un merge sur la
+branche principale.
+Tests : L'application devra inclure une suite de tests pertinents :
+Tests Unitaires (fonctions critiques du backend/frontend).
+Tests d'Intégration (interactions entre plusieurs modules).
+Tests d'Interface (E2E) pour les parcours utilisateurs principaux.
+
+===== PAGE BREAK =====
+
+Barème d'Évaluation (Total sur 15 points)
+Points Bonus (jusqu'à 5 points supplémentaires)
+Des points bonus pourront être accordés pour l'implémentation de fonctionnalités ou de
+technologies avancées, telles que :
+Livrables Attendus
+RGPD : Une page devra informer l'utilisateur sur la collecte et l'utilisation de ses
+données, conformément au RGPD. Le consentement pour les cookies non essentiels
+devra être recueilli.
+Analytique : Intégration d'un outil d'analytique respectueux de la vie privée comme
+Umami ou Plausible.
+Respect du Cahier des Charges (15 points) :
+Gestion de projet et organisation : 1 pt
+Frontend (Nuxt.js, TailwindCSS, UX, Accessibilité) : 3 pts
+Backend (Node.js) : 2 pts
+Base de données (Modélisation, SQL optimisé) : 2 pts
+Authentification (OAuth2, TOTP) : 2 pts
+DevOps (Docker, VPS, Sécurité, CI/CD) : 3 pts
+Qualité et Tests (Unitaires, Intégration, E2E) : 1 pt
+Légal et Analytique (RGPD, Umami) : 1 pt
+Virtualisation avancée : Utilisation de Proxmox pour gérer le VPS et les conteneurs.
+Orchestration de conteneurs : Déploiement sur un cluster Docker Swarm ou
+Kubernetes (k3s).
+Architecture hexagonale avec CQRS et Event Sourcing.
+API en ts-rest ou tRPC à la place d'une API REST classique.
+Fonctionnalités temps réel avec WebSockets.
+Sécurité renforcée : Mise en place de Content Security Policy (CSP), HSTS, etc.
+1. Archive ZIP du code source complet (le projet doit utiliser Git pour le versionning
+interne, mais le livrable est une archive).
+2. URL de l'application en production.
+3. Accès au board de gestion de projet.
+4. Un support de présentation technique n'est pas obligatoire mais est autorisé.

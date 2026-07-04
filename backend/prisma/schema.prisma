@@ -34,6 +34,7 @@ model User {
   orders                  Order[]
   ownershipTokens         OwnershipToken[]
   passwordResetTokens     PasswordResetToken[]     @relation("passwordResetTokens")
+  personalCollections     Collection[]             @relation("user_collections")
   refreshTokens           RefreshToken[]
   rememberedDevices       RememberedDevice[]       @relation("rememberedDevices")
   galleries               UserGallery[]
@@ -149,11 +150,14 @@ model Category {
 
 model Collection {
   id          Int              @id @default(autoincrement())
-  artistId    Int              @map("artist_id")
+  artistId    Int?             @map("artist_id")
+  userId      Int?             @map("user_id")
   title       String?
   description String?
+  isPrivate   Boolean          @default(false) @map("is_private")
   createdAt   DateTime?        @map("created_at")
-  artist      Artist           @relation(fields: [artistId], references: [id])
+  artist      Artist?          @relation(fields: [artistId], references: [id])
+  user        User?            @relation("user_collections", fields: [userId], references: [id])
   items       CollectionItem[]
 
   @@map("collection")

@@ -1,5 +1,6 @@
 <template>
-  <main class="min-h-screen bg-[#000000] px-6 py-10 text-[#E6EDF7]">
+  <WishlistPageContent />
+  <main v-if="false" class="min-h-screen bg-[#000000] px-6 py-10 text-[#E6EDF7]">
     <section
       class="mx-auto w-full max-w-[1120px] rounded-[32px] border border-[#1A1F2A] bg-[#01050E] p-8 shadow-[0_32px_90px_rgba(0,0,0,0.22)]"
     >
@@ -31,10 +32,18 @@
 
 <script setup>
 import { navigateTo } from "#app";
+import WishlistPageContent from "~/components/collector/WishlistPageContent.vue";
+import { useAuthStore } from "~/stores/auth";
 
 definePageMeta({
   middleware: "auth"
 });
+
+const auth = useAuthStore();
+
+if (auth.isAdmin) {
+  await navigateTo("/admin");
+}
 
 function navigateBack() {
   return navigateTo("/profile");
