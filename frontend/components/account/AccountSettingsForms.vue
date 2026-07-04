@@ -120,6 +120,50 @@
       </div>
     </form>
 
+    <section
+      v-if="showArtistContractSection"
+      class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-8"
+    >
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-[#E6EDF7]">Contrat artiste</h2>
+          <p class="mt-2 max-w-2xl text-sm leading-7 text-[#A0ADB4]">
+            Retrouvez ici votre contrat signe en PDF pour le consulter ou le telecharger a tout
+            moment.
+          </p>
+          <p
+            v-if="artistContractSignedAtLabel"
+            class="mt-3 text-sm font-medium text-[#B8C5D9]"
+          >
+            Signe le {{ artistContractSignedAtLabel }}
+          </p>
+          <p
+            v-if="artistContractVersion"
+            class="mt-1 text-xs uppercase tracking-[0.16em] text-[#4A6CF7]"
+          >
+            {{ artistContractVersion }}
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+          <a
+            href="/api/artists/me/contract.pdf"
+            target="_blank"
+            rel="noreferrer"
+            class="inline-flex items-center justify-center rounded-2xl border border-[#4A6CF7] bg-[#4A6CF7]/10 px-6 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#4A6CF7]/20"
+          >
+            Ouvrir le PDF
+          </a>
+          <a
+            href="/api/artists/me/contract.pdf?download=1"
+            class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-6 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+          >
+            Telecharger le PDF
+          </a>
+        </div>
+      </div>
+    </section>
+
     <section class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-8">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -141,7 +185,7 @@
 </template>
 
 <script setup>
-import { ref, watchEffect } from "vue";
+import { computed, ref, watchEffect } from "vue";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "~/stores/auth";
 import {
@@ -161,6 +205,40 @@ const newPassword = ref("");
 const confirmPassword = ref("");
 const successMessage = ref("");
 const errorMessage = ref("");
+
+const artistContractSignedAtLabel = computed(() => {
+  const signedAt = user.value?.artistApplication?.contractSignedAt;
+
+  if (!signedAt) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(signedAt));
+});
+
+const artistContractVersion = computed(() => user.value?.artistApplication?.contractVersion || "");
+const showArtistContractSection = computed(() => {
+  if (auth.isAdmin) {
+    return false;
+  }
+
+  const application = user.value?.artistApplication;
+
+  return Boolean(
+    auth.isArtist &&
+      application &&
+      (application.hasContractPdf ||
+        application.contractSignedAt ||
+        application.contractVersion ||
+        application.status === "approved")
+  );
+});
 
 watchEffect(() => {
   if (user.value) {

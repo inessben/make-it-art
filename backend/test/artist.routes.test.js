@@ -396,6 +396,32 @@ test("GET /artists/me/contract.pdf returns a valid PDF response for Uint8Array d
   assert.deepEqual(response.body, Buffer.from(pdfBytes));
 });
 
+test("GET /artists/me/contract.pdf supports forced download mode", async (t) => {
+  const pdfBytes = new Uint8Array(Buffer.from("%PDF-1.4\nartist-contract-download"));
+  const { baseUrl } = await startArtistRoutesApp(t, {
+    findByUserIdResult: {
+      id: 11,
+      userId: authUser.id,
+      status: "approved",
+      currentStep: 4,
+      payload: {
+        displayName: "Ada Art",
+        firstName: "Ada",
+        lastName: "Lovelace"
+      },
+      contractVersion: "make-it-art-artist-contract-v2",
+      contractPdf: pdfBytes,
+      user: authUser
+    }
+  });
+
+  const response = await requestBinary(baseUrl, "/artists/me/contract.pdf?download=1");
+
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-disposition"), /^attachment;/);
+  assert.deepEqual(response.body, Buffer.from(pdfBytes));
+});
+
 test("GET /artists/me/contract.pdf regenerates legacy contracts with the stored signature timestamp", async (t) => {
   const { baseUrl, calls } = await startArtistRoutesApp(t, {
     findByUserIdResult: {
