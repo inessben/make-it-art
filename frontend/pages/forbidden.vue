@@ -3,13 +3,17 @@
     <section
       class="mx-auto w-full max-w-[820px] rounded-[32px] border border-[#1A1F2A] bg-[#01050E] p-8 shadow-[0_32px_90px_rgba(0,0,0,0.22)]"
     >
-      <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Access control</p>
-      <h1 class="mt-4 text-[clamp(2rem,2.5vw,2.8rem)] font-semibold leading-[1.05]">
+      <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+        Access control
+      </p>
+      <h1
+        class="mt-4 text-[clamp(2rem,2.5vw,2.8rem)] font-semibold leading-[1.05]"
+      >
         Acces refuse
       </h1>
       <p class="mt-4 max-w-2xl text-[#A0ADB4] leading-7">
-        Cette zone est reservee aux comptes admin. Si tu dois y avoir acces, il faut qu'un role
-        admin soit defini pour ton utilisateur dans la base.
+        Cette zone est reservee aux comptes admin. Si tu dois y avoir acces, il
+        faut qu'un role admin soit defini pour ton utilisateur dans la base.
       </p>
 
       <div class="mt-8 grid gap-4 sm:grid-cols-2">

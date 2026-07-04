@@ -23,19 +23,31 @@
         <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
           {{ summaryCard.label }}
         </p>
-        <p class="mt-4 text-3xl font-semibold text-white">{{ summaryCard.value }}</p>
-        <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">{{ summaryCard.description }}</p>
+        <p class="mt-4 text-3xl font-semibold text-white">
+          {{ summaryCard.value }}
+        </p>
+        <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
+          {{ summaryCard.description }}
+        </p>
       </article>
     </section>
 
     <section class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div
+        class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+      >
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Orders list</p>
-          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Suivi des commandes</h2>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+            Orders list
+          </p>
+          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
+            Suivi des commandes
+          </h2>
         </div>
         <div class="grid gap-3 sm:grid-cols-2">
-          <label class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3">
+          <label
+            class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3"
+          >
             <span class="sr-only">Search orders</span>
             <input
               v-model="searchTerm"
@@ -44,7 +56,9 @@
               class="w-full bg-transparent text-sm text-[#E6EDF7] outline-none placeholder:text-[#6D7A88]"
             />
           </label>
-          <label class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3">
+          <label
+            class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3"
+          >
             <span class="sr-only">Filter orders</span>
             <select
               v-model="statusFilter"
@@ -80,11 +94,16 @@
         Aucune commande ne correspond aux filtres actuels.
       </div>
 
-      <div v-else class="mt-6 overflow-hidden rounded-[22px] border border-[#1A1F2A]">
+      <div
+        v-else
+        class="mt-6 overflow-hidden rounded-[22px] border border-[#1A1F2A]"
+      >
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-[#1A1F2A]">
             <thead class="bg-[#01050E]">
-              <tr class="text-left text-xs uppercase tracking-[0.18em] text-[#6D7A88]">
+              <tr
+                class="text-left text-xs uppercase tracking-[0.18em] text-[#6D7A88]"
+              >
                 <th class="px-5 py-4 font-medium">Order</th>
                 <th class="px-5 py-4 font-medium">Customer</th>
                 <th class="px-5 py-4 font-medium">Status</th>
@@ -95,12 +114,18 @@
             <tbody class="divide-y divide-[#1A1F2A] bg-[#090017]">
               <tr v-for="order in filteredOrders" :key="order.id">
                 <td class="px-5 py-4">
-                  <p class="font-semibold text-[#E6EDF7]">{{ order.reference }}</p>
-                  <p class="mt-1 text-sm text-[#8E9AA7]">{{ order.itemsCount }} items</p>
+                  <p class="font-semibold text-[#E6EDF7]">
+                    {{ order.reference }}
+                  </p>
+                  <p class="mt-1 text-sm text-[#8E9AA7]">
+                    {{ order.itemsCount }} items
+                  </p>
                 </td>
                 <td class="px-5 py-4">
                   <p class="text-sm text-[#D8E1F0]">{{ order.customer }}</p>
-                  <p class="mt-1 text-sm text-[#8E9AA7]">{{ order.customerEmail }}</p>
+                  <p class="mt-1 text-sm text-[#8E9AA7]">
+                    {{ order.customerEmail }}
+                  </p>
                 </td>
                 <td class="px-5 py-4">
                   <span
@@ -110,8 +135,12 @@
                     {{ order.status }}
                   </span>
                 </td>
-                <td class="px-5 py-4 text-sm text-[#D8E1F0]">{{ order.amount }}</td>
-                <td class="px-5 py-4 text-sm text-[#8E9AA7]">{{ formatDate(order.createdAt) }}</td>
+                <td class="px-5 py-4 text-sm text-[#D8E1F0]">
+                  {{ order.amount }}
+                </td>
+                <td class="px-5 py-4 text-sm text-[#8E9AA7]">
+                  {{ formatDate(order.createdAt) }}
+                </td>
               </tr>
             </tbody>
           </table>
@@ -126,7 +155,7 @@ import { computed, onMounted, ref } from "vue";
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "admin"
+  middleware: "admin",
 });
 
 const loading = ref(true);
@@ -138,30 +167,30 @@ const summary = ref({
   totalOrders: 0,
   paidOrders: 0,
   pendingOrders: 0,
-  refundedOrders: 0
+  refundedOrders: 0,
 });
 
 const summaries = computed(() => [
   {
     label: "Total orders",
     value: summary.value.totalOrders,
-    description: "Nombre total de commandes en base."
+    description: "Nombre total de commandes en base.",
   },
   {
     label: "Paid orders",
     value: summary.value.paidOrders,
-    description: "Commandes marquees comme payees."
+    description: "Commandes marquees comme payees.",
   },
   {
     label: "Pending orders",
     value: summary.value.pendingOrders,
-    description: "Commandes encore en attente."
+    description: "Commandes encore en attente.",
   },
   {
     label: "Refunded orders",
     value: summary.value.refundedOrders,
-    description: "Commandes remboursees."
-  }
+    description: "Commandes remboursees.",
+  },
 ]);
 
 const filteredOrders = computed(() => {
@@ -174,7 +203,8 @@ const filteredOrders = computed(() => {
       order.customer.toLowerCase().includes(normalizedSearch) ||
       order.customerEmail.toLowerCase().includes(normalizedSearch);
 
-    const matchesStatus = statusFilter.value === "all" || order.status === statusFilter.value;
+    const matchesStatus =
+      statusFilter.value === "all" || order.status === statusFilter.value;
 
     return matchesSearch && matchesStatus;
   });
@@ -190,7 +220,7 @@ async function loadOrders() {
 
   try {
     const response = await $fetch("/api/admin/orders", {
-      credentials: "include"
+      credentials: "include",
     });
 
     orders.value = response.orders || [];
@@ -230,7 +260,7 @@ function formatDate(value) {
   }
 
   return new Intl.DateTimeFormat("fr-FR", {
-    dateStyle: "medium"
+    dateStyle: "medium",
   }).format(new Date(value));
 }
 </script>

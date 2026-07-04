@@ -22,7 +22,8 @@ onMounted(async () => {
     message.value = "Your email has been verified. You can now log in.";
     verified.value = true;
   } catch (error) {
-    message.value = error?.data?.message || "This verification link is invalid or expired.";
+    message.value =
+      error?.data?.message || "This verification link is invalid or expired.";
   }
 });
 </script>
@@ -34,7 +35,11 @@ onMounted(async () => {
   place-items: center;
   padding: 24px;
   background:
-    radial-gradient(circle at top left, rgba(50, 115, 220, 0.12), transparent 34%),
+    radial-gradient(
+      circle at top left,
+      rgba(50, 115, 220, 0.12),
+      transparent 34%
+    ),
     linear-gradient(135deg, #f7f8fb 0%, #eef2f7 100%);
   color: #172033;
 }

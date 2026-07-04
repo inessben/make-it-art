@@ -4,13 +4,15 @@ const { isAdminUser } = require("../middlewares/admin-required.middleware");
 const artistApplicationDraftRepository = require("../repositories/artist-application-draft.repository");
 const artistRepository = require("../repositories/artist.repository");
 const userRepository = require("../repositories/user.repository");
-const { ARTIST_APPLICATION_STATUS } = require("../constants/artist-application-status");
+const {
+  ARTIST_APPLICATION_STATUS,
+} = require("../constants/artist-application-status");
 const {
   CONTRACT_VERSION,
   extractArtistApplicationPayload,
   resolveContractSignedAt,
   renderArtistContract,
-  generateArtistContractPdf
+  generateArtistContractPdf,
 } = require("../services/artist-contract.service");
 const { serializeAuthUser } = require("../utils/serialize-auth-user");
 const { ensureBuffer } = require("../utils/ensure-buffer");
@@ -20,7 +22,7 @@ const router = express.Router();
 function ensureNonAdminArtistAccess(req, res, next) {
   if (isAdminUser(req.user)) {
     return res.status(403).json({
-      message: "Admin accounts cannot access artist application routes"
+      message: "Admin accounts cannot access artist application routes",
     });
   }
 
@@ -49,7 +51,7 @@ function serializeApplicationDraft(draft) {
     hasContractPdf: Boolean(draft.contractPdf),
     lastReminderSentAt: draft.lastReminderSentAt,
     createdAt: draft.createdAt,
-    updatedAt: draft.updatedAt
+    updatedAt: draft.updatedAt,
   };
 }
 
@@ -70,8 +72,8 @@ function serializeArtistProfile(artist) {
     stats: {
       artworks: artist._count?.artworks || 0,
       followers: artist._count?.followers || 0,
-      collections: artist._count?.collections || 0
-    }
+      collections: artist._count?.collections || 0,
+    },
   };
 }
 
@@ -105,7 +107,7 @@ function normalizeArtistApplicationPayload(input = {}) {
     country: normalizeText(input.country),
     taxId: normalizeText(input.taxId),
     termsAccepted: Boolean(input.termsAccepted),
-    commissionAccepted: Boolean(input.commissionAccepted)
+    commissionAccepted: Boolean(input.commissionAccepted),
   };
 }
 
@@ -124,9 +126,7 @@ function isValidOptionalUrl(value) {
 
 function validateArtistApplicationPayload(
   payload,
-  {
-    requireAcceptances = false
-  } = {}
+  { requireAcceptances = false } = {},
 ) {
   if (!payload.displayName) {
     return "Le nom d'artiste est requis.";
@@ -136,7 +136,12 @@ function validateArtistApplicationPayload(
     return "Le prenom et le nom legal sont requis.";
   }
 
-  if (!payload.addressLine1 || !payload.city || !payload.postalCode || !payload.country) {
+  if (
+    !payload.addressLine1 ||
+    !payload.city ||
+    !payload.postalCode ||
+    !payload.country
+  ) {
     return "L'adresse legale complete est requise.";
   }
 
@@ -160,7 +165,10 @@ function validateArtistApplicationPayload(
     return "Le lien de portfolio doit etre une URL valide.";
   }
 
-  if (requireAcceptances && (!payload.termsAccepted || !payload.commissionAccepted)) {
+  if (
+    requireAcceptances &&
+    (!payload.termsAccepted || !payload.commissionAccepted)
+  ) {
     return "Les validations obligatoires doivent etre acceptees.";
   }
 
@@ -170,13 +178,17 @@ function validateArtistApplicationPayload(
 function isApplicationLocked(application) {
   return (
     application &&
-    [ARTIST_APPLICATION_STATUS.PENDING, ARTIST_APPLICATION_STATUS.APPROVED].includes(
-      application.status
-    )
+    [
+      ARTIST_APPLICATION_STATUS.PENDING,
+      ARTIST_APPLICATION_STATUS.APPROVED,
+    ].includes(application.status)
   );
 }
 
-function buildContractFilename(applicationOrArtistPayload, fallbackName = "artiste") {
+function buildContractFilename(
+  applicationOrArtistPayload,
+  fallbackName = "artiste",
+) {
   const displayName =
     normalizeText(applicationOrArtistPayload?.displayName) ||
     normalizeText(applicationOrArtistPayload?.payload?.displayName) ||
@@ -194,12 +206,14 @@ async function resolveApplicationContractPdf(application, fallbackUser) {
   const payload = extractArtistApplicationPayload(application);
   const existingPdf = ensureBuffer(application?.contractPdf);
   const needsRegeneration =
-    application?.contractVersion !== CONTRACT_VERSION || !existingPdf || existingPdf.length === 0;
+    application?.contractVersion !== CONTRACT_VERSION ||
+    !existingPdf ||
+    existingPdf.length === 0;
 
   if (!needsRegeneration) {
     return {
       payload,
-      pdfBuffer: existingPdf
+      pdfBuffer: existingPdf,
     };
   }
 
@@ -210,7 +224,7 @@ async function resolveApplicationContractPdf(application, fallbackUser) {
 
     return {
       payload,
-      pdfBuffer: existingPdf
+      pdfBuffer: existingPdf,
     };
   }
 
@@ -219,7 +233,7 @@ async function resolveApplicationContractPdf(application, fallbackUser) {
     user: application.user || fallbackUser,
     payload,
     signatureDataUrl: application.signatureDataUrl,
-    signedAt
+    signedAt,
   });
 
   await artistApplicationDraftRepository.updateStoredContract({
@@ -227,12 +241,12 @@ async function resolveApplicationContractPdf(application, fallbackUser) {
     contractVersion: regeneratedContract.contractVersion,
     contractPdf: regeneratedContract.pdfBuffer,
     contractSignedAt: signedAt,
-    contractAcceptedAt: application.contractAcceptedAt || signedAt
+    contractAcceptedAt: application.contractAcceptedAt || signedAt,
   });
 
   return {
     payload,
-    pdfBuffer: regeneratedContract.pdfBuffer
+    pdfBuffer: regeneratedContract.pdfBuffer,
   };
 }
 
@@ -240,70 +254,73 @@ router.get("/artists/me", async (req, res) => {
   try {
     const [artist, application] = await Promise.all([
       artistRepository.findByUserId(req.user.id),
-      artistApplicationDraftRepository.findByUserId(req.user.id)
+      artistApplicationDraftRepository.findByUserId(req.user.id),
     ]);
 
     return res.status(200).json({
       artist: serializeArtistProfile(artist),
-      application: serializeApplicationDraft(application)
+      application: serializeApplicationDraft(application),
     });
   } catch (error) {
     console.error("Artist profile fetch error:", error);
     return res.status(500).json({
-      message: "Unable to load artist profile"
+      message: "Unable to load artist profile",
     });
   }
 });
 
 router.post("/artists/me/contract-preview", async (req, res) => {
   try {
-    const existingApplication = await artistApplicationDraftRepository.findByUserId(req.user.id);
+    const existingApplication =
+      await artistApplicationDraftRepository.findByUserId(req.user.id);
 
     if (isApplicationLocked(existingApplication)) {
       return res.status(409).json({
-        message: "Your artist application is already under review."
+        message: "Your artist application is already under review.",
       });
     }
 
     const payload = normalizeArtistApplicationPayload(req.body);
     const validationError = validateArtistApplicationPayload(payload, {
-      requireAcceptances: true
+      requireAcceptances: true,
     });
 
     if (validationError) {
       return res.status(400).json({
-        message: validationError
+        message: validationError,
       });
     }
 
     const contract = renderArtistContract({
       user: req.user,
-      payload
+      payload,
     });
 
     return res.status(200).json({
       contractText: contract.contractText,
-      contractVersion: contract.contractVersion
+      contractVersion: contract.contractVersion,
     });
   } catch (error) {
     console.error("Artist contract preview error:", error);
     return res.status(500).json({
-      message: "Unable to generate the artist contract preview"
+      message: "Unable to generate the artist contract preview",
     });
   }
 });
 
 router.get("/artists/me/application-draft", async (req, res) => {
   try {
-    const draft = await artistApplicationDraftRepository.findByUserId(req.user.id);
+    const draft = await artistApplicationDraftRepository.findByUserId(
+      req.user.id,
+    );
 
     return res.status(200).json({
-      draft: serializeApplicationDraft(draft)
+      draft: serializeApplicationDraft(draft),
     });
   } catch (error) {
     console.error("Artist application draft fetch error:", error);
     return res.status(500).json({
-      message: "Unable to load artist application draft"
+      message: "Unable to load artist application draft",
     });
   }
 });
@@ -314,15 +331,16 @@ router.patch("/artists/me/application-draft", async (req, res) => {
 
     if (!Number.isInteger(currentStep) || currentStep < 1 || currentStep > 4) {
       return res.status(400).json({
-        message: "Current step must be between 1 and 4"
+        message: "Current step must be between 1 and 4",
       });
     }
 
-    const existingApplication = await artistApplicationDraftRepository.findByUserId(req.user.id);
+    const existingApplication =
+      await artistApplicationDraftRepository.findByUserId(req.user.id);
 
     if (isApplicationLocked(existingApplication)) {
       return res.status(409).json({
-        message: "Your artist application is already under review."
+        message: "Your artist application is already under review.",
       });
     }
 
@@ -330,28 +348,29 @@ router.patch("/artists/me/application-draft", async (req, res) => {
     const draft = await artistApplicationDraftRepository.saveDraft({
       userId: req.user.id,
       currentStep,
-      payload
+      payload,
     });
 
     return res.status(200).json({
       message: "Artist application draft saved",
-      draft: serializeApplicationDraft(draft)
+      draft: serializeApplicationDraft(draft),
     });
   } catch (error) {
     console.error("Artist application draft save error:", error);
     return res.status(500).json({
-      message: "Unable to save artist application draft"
+      message: "Unable to save artist application draft",
     });
   }
 });
 
 router.post("/artists/me", async (req, res) => {
   try {
-    const existingApplication = await artistApplicationDraftRepository.findByUserId(req.user.id);
+    const existingApplication =
+      await artistApplicationDraftRepository.findByUserId(req.user.id);
 
     if (isApplicationLocked(existingApplication)) {
       return res.status(409).json({
-        message: "Your artist application is already under review."
+        message: "Your artist application is already under review.",
       });
     }
 
@@ -359,48 +378,49 @@ router.post("/artists/me", async (req, res) => {
     const signatureDataUrl = normalizeText(req.body.signatureDataUrl);
     const contractAccepted = Boolean(req.body.contractAccepted);
     const validationError = validateArtistApplicationPayload(payload, {
-      requireAcceptances: true
+      requireAcceptances: true,
     });
 
     if (validationError) {
       return res.status(400).json({
-        message: validationError
+        message: validationError,
       });
     }
 
     if (!contractAccepted) {
       return res.status(400).json({
-        message: "Le contrat doit etre accepte avant la soumission."
+        message: "Le contrat doit etre accepte avant la soumission.",
       });
     }
 
     if (!signatureDataUrl.startsWith("data:image/")) {
       return res.status(400).json({
-        message: "La signature de l'artiste est requise."
+        message: "La signature de l'artiste est requise.",
       });
     }
 
     const generatedContract = await generateArtistContractPdf({
       user: req.user,
       payload,
-      signatureDataUrl
+      signatureDataUrl,
     });
 
-    const application = await artistApplicationDraftRepository.submitApplication({
-      userId: req.user.id,
-      currentStep: 4,
-      payload,
-      submittedAt: generatedContract.signedAt,
-      contractVersion: generatedContract.contractVersion,
-      signatureDataUrl,
-      contractPdf: generatedContract.pdfBuffer
-    });
+    const application =
+      await artistApplicationDraftRepository.submitApplication({
+        userId: req.user.id,
+        currentStep: 4,
+        payload,
+        submittedAt: generatedContract.signedAt,
+        contractVersion: generatedContract.contractVersion,
+        signatureDataUrl,
+        contractPdf: generatedContract.pdfBuffer,
+      });
     const updatedUser = await userRepository.findById(req.user.id);
 
     return res.status(200).json({
       message: "Artist application submitted and pending admin review",
       application: serializeApplicationDraft(application),
-      user: serializeAuthUser(updatedUser)
+      user: serializeAuthUser(updatedUser),
     });
   } catch (error) {
     console.error("Artist application submit error:", error);
@@ -408,29 +428,40 @@ router.post("/artists/me", async (req, res) => {
       message: "Unable to submit artist application",
       ...(process.env.NODE_ENV !== "production" && error?.message
         ? {
-            details: error.message
+            details: error.message,
           }
-        : {})
+        : {}),
     });
   }
 });
 
 router.get("/artists/me/contract.pdf", async (req, res) => {
   try {
-    const application = await artistApplicationDraftRepository.findByUserId(req.user.id);
+    const application = await artistApplicationDraftRepository.findByUserId(
+      req.user.id,
+    );
 
-    if (!application || (!application.contractPdf && !application.signatureDataUrl)) {
+    if (
+      !application ||
+      (!application.contractPdf && !application.signatureDataUrl)
+    ) {
       return res.status(404).json({
-        message: "Artist contract not found"
+        message: "Artist contract not found",
       });
     }
 
-    const { payload, pdfBuffer } = await resolveApplicationContractPdf(application, req.user);
-    const filename = buildContractFilename(payload, req.user.username || "artiste");
-    const shouldDownload = ["1", "true", "yes"].includes(
-      String(req.query.download || "").toLowerCase()
+    const { payload, pdfBuffer } = await resolveApplicationContractPdf(
+      application,
+      req.user,
     );
-    
+    const filename = buildContractFilename(
+      payload,
+      req.user.username || "artiste",
+    );
+    const shouldDownload = ["1", "true", "yes"].includes(
+      String(req.query.download || "").toLowerCase(),
+    );
+
     if (!pdfBuffer || pdfBuffer.length === 0) {
       throw new Error("Stored artist contract PDF is unreadable");
     }
@@ -438,7 +469,7 @@ router.get("/artists/me/contract.pdf", async (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `${shouldDownload ? "attachment" : "inline"}; filename="${filename}"`
+      `${shouldDownload ? "attachment" : "inline"}; filename="${filename}"`,
     );
     res.setHeader("Content-Length", pdfBuffer.length);
     res.setHeader("Cache-Control", "no-store, max-age=0");
@@ -448,7 +479,7 @@ router.get("/artists/me/contract.pdf", async (req, res) => {
   } catch (error) {
     console.error("Artist contract download error:", error);
     return res.status(500).json({
-      message: "Unable to load artist contract"
+      message: "Unable to load artist contract",
     });
   }
 });

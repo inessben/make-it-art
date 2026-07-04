@@ -8,7 +8,12 @@ $color-brand: #22d3ee;
 
 .page-home {
   background:
-    radial-gradient(circle at top right, rgba(34, 211, 238, 0.16), transparent 42%), $color-bg;
+    radial-gradient(
+      circle at top right,
+      rgba(34, 211, 238, 0.16),
+      transparent 42%
+    ),
+    $color-bg;
 
   &__title {
     color: $color-brand;

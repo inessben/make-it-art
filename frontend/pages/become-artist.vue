@@ -3,15 +3,21 @@
     <section
       class="mx-auto grid w-full max-w-[1160px] gap-8 rounded-[32px] border border-[#1A1F2A] bg-[#01050E] p-7 shadow-[0_32px_90px_rgba(0,0,0,0.22)]"
     >
-      <header class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <header
+        class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
+      >
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Artist onboarding</p>
-          <h1 class="mt-4 text-[clamp(2rem,2.6vw,3rem)] font-semibold leading-[1.05] text-white">
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+            Artist onboarding
+          </p>
+          <h1
+            class="mt-4 text-[clamp(2rem,2.6vw,3rem)] font-semibold leading-[1.05] text-white"
+          >
             Deposer votre candidature artiste
           </h1>
           <p class="mt-4 max-w-3xl text-sm leading-6 text-[#A0ADB4]">
-            Remplissez votre dossier, lisez le contrat, signez-le puis envoyez votre demande a
-            l'administration pour validation.
+            Remplissez votre dossier, lisez le contrat, signez-le puis envoyez
+            votre demande a l'administration pour validation.
           </p>
         </div>
 
@@ -35,17 +41,22 @@
         class="grid gap-5 rounded-[28px] border border-[#1A1F2A] bg-[#090017] p-7"
       >
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Demande en cours</p>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+            Demande en cours
+          </p>
           <h2 class="mt-4 text-3xl font-semibold text-white">
             Votre contrat signe est en cours d'examen
           </h2>
           <p class="mt-4 max-w-3xl text-sm leading-6 text-[#A0ADB4]">
-            L'administration doit maintenant accepter ou refuser votre demande. Tant que la revue
-            n'est pas terminee, votre profil artiste reste inactif.
+            L'administration doit maintenant accepter ou refuser votre demande.
+            Tant que la revue n'est pas terminee, votre profil artiste reste
+            inactif.
           </p>
         </div>
 
-        <dl class="grid gap-3 rounded-[24px] border border-[#1A1F2A] bg-[#050916] p-5 text-sm">
+        <dl
+          class="grid gap-3 rounded-[24px] border border-[#1A1F2A] bg-[#050916] p-5 text-sm"
+        >
           <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
             <dt class="text-[#A0ADB4]">Nom d'artiste</dt>
             <dd class="font-semibold text-white">
@@ -58,7 +69,9 @@
           </div>
           <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
             <dt class="text-[#A0ADB4]">Soumis le</dt>
-            <dd class="font-semibold text-white">{{ formatDate(pendingApplication.submittedAt) }}</dd>
+            <dd class="font-semibold text-white">
+              {{ formatDate(pendingApplication.submittedAt) }}
+            </dd>
           </div>
         </dl>
 
@@ -85,16 +98,25 @@
           v-if="rejectedApplication"
           class="rounded-[24px] border border-[#5A2C14] bg-[#28150A] px-6 py-5 text-sm text-[#F7C9A8]"
         >
-          <p class="font-semibold text-white">Votre precedente demande a ete refusee.</p>
-          <p class="mt-2 leading-6">
-            Corrigez votre dossier, relisez le contrat puis renvoyez une nouvelle candidature.
+          <p class="font-semibold text-white">
+            Votre precedente demande a ete refusee.
           </p>
-          <p v-if="rejectedApplication.reviewNote" class="mt-3 leading-6 text-[#FFDDBA]">
+          <p class="mt-2 leading-6">
+            Corrigez votre dossier, relisez le contrat puis renvoyez une
+            nouvelle candidature.
+          </p>
+          <p
+            v-if="rejectedApplication.reviewNote"
+            class="mt-3 leading-6 text-[#FFDDBA]"
+          >
             Motif admin : {{ rejectedApplication.reviewNote }}
           </p>
         </section>
 
-        <nav class="grid gap-3 sm:grid-cols-4" aria-label="Progression du formulaire artiste">
+        <nav
+          class="grid gap-3 sm:grid-cols-4"
+          aria-label="Progression du formulaire artiste"
+        >
           <button
             v-for="item in steps"
             :key="item.id"
@@ -109,7 +131,9 @@
             "
             @click="goToStep(item.id)"
           >
-            <span class="block text-xs uppercase tracking-[0.16em]">Etape {{ item.id }}</span>
+            <span class="block text-xs uppercase tracking-[0.16em]"
+              >Etape {{ item.id }}</span
+            >
             <span class="mt-1 block font-semibold">{{ item.label }}</span>
           </button>
         </nav>
@@ -119,7 +143,8 @@
             <div>
               <h2 class="text-xl font-semibold text-white">Identite legale</h2>
               <p class="mt-2 text-sm text-[#A0ADB4]">
-                Ces informations seront integrees automatiquement dans le contrat artiste.
+                Ces informations seront integrees automatiquement dans le
+                contrat artiste.
               </p>
             </div>
 
@@ -179,7 +204,9 @@
               </label>
 
               <label class="grid gap-2 text-sm text-[#A0ADB4] lg:col-span-2">
-                <span class="font-medium text-[#E6EDF7]">Complement d'adresse</span>
+                <span class="font-medium text-[#E6EDF7]"
+                  >Complement d'adresse</span
+                >
                 <input
                   v-model.trim="form.addressLine2"
                   type="text"
@@ -201,7 +228,9 @@
               </label>
 
               <label class="grid gap-2 text-sm text-[#A0ADB4]">
-                <span class="font-medium text-[#E6EDF7]">Region / departement</span>
+                <span class="font-medium text-[#E6EDF7]"
+                  >Region / departement</span
+                >
                 <input
                   v-model.trim="form.region"
                   type="text"
@@ -251,7 +280,8 @@
             <div>
               <h2 class="text-xl font-semibold text-white">Profil public</h2>
               <p class="mt-2 text-sm text-[#A0ADB4]">
-                Ces elements serviront a presenter votre univers artistique sur la plateforme.
+                Ces elements serviront a presenter votre univers artistique sur
+                la plateforme.
               </p>
             </div>
 
@@ -267,10 +297,16 @@
 
             <div class="grid gap-5 lg:grid-cols-2">
               <label class="grid gap-2 text-sm text-[#A0ADB4]">
-                <span class="font-medium text-[#E6EDF7]">Type d'art principal *</span>
+                <span class="font-medium text-[#E6EDF7]"
+                  >Type d'art principal *</span
+                >
                 <select v-model="form.artType" class="field-control">
                   <option value="">Selectionner un type</option>
-                  <option v-for="option in artTypeOptions" :key="option" :value="option">
+                  <option
+                    v-for="option in artTypeOptions"
+                    :key="option"
+                    :value="option"
+                  >
                     {{ option }}
                   </option>
                 </select>
@@ -289,7 +325,9 @@
 
             <div class="grid gap-3">
               <label class="grid gap-2 text-sm text-[#A0ADB4]">
-                <span class="font-medium text-[#E6EDF7]">Styles / specialites *</span>
+                <span class="font-medium text-[#E6EDF7]"
+                  >Styles / specialites *</span
+                >
                 <span class="flex flex-col gap-3 sm:flex-row">
                   <input
                     v-model.trim="styleInput"
@@ -322,7 +360,9 @@
             </div>
 
             <label class="grid gap-2 text-sm text-[#A0ADB4]">
-              <span class="font-medium text-[#E6EDF7]">Reseau social principal</span>
+              <span class="font-medium text-[#E6EDF7]"
+                >Reseau social principal</span
+              >
               <input
                 v-model.trim="form.socialHandle"
                 type="text"
@@ -334,13 +374,17 @@
 
           <section v-else-if="step === 3" class="grid gap-6">
             <div>
-              <h2 class="text-xl font-semibold text-white">Validation du dossier</h2>
+              <h2 class="text-xl font-semibold text-white">
+                Validation du dossier
+              </h2>
               <p class="mt-2 text-sm text-[#A0ADB4]">
                 Verifiez les informations avant d'ouvrir le contrat.
               </p>
             </div>
 
-            <dl class="grid gap-3 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-5 text-sm">
+            <dl
+              class="grid gap-3 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-5 text-sm"
+            >
               <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
                 <dt class="text-[#A0ADB4]">Nom legal</dt>
                 <dd class="font-semibold text-white">
@@ -349,7 +393,9 @@
               </div>
               <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
                 <dt class="text-[#A0ADB4]">Nom d'artiste</dt>
-                <dd class="font-semibold text-white">{{ form.displayName || "-" }}</dd>
+                <dd class="font-semibold text-white">
+                  {{ form.displayName || "-" }}
+                </dd>
               </div>
               <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
                 <dt class="text-[#A0ADB4]">Adresse</dt>
@@ -359,11 +405,15 @@
               </div>
               <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
                 <dt class="text-[#A0ADB4]">Type d'art</dt>
-                <dd class="font-semibold text-white">{{ form.artType || "-" }}</dd>
+                <dd class="font-semibold text-white">
+                  {{ form.artType || "-" }}
+                </dd>
               </div>
               <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
                 <dt class="text-[#A0ADB4]">Styles</dt>
-                <dd class="font-semibold text-white">{{ form.styles.join(", ") || "-" }}</dd>
+                <dd class="font-semibold text-white">
+                  {{ form.styles.join(", ") || "-" }}
+                </dd>
               </div>
               <div class="grid gap-1">
                 <dt class="text-[#A0ADB4]">Bio</dt>
@@ -380,7 +430,10 @@
                   type="checkbox"
                   class="mt-1 h-4 w-4 accent-[#4A6CF7]"
                 />
-                <span>J'accepte les conditions et la politique de confidentialite *</span>
+                <span
+                  >J'accepte les conditions et la politique de confidentialite
+                  *</span
+                >
               </label>
 
               <label
@@ -391,17 +444,25 @@
                   type="checkbox"
                   class="mt-1 h-4 w-4 accent-[#4A6CF7]"
                 />
-                <span>Je comprends que Make It Art applique une commission sur les ventes *</span>
+                <span
+                  >Je comprends que Make It Art applique une commission sur les
+                  ventes *</span
+                >
               </label>
             </div>
           </section>
 
           <section v-else class="grid gap-6">
-            <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div
+              class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between"
+            >
               <div>
-                <h2 class="text-xl font-semibold text-white">Contrat artiste</h2>
+                <h2 class="text-xl font-semibold text-white">
+                  Contrat artiste
+                </h2>
                 <p class="mt-2 text-sm text-[#A0ADB4]">
-                  Lisez le contrat dynamique, acceptez-le puis signez avant l'envoi.
+                  Lisez le contrat dynamique, acceptez-le puis signez avant
+                  l'envoi.
                 </p>
               </div>
 
@@ -411,7 +472,11 @@
                 :disabled="contractPreviewLoading"
                 @click="ensureContractPreview(true)"
               >
-                {{ contractPreviewLoading ? "Generation..." : "Rafraichir le contrat" }}
+                {{
+                  contractPreviewLoading
+                    ? "Generation..."
+                    : "Rafraichir le contrat"
+                }}
               </button>
             </div>
 
@@ -433,12 +498,15 @@
               v-else
               class="max-h-[520px] overflow-y-auto rounded-[24px] border border-[#1A1F2A] bg-[#050916] p-5"
             >
-              <pre class="whitespace-pre-wrap font-mono text-[13px] leading-6 text-[#E6EDF7]">{{
-                contractPreview
-              }}</pre>
+              <pre
+                class="whitespace-pre-wrap font-mono text-[13px] leading-6 text-[#E6EDF7]"
+                >{{ contractPreview }}</pre
+              >
             </div>
 
-            <div class="grid gap-4 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-5">
+            <div
+              class="grid gap-4 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-5"
+            >
               <label
                 class="flex gap-3 rounded-2xl border border-[#1A1F2A] bg-[#050916] p-4 text-sm text-[#A0ADB4]"
               >
@@ -448,16 +516,19 @@
                   class="mt-1 h-4 w-4 accent-[#4A6CF7]"
                 />
                 <span>
-                  J'ai lu le contrat, j'accepte son contenu et j'autorise Make it Art a le
-                  transmettre a l'administration pour decision.
+                  J'ai lu le contrat, j'accepte son contenu et j'autorise Make
+                  it Art a le transmettre a l'administration pour decision.
                 </span>
               </label>
 
               <div class="grid gap-3">
                 <div>
-                  <p class="text-sm font-medium text-[#E6EDF7]">Signature de l'artiste *</p>
+                  <p class="text-sm font-medium text-[#E6EDF7]">
+                    Signature de l'artiste *
+                  </p>
                   <p class="mt-1 text-sm text-[#A0ADB4]">
-                    Cette signature sera placee en bas du PDF transmis a l'administration.
+                    Cette signature sera placee en bas du PDF transmis a
+                    l'administration.
                   </p>
                 </div>
 
@@ -516,11 +587,18 @@
 <script setup>
 import { navigateTo } from "#app";
 import { storeToRefs } from "pinia";
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from "vue";
 import { useAuthStore } from "~/stores/auth";
 
 definePageMeta({
-  middleware: "auth"
+  middleware: "auth",
 });
 
 const auth = useAuthStore();
@@ -530,7 +608,7 @@ const steps = [
   { id: 1, label: "Identite legale" },
   { id: 2, label: "Profil public" },
   { id: 3, label: "Validations" },
-  { id: 4, label: "Contrat & signature" }
+  { id: 4, label: "Contrat & signature" },
 ];
 
 const artTypeOptions = [
@@ -540,7 +618,7 @@ const artTypeOptions = [
   "Vector Art",
   "Illustration",
   "Graphic Design",
-  "Mixed Media"
+  "Mixed Media",
 ];
 
 const step = ref(1);
@@ -577,25 +655,26 @@ const form = reactive({
   country: "France",
   taxId: "",
   termsAccepted: false,
-  commissionAccepted: false
+  commissionAccepted: false,
 });
 
-const pendingApplication = computed(
-  () => applicationState.value?.status === "pending" ? applicationState.value : null
+const pendingApplication = computed(() =>
+  applicationState.value?.status === "pending" ? applicationState.value : null,
 );
-const rejectedApplication = computed(
-  () => applicationState.value?.status === "rejected" ? applicationState.value : null
+const rejectedApplication = computed(() =>
+  applicationState.value?.status === "rejected" ? applicationState.value : null,
 );
-const legalAddressSummary = computed(() =>
-  [
-    form.addressLine1,
-    form.addressLine2,
-    [form.postalCode, form.city].filter(Boolean).join(" "),
-    form.region,
-    form.country
-  ]
-    .filter(Boolean)
-    .join(", ") || "-"
+const legalAddressSummary = computed(
+  () =>
+    [
+      form.addressLine1,
+      form.addressLine2,
+      [form.postalCode, form.city].filter(Boolean).join(" "),
+      form.region,
+      form.country,
+    ]
+      .filter(Boolean)
+      .join(", ") || "-",
 );
 
 onMounted(async () => {
@@ -627,7 +706,7 @@ watch(
     contractPreviewDirty.value = true;
     queueDraftSave();
   },
-  { deep: true }
+  { deep: true },
 );
 
 watch(step, () => {
@@ -640,7 +719,8 @@ function prefillFromUser() {
 
   form.firstName = firstName;
   form.lastName = lastNameParts.join(" ");
-  form.displayName = user.value?.artist?.displayName || user.value?.username || "";
+  form.displayName =
+    user.value?.artist?.displayName || user.value?.username || "";
   form.bio = user.value?.bio || "";
 }
 
@@ -662,7 +742,7 @@ function buildDraftPayload() {
     country: form.country,
     taxId: form.taxId,
     termsAccepted: form.termsAccepted,
-    commissionAccepted: form.commissionAccepted
+    commissionAccepted: form.commissionAccepted,
   };
 }
 
@@ -672,25 +752,42 @@ function applyDraftPayload(payload) {
   }
 
   form.displayName =
-    typeof payload.displayName === "string" ? payload.displayName : form.displayName;
-  form.firstName = typeof payload.firstName === "string" ? payload.firstName : form.firstName;
-  form.lastName = typeof payload.lastName === "string" ? payload.lastName : form.lastName;
+    typeof payload.displayName === "string"
+      ? payload.displayName
+      : form.displayName;
+  form.firstName =
+    typeof payload.firstName === "string" ? payload.firstName : form.firstName;
+  form.lastName =
+    typeof payload.lastName === "string" ? payload.lastName : form.lastName;
   form.bio = typeof payload.bio === "string" ? payload.bio : form.bio;
-  form.artType = typeof payload.artType === "string" ? payload.artType : form.artType;
+  form.artType =
+    typeof payload.artType === "string" ? payload.artType : form.artType;
   form.styles = Array.isArray(payload.styles) ? payload.styles : form.styles;
   form.portfolioUrl =
-    typeof payload.portfolioUrl === "string" ? payload.portfolioUrl : form.portfolioUrl;
+    typeof payload.portfolioUrl === "string"
+      ? payload.portfolioUrl
+      : form.portfolioUrl;
   form.socialHandle =
-    typeof payload.socialHandle === "string" ? payload.socialHandle : form.socialHandle;
+    typeof payload.socialHandle === "string"
+      ? payload.socialHandle
+      : form.socialHandle;
   form.addressLine1 =
-    typeof payload.addressLine1 === "string" ? payload.addressLine1 : form.addressLine1;
+    typeof payload.addressLine1 === "string"
+      ? payload.addressLine1
+      : form.addressLine1;
   form.addressLine2 =
-    typeof payload.addressLine2 === "string" ? payload.addressLine2 : form.addressLine2;
+    typeof payload.addressLine2 === "string"
+      ? payload.addressLine2
+      : form.addressLine2;
   form.city = typeof payload.city === "string" ? payload.city : form.city;
-  form.region = typeof payload.region === "string" ? payload.region : form.region;
+  form.region =
+    typeof payload.region === "string" ? payload.region : form.region;
   form.postalCode =
-    typeof payload.postalCode === "string" ? payload.postalCode : form.postalCode;
-  form.country = typeof payload.country === "string" ? payload.country : form.country;
+    typeof payload.postalCode === "string"
+      ? payload.postalCode
+      : form.postalCode;
+  form.country =
+    typeof payload.country === "string" ? payload.country : form.country;
   form.taxId = typeof payload.taxId === "string" ? payload.taxId : form.taxId;
   form.termsAccepted = Boolean(payload.termsAccepted);
   form.commissionAccepted = Boolean(payload.commissionAccepted);
@@ -699,7 +796,7 @@ function applyDraftPayload(payload) {
 async function loadArtistState() {
   try {
     const response = await $fetch("/api/artists/me", {
-      credentials: "include"
+      credentials: "include",
     });
 
     applicationState.value = response.application;
@@ -711,7 +808,7 @@ async function loadArtistState() {
 async function loadApplicationDraft() {
   try {
     const response = await $fetch("/api/artists/me/application-draft", {
-      credentials: "include"
+      credentials: "include",
     });
     const draft = response.draft;
 
@@ -728,7 +825,10 @@ async function loadApplicationDraft() {
     }
 
     if (draft.status !== "pending" && draft.status !== "approved") {
-      step.value = Math.min(Math.max(Number(draft.currentStep || 1), 1), steps.length);
+      step.value = Math.min(
+        Math.max(Number(draft.currentStep || 1), 1),
+        steps.length,
+      );
     }
 
     draftStatusMessage.value = "Brouillon restaure.";
@@ -762,8 +862,8 @@ async function saveApplicationDraft() {
       credentials: "include",
       body: {
         currentStep: step.value,
-        payload: buildDraftPayload()
-      }
+        payload: buildDraftPayload(),
+      },
     });
 
     draftStatusMessage.value = "Brouillon sauvegarde.";
@@ -876,7 +976,7 @@ async function ensureContractPreview(force = false) {
     const response = await $fetch("/api/artists/me/contract-preview", {
       method: "POST",
       credentials: "include",
-      body: buildDraftPayload()
+      body: buildDraftPayload(),
     });
 
     contractPreview.value = response.contractText || "";
@@ -959,8 +1059,8 @@ async function submitApplication() {
       body: {
         ...buildDraftPayload(),
         contractAccepted: contractAccepted.value,
-        signatureDataUrl: signatureDataUrl.value
-      }
+        signatureDataUrl: signatureDataUrl.value,
+      },
     });
 
     draftCompleted.value = true;
@@ -987,7 +1087,7 @@ function formatDate(value) {
   }
 
   return new Intl.DateTimeFormat("fr-FR", {
-    dateStyle: "medium"
+    dateStyle: "medium",
   }).format(new Date(value));
 }
 </script>

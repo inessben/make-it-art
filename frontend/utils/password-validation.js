@@ -3,32 +3,32 @@ export const PASSWORD_REQUIREMENTS = [
     id: "length",
     label: "At least 8 characters",
     test: (password) => password.length >= 8,
-    message: "Password must be at least 8 characters."
+    message: "Password must be at least 8 characters.",
   },
   {
     id: "lowercase",
     label: "At least one lowercase letter",
     test: (password) => /[a-z]/.test(password),
-    message: "Password must contain at least one lowercase letter."
+    message: "Password must contain at least one lowercase letter.",
   },
   {
     id: "uppercase",
     label: "At least one uppercase letter",
     test: (password) => /[A-Z]/.test(password),
-    message: "Password must contain at least one uppercase letter."
+    message: "Password must contain at least one uppercase letter.",
   },
   {
     id: "number",
     label: "At least one number",
     test: (password) => /\d/.test(password),
-    message: "Password must contain at least one number."
+    message: "Password must contain at least one number.",
   },
   {
     id: "special",
     label: "At least one special character",
     test: (password) => /[!@#$%^&*()_\-+=[\]{};:,.<>?]/.test(password),
-    message: "Password must contain at least one special character."
-  }
+    message: "Password must contain at least one special character.",
+  },
 ];
 
 export function getPasswordRequirementStates(password) {
@@ -36,13 +36,15 @@ export function getPasswordRequirementStates(password) {
     id: requirement.id,
     label: requirement.label,
     message: requirement.message,
-    isMet: requirement.test(password)
+    isMet: requirement.test(password),
   }));
 }
 
 export function getPasswordStrength(password) {
   const requirementStates = getPasswordRequirementStates(password);
-  const metCount = requirementStates.filter((requirement) => requirement.isMet).length;
+  const metCount = requirementStates.filter(
+    (requirement) => requirement.isMet,
+  ).length;
   const totalCount = requirementStates.length;
   const percentage = Math.round((metCount / totalCount) * 100);
   let level = "Weak";
@@ -57,7 +59,7 @@ export function getPasswordStrength(password) {
     level,
     metCount,
     percentage,
-    totalCount
+    totalCount,
   };
 }
 

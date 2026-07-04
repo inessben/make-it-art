@@ -13,11 +13,17 @@
         autocomplete="current-password"
       />
 
-      <SubmitButton label="Link Google account" loading-label="Linking..." :loading="loading" />
+      <SubmitButton
+        label="Link Google account"
+        loading-label="Linking..."
+        :loading="loading"
+      />
 
       <FormMessage :message="message" />
 
-      <button type="button" class="text-button" @click="resetGoogleLinkStep">Back to login</button>
+      <button type="button" class="text-button" @click="resetGoogleLinkStep">
+        Back to login
+      </button>
     </template>
 
     <template v-else-if="!requiresCode">
@@ -28,7 +34,13 @@
 
       <div class="auth-divider"><span>or</span></div>
 
-      <TextField id="email" v-model="email" label="Email" type="email" autocomplete="email" />
+      <TextField
+        id="email"
+        v-model="email"
+        label="Email"
+        type="email"
+        autocomplete="email"
+      />
 
       <PasswordField
         id="password"
@@ -37,7 +49,11 @@
         autocomplete="current-password"
       />
 
-      <SubmitButton label="Login" loading-label="Loading..." :loading="loading" />
+      <SubmitButton
+        label="Login"
+        loading-label="Loading..."
+        :loading="loading"
+      />
 
       <FormMessage :message="message" />
 
@@ -75,11 +91,17 @@
         <span>Remember this computer for 30 days</span>
       </label>
 
-      <SubmitButton label="Verify code" loading-label="Verifying..." :loading="loading" />
+      <SubmitButton
+        label="Verify code"
+        loading-label="Verifying..."
+        :loading="loading"
+      />
 
       <FormMessage :message="message" />
 
-      <button type="button" class="text-button" @click="resetLoginStep">Back to login</button>
+      <button type="button" class="text-button" @click="resetLoginStep">
+        Back to login
+      </button>
     </template>
   </AuthPanel>
 </template>
@@ -92,11 +114,11 @@ import {
   getGoogleLoginMessage,
   getGoogleLoginUrl,
   GOOGLE_LOGIN_LABEL,
-  isGoogleLinkRequired
+  isGoogleLinkRequired,
 } from "~/utils/google-auth";
 
 definePageMeta({
-  middleware: "guest"
+  middleware: "guest",
 });
 
 const auth = useAuthStore();
@@ -121,7 +143,8 @@ onMounted(() => {
 
   if (isGoogleLinkRequired(route.query.googleLink)) {
     requiresGooglePasswordLink.value = true;
-    email.value = typeof route.query.email === "string" ? route.query.email : "";
+    email.value =
+      typeof route.query.email === "string" ? route.query.email : "";
     message.value = "A password is required to link this Google account.";
   }
 });
@@ -159,21 +182,24 @@ async function handleGoogleLink() {
       method: "POST",
       credentials: "include",
       body: {
-        password: password.value
-      }
+        password: password.value,
+      },
     });
 
     linkedUser = response.user;
     redirectTo = response.redirectTo || "";
   } catch (error) {
-    message.value = error?.data?.message || "Unable to complete Google sign-in.";
+    message.value =
+      error?.data?.message || "Unable to complete Google sign-in.";
   } finally {
     loading.value = false;
   }
 
   if (linkedUser) {
     auth.user = linkedUser;
-    await navigateTo(redirectTo || auth.defaultAuthenticatedRoute, { replace: true });
+    await navigateTo(redirectTo || auth.defaultAuthenticatedRoute, {
+      replace: true,
+    });
   }
 }
 
@@ -193,13 +219,14 @@ async function handleLogin() {
       credentials: "include",
       body: {
         email: email.value,
-        password: password.value
-      }
+        password: password.value,
+      },
     });
 
     if (response.requiresCode) {
       requiresCode.value = true;
-      message.value = response.message || "Login code sent. Please check your email.";
+      message.value =
+        response.message || "Login code sent. Please check your email.";
       return;
     }
 
@@ -233,8 +260,8 @@ async function handleVerifyCode() {
       credentials: "include",
       body: {
         code: code.value,
-        rememberDevice: rememberDevice.value
-      }
+        rememberDevice: rememberDevice.value,
+      },
     });
 
     verifiedUser = response.user;
@@ -250,7 +277,9 @@ async function handleVerifyCode() {
 
   if (verifiedUser) {
     auth.user = verifiedUser;
-    await navigateTo(redirectTo || auth.defaultAuthenticatedRoute, { replace: true });
+    await navigateTo(redirectTo || auth.defaultAuthenticatedRoute, {
+      replace: true,
+    });
   }
 }
 
@@ -263,13 +292,14 @@ async function handleResendVerification() {
       method: "POST",
       credentials: "include",
       body: {
-        email: email.value
-      }
+        email: email.value,
+      },
     });
 
     message.value = response.message || "Verification email sent.";
   } catch (error) {
-    message.value = error?.data?.message || "Unable to resend verification email.";
+    message.value =
+      error?.data?.message || "Unable to resend verification email.";
   } finally {
     resending.value = false;
   }

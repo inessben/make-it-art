@@ -1,10 +1,13 @@
 <template>
   <aside class="rounded-[28px] border border-[#1A1F2A] bg-[#090017] p-5 xl:p-6">
     <div class="rounded-[24px] border border-[#1A1F2A] bg-[#01050E] p-5">
-      <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Backoffice</p>
+      <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+        Backoffice
+      </p>
       <h2 class="mt-3 text-2xl font-semibold text-[#E6EDF7]">Admin panel</h2>
       <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
-        Interface reservee a l'administration avec un parcours separe de l'espace membre.
+        Interface reservee a l'administration avec un parcours separe de
+        l'espace membre.
       </p>
     </div>
 
@@ -35,7 +38,9 @@
           <div class="min-w-0">
             <p
               class="text-sm font-semibold transition"
-              :class="isActive(item.route) ? 'text-[#E6EDF7]' : 'text-[#D8E1F0]'"
+              :class="
+                isActive(item.route) ? 'text-[#E6EDF7]' : 'text-[#D8E1F0]'
+              "
             >
               {{ item.label }}
             </p>
@@ -48,7 +53,9 @@
     </nav>
 
     <div class="mt-5 rounded-[24px] border border-[#1A1F2A] bg-[#01050E] p-5">
-      <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Compte admin</p>
+      <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+        Compte admin
+      </p>
       <p class="mt-3 text-sm font-semibold text-[#E6EDF7]">
         {{ user?.username || "Administrateur" }}
       </p>

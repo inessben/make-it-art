@@ -9,16 +9,16 @@ async function findValidDeviceByHash(tokenHash) {
     where: {
       tokenHash,
       expiresAt: {
-        gt: new Date()
-      }
+        gt: new Date(),
+      },
     },
     include: {
-      user: true
-    }
+      user: true,
+    },
   });
 }
 
 module.exports = {
   createDevice,
-  findValidDeviceByHash
+  findValidDeviceByHash,
 };

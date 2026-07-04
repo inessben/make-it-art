@@ -5,12 +5,15 @@ import {
   getPasswordRequirementStates,
   getPasswordStrength,
   getPasswordValidationError,
-  PASSWORD_REQUIREMENTS
+  PASSWORD_REQUIREMENTS,
 } from "../utils/password-validation.js";
 
 function getRequirementMap(password) {
   return Object.fromEntries(
-    getPasswordRequirementStates(password).map((requirement) => [requirement.id, requirement.isMet])
+    getPasswordRequirementStates(password).map((requirement) => [
+      requirement.id,
+      requirement.isMet,
+    ]),
   );
 }
 
@@ -22,7 +25,7 @@ describe("password requirement detection", () => {
       lowercase: false,
       uppercase: false,
       number: false,
-      special: false
+      special: false,
     });
   });
 
@@ -58,7 +61,7 @@ describe("password strength calculation", () => {
       level: "Weak",
       metCount: 2,
       percentage: 40,
-      totalCount: 5
+      totalCount: 5,
     });
   });
 
@@ -67,7 +70,7 @@ describe("password strength calculation", () => {
       level: "Medium",
       metCount: 3,
       percentage: 60,
-      totalCount: 5
+      totalCount: 5,
     });
   });
 
@@ -76,7 +79,7 @@ describe("password strength calculation", () => {
       level: "Strong",
       metCount: 5,
       percentage: 100,
-      totalCount: 5
+      totalCount: 5,
     });
   });
 });
@@ -89,14 +92,14 @@ describe("password validation result", () => {
   test("returns the first unmet condition message when a condition is missing", () => {
     assert.equal(
       getPasswordValidationError("Password1"),
-      "Password must contain at least one special character."
+      "Password must contain at least one special character.",
     );
   });
 
   test("keeps final confirmation validation separate from strength validation", () => {
     assert.equal(
       getPasswordConfirmationError("Password1!", "Password2!"),
-      "Passwords do not match."
+      "Passwords do not match.",
     );
     assert.equal(getPasswordConfirmationError("Password1!", "Password1!"), "");
   });

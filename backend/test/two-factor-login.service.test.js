@@ -5,7 +5,8 @@ const { loadModuleWithMocks } = require("./helpers/mock-require");
 
 const servicePath = require.resolve("../src/services/two-factor-login.service");
 const envPath = require.resolve("../src/config/env");
-const userRepositoryPath = require.resolve("../src/repositories/user.repository");
+const userRepositoryPath =
+  require.resolve("../src/repositories/user.repository");
 const loginCodeRepositoryPath =
   require.resolve("../src/repositories/login-verification-code.repository");
 const rememberedDeviceRepositoryPath =
@@ -20,7 +21,7 @@ const activeUser = {
   username: "Ada",
   passwordHash: "hashed-password",
   verified: true,
-  isActive: true
+  isActive: true,
 };
 
 function sha256(value) {
@@ -32,13 +33,13 @@ function buildEnv(overrides = {}) {
   const defaultAdmin = {
     email: "admin@art.com",
     bypassLoginCode: false,
-    ...(defaultAdminOverrides || {})
+    ...(defaultAdminOverrides || {}),
   };
 
   return {
     nodeEnv: "test",
     ...envOverrides,
-    defaultAdmin
+    defaultAdmin,
   };
 }
 
@@ -53,7 +54,7 @@ function loadService(overrides = {}) {
     markCodeAsUsed: [],
     markUnusedCodesAsUsed: [],
     sendLoginCodeEmail: [],
-    verifyPassword: []
+    verifyPassword: [],
   };
 
   const user = Object.prototype.hasOwnProperty.call(overrides, "user")
@@ -62,7 +63,7 @@ function loadService(overrides = {}) {
 
   const session = overrides.session || {
     accessToken: "access-token",
-    refreshToken: "refresh-token"
+    refreshToken: "refresh-token",
   };
 
   const modules = {
@@ -71,7 +72,7 @@ function loadService(overrides = {}) {
       async findByEmail(email) {
         calls.findByEmail.push(email);
         return user;
-      }
+      },
     },
     [loginCodeRepositoryPath]: {
       async createCode(payload) {
@@ -89,7 +90,7 @@ function loadService(overrides = {}) {
       async markUnusedCodesAsUsed(userId) {
         calls.markUnusedCodesAsUsed.push(userId);
         return { count: 1 };
-      }
+      },
     },
     [rememberedDeviceRepositoryPath]: {
       async createDevice(payload) {
@@ -99,25 +100,25 @@ function loadService(overrides = {}) {
       async findValidDeviceByHash(tokenHash) {
         calls.findValidDeviceByHash.push(tokenHash);
         return overrides.rememberedDevice || null;
-      }
+      },
     },
     [mailServicePath]: {
       async sendLoginCodeEmail(payload) {
         calls.sendLoginCodeEmail.push(payload);
-      }
+      },
     },
     [sessionServicePath]: {
       async createSession(sessionUser) {
         calls.createSession.push(sessionUser);
         return session;
-      }
+      },
     },
     [argon2Path]: {
       async verify(passwordHash, password) {
         calls.verifyPassword.push({ passwordHash, password });
         return overrides.isValidPassword ?? true;
-      }
-    }
+      },
+    },
   };
 
   const { moduleExports, restore } = loadModuleWithMocks(servicePath, modules);
@@ -125,7 +126,7 @@ function loadService(overrides = {}) {
   return {
     calls,
     restore,
-    service: moduleExports
+    service: moduleExports,
   };
 }
 
@@ -137,9 +138,9 @@ test("startLoginWithCode normalizes email and rejects unknown users", async (t) 
     () =>
       service.startLoginWithCode({
         email: " Artist@Example.COM ",
-        password: "secret"
+        password: "secret",
       }),
-    /Invalid credentials/
+    /Invalid credentials/,
   );
 
   assert.deepEqual(calls.findByEmail, ["artist@example.com"]);
@@ -151,8 +152,8 @@ test("startLoginWithCode rejects unverified or inactive users before password ve
   const { calls, restore, service } = loadService({
     user: {
       ...activeUser,
-      verified: false
-    }
+      verified: false,
+    },
   });
   t.after(restore);
 
@@ -160,9 +161,9 @@ test("startLoginWithCode rejects unverified or inactive users before password ve
     () =>
       service.startLoginWithCode({
         email: activeUser.email,
-        password: "secret"
+        password: "secret",
       }),
-    /Email not verified/
+    /Email not verified/,
   );
 
   assert.deepEqual(calls.verifyPassword, []);
@@ -177,16 +178,16 @@ test("startLoginWithCode rejects invalid passwords", async (t) => {
     () =>
       service.startLoginWithCode({
         email: activeUser.email,
-        password: "bad-password"
+        password: "bad-password",
       }),
-    /Invalid credentials/
+    /Invalid credentials/,
   );
 
   assert.deepEqual(calls.verifyPassword, [
     {
       passwordHash: activeUser.passwordHash,
-      password: "bad-password"
-    }
+      password: "bad-password",
+    },
   ]);
   assert.deepEqual(calls.createCode, []);
   assert.deepEqual(calls.sendLoginCodeEmail, []);
@@ -202,7 +203,7 @@ test("startLoginWithCode creates and emails a login code for valid credentials",
   const beforeCall = Date.now();
   const result = await service.startLoginWithCode({
     email: activeUser.email,
-    password: "valid-password"
+    password: "valid-password",
   });
 
   const challengeToken = "02".repeat(32);
@@ -211,7 +212,7 @@ test("startLoginWithCode creates and emails a login code for valid credentials",
 
   assert.deepEqual(result, {
     bypassCode: false,
-    challengeToken
+    challengeToken,
   });
   assert.deepEqual(calls.markUnusedCodesAsUsed, [activeUser.id]);
   assert.equal(calls.createCode[0].userId, activeUser.id);
@@ -222,8 +223,8 @@ test("startLoginWithCode creates and emails a login code for valid credentials",
     {
       to: activeUser.email,
       username: activeUser.username,
-      code: "123456"
-    }
+      code: "123456",
+    },
   ]);
   assert.deepEqual(calls.createSession, []);
 });
@@ -233,19 +234,19 @@ test("startLoginWithCode bypasses email code for the configured default admin", 
     env: {
       defaultAdmin: {
         email: "admin@art.com",
-        bypassLoginCode: true
-      }
+        bypassLoginCode: true,
+      },
     },
     user: {
       ...activeUser,
-      email: "admin@art.com"
-    }
+      email: "admin@art.com",
+    },
   });
   t.after(restore);
 
   const result = await service.startLoginWithCode({
     email: " Admin@Art.COM ",
-    password: "valid-password"
+    password: "valid-password",
   });
 
   assert.deepEqual(result, {
@@ -254,8 +255,8 @@ test("startLoginWithCode bypasses email code for the configured default admin", 
     refreshToken: "refresh-token",
     user: {
       ...activeUser,
-      email: "admin@art.com"
-    }
+      email: "admin@art.com",
+    },
   });
   assert.equal(calls.createSession.length, 1);
   assert.deepEqual(calls.createCode, []);
@@ -269,16 +270,16 @@ test("startLoginWithCode bypasses email code for a valid remembered device", asy
       userId: activeUser.id,
       user: {
         verified: true,
-        isActive: true
-      }
-    }
+        isActive: true,
+      },
+    },
   });
   t.after(restore);
 
   const result = await service.startLoginWithCode({
     email: activeUser.email,
     password: "valid-password",
-    rememberDeviceToken
+    rememberDeviceToken,
   });
 
   assert.deepEqual(calls.findValidDeviceByHash, [sha256(rememberDeviceToken)]);
@@ -297,21 +298,21 @@ test("startLoginWithCode falls back to email code when remembered device is not 
       userId: 999,
       user: {
         verified: true,
-        isActive: true
-      }
-    }
+        isActive: true,
+      },
+    },
   });
   t.after(restore);
 
   const result = await service.startLoginWithCode({
     email: activeUser.email,
     password: "valid-password",
-    rememberDeviceToken: "other-user-device"
+    rememberDeviceToken: "other-user-device",
   });
 
   assert.deepEqual(result, {
     bypassCode: false,
-    challengeToken: "04".repeat(32)
+    challengeToken: "04".repeat(32),
   });
   assert.equal(calls.createCode.length, 1);
   assert.equal(calls.sendLoginCodeEmail.length, 1);
@@ -327,16 +328,16 @@ test("verifyLoginCode rejects invalid or expired login codes", async (t) => {
       service.verifyLoginCode({
         challengeToken: "challenge",
         code: "123456",
-        rememberDevice: false
+        rememberDevice: false,
       }),
-    /Invalid or expired login code/
+    /Invalid or expired login code/,
   );
 
   assert.deepEqual(calls.findValidCodeByHash, [
     {
       userId: undefined,
-      codeHash: sha256("challenge:123456")
-    }
+      codeHash: sha256("challenge:123456"),
+    },
   ]);
   assert.deepEqual(calls.markCodeAsUsed, []);
   assert.deepEqual(calls.createSession, []);
@@ -346,22 +347,22 @@ test("verifyLoginCode marks the code as used and creates a session", async (t) =
   const { calls, restore, service } = loadService({
     loginCode: {
       id: 7,
-      user: activeUser
-    }
+      user: activeUser,
+    },
   });
   t.after(restore);
 
   const result = await service.verifyLoginCode({
     challengeToken: "challenge",
     code: "123456",
-    rememberDevice: false
+    rememberDevice: false,
   });
 
   assert.deepEqual(result, {
     accessToken: "access-token",
     refreshToken: "refresh-token",
     rememberDeviceToken: null,
-    user: activeUser
+    user: activeUser,
   });
   assert.deepEqual(calls.markCodeAsUsed, [7]);
   assert.deepEqual(calls.createSession, [activeUser]);
@@ -374,15 +375,15 @@ test("verifyLoginCode creates a remembered device token when requested", async (
   const { calls, restore, service } = loadService({
     loginCode: {
       id: 8,
-      user: activeUser
-    }
+      user: activeUser,
+    },
   });
   t.after(restore);
 
   const result = await service.verifyLoginCode({
     challengeToken: "challenge",
     code: "123456",
-    rememberDevice: true
+    rememberDevice: true,
   });
 
   const rememberDeviceToken = "03".repeat(32);
@@ -392,8 +393,8 @@ test("verifyLoginCode creates a remembered device token when requested", async (
     {
       userId: activeUser.id,
       tokenHash: sha256(rememberDeviceToken),
-      expiresAt: calls.createDevice[0].expiresAt
-    }
+      expiresAt: calls.createDevice[0].expiresAt,
+    },
   ]);
   assert.ok(calls.createDevice[0].expiresAt instanceof Date);
 });
@@ -401,8 +402,8 @@ test("verifyLoginCode creates a remembered device token when requested", async (
 test("login cookie options use the expected lifetimes and secure flag", (t) => {
   const { restore, service } = loadService({
     env: {
-      nodeEnv: "production"
-    }
+      nodeEnv: "production",
+    },
   });
   t.after(restore);
 
@@ -411,25 +412,25 @@ test("login cookie options use the expected lifetimes and secure flag", (t) => {
     sameSite: "lax",
     secure: true,
     maxAge: 1000 * 60 * 10,
-    path: "/"
+    path: "/",
   });
   assert.deepEqual(service.getClearLoginChallengeCookieOptions(), {
     httpOnly: true,
     sameSite: "lax",
     secure: true,
-    path: "/"
+    path: "/",
   });
   assert.deepEqual(service.getRememberDeviceCookieOptions(), {
     httpOnly: true,
     sameSite: "lax",
     secure: true,
     maxAge: 1000 * 60 * 60 * 24 * 30,
-    path: "/"
+    path: "/",
   });
   assert.deepEqual(service.getClearRememberDeviceCookieOptions(), {
     httpOnly: true,
     sameSite: "lax",
     secure: true,
-    path: "/"
+    path: "/",
   });
 });

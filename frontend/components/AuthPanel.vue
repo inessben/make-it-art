@@ -1,6 +1,10 @@
 <template>
   <main class="auth-page">
-    <form class="auth-form" :style="{ maxWidth }" @submit.prevent="$emit('submit')">
+    <form
+      class="auth-form"
+      :style="{ maxWidth }"
+      @submit.prevent="$emit('submit')"
+    >
       <h1>{{ title }}</h1>
       <slot />
     </form>
@@ -11,12 +15,12 @@
 defineProps({
   title: {
     type: String,
-    required: true
+    required: true,
   },
   maxWidth: {
     type: String,
-    default: "420px"
-  }
+    default: "420px",
+  },
 });
 
 defineEmits(["submit"]);
@@ -29,7 +33,11 @@ defineEmits(["submit"]);
   place-items: center;
   padding: 24px;
   background:
-    radial-gradient(circle at top left, rgba(50, 115, 220, 0.12), transparent 34%),
+    radial-gradient(
+      circle at top left,
+      rgba(50, 115, 220, 0.12),
+      transparent 34%
+    ),
     linear-gradient(135deg, #f7f8fb 0%, #eef2f7 100%);
   color: #172033;
 }

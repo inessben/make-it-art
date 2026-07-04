@@ -19,5 +19,5 @@ function ensureBuffer(value) {
 }
 
 module.exports = {
-  ensureBuffer
+  ensureBuffer,
 };

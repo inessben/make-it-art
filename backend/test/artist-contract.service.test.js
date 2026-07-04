@@ -6,7 +6,7 @@ const {
   CONTRACT_TIME_ZONE,
   buildContractContext,
   resolveContractSignedAt,
-  renderArtistContract
+  renderArtistContract,
 } = require("../src/services/artist-contract.service");
 
 test("buildContractContext formats the signature timestamp in Europe/Paris with time", () => {
@@ -14,7 +14,7 @@ test("buildContractContext formats the signature timestamp in Europe/Paris with 
     user: {
       email: "artist@example.com",
       username: "Ada Lovelace",
-      phone: "0102030405"
+      phone: "0102030405",
     },
     payload: {
       firstName: "Ada",
@@ -26,9 +26,9 @@ test("buildContractContext formats the signature timestamp in Europe/Paris with 
       country: "France",
       taxId: "FR123",
       artType: "Digital Art",
-      styles: ["Digital painting"]
+      styles: ["Digital painting"],
     },
-    effectiveDate: new Date("2026-07-04T13:45:00.000Z")
+    effectiveDate: new Date("2026-07-04T13:45:00.000Z"),
   });
 
   assert.equal(CONTRACT_TIME_ZONE, "Europe/Paris");
@@ -41,7 +41,7 @@ test("renderArtistContract includes the signature date and time in the contract 
     user: {
       email: "artist@example.com",
       username: "Ada Lovelace",
-      phone: "0102030405"
+      phone: "0102030405",
     },
     payload: {
       firstName: "Ada",
@@ -53,19 +53,22 @@ test("renderArtistContract includes the signature date and time in the contract 
       country: "France",
       taxId: "FR123",
       artType: "Digital Art",
-      styles: ["Digital painting"]
+      styles: ["Digital painting"],
     },
-    effectiveDate: new Date("2026-07-04T13:45:00.000Z")
+    effectiveDate: new Date("2026-07-04T13:45:00.000Z"),
   });
 
-  assert.match(contractText, /Date et heure de signature : .*15:45.*Europe\/Paris/);
+  assert.match(
+    contractText,
+    /Date et heure de signature : .*15:45.*Europe\/Paris/,
+  );
 });
 
 test("resolveContractSignedAt falls back to the submission timestamp when needed", () => {
   const signedAt = resolveContractSignedAt({
     contractSignedAt: null,
     contractAcceptedAt: null,
-    submittedAt: new Date("2026-07-03T08:20:00.000Z")
+    submittedAt: new Date("2026-07-03T08:20:00.000Z"),
   });
 
   assert.equal(signedAt.toISOString(), "2026-07-03T08:20:00.000Z");

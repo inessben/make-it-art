@@ -9,7 +9,7 @@ function serializeArtist(artist) {
     id: artist.id,
     displayName: artist.displayName,
     verified: Boolean(artist.verified),
-    createdAt: artist.createdAt
+    createdAt: artist.createdAt,
   };
 }
 
@@ -27,7 +27,7 @@ function serializeArtistApplication(application) {
     reviewNote: application.reviewNote || "",
     contractSignedAt: application.contractSignedAt || null,
     contractVersion: application.contractVersion || null,
-    hasContractPdf: Boolean(application.contractPdf)
+    hasContractPdf: Boolean(application.contractPdf),
   };
 }
 
@@ -44,12 +44,14 @@ function serializeAuthUser(user) {
     isAdmin: admin,
     isArtist: admin ? false : Boolean(user.artist),
     artist: admin ? null : serializeArtist(user.artist),
-    artistApplication: admin ? null : serializeArtistApplication(user.artistApplicationDraft)
+    artistApplication: admin
+      ? null
+      : serializeArtistApplication(user.artistApplicationDraft),
   };
 }
 
 module.exports = {
   serializeArtist,
   serializeArtistApplication,
-  serializeAuthUser
+  serializeAuthUser,
 };

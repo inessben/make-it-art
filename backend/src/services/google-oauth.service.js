@@ -37,7 +37,10 @@ function isGoogleOAuthConfigured() {
 
 function assertGoogleOAuthConfigured() {
   if (!isGoogleOAuthConfigured()) {
-    throw new GoogleOAuthError("Google OAuth is not configured", "GOOGLE_OAUTH_NOT_CONFIGURED");
+    throw new GoogleOAuthError(
+      "Google OAuth is not configured",
+      "GOOGLE_OAUTH_NOT_CONFIGURED",
+    );
   }
 }
 
@@ -47,7 +50,7 @@ function getGoogleOAuthStateCookieOptions() {
     sameSite: "lax",
     secure: env.nodeEnv === "production",
     maxAge: GOOGLE_STATE_COOKIE_MAX_AGE_MS,
-    path: "/"
+    path: "/",
   };
 }
 
@@ -56,7 +59,7 @@ function getClearGoogleOAuthStateCookieOptions() {
     httpOnly: true,
     sameSite: "lax",
     secure: env.nodeEnv === "production",
-    path: "/"
+    path: "/",
   };
 }
 
@@ -66,7 +69,7 @@ function getGoogleOAuthLinkCookieOptions() {
     sameSite: "lax",
     secure: env.nodeEnv === "production",
     maxAge: GOOGLE_LINK_COOKIE_MAX_AGE_MS,
-    path: "/"
+    path: "/",
   };
 }
 
@@ -75,7 +78,7 @@ function getClearGoogleOAuthLinkCookieOptions() {
     httpOnly: true,
     sameSite: "lax",
     secure: env.nodeEnv === "production",
-    path: "/"
+    path: "/",
   };
 }
 
@@ -90,7 +93,10 @@ function getGoogleAuthorizationUrl() {
   const authorizationUrl = new URL(env.googleOAuth.authorizationUrl);
 
   authorizationUrl.searchParams.set("client_id", env.googleOAuth.clientId);
-  authorizationUrl.searchParams.set("redirect_uri", env.googleOAuth.redirectUri);
+  authorizationUrl.searchParams.set(
+    "redirect_uri",
+    env.googleOAuth.redirectUri,
+  );
   authorizationUrl.searchParams.set("response_type", "code");
   authorizationUrl.searchParams.set("scope", GOOGLE_AUTH_SCOPE);
   authorizationUrl.searchParams.set("state", state);
@@ -98,7 +104,7 @@ function getGoogleAuthorizationUrl() {
 
   return {
     authorizationUrl: authorizationUrl.toString(),
-    state
+    state,
   };
 }
 
@@ -108,25 +114,31 @@ async function exchangeAuthorizationCode(code) {
   const response = await fetch(env.googleOAuth.tokenUrl, {
     method: "POST",
     headers: {
-      "content-type": "application/x-www-form-urlencoded"
+      "content-type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({
       client_id: env.googleOAuth.clientId,
       client_secret: env.googleOAuth.clientSecret,
       code,
       grant_type: "authorization_code",
-      redirect_uri: env.googleOAuth.redirectUri
-    })
+      redirect_uri: env.googleOAuth.redirectUri,
+    }),
   });
 
   if (!response.ok) {
-    throw new GoogleOAuthError("Google token exchange failed", "GOOGLE_TOKEN_EXCHANGE_FAILED");
+    throw new GoogleOAuthError(
+      "Google token exchange failed",
+      "GOOGLE_TOKEN_EXCHANGE_FAILED",
+    );
   }
 
   const payload = await response.json();
 
   if (!payload.access_token) {
-    throw new GoogleOAuthError("Google token response is invalid", "GOOGLE_TOKEN_RESPONSE_INVALID");
+    throw new GoogleOAuthError(
+      "Google token response is invalid",
+      "GOOGLE_TOKEN_RESPONSE_INVALID",
+    );
   }
 
   return payload.access_token;
@@ -135,24 +147,30 @@ async function exchangeAuthorizationCode(code) {
 async function fetchGoogleProfile(accessToken) {
   const response = await fetch(env.googleOAuth.userInfoUrl, {
     headers: {
-      authorization: `Bearer ${accessToken}`
-    }
+      authorization: `Bearer ${accessToken}`,
+    },
   });
 
   if (!response.ok) {
-    throw new GoogleOAuthError("Google profile request failed", "GOOGLE_PROFILE_REQUEST_FAILED");
+    throw new GoogleOAuthError(
+      "Google profile request failed",
+      "GOOGLE_PROFILE_REQUEST_FAILED",
+    );
   }
 
   const payload = await response.json();
 
   if (!payload.sub || !payload.email || payload.email_verified === false) {
-    throw new GoogleOAuthError("Google profile is invalid", "GOOGLE_PROFILE_INVALID");
+    throw new GoogleOAuthError(
+      "Google profile is invalid",
+      "GOOGLE_PROFILE_INVALID",
+    );
   }
 
   return {
     email: normalizeEmail(payload.email),
     name: payload.name || "",
-    subject: payload.sub
+    subject: payload.sub,
   };
 }
 
@@ -163,12 +181,12 @@ function createGoogleLinkToken({ email, subject, userId }) {
       email,
       provider: GOOGLE_PROVIDER,
       subject,
-      userId
+      userId,
     },
     env.jwtSecret,
     {
-      expiresIn: GOOGLE_LINK_TOKEN_EXPIRES_IN
-    }
+      expiresIn: GOOGLE_LINK_TOKEN_EXPIRES_IN,
+    },
   );
 }
 
@@ -176,13 +194,19 @@ function verifyGoogleLinkToken(linkToken) {
   try {
     const payload = jwt.verify(linkToken, env.jwtSecret);
 
-    if (payload.type !== "google_oauth_link" || payload.provider !== GOOGLE_PROVIDER) {
+    if (
+      payload.type !== "google_oauth_link" ||
+      payload.provider !== GOOGLE_PROVIDER
+    ) {
       throw new Error("Invalid Google link token");
     }
 
     return payload;
   } catch (_error) {
-    throw new GoogleOAuthError("Google link session is invalid or expired", "GOOGLE_LINK_INVALID");
+    throw new GoogleOAuthError(
+      "Google link session is invalid or expired",
+      "GOOGLE_LINK_INVALID",
+    );
   }
 }
 
@@ -190,16 +214,22 @@ async function createAuthenticatedResult(user) {
   return {
     status: "authenticated",
     user,
-    ...(await createSession(user))
+    ...(await createSession(user)),
   };
 }
 
 async function authenticateGoogleProfile(profile) {
-  const linkedUser = await userRepository.findByOAuthProvider(GOOGLE_PROVIDER, profile.subject);
+  const linkedUser = await userRepository.findByOAuthProvider(
+    GOOGLE_PROVIDER,
+    profile.subject,
+  );
 
   if (linkedUser) {
     if (!linkedUser.verified || !linkedUser.isActive) {
-      throw new GoogleOAuthError("Google account cannot be used", "GOOGLE_ACCOUNT_DISABLED");
+      throw new GoogleOAuthError(
+        "Google account cannot be used",
+        "GOOGLE_ACCOUNT_DISABLED",
+      );
     }
 
     return createAuthenticatedResult(linkedUser);
@@ -211,7 +241,7 @@ async function authenticateGoogleProfile(profile) {
     if (existingUser.oauthProvider || existingUser.oauthSubject) {
       throw new GoogleOAuthError(
         "Email is already linked to another OAuth account",
-        "GOOGLE_EMAIL_ALREADY_LINKED"
+        "GOOGLE_EMAIL_ALREADY_LINKED",
       );
     }
 
@@ -221,8 +251,8 @@ async function authenticateGoogleProfile(profile) {
       linkToken: createGoogleLinkToken({
         email: existingUser.email,
         subject: profile.subject,
-        userId: existingUser.id
-      })
+        userId: existingUser.id,
+      }),
     };
   }
 
@@ -236,7 +266,7 @@ async function authenticateGoogleProfile(profile) {
     isActive: true,
     oauthProvider: GOOGLE_PROVIDER,
     oauthSubject: profile.subject,
-    oauthLinkedAt: new Date()
+    oauthLinkedAt: new Date(),
   });
 
   return createAuthenticatedResult(createdUser);
@@ -253,7 +283,7 @@ async function linkGoogleAccountWithPassword({ linkToken, password }) {
   if (!linkToken || !password) {
     throw new GoogleOAuthError(
       "Google link token and password are required",
-      "GOOGLE_LINK_REQUIRED"
+      "GOOGLE_LINK_REQUIRED",
     );
   }
 
@@ -261,26 +291,38 @@ async function linkGoogleAccountWithPassword({ linkToken, password }) {
   const user = await userRepository.findById(Number(payload.userId));
 
   if (!user || normalizeEmail(user.email) !== payload.email) {
-    throw new GoogleOAuthError("Google link session is invalid or expired", "GOOGLE_LINK_INVALID");
+    throw new GoogleOAuthError(
+      "Google link session is invalid or expired",
+      "GOOGLE_LINK_INVALID",
+    );
   }
 
-  if (user.oauthProvider === GOOGLE_PROVIDER && user.oauthSubject === payload.subject) {
+  if (
+    user.oauthProvider === GOOGLE_PROVIDER &&
+    user.oauthSubject === payload.subject
+  ) {
     return createAuthenticatedResult(user);
   }
 
   if (user.oauthProvider || user.oauthSubject || !user.passwordHash) {
-    throw new GoogleOAuthError("Google account cannot be linked", "GOOGLE_LINK_NOT_ALLOWED");
+    throw new GoogleOAuthError(
+      "Google account cannot be linked",
+      "GOOGLE_LINK_NOT_ALLOWED",
+    );
   }
 
   const isValidPassword = await argon2.verify(user.passwordHash, password);
 
   if (!isValidPassword) {
-    throw new GoogleOAuthError("Password is incorrect", "GOOGLE_LINK_INVALID_PASSWORD");
+    throw new GoogleOAuthError(
+      "Password is incorrect",
+      "GOOGLE_LINK_INVALID_PASSWORD",
+    );
   }
 
   const linkedUser = await userRepository.linkOAuthProvider(user.id, {
     oauthProvider: GOOGLE_PROVIDER,
-    oauthSubject: payload.subject
+    oauthSubject: payload.subject,
   });
 
   return createAuthenticatedResult(linkedUser);
@@ -298,5 +340,5 @@ module.exports = {
   getGoogleOAuthLinkCookieOptions,
   getGoogleOAuthStateCookieOptions,
   isGoogleOAuthConfigured,
-  linkGoogleAccountWithPassword
+  linkGoogleAccountWithPassword,
 };
