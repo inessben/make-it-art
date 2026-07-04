@@ -427,13 +427,19 @@ router.get("/artists/me/contract.pdf", async (req, res) => {
 
     const { payload, pdfBuffer } = await resolveApplicationContractPdf(application, req.user);
     const filename = buildContractFilename(payload, req.user.username || "artiste");
+    const shouldDownload = ["1", "true", "yes"].includes(
+      String(req.query.download || "").toLowerCase()
+    );
     
     if (!pdfBuffer || pdfBuffer.length === 0) {
       throw new Error("Stored artist contract PDF is unreadable");
     }
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+    res.setHeader(
+      "Content-Disposition",
+      `${shouldDownload ? "attachment" : "inline"}; filename="${filename}"`
+    );
     res.setHeader("Content-Length", pdfBuffer.length);
     res.setHeader("Cache-Control", "no-store, max-age=0");
     res.setHeader("Pragma", "no-cache");

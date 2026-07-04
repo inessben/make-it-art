@@ -26,7 +26,8 @@ function serializeArtistApplication(application) {
     reviewedAt: application.reviewedAt || null,
     reviewNote: application.reviewNote || "",
     contractSignedAt: application.contractSignedAt || null,
-    contractVersion: application.contractVersion || null
+    contractVersion: application.contractVersion || null,
+    hasContractPdf: Boolean(application.contractPdf)
   };
 }
 
