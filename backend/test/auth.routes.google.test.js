@@ -293,7 +293,7 @@ test("GET /auth/google/callback logs in successful OAuth users", async (t) => {
   const cookies = getSetCookieHeaders(response.headers);
 
   assert.equal(response.status, 302);
-  assert.equal(response.headers.get("location"), "http://localhost/profile");
+  assert.equal(response.headers.get("location"), "http://localhost/");
   assert.deepEqual(calls.authenticateGoogleCode, ["code"]);
   assert.ok(
     cookies.some((cookie) => cookie.startsWith("mia_session=access-token")),
@@ -425,7 +425,7 @@ test("POST /auth/google/link links the account and creates session cookies", asy
 
   assert.equal(response.status, 200);
   assert.equal(body.message, "Google account linked successfully");
-  assert.equal(body.redirectTo, "/profile");
+  assert.equal(body.redirectTo, "/");
   assert.deepEqual(body.user, {
     id: authUser.id,
     email: authUser.email,

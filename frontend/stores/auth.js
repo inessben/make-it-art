@@ -32,7 +32,7 @@ export const useAuthStore = defineStore("auth", {
       return state.user?.artistApplication?.status || null;
     },
     defaultAuthenticatedRoute() {
-      return this.isAdmin ? "/admin" : "/profile";
+      return this.isAdmin ? "/admin" : "/";
     },
     settingsRoute() {
       return this.isAdmin ? "/admin/settings" : "/account-settings";

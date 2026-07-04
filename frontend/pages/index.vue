@@ -3,11 +3,53 @@
     <section
       class="relative isolate overflow-hidden border-b border-[#121826] bg-[radial-gradient(circle_at_top_left,_rgba(74,108,247,0.22),_transparent_34%),radial-gradient(circle_at_85%_15%,_rgba(242,201,125,0.12),_transparent_22%),linear-gradient(180deg,_#050812,_#02040A)]"
     >
+      <div class="relative z-10 mx-auto w-full max-w-[1240px] px-6 pt-6">
+        <div
+          class="flex flex-col gap-4 rounded-[24px] border border-[#151E30] bg-[#060A13]/80 px-5 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between"
+        >
+          <NuxtLink
+            to="/"
+            class="inline-flex items-center gap-3 text-sm font-semibold tracking-[0.22em] text-[#DCE7FF] uppercase"
+          >
+            <span
+              class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#4A6CF7] text-black"
+            >
+              MIA
+            </span>
+            <span>Make It Art</span>
+          </NuxtLink>
+
+          <div class="flex flex-wrap gap-3">
+            <template v-if="auth.isAuthenticated">
+              <NuxtLink
+                :to="homePrimaryRoute"
+                class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#24314F] bg-[#0C111D] px-5 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#141C2E]"
+              >
+                {{ homePrimaryLabel }}
+              </NuxtLink>
+            </template>
+            <template v-else>
+              <NuxtLink
+                to="/login"
+                class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#24314F] bg-[#0C111D] px-5 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#141C2E]"
+              >
+                Connexion
+              </NuxtLink>
+              <NuxtLink
+                to="/register"
+                class="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#4A6CF7] px-5 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
+              >
+                Creer un compte
+              </NuxtLink>
+            </template>
+          </div>
+        </div>
+      </div>
       <div
         class="absolute inset-0 bg-[linear-gradient(transparent_0%,rgba(255,255,255,0.02)_100%)]"
       />
       <div
-        class="mx-auto grid w-full max-w-[1240px] gap-10 px-6 py-16 lg:grid-cols-[1.2fr_0.9fr]"
+        class="mx-auto grid w-full max-w-[1240px] gap-10 px-6 pb-16 pt-10 lg:grid-cols-[1.2fr_0.9fr]"
       >
         <div class="relative z-10">
           <p class="text-xs uppercase tracking-[0.22em] text-[#8AA2FF]">
@@ -240,6 +282,10 @@ const overview = computed(() => {
 
 const errorMessage = computed(() => error.value?.data?.message || "");
 const showCollectorShortcut = computed(() => user.value && !auth.isAdmin);
+const homePrimaryRoute = computed(() => (auth.isAdmin ? "/admin" : "/profile"));
+const homePrimaryLabel = computed(() =>
+  auth.isAdmin ? "Backoffice admin" : "Mon profil",
+);
 
 const {
   actionMessage,
