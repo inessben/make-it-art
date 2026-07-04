@@ -76,7 +76,7 @@ function setAuthCookies(res, result) {
 }
 
 function getAuthenticatedAppPath(user) {
-  return isAdminUser(user) ? "/admin" : "/profile";
+  return isAdminUser(user) ? "/admin" : "/";
 }
 
 router.post("/auth/login", strictAuthRateLimit, async (req, res) => {

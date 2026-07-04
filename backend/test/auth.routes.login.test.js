@@ -236,7 +236,7 @@ test("POST /auth/login creates session cookies when code is bypassed", async (t)
   assert.deepEqual(response.body, {
     message: "Login successful",
     requiresCode: false,
-    redirectTo: "/profile",
+    redirectTo: "/",
     user,
   });
   assert.ok(
@@ -321,7 +321,7 @@ test("POST /auth/verify-login-code creates session cookies and a remembered devi
   assert.equal(response.status, 200);
   assert.deepEqual(response.body, {
     message: "Login successful",
-    redirectTo: "/profile",
+    redirectTo: "/",
     user,
   });
   assert.equal(calls.verifyLoginCode[0].challengeToken, "challenge-token");
