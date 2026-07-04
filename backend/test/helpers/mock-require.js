@@ -20,7 +20,7 @@ function loadModuleWithMocks(targetPath, mockedModules) {
       id: resolvedPath,
       filename: resolvedPath,
       loaded: true,
-      exports
+      exports,
     };
   });
 
@@ -35,10 +35,10 @@ function loadModuleWithMocks(targetPath, mockedModules) {
       originalMockedModules.forEach((originalCacheEntry, resolvedPath) => {
         restoreCacheEntry(resolvedPath, originalCacheEntry);
       });
-    }
+    },
   };
 }
 
 module.exports = {
-  loadModuleWithMocks
+  loadModuleWithMocks,
 };

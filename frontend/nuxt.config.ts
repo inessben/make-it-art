@@ -4,12 +4,13 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   routeRules: {
     "/api/**": {
-      proxy: process.env.NUXT_API_PROXY_TARGET || "http://localhost:4000/api/**"
-    }
+      proxy:
+        process.env.NUXT_API_PROXY_TARGET || "http://localhost:4000/api/**",
+    },
   },
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || "/api"
-    }
-  }
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || "/api",
+    },
+  },
 });

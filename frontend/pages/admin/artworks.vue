@@ -23,20 +23,32 @@
         <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
           {{ summaryCard.label }}
         </p>
-        <p class="mt-4 text-3xl font-semibold text-white">{{ summaryCard.value }}</p>
-        <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">{{ summaryCard.description }}</p>
+        <p class="mt-4 text-3xl font-semibold text-white">
+          {{ summaryCard.value }}
+        </p>
+        <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
+          {{ summaryCard.description }}
+        </p>
       </article>
     </section>
 
     <section class="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
       <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div
+          class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+        >
           <div>
-            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Artwork catalog</p>
-            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Oeuvres en base</h2>
+            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+              Artwork catalog
+            </p>
+            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
+              Oeuvres en base
+            </h2>
           </div>
           <div class="grid gap-3 sm:grid-cols-2">
-            <label class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3">
+            <label
+              class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3"
+            >
               <span class="sr-only">Search artworks</span>
               <input
                 v-model="searchTerm"
@@ -45,7 +57,9 @@
                 class="w-full bg-transparent text-sm text-[#E6EDF7] outline-none placeholder:text-[#6D7A88]"
               />
             </label>
-            <label class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3">
+            <label
+              class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3"
+            >
               <span class="sr-only">Filter artworks</span>
               <select
                 v-model="statusFilter"
@@ -87,10 +101,14 @@
             :key="artwork.id"
             class="rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-5"
           >
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div
+              class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
+            >
               <div>
                 <p class="font-semibold text-[#E6EDF7]">{{ artwork.title }}</p>
-                <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">By {{ artwork.artistName }}</p>
+                <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">
+                  By {{ artwork.artistName }}
+                </p>
                 <div class="mt-4 flex flex-wrap gap-3 text-sm text-[#8E9AA7]">
                   <span>{{ artwork.category }}</span>
                   <span>{{ artwork.price }}</span>
@@ -111,26 +129,33 @@
       </article>
 
       <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-        <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Action blocks</p>
-        <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Futur panneau de decision</h2>
+        <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+          Action blocks
+        </p>
+        <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
+          Futur panneau de decision
+        </h2>
 
         <div class="mt-6 grid gap-4">
           <div class="rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-5">
             <p class="font-semibold text-[#E6EDF7]">Approve</p>
             <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">
-              Bloc visuel pret pour de futures actions de moderation quand le schema les gerera.
+              Bloc visuel pret pour de futures actions de moderation quand le
+              schema les gerera.
             </p>
           </div>
           <div class="rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-5">
             <p class="font-semibold text-[#E6EDF7]">Reject</p>
             <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">
-              Pour l'instant, cette page s'appuie sur les champs reels disponibles en base.
+              Pour l'instant, cette page s'appuie sur les champs reels
+              disponibles en base.
             </p>
           </div>
           <div class="rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-5">
             <p class="font-semibold text-[#E6EDF7]">Delete</p>
             <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">
-              On branchera les vraies actions quand les endpoints d'administration existeront.
+              On branchera les vraies actions quand les endpoints
+              d'administration existeront.
             </p>
           </div>
         </div>
@@ -144,7 +169,7 @@ import { computed, onMounted, ref } from "vue";
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "admin"
+  middleware: "admin",
 });
 
 const loading = ref(true);
@@ -156,30 +181,30 @@ const summary = ref({
   totalArtworks: 0,
   protectedArtworks: 0,
   needsCategoryArtworks: 0,
-  totalFavorites: 0
+  totalFavorites: 0,
 });
 
 const summaries = computed(() => [
   {
     label: "Total artworks",
     value: summary.value.totalArtworks,
-    description: "Nombre total d'oeuvres presentes en base."
+    description: "Nombre total d'oeuvres presentes en base.",
   },
   {
     label: "Protected artworks",
     value: summary.value.protectedArtworks,
-    description: "Oeuvres marquees comme protegees."
+    description: "Oeuvres marquees comme protegees.",
   },
   {
     label: "Needs category",
     value: summary.value.needsCategoryArtworks,
-    description: "Oeuvres sans categorie renseignee."
+    description: "Oeuvres sans categorie renseignee.",
   },
   {
     label: "Total favorites",
     value: summary.value.totalFavorites,
-    description: "Volume global des favoris sur les oeuvres."
-  }
+    description: "Volume global des favoris sur les oeuvres.",
+  },
 ]);
 
 const filteredArtworks = computed(() => {
@@ -191,7 +216,8 @@ const filteredArtworks = computed(() => {
       artwork.title.toLowerCase().includes(normalizedSearch) ||
       artwork.artistName.toLowerCase().includes(normalizedSearch);
 
-    const matchesStatus = statusFilter.value === "all" || artwork.status === statusFilter.value;
+    const matchesStatus =
+      statusFilter.value === "all" || artwork.status === statusFilter.value;
 
     return matchesSearch && matchesStatus;
   });
@@ -207,7 +233,7 @@ async function loadArtworks() {
 
   try {
     const response = await $fetch("/api/admin/artworks", {
-      credentials: "include"
+      credentials: "include",
     });
 
     artworks.value = response.artworks || [];
@@ -223,7 +249,8 @@ async function loadArtworks() {
       return;
     }
 
-    errorMessage.value = error?.data?.message || "Unable to load admin artworks.";
+    errorMessage.value =
+      error?.data?.message || "Unable to load admin artworks.";
   } finally {
     loading.value = false;
   }
@@ -247,7 +274,7 @@ function formatDate(value) {
   }
 
   return new Intl.DateTimeFormat("fr-FR", {
-    dateStyle: "medium"
+    dateStyle: "medium",
   }).format(new Date(value));
 }
 </script>

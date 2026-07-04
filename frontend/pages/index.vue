@@ -3,16 +3,25 @@
     <section
       class="relative isolate overflow-hidden border-b border-[#121826] bg-[radial-gradient(circle_at_top_left,_rgba(74,108,247,0.22),_transparent_34%),radial-gradient(circle_at_85%_15%,_rgba(242,201,125,0.12),_transparent_22%),linear-gradient(180deg,_#050812,_#02040A)]"
     >
-      <div class="absolute inset-0 bg-[linear-gradient(transparent_0%,rgba(255,255,255,0.02)_100%)]" />
-      <div class="mx-auto grid w-full max-w-[1240px] gap-10 px-6 py-16 lg:grid-cols-[1.2fr_0.9fr]">
+      <div
+        class="absolute inset-0 bg-[linear-gradient(transparent_0%,rgba(255,255,255,0.02)_100%)]"
+      />
+      <div
+        class="mx-auto grid w-full max-w-[1240px] gap-10 px-6 py-16 lg:grid-cols-[1.2fr_0.9fr]"
+      >
         <div class="relative z-10">
-          <p class="text-xs uppercase tracking-[0.22em] text-[#8AA2FF]">Make It Art</p>
-          <h1 class="mt-6 max-w-3xl text-[clamp(2.7rem,7vw,5.8rem)] font-semibold leading-[0.94] text-white">
+          <p class="text-xs uppercase tracking-[0.22em] text-[#8AA2FF]">
+            Make It Art
+          </p>
+          <h1
+            class="mt-6 max-w-3xl text-[clamp(2.7rem,7vw,5.8rem)] font-semibold leading-[0.94] text-white"
+          >
             Decouvre des artistes numeriques avec une vibe galerie futuriste.
           </h1>
           <p class="mt-6 max-w-2xl text-base leading-8 text-[#A7B4C9]">
-            Explore les oeuvres, suis les artistes qui te marquent et organise tes coups de coeur
-            dans des collections personnelles prêtes pour la prochaine phase e-commerce.
+            Explore les oeuvres, suis les artistes qui te marquent et organise
+            tes coups de coeur dans des collections personnelles prêtes pour la
+            prochaine phase e-commerce.
           </p>
 
           <div class="mt-10 flex flex-wrap gap-4">
@@ -46,29 +55,50 @@
         </div>
 
         <div class="relative z-10 grid gap-4 sm:grid-cols-2">
-          <article class="rounded-[28px] border border-[#151E30] bg-[#070B14]/92 p-6 backdrop-blur">
-            <p class="text-xs uppercase tracking-[0.18em] text-[#6F84AA]">Oeuvres en vitrine</p>
-            <p class="mt-4 text-4xl font-semibold text-white">{{ overview.stats.artworks }}</p>
+          <article
+            class="rounded-[28px] border border-[#151E30] bg-[#070B14]/92 p-6 backdrop-blur"
+          >
+            <p class="text-xs uppercase tracking-[0.18em] text-[#6F84AA]">
+              Oeuvres en vitrine
+            </p>
+            <p class="mt-4 text-4xl font-semibold text-white">
+              {{ overview.stats.artworks }}
+            </p>
             <p class="mt-3 text-sm leading-7 text-[#96A4B8]">
-              Un catalogue public pensé pour la decouverte, le coup de coeur et la navigation vers
-              chaque artiste.
+              Un catalogue public pensé pour la decouverte, le coup de coeur et
+              la navigation vers chaque artiste.
             </p>
           </article>
-          <article class="rounded-[28px] border border-[#151E30] bg-[#070B14]/92 p-6 backdrop-blur">
-            <p class="text-xs uppercase tracking-[0.18em] text-[#6F84AA]">Artistes verifies</p>
-            <p class="mt-4 text-4xl font-semibold text-white">{{ overview.stats.artists }}</p>
+          <article
+            class="rounded-[28px] border border-[#151E30] bg-[#070B14]/92 p-6 backdrop-blur"
+          >
+            <p class="text-xs uppercase tracking-[0.18em] text-[#6F84AA]">
+              Artistes verifies
+            </p>
+            <p class="mt-4 text-4xl font-semibold text-white">
+              {{ overview.stats.artists }}
+            </p>
             <p class="mt-3 text-sm leading-7 text-[#96A4B8]">
-              Des profils publics plus riches avec styles, portfolio, univers et boutons de suivi.
+              Des profils publics plus riches avec styles, portfolio, univers et
+              boutons de suivi.
             </p>
           </article>
           <article
             class="sm:col-span-2 rounded-[28px] border border-[#1B2640] bg-[linear-gradient(135deg,_rgba(74,108,247,0.22),_rgba(6,8,14,0.95)_56%)] p-6"
           >
-            <p class="text-xs uppercase tracking-[0.18em] text-[#D7E2FF]">Parcours collectionneur</p>
+            <p class="text-xs uppercase tracking-[0.18em] text-[#D7E2FF]">
+              Parcours collectionneur
+            </p>
             <div class="mt-5 grid gap-3 text-sm text-[#DCE7FF] sm:grid-cols-3">
-              <div class="rounded-2xl bg-[#050812]/55 px-4 py-4">1. Je decouvre des oeuvres</div>
-              <div class="rounded-2xl bg-[#050812]/55 px-4 py-4">2. Je plonge dans le profil artiste</div>
-              <div class="rounded-2xl bg-[#050812]/55 px-4 py-4">3. Je sauvegarde dans mes favoris et collections</div>
+              <div class="rounded-2xl bg-[#050812]/55 px-4 py-4">
+                1. Je decouvre des oeuvres
+              </div>
+              <div class="rounded-2xl bg-[#050812]/55 px-4 py-4">
+                2. Je plonge dans le profil artiste
+              </div>
+              <div class="rounded-2xl bg-[#050812]/55 px-4 py-4">
+                3. Je sauvegarde dans mes favoris et collections
+              </div>
             </div>
           </article>
         </div>
@@ -76,15 +106,19 @@
     </section>
 
     <section class="mx-auto grid w-full max-w-[1240px] gap-14 px-6 py-16">
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div
+        class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+      >
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">Selection du moment</p>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
+            Selection du moment
+          </p>
           <h2 class="mt-3 text-[clamp(2rem,4vw,3rem)] font-semibold text-white">
             Oeuvres a ne pas laisser filer
           </h2>
           <p class="mt-4 max-w-2xl text-sm leading-7 text-[#96A4B8]">
-            Des fiches oeuvre detaillees, liees aux profils publics des artistes pour fluidifier la
-            decouverte.
+            Des fiches oeuvre detaillees, liees aux profils publics des artistes
+            pour fluidifier la decouverte.
           </p>
         </div>
         <NuxtLink
@@ -95,7 +129,10 @@
         </NuxtLink>
       </div>
 
-      <section v-if="pending" class="rounded-[28px] border border-[#151E30] bg-[#080C16] p-8 text-[#96A4B8]">
+      <section
+        v-if="pending"
+        class="rounded-[28px] border border-[#151E30] bg-[#080C16] p-8 text-[#96A4B8]"
+      >
         Chargement de la marketplace...
       </section>
       <section
@@ -115,15 +152,19 @@
         />
       </section>
 
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div
+        class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+      >
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">Artistes en lumiere</p>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
+            Artistes en lumiere
+          </p>
           <h2 class="mt-3 text-[clamp(2rem,4vw,3rem)] font-semibold text-white">
             Explore les univers derriere les oeuvres
           </h2>
           <p class="mt-4 max-w-2xl text-sm leading-7 text-[#96A4B8]">
-            Une vraie porte d’entree pour la decouverte d’artistes, avec suivi et navigation vers
-            leur portfolio public.
+            Une vraie porte d’entree pour la decouverte d’artistes, avec suivi
+            et navigation vers leur portfolio public.
           </p>
         </div>
         <NuxtLink
@@ -134,7 +175,10 @@
         </NuxtLink>
       </div>
 
-      <section v-if="!pending && !errorMessage" class="grid gap-6 lg:grid-cols-2">
+      <section
+        v-if="!pending && !errorMessage"
+        class="grid gap-6 lg:grid-cols-2"
+      >
         <ArtistCard
           v-for="artist in overview.artists"
           :key="artist.id"
@@ -159,35 +203,39 @@ import ArtistCard from "~/components/marketplace/ArtistCard.vue";
 
 const auth = useAuthStore();
 const { user } = storeToRefs(auth);
-const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
+const requestHeaders = import.meta.server
+  ? useRequestHeaders(["cookie"])
+  : undefined;
 
 const {
   data,
   pending,
   error,
-  refresh: refreshOverview
+  refresh: refreshOverview,
 } = await useFetch("/api/marketplace/overview", {
   headers: requestHeaders,
   credentials: "include",
   default: () => ({
     stats: {
       artworks: 0,
-      artists: 0
+      artists: 0,
     },
     artworks: [],
-    artists: []
-  })
+    artists: [],
+  }),
 });
 
 const overview = computed(() => {
-  return data.value || {
-    stats: {
-      artworks: 0,
-      artists: 0
-    },
-    artworks: [],
-    artists: []
-  };
+  return (
+    data.value || {
+      stats: {
+        artworks: 0,
+        artists: 0,
+      },
+      artworks: [],
+      artists: [],
+    }
+  );
 });
 
 const errorMessage = computed(() => error.value?.data?.message || "");
@@ -198,7 +246,7 @@ const {
   favoriteLoading,
   followLoading,
   toggleFavorite,
-  toggleFollow
+  toggleFollow,
 } = useMarketplaceActions(auth);
 
 onMounted(async () => {

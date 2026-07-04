@@ -8,7 +8,10 @@
         Retour aux artistes
       </NuxtLink>
 
-      <section v-if="pending" class="rounded-[32px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]">
+      <section
+        v-if="pending"
+        class="rounded-[32px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]"
+      >
         Chargement du profil artiste...
       </section>
       <section
@@ -31,7 +34,9 @@
 
               <div class="flex-1">
                 <div class="flex flex-wrap items-center gap-3">
-                  <h1 class="text-[clamp(2.4rem,5vw,4rem)] font-semibold leading-[0.96] text-white">
+                  <h1
+                    class="text-[clamp(2.4rem,5vw,4rem)] font-semibold leading-[0.96] text-white"
+                  >
                     {{ artist.displayName }}
                   </h1>
                   <span
@@ -45,9 +50,14 @@
                     {{ artist.verified ? "Verifie" : "En revue" }}
                   </span>
                 </div>
-                <p class="mt-4 text-base text-[#D1DBEA]">{{ artist.artType || "Art numerique" }}</p>
+                <p class="mt-4 text-base text-[#D1DBEA]">
+                  {{ artist.artType || "Art numerique" }}
+                </p>
                 <p class="mt-4 max-w-3xl text-sm leading-8 text-[#A4B0C0]">
-                  {{ artist.bio || "Ce profil public sera enrichi a mesure que l'artiste structure son portfolio." }}
+                  {{
+                    artist.bio ||
+                    "Ce profil public sera enrichi a mesure que l'artiste structure son portfolio."
+                  }}
                 </p>
               </div>
             </div>
@@ -103,17 +113,35 @@
           </div>
 
           <div class="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-            <article class="rounded-[24px] border border-[#151E30] bg-[#050912] p-5">
-              <p class="text-xs uppercase tracking-[0.16em] text-[#63728B]">Oeuvres</p>
-              <p class="mt-3 text-3xl font-semibold text-white">{{ artist.stats?.artworks || 0 }}</p>
+            <article
+              class="rounded-[24px] border border-[#151E30] bg-[#050912] p-5"
+            >
+              <p class="text-xs uppercase tracking-[0.16em] text-[#63728B]">
+                Oeuvres
+              </p>
+              <p class="mt-3 text-3xl font-semibold text-white">
+                {{ artist.stats?.artworks || 0 }}
+              </p>
             </article>
-            <article class="rounded-[24px] border border-[#151E30] bg-[#050912] p-5">
-              <p class="text-xs uppercase tracking-[0.16em] text-[#63728B]">Followers</p>
-              <p class="mt-3 text-3xl font-semibold text-white">{{ artist.stats?.followers || 0 }}</p>
+            <article
+              class="rounded-[24px] border border-[#151E30] bg-[#050912] p-5"
+            >
+              <p class="text-xs uppercase tracking-[0.16em] text-[#63728B]">
+                Followers
+              </p>
+              <p class="mt-3 text-3xl font-semibold text-white">
+                {{ artist.stats?.followers || 0 }}
+              </p>
             </article>
-            <article class="rounded-[24px] border border-[#151E30] bg-[#050912] p-5">
-              <p class="text-xs uppercase tracking-[0.16em] text-[#63728B]">Collections</p>
-              <p class="mt-3 text-3xl font-semibold text-white">{{ artist.stats?.collections || 0 }}</p>
+            <article
+              class="rounded-[24px] border border-[#151E30] bg-[#050912] p-5"
+            >
+              <p class="text-xs uppercase tracking-[0.16em] text-[#63728B]">
+                Collections
+              </p>
+              <p class="mt-3 text-3xl font-semibold text-white">
+                {{ artist.stats?.collections || 0 }}
+              </p>
             </article>
           </div>
         </section>
@@ -122,8 +150,12 @@
           <div class="grid gap-6">
             <div class="flex items-end justify-between gap-4">
               <div>
-                <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">Portfolio public</p>
-                <h2 class="mt-3 text-2xl font-semibold text-white">Oeuvres disponibles</h2>
+                <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
+                  Portfolio public
+                </p>
+                <h2 class="mt-3 text-2xl font-semibold text-white">
+                  Oeuvres disponibles
+                </h2>
               </div>
               <NuxtLink
                 to="/artworks"
@@ -143,15 +175,22 @@
                 @toggle-favorite="toggleFavorite"
               />
             </div>
-            <div v-else class="rounded-[28px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]">
+            <div
+              v-else
+              class="rounded-[28px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]"
+            >
               Cet artiste n'a pas encore d'oeuvres publiques visibles.
             </div>
           </div>
 
           <div class="grid gap-6">
             <div>
-              <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">Collections d'artiste</p>
-              <h2 class="mt-3 text-2xl font-semibold text-white">Series et selections</h2>
+              <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
+                Collections d'artiste
+              </p>
+              <h2 class="mt-3 text-2xl font-semibold text-white">
+                Series et selections
+              </h2>
             </div>
 
             <div v-if="collections.length" class="grid gap-4">
@@ -162,12 +201,19 @@
               >
                 <div class="flex items-start justify-between gap-4">
                   <div>
-                    <h3 class="text-xl font-semibold text-white">{{ collection.title }}</h3>
+                    <h3 class="text-xl font-semibold text-white">
+                      {{ collection.title }}
+                    </h3>
                     <p class="mt-3 text-sm leading-7 text-[#A4B0C0]">
-                      {{ collection.description || "Collection en cours de curation." }}
+                      {{
+                        collection.description ||
+                        "Collection en cours de curation."
+                      }}
                     </p>
                   </div>
-                  <span class="rounded-full bg-[#101728] px-3 py-1 text-xs font-medium text-[#C7D4EA]">
+                  <span
+                    class="rounded-full bg-[#101728] px-3 py-1 text-xs font-medium text-[#C7D4EA]"
+                  >
                     {{ collection.itemsCount }} oeuvre(s)
                   </span>
                 </div>
@@ -187,7 +233,10 @@
                 </div>
               </article>
             </div>
-            <div v-else class="rounded-[28px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]">
+            <div
+              v-else
+              class="rounded-[28px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]"
+            >
               Aucune collection publique n'est visible pour cet artiste.
             </div>
           </div>
@@ -207,22 +256,22 @@ import { getArtistInitials } from "~/utils/marketplace";
 
 const route = useRoute();
 const auth = useAuthStore();
-const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
+const requestHeaders = import.meta.server
+  ? useRequestHeaders(["cookie"])
+  : undefined;
 
-const {
-  data,
-  pending,
-  error,
-  refresh
-} = await useFetch(`/api/artists/${route.params.id}`, {
-  headers: requestHeaders,
-  credentials: "include",
-  default: () => ({
-    artist: null,
-    artworks: [],
-    collections: []
-  })
-});
+const { data, pending, error, refresh } = await useFetch(
+  `/api/artists/${route.params.id}`,
+  {
+    headers: requestHeaders,
+    credentials: "include",
+    default: () => ({
+      artist: null,
+      artworks: [],
+      collections: [],
+    }),
+  },
+);
 
 const artist = computed(() => data.value?.artist || null);
 const artworks = computed(() => data.value?.artworks || []);
@@ -235,7 +284,7 @@ const {
   favoriteLoading,
   followLoading,
   toggleFavorite,
-  toggleFollow
+  toggleFollow,
 } = useMarketplaceActions(auth);
 
 onMounted(async () => {

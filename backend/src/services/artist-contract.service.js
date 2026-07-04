@@ -14,7 +14,7 @@ const BUNDLED_PYTHON_PATH = path.join(
   "codex-primary-runtime",
   "dependencies",
   "python",
-  "python.exe"
+  "python.exe",
 );
 
 function formatDisplayDate(date) {
@@ -22,7 +22,7 @@ function formatDisplayDate(date) {
     day: "2-digit",
     month: "long",
     year: "numeric",
-    timeZone: CONTRACT_TIME_ZONE
+    timeZone: CONTRACT_TIME_ZONE,
   }).format(date);
 }
 
@@ -31,7 +31,7 @@ function formatDisplayTime(date) {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-    timeZone: CONTRACT_TIME_ZONE
+    timeZone: CONTRACT_TIME_ZONE,
   }).format(date);
 }
 
@@ -40,7 +40,9 @@ function normalizeText(value) {
 }
 
 function extractArtistApplicationPayload(application) {
-  return application?.payload && typeof application.payload === "object" ? application.payload : {};
+  return application?.payload && typeof application.payload === "object"
+    ? application.payload
+    : {};
 }
 
 function resolveContractSignedAt(application) {
@@ -59,15 +61,18 @@ function buildContractContext({ user, payload, effectiveDate = new Date() }) {
   const firstName = normalizeText(payload.firstName);
   const lastName = normalizeText(payload.lastName);
   const displayName = normalizeText(payload.displayName);
-  const legalName = [firstName, lastName].filter(Boolean).join(" ").trim() || user.username || "";
+  const legalName =
+    [firstName, lastName].filter(Boolean).join(" ").trim() ||
+    user.username ||
+    "";
   const addressParts = [
     normalizeText(payload.addressLine1),
-    normalizeText(payload.addressLine2)
+    normalizeText(payload.addressLine2),
   ].filter(Boolean);
   const localityParts = [
     normalizeText(payload.city),
     normalizeText(payload.region),
-    normalizeText(payload.postalCode)
+    normalizeText(payload.postalCode),
   ].filter(Boolean);
 
   return {
@@ -77,7 +82,7 @@ function buildContractContext({ user, payload, effectiveDate = new Date() }) {
     effectiveDateLabel: formatDisplayDate(effectiveDate),
     signatureTimeLabel: formatDisplayTime(effectiveDate),
     signatureDateTimeLabel: `${formatDisplayDate(effectiveDate)} a ${formatDisplayTime(
-      effectiveDate
+      effectiveDate,
     )} (${CONTRACT_TIME_ZONE})`,
     legalName,
     firstName,
@@ -90,10 +95,12 @@ function buildContractContext({ user, payload, effectiveDate = new Date() }) {
     taxId: normalizeText(payload.taxId) || "Non renseigne",
     phone: user.phone || "Non renseigne",
     artType: normalizeText(payload.artType) || "Non renseigne",
-    styles: Array.isArray(payload.styles) ? payload.styles.filter(Boolean).join(", ") : "",
+    styles: Array.isArray(payload.styles)
+      ? payload.styles.filter(Boolean).join(", ")
+      : "",
     portfolioUrl: normalizeText(payload.portfolioUrl),
     socialHandle: normalizeText(payload.socialHandle),
-    bio: normalizeText(payload.bio)
+    bio: normalizeText(payload.bio),
   };
 }
 
@@ -101,7 +108,7 @@ function renderArtistContract({ user, payload, effectiveDate = new Date() }) {
   const context = buildContractContext({
     user,
     payload,
-    effectiveDate
+    effectiveDate,
   });
 
   const contractText = `CONTRAT D'ARTISTE POUR LA PLATEFORME DE COMMERCE D'ART NUMERIQUE
@@ -232,7 +239,7 @@ Date et heure de signature : ${context.signatureDateTimeLabel}`;
   return {
     contractVersion: context.contractVersion,
     contractText,
-    context
+    context,
   };
 }
 
@@ -242,37 +249,41 @@ function resolvePythonCommand() {
   if (process.env.PDF_PYTHON_PATH) {
     candidates.push({
       command: process.env.PDF_PYTHON_PATH,
-      args: []
+      args: [],
     });
   }
 
   if (fs.existsSync(BUNDLED_PYTHON_PATH)) {
     candidates.push({
       command: BUNDLED_PYTHON_PATH,
-      args: []
+      args: [],
     });
   }
 
   candidates.push(
     {
       command: "python3",
-      args: []
+      args: [],
     },
     {
       command: "python",
-      args: []
+      args: [],
     },
     {
       command: "py",
-      args: ["-3"]
-    }
+      args: ["-3"],
+    },
   );
 
   for (const candidate of candidates) {
-    const result = spawnSync(candidate.command, [...candidate.args, "--version"], {
-      encoding: "utf8",
-      windowsHide: true
-    });
+    const result = spawnSync(
+      candidate.command,
+      [...candidate.args, "--version"],
+      {
+        encoding: "utf8",
+        windowsHide: true,
+      },
+    );
 
     if (result.status === 0) {
       return candidate;
@@ -290,25 +301,34 @@ async function cleanupFiles(pathsToRemove) {
       } catch (_error) {
         // Ignore cleanup failures for temp files.
       }
-    })
+    }),
   );
 }
 
-async function generateArtistContractPdf({ user, payload, signatureDataUrl, signedAt = new Date() }) {
+async function generateArtistContractPdf({
+  user,
+  payload,
+  signatureDataUrl,
+  signedAt = new Date(),
+}) {
   const { contractText, contractVersion, context } = renderArtistContract({
     user,
     payload,
-    effectiveDate: signedAt
+    effectiveDate: signedAt,
   });
   const backendRoot = path.resolve(__dirname, "../..");
   const tempDir = path.join(backendRoot, "tmp", "pdfs");
   const tempId = crypto.randomUUID();
   const inputPath = path.join(tempDir, `${tempId}.json`);
   const outputPath = path.join(tempDir, `${tempId}.pdf`);
-  const pythonScriptPath = path.join(backendRoot, "scripts", "generate_artist_contract_pdf.py");
+  const pythonScriptPath = path.join(
+    backendRoot,
+    "scripts",
+    "generate_artist_contract_pdf.py",
+  );
 
   await fsp.mkdir(tempDir, {
-    recursive: true
+    recursive: true,
   });
 
   await fsp.writeFile(
@@ -322,12 +342,12 @@ async function generateArtistContractPdf({ user, payload, signatureDataUrl, sign
         email: context.email,
         effectiveDateLabel: context.effectiveDateLabel,
         signatureDateTimeLabel: context.signatureDateTimeLabel,
-        contractVersion
+        contractVersion,
       },
       null,
-      2
+      2,
     ),
-    "utf8"
+    "utf8",
   );
 
   const python = resolvePythonCommand();
@@ -336,14 +356,17 @@ async function generateArtistContractPdf({ user, payload, signatureDataUrl, sign
     [...python.args, pythonScriptPath, inputPath, outputPath],
     {
       encoding: "utf8",
-      windowsHide: true
-    }
+      windowsHide: true,
+    },
   );
 
   if (result.status !== 0) {
     await cleanupFiles([inputPath, outputPath]);
-    const details = result.stderr || result.stdout || "Unknown PDF generation error";
-    throw new Error(`Unable to generate artist contract PDF: ${details.trim()}`);
+    const details =
+      result.stderr || result.stdout || "Unknown PDF generation error";
+    throw new Error(
+      `Unable to generate artist contract PDF: ${details.trim()}`,
+    );
   }
 
   const pdfBuffer = await fsp.readFile(outputPath);
@@ -353,7 +376,7 @@ async function generateArtistContractPdf({ user, payload, signatureDataUrl, sign
     contractVersion,
     contractText,
     pdfBuffer,
-    signedAt
+    signedAt,
   };
 }
 
@@ -364,5 +387,5 @@ module.exports = {
   extractArtistApplicationPayload,
   resolveContractSignedAt,
   renderArtistContract,
-  generateArtistContractPdf
+  generateArtistContractPdf,
 };

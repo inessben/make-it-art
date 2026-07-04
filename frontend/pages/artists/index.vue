@@ -4,15 +4,21 @@
       <header
         class="rounded-[32px] border border-[#151E30] bg-[radial-gradient(circle_at_top_left,_rgba(74,108,247,0.16),_transparent_30%),linear-gradient(180deg,_#070B14,_#04070D)] p-8"
       >
-        <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">Decouverte d'artistes</p>
-        <div class="mt-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
+          Decouverte d'artistes
+        </p>
+        <div
+          class="mt-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+        >
           <div>
-            <h1 class="text-[clamp(2.4rem,5vw,4rem)] font-semibold leading-[0.98] text-white">
+            <h1
+              class="text-[clamp(2.4rem,5vw,4rem)] font-semibold leading-[0.98] text-white"
+            >
               Explorer les artistes
             </h1>
             <p class="mt-4 max-w-3xl text-sm leading-7 text-[#96A4B8]">
-              Parcours les profils verifies, filtre par style ou type d’art et suis les artistes
-              qui matchent vraiment avec ton univers.
+              Parcours les profils verifies, filtre par style ou type d’art et
+              suis les artistes qui matchent vraiment avec ton univers.
             </p>
           </div>
 
@@ -25,7 +31,9 @@
         </div>
       </header>
 
-      <section class="grid gap-4 rounded-[28px] border border-[#151E30] bg-[#070B14] p-6 lg:grid-cols-[1.4fr_1fr_1fr_0.9fr]">
+      <section
+        class="grid gap-4 rounded-[28px] border border-[#151E30] bg-[#070B14] p-6 lg:grid-cols-[1.4fr_1fr_1fr_0.9fr]"
+      >
         <label class="grid gap-2 text-sm text-[#9EABBE]">
           <span class="font-medium text-[#E6EDF7]">Recherche</span>
           <input
@@ -68,7 +76,10 @@
         </label>
       </section>
 
-      <section v-if="pending" class="rounded-[28px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]">
+      <section
+        v-if="pending"
+        class="rounded-[28px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]"
+      >
         Chargement des artistes...
       </section>
       <section
@@ -105,20 +116,22 @@ import ArtistCard from "~/components/marketplace/ArtistCard.vue";
 import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
 
 const auth = useAuthStore();
-const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
+const requestHeaders = import.meta.server
+  ? useRequestHeaders(["cookie"])
+  : undefined;
 
 const filters = reactive({
   search: "",
   style: "",
   artType: "",
-  sort: "featured"
+  sort: "featured",
 });
 
 const query = computed(() => ({
   search: filters.search || undefined,
   style: filters.style || undefined,
   artType: filters.artType || undefined,
-  sort: filters.sort
+  sort: filters.sort,
 }));
 
 const { data, pending, error, refresh } = await useFetch("/api/artists", {
@@ -126,18 +139,15 @@ const { data, pending, error, refresh } = await useFetch("/api/artists", {
   headers: requestHeaders,
   credentials: "include",
   default: () => ({
-    artists: []
-  })
+    artists: [],
+  }),
 });
 
 const artists = computed(() => data.value?.artists || []);
 const errorMessage = computed(() => error.value?.data?.message || "");
 
-const {
-  actionMessage,
-  followLoading,
-  toggleFollow
-} = useMarketplaceActions(auth);
+const { actionMessage, followLoading, toggleFollow } =
+  useMarketplaceActions(auth);
 
 onMounted(async () => {
   if (!auth.user) {

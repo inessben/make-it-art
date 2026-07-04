@@ -1,6 +1,9 @@
 const userRepository = require("../repositories/user.repository");
 const emailVerificationTokenRepository = require("../repositories/email-verification-token.repository");
-const { sendVerificationEmail, sendPasswordResetEmail } = require("./mail.service");
+const {
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+} = require("./mail.service");
 const passwordResetTokenRepository = require("../repositories/password-reset-token.repository");
 const env = require("../config/env");
 const argon2 = require("argon2");
@@ -26,7 +29,7 @@ async function loginWithEmail(email, password) {
       "[auth] stored passwordHash (prefix):",
       user.passwordHash ? user.passwordHash.slice(0, 20) : null,
       "length:",
-      user.passwordHash ? user.passwordHash.length : 0
+      user.passwordHash ? user.passwordHash.length : 0,
     );
     const isValid = await argon2.verify(user.passwordHash, password);
     if (!isValid) {
@@ -61,7 +64,7 @@ async function sendUserVerificationEmail(user) {
   await emailVerificationTokenRepository.createToken({
     userId: user.id,
     tokenHash,
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60)
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60),
   });
 
   const verificationUrl = `${env.appBaseUrl}/verify-email?token=${verificationToken}`;
@@ -69,7 +72,7 @@ async function sendUserVerificationEmail(user) {
   await sendVerificationEmail({
     to: user.email,
     username: user.username,
-    verificationUrl
+    verificationUrl,
   });
 }
 
@@ -90,7 +93,7 @@ async function registerUser({ username, email, phone, password }) {
     passwordHash: passwordHash,
     createdAt: new Date(),
     verified: false,
-    isActive: false
+    isActive: false,
   });
 
   await sendUserVerificationEmail(user);
@@ -117,7 +120,8 @@ async function resendVerificationEmail(email) {
 
 async function verifyEmail(token) {
   const tokenHash = hashToken(token);
-  const verificationToken = await emailVerificationTokenRepository.findValidTokenByHash(tokenHash);
+  const verificationToken =
+    await emailVerificationTokenRepository.findValidTokenByHash(tokenHash);
 
   if (!verificationToken) {
     throw new Error("Invalid or expired verification token");
@@ -144,7 +148,7 @@ async function requestPasswordReset(email) {
   await passwordResetTokenRepository.createToken({
     userId: user.id,
     tokenHash,
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60)
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60),
   });
 
   const resetUrl = `${env.appBaseUrl}/reset-password?token=${resetToken}`;
@@ -152,7 +156,7 @@ async function requestPasswordReset(email) {
   await sendPasswordResetEmail({
     to: user.email,
     username: user.username,
-    resetUrl
+    resetUrl,
   });
 
   return user;
@@ -160,7 +164,8 @@ async function requestPasswordReset(email) {
 
 async function resetPassword({ token, password }) {
   const tokenHash = hashToken(token);
-  const resetToken = await passwordResetTokenRepository.findValidTokenByHash(tokenHash);
+  const resetToken =
+    await passwordResetTokenRepository.findValidTokenByHash(tokenHash);
 
   if (!resetToken) {
     throw new Error("Invalid or expired reset token");
@@ -180,5 +185,5 @@ module.exports = {
   resendVerificationEmail,
   verifyEmail,
   requestPasswordReset,
-  resetPassword
+  resetPassword,
 };

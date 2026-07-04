@@ -1,8 +1,18 @@
 <template>
   <AuthPanel title="Forgot password" max-width="420px" @submit="handleSubmit">
-    <TextField id="email" v-model="email" label="Email" type="email" autocomplete="email" />
+    <TextField
+      id="email"
+      v-model="email"
+      label="Email"
+      type="email"
+      autocomplete="email"
+    />
 
-    <SubmitButton label="Send reset link" loading-label="Sending..." :loading="loading" />
+    <SubmitButton
+      label="Send reset link"
+      loading-label="Sending..."
+      :loading="loading"
+    />
 
     <FormMessage :message="message" />
 
@@ -25,15 +35,17 @@ async function handleSubmit() {
     const response = await $fetch("/api/auth/forgot-password", {
       method: "POST",
       body: {
-        email: email.value
-      }
+        email: email.value,
+      },
     });
 
     message.value =
-      response.message || "If this email exists, a password reset link has been sent.";
+      response.message ||
+      "If this email exists, a password reset link has been sent.";
   } catch (error) {
     message.value =
-      error?.data?.message || "If this email exists, a password reset link has been sent.";
+      error?.data?.message ||
+      "If this email exists, a password reset link has been sent.";
   } finally {
     loading.value = false;
   }

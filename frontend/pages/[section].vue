@@ -3,10 +3,16 @@
     <section
       class="mx-auto w-full max-w-[1120px] rounded-[32px] border border-[#1A1F2A] bg-[#01050E] p-8 shadow-[0_32px_90px_rgba(0,0,0,0.22)]"
     >
-      <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+      <div
+        class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"
+      >
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Mon compte</p>
-          <h1 class="mt-4 text-[clamp(2rem,2.5vw,2.8rem)] font-semibold leading-[1.05]">
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+            Mon compte
+          </p>
+          <h1
+            class="mt-4 text-[clamp(2rem,2.5vw,2.8rem)] font-semibold leading-[1.05]"
+          >
             {{ sectionData.title }}
           </h1>
           <p class="mt-4 max-w-2xl text-[#A0ADB4] leading-7">
@@ -22,10 +28,13 @@
         </button>
       </div>
 
-      <div class="mt-10 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-8 text-[#A0ADB4]">
+      <div
+        class="mt-10 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-8 text-[#A0ADB4]"
+      >
         <p>
-          Cette page est prête pour être enrichie avec la fonctionnalité correspondante. En
-          attendant, la navigation fonctionne vers cette section.
+          Cette page est prête pour être enrichie avec la fonctionnalité
+          correspondante. En attendant, la navigation fonctionne vers cette
+          section.
         </p>
       </div>
     </section>
@@ -42,36 +51,37 @@ const section = route.params.section;
 const sections = {
   "artist-profile": {
     title: "Profil artiste",
-    description: "Gérez votre portfolio artistique et vos informations de présentation."
+    description:
+      "Gérez votre portfolio artistique et vos informations de présentation.",
   },
   wishlist: {
     title: "Liste de souhaits",
-    description: "Retrouvez vos œuvres préférées et vos favoris."
+    description: "Retrouvez vos œuvres préférées et vos favoris.",
   },
   orders: {
     title: "Historique des commandes",
-    description: "Consultez vos commandes passées et leur statut."
+    description: "Consultez vos commandes passées et leur statut.",
   },
   "payment-methods": {
     title: "Moyens de paiement",
-    description: "Gérez vos cartes et options de paiement."
+    description: "Gérez vos cartes et options de paiement.",
   },
   wallet: {
     title: "Portefeuille",
-    description: "Consultez votre solde et vos transactions enregistrées."
+    description: "Consultez votre solde et vos transactions enregistrées.",
   },
   addresses: {
     title: "Adresses",
-    description: "Gérez vos adresses de livraison et de facturation."
+    description: "Gérez vos adresses de livraison et de facturation.",
   },
   notifications: {
     title: "Notifications",
-    description: "Configurez vos préférences de notification."
+    description: "Configurez vos préférences de notification.",
   },
   settings: {
     title: "Paramètres",
-    description: "Gérez les préférences générales de votre compte."
-  }
+    description: "Gérez les préférences générales de votre compte.",
+  },
 };
 
 const allowedSections = [
@@ -82,7 +92,7 @@ const allowedSections = [
   "wallet",
   "addresses",
   "notifications",
-  "settings"
+  "settings",
 ];
 
 definePageMeta({
@@ -93,7 +103,7 @@ definePageMeta({
       : route.params.section;
 
     return allowedSections.includes(routeSection);
-  }
+  },
 });
 
 const sectionData = computed(() => {
@@ -101,7 +111,7 @@ const sectionData = computed(() => {
     sections[section] || {
       title: "Section introuvable",
       description:
-        "Cette section n'existe pas encore. Retournez au profil pour choisir une autre page."
+        "Cette section n'existe pas encore. Retournez au profil pour choisir une autre page.",
     }
   );
 });

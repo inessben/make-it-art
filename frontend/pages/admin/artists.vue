@@ -23,20 +23,32 @@
         <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
           {{ summaryCard.label }}
         </p>
-        <p class="mt-4 text-3xl font-semibold text-white">{{ summaryCard.value }}</p>
-        <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">{{ summaryCard.description }}</p>
+        <p class="mt-4 text-3xl font-semibold text-white">
+          {{ summaryCard.value }}
+        </p>
+        <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
+          {{ summaryCard.description }}
+        </p>
       </article>
     </section>
 
     <section class="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
       <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div
+          class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+        >
           <div>
-            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Artist queue</p>
-            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Demandes artistes</h2>
+            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+              Artist queue
+            </p>
+            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
+              Demandes artistes
+            </h2>
           </div>
           <div class="grid gap-3 sm:grid-cols-2">
-            <label class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3">
+            <label
+              class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3"
+            >
               <span class="sr-only">Search applications</span>
               <input
                 v-model="searchTerm"
@@ -45,7 +57,9 @@
                 class="w-full bg-transparent text-sm text-[#E6EDF7] outline-none placeholder:text-[#6D7A88]"
               />
             </label>
-            <label class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3">
+            <label
+              class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3"
+            >
               <span class="sr-only">Filter applications</span>
               <select
                 v-model="statusFilter"
@@ -93,13 +107,19 @@
             :key="application.id"
             class="rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-5"
           >
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div
+              class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+            >
               <div>
-                <p class="font-semibold text-[#E6EDF7]">{{ application.displayName }}</p>
+                <p class="font-semibold text-[#E6EDF7]">
+                  {{ application.displayName }}
+                </p>
                 <p class="mt-1 text-sm text-[#8E9AA7]">
                   {{ application.applicantName }} - {{ application.email }}
                 </p>
-                <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">{{ application.bio }}</p>
+                <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">
+                  {{ application.bio }}
+                </p>
               </div>
               <span
                 class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
@@ -109,10 +129,14 @@
               </span>
             </div>
 
-            <div class="mt-5 grid gap-3 rounded-[18px] border border-[#1A1F2A] bg-[#090017] p-4 text-sm">
+            <div
+              class="mt-5 grid gap-3 rounded-[18px] border border-[#1A1F2A] bg-[#090017] p-4 text-sm"
+            >
               <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
                 <span class="text-[#8E9AA7]">Type d'art</span>
-                <span class="font-medium text-[#E6EDF7]">{{ application.artType }}</span>
+                <span class="font-medium text-[#E6EDF7]">{{
+                  application.artType
+                }}</span>
               </div>
               <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
                 <span class="text-[#8E9AA7]">Styles</span>
@@ -134,12 +158,16 @@
               </div>
               <div v-if="application.reviewNote" class="grid gap-1">
                 <span class="text-[#8E9AA7]">Note admin</span>
-                <span class="leading-6 text-[#E6EDF7]">{{ application.reviewNote }}</span>
+                <span class="leading-6 text-[#E6EDF7]">{{
+                  application.reviewNote
+                }}</span>
               </div>
             </div>
 
             <label class="mt-5 grid gap-2 text-sm text-[#A0ADB4]">
-              <span class="font-medium text-[#E6EDF7]">Note admin (optionnelle)</span>
+              <span class="font-medium text-[#E6EDF7]"
+                >Note admin (optionnelle)</span
+              >
               <textarea
                 v-model="reviewNotes[application.id]"
                 rows="3"
@@ -165,7 +193,11 @@
                 :disabled="reviewLoadingId === application.id"
                 @click="reviewApplication(application, 'approved')"
               >
-                {{ reviewLoadingId === application.id ? "Mise a jour..." : "Approuver" }}
+                {{
+                  reviewLoadingId === application.id
+                    ? "Mise a jour..."
+                    : "Approuver"
+                }}
               </button>
               <button
                 v-if="application.status !== 'rejected'"
@@ -174,7 +206,11 @@
                 :disabled="reviewLoadingId === application.id"
                 @click="reviewApplication(application, 'rejected')"
               >
-                {{ reviewLoadingId === application.id ? "Mise a jour..." : "Refuser" }}
+                {{
+                  reviewLoadingId === application.id
+                    ? "Mise a jour..."
+                    : "Refuser"
+                }}
               </button>
             </div>
           </div>
@@ -182,8 +218,12 @@
       </article>
 
       <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-        <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Review flow</p>
-        <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Gestion des contrats</h2>
+        <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+          Review flow
+        </p>
+        <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
+          Gestion des contrats
+        </h2>
 
         <div class="mt-6 grid gap-4">
           <div
@@ -192,7 +232,9 @@
             class="rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-5"
           >
             <p class="font-semibold text-[#E6EDF7]">{{ action.title }}</p>
-            <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">{{ action.description }}</p>
+            <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">
+              {{ action.description }}
+            </p>
           </div>
         </div>
       </article>
@@ -205,7 +247,7 @@ import { computed, onMounted, ref } from "vue";
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "admin"
+  middleware: "admin",
 });
 
 const loading = ref(true);
@@ -220,30 +262,30 @@ const summary = ref({
   totalApplications: 0,
   pendingApplications: 0,
   approvedApplications: 0,
-  rejectedApplications: 0
+  rejectedApplications: 0,
 });
 
 const summaries = computed(() => [
   {
     label: "Total applications",
     value: summary.value.totalApplications,
-    description: "Nombre total de candidatures signees."
+    description: "Nombre total de candidatures signees.",
   },
   {
     label: "Pending",
     value: summary.value.pendingApplications,
-    description: "Demandes encore en attente de decision."
+    description: "Demandes encore en attente de decision.",
   },
   {
     label: "Approved",
     value: summary.value.approvedApplications,
-    description: "Demandes acceptees et profils artistes actives."
+    description: "Demandes acceptees et profils artistes actives.",
   },
   {
     label: "Rejected",
     value: summary.value.rejectedApplications,
-    description: "Demandes refusees par l'administration."
-  }
+    description: "Demandes refusees par l'administration.",
+  },
 ]);
 
 const filteredApplications = computed(() => {
@@ -274,7 +316,7 @@ async function loadApplications() {
 
   try {
     const response = await $fetch("/api/admin/artist-applications", {
-      credentials: "include"
+      credentials: "include",
     });
 
     applications.value = response.applications || [];
@@ -290,7 +332,8 @@ async function loadApplications() {
       return;
     }
 
-    errorMessage.value = error?.data?.message || "Unable to load artist applications.";
+    errorMessage.value =
+      error?.data?.message || "Unable to load artist applications.";
   } finally {
     loading.value = false;
   }
@@ -299,27 +342,35 @@ async function loadApplications() {
 const actions = [
   {
     title: "Contrat signe",
-    description: "Chaque demande contient un contrat PDF signe par l'artiste."
+    description: "Chaque demande contient un contrat PDF signe par l'artiste.",
   },
   {
     title: "Approbation",
-    description: "Approuver active le profil artiste et donne acces a l'espace artiste."
+    description:
+      "Approuver active le profil artiste et donne acces a l'espace artiste.",
   },
   {
     title: "Refus",
-    description: "Refuser bloque l'activation et laisse le dossier visible pour correction."
-  }
+    description:
+      "Refuser bloque l'activation et laisse le dossier visible pour correction.",
+  },
 ];
 
 function replaceApplication(updatedApplication) {
   applications.value = applications.value.map((application) =>
-    application.id === updatedApplication.id ? updatedApplication : application
+    application.id === updatedApplication.id ? updatedApplication : application,
   );
   summary.value = {
     totalApplications: applications.value.length,
-    pendingApplications: applications.value.filter((item) => item.status === "pending").length,
-    approvedApplications: applications.value.filter((item) => item.status === "approved").length,
-    rejectedApplications: applications.value.filter((item) => item.status === "rejected").length
+    pendingApplications: applications.value.filter(
+      (item) => item.status === "pending",
+    ).length,
+    approvedApplications: applications.value.filter(
+      (item) => item.status === "approved",
+    ).length,
+    rejectedApplications: applications.value.filter(
+      (item) => item.status === "rejected",
+    ).length,
   };
 }
 
@@ -329,14 +380,17 @@ async function reviewApplication(application, status) {
   reviewLoadingId.value = application.id;
 
   try {
-    const response = await $fetch(`/api/admin/artist-applications/${application.id}`, {
-      method: "PATCH",
-      credentials: "include",
-      body: {
-        status,
-        reviewNote: reviewNotes.value[application.id] || ""
-      }
-    });
+    const response = await $fetch(
+      `/api/admin/artist-applications/${application.id}`,
+      {
+        method: "PATCH",
+        credentials: "include",
+        body: {
+          status,
+          reviewNote: reviewNotes.value[application.id] || "",
+        },
+      },
+    );
 
     replaceApplication(response.application);
     successMessage.value =
@@ -354,7 +408,8 @@ async function reviewApplication(application, status) {
       return;
     }
 
-    errorMessage.value = error?.data?.message || "Unable to review artist application.";
+    errorMessage.value =
+      error?.data?.message || "Unable to review artist application.";
   } finally {
     reviewLoadingId.value = null;
   }
@@ -366,7 +421,7 @@ function formatDate(value) {
   }
 
   return new Intl.DateTimeFormat("fr-FR", {
-    dateStyle: "medium"
+    dateStyle: "medium",
   }).format(new Date(value));
 }
 
@@ -376,7 +431,7 @@ function formatAddress(application) {
     application.addressLine2,
     [application.postalCode, application.city].filter(Boolean).join(" "),
     application.region,
-    application.country
+    application.country,
   ]
     .filter(Boolean)
     .join(", ");

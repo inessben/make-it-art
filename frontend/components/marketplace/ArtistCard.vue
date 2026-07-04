@@ -73,17 +73,25 @@
 
     <div class="grid gap-3 sm:grid-cols-3">
       <div class="rounded-2xl border border-[#151B29] bg-[#0B101A] px-4 py-3">
-        <p class="text-xs uppercase tracking-[0.16em] text-[#63728B]">Oeuvres</p>
-        <p class="mt-2 text-xl font-semibold text-[#EFF4FF]">{{ artist.stats?.artworks || 0 }}</p>
+        <p class="text-xs uppercase tracking-[0.16em] text-[#63728B]">
+          Oeuvres
+        </p>
+        <p class="mt-2 text-xl font-semibold text-[#EFF4FF]">
+          {{ artist.stats?.artworks || 0 }}
+        </p>
       </div>
       <div class="rounded-2xl border border-[#151B29] bg-[#0B101A] px-4 py-3">
-        <p class="text-xs uppercase tracking-[0.16em] text-[#63728B]">Followers</p>
+        <p class="text-xs uppercase tracking-[0.16em] text-[#63728B]">
+          Followers
+        </p>
         <p class="mt-2 text-xl font-semibold text-[#EFF4FF]">
           {{ artist.stats?.followers || 0 }}
         </p>
       </div>
       <div class="rounded-2xl border border-[#151B29] bg-[#0B101A] px-4 py-3">
-        <p class="text-xs uppercase tracking-[0.16em] text-[#63728B]">Collections</p>
+        <p class="text-xs uppercase tracking-[0.16em] text-[#63728B]">
+          Collections
+        </p>
         <p class="mt-2 text-xl font-semibold text-[#EFF4FF]">
           {{ artist.stats?.collections || 0 }}
         </p>
@@ -99,22 +107,24 @@ import { getArtistInitials } from "~/utils/marketplace";
 const props = defineProps({
   artist: {
     type: Object,
-    required: true
+    required: true,
   },
   followLoading: {
     type: Boolean,
-    default: false
+    default: false,
   },
   showFollowAction: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 
 defineEmits(["toggle-follow"]);
 
 const limitedStyles = computed(() => {
-  return Array.isArray(props.artist.styles) ? props.artist.styles.slice(0, 4) : [];
+  return Array.isArray(props.artist.styles)
+    ? props.artist.styles.slice(0, 4)
+    : [];
 });
 
 const initials = computed(() => getArtistInitials(props.artist.displayName));

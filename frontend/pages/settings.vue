@@ -3,14 +3,21 @@
     <section
       class="mx-auto w-full max-w-[1120px] rounded-[32px] border border-[#1A1F2A] bg-[#01050E] p-8 shadow-[0_32px_90px_rgba(0,0,0,0.22)]"
     >
-      <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+      <div
+        class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"
+      >
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Paramètres</p>
-          <h1 class="mt-4 text-[clamp(2rem,2.5vw,2.8rem)] font-semibold leading-[1.05]">
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+            Paramètres
+          </p>
+          <h1
+            class="mt-4 text-[clamp(2rem,2.5vw,2.8rem)] font-semibold leading-[1.05]"
+          >
             Paramètres du compte
           </h1>
           <p class="mt-4 max-w-2xl text-[#A0ADB4] leading-7">
-            Réglez vos préférences générales de compte et vos paramètres de confidentialité.
+            Réglez vos préférences générales de compte et vos paramètres de
+            confidentialité.
           </p>
         </div>
         <button
@@ -22,7 +29,9 @@
         </button>
       </div>
 
-      <div class="mt-10 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-8 text-[#A0ADB4]">
+      <div
+        class="mt-10 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-8 text-[#A0ADB4]"
+      >
         <p>Contenu spécifique aux paramètres de compte sera ajouté ici.</p>
       </div>
     </section>
@@ -33,7 +42,7 @@
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "auth"
+  middleware: "auth",
 });
 
 function navigateBack() {

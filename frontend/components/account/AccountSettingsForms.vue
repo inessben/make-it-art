@@ -19,10 +19,16 @@
       class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-8"
       @submit.prevent="saveProfile"
     >
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div
+        class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+      >
         <div>
-          <h2 class="text-lg font-semibold text-[#E6EDF7]">Profile Information</h2>
-          <p class="mt-2 text-sm text-[#A0ADB4]">Update your personal information.</p>
+          <h2 class="text-lg font-semibold text-[#E6EDF7]">
+            Profile Information
+          </h2>
+          <p class="mt-2 text-sm text-[#A0ADB4]">
+            Update your personal information.
+          </p>
         </div>
         <button
           type="submit"
@@ -79,10 +85,14 @@
       class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-8"
       @submit.prevent="updatePassword"
     >
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div
+        class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+      >
         <div>
           <h2 class="text-lg font-semibold text-[#E6EDF7]">Change Password</h2>
-          <p class="mt-2 text-sm text-[#A0ADB4]">Change your password to improve security.</p>
+          <p class="mt-2 text-sm text-[#A0ADB4]">
+            Change your password to improve security.
+          </p>
         </div>
         <button
           type="submit"
@@ -124,12 +134,14 @@
       v-if="showArtistContractSection"
       class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-8"
     >
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div
+        class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      >
         <div>
           <h2 class="text-lg font-semibold text-[#E6EDF7]">Contrat artiste</h2>
           <p class="mt-2 max-w-2xl text-sm leading-7 text-[#A0ADB4]">
-            Retrouvez ici votre contrat signe en PDF pour le consulter ou le telecharger a tout
-            moment.
+            Retrouvez ici votre contrat signe en PDF pour le consulter ou le
+            telecharger a tout moment.
           </p>
           <p
             v-if="artistContractSignedAtLabel"
@@ -165,7 +177,9 @@
     </section>
 
     <section class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-8">
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div
+        class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      >
         <div>
           <h2 class="text-lg font-semibold text-[#E6EDF7]">Danger Zone</h2>
           <p class="mt-2 max-w-2xl text-sm leading-7 text-[#A0ADB4]">
@@ -190,7 +204,7 @@ import { storeToRefs } from "pinia";
 import { useAuthStore } from "~/stores/auth";
 import {
   getPasswordConfirmationError,
-  getPasswordValidationError
+  getPasswordValidationError,
 } from "~/utils/password-validation";
 
 const auth = useAuthStore();
@@ -218,11 +232,13 @@ const artistContractSignedAtLabel = computed(() => {
     month: "long",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
   }).format(new Date(signedAt));
 });
 
-const artistContractVersion = computed(() => user.value?.artistApplication?.contractVersion || "");
+const artistContractVersion = computed(
+  () => user.value?.artistApplication?.contractVersion || "",
+);
 const showArtistContractSection = computed(() => {
   if (auth.isAdmin) {
     return false;
@@ -232,11 +248,11 @@ const showArtistContractSection = computed(() => {
 
   return Boolean(
     auth.isArtist &&
-      application &&
-      (application.hasContractPdf ||
-        application.contractSignedAt ||
-        application.contractVersion ||
-        application.status === "approved")
+    application &&
+    (application.hasContractPdf ||
+      application.contractSignedAt ||
+      application.contractVersion ||
+      application.status === "approved"),
   );
 });
 
@@ -262,8 +278,8 @@ async function saveProfile() {
       body: {
         username: `${firstName.value} ${lastName.value}`.trim(),
         email: email.value,
-        bio: bio.value
-      }
+        bio: bio.value,
+      },
     });
 
     auth.user = response.user;
@@ -292,7 +308,8 @@ async function updatePassword() {
   }
 
   if (newPassword.value === currentPassword.value) {
-    errorMessage.value = "The new password must be different from the current one.";
+    errorMessage.value =
+      "The new password must be different from the current one.";
     return;
   }
 
@@ -303,8 +320,8 @@ async function updatePassword() {
       body: {
         currentPassword: currentPassword.value,
         newPassword: newPassword.value,
-        confirmPassword: confirmPassword.value
-      }
+        confirmPassword: confirmPassword.value,
+      },
     });
 
     successMessage.value = "Password updated successfully.";

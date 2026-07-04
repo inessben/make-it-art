@@ -15,8 +15,8 @@ async function findValidCodeByHash({ codeHash, userId } = {}) {
     tokenHash: codeHash,
     usedAt: null,
     expiresAt: {
-      gt: new Date()
-    }
+      gt: new Date(),
+    },
   };
 
   if (userId) {
@@ -26,8 +26,8 @@ async function findValidCodeByHash({ codeHash, userId } = {}) {
   return prisma.loginVerificationCode.findFirst({
     where,
     include: {
-      user: true
-    }
+      user: true,
+    },
   });
 }
 
@@ -35,8 +35,8 @@ async function markCodeAsUsed(id) {
   return prisma.loginVerificationCode.update({
     where: { id },
     data: {
-      usedAt: new Date()
-    }
+      usedAt: new Date(),
+    },
   });
 }
 
@@ -44,11 +44,11 @@ async function markUnusedCodesAsUsed(userId) {
   return prisma.loginVerificationCode.updateMany({
     where: {
       userId,
-      usedAt: null
+      usedAt: null,
     },
     data: {
-      usedAt: new Date()
-    }
+      usedAt: new Date(),
+    },
   });
 }
 
@@ -56,5 +56,5 @@ module.exports = {
   createCode,
   findValidCodeByHash,
   markCodeAsUsed,
-  markUnusedCodesAsUsed
+  markUnusedCodesAsUsed,
 };

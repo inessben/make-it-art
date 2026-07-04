@@ -9,7 +9,7 @@ export function useMarketplaceActions(auth) {
   function setLoading(target, id, value) {
     target.value = {
       ...target.value,
-      [id]: value
+      [id]: value,
     };
   }
 
@@ -44,7 +44,7 @@ export function useMarketplaceActions(auth) {
     artist.isFollowed = nextState;
     artist.stats = {
       ...(artist.stats || {}),
-      followers: Math.max(0, currentCount + (nextState ? 1 : -1))
+      followers: Math.max(0, currentCount + (nextState ? 1 : -1)),
     };
   }
 
@@ -62,7 +62,7 @@ export function useMarketplaceActions(auth) {
 
       await $fetch(`/api/artworks/${artwork.id}/favorite`, {
         method: nextState ? "POST" : "DELETE",
-        credentials: "include"
+        credentials: "include",
       });
 
       updateArtworkFavoriteState(artwork, nextState);
@@ -72,7 +72,8 @@ export function useMarketplaceActions(auth) {
 
       return true;
     } catch (error) {
-      actionMessage.value = error?.data?.message || "Impossible de mettre a jour vos favoris.";
+      actionMessage.value =
+        error?.data?.message || "Impossible de mettre a jour vos favoris.";
       return false;
     } finally {
       setLoading(favoriteLoading, artwork.id, false);
@@ -93,7 +94,7 @@ export function useMarketplaceActions(auth) {
 
       await $fetch(`/api/artists/${artist.id}/follow`, {
         method: nextState ? "POST" : "DELETE",
-        credentials: "include"
+        credentials: "include",
       });
 
       updateArtistFollowState(artist, nextState);
@@ -103,7 +104,8 @@ export function useMarketplaceActions(auth) {
 
       return true;
     } catch (error) {
-      actionMessage.value = error?.data?.message || "Impossible de mettre a jour ce suivi.";
+      actionMessage.value =
+        error?.data?.message || "Impossible de mettre a jour ce suivi.";
       return false;
     } finally {
       setLoading(followLoading, artist.id, false);
@@ -115,6 +117,6 @@ export function useMarketplaceActions(auth) {
     favoriteLoading,
     followLoading,
     toggleFavorite,
-    toggleFollow
+    toggleFollow,
   };
 }

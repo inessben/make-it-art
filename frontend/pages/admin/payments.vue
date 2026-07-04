@@ -23,19 +23,31 @@
         <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
           {{ summaryCard.label }}
         </p>
-        <p class="mt-4 text-3xl font-semibold text-white">{{ summaryCard.value }}</p>
-        <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">{{ summaryCard.description }}</p>
+        <p class="mt-4 text-3xl font-semibold text-white">
+          {{ summaryCard.value }}
+        </p>
+        <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
+          {{ summaryCard.description }}
+        </p>
       </article>
     </section>
 
     <section class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div
+        class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+      >
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Transactions</p>
-          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Paiements recents</h2>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+            Transactions
+          </p>
+          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
+            Paiements recents
+          </h2>
         </div>
         <div class="grid gap-3 sm:grid-cols-2">
-          <label class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3">
+          <label
+            class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3"
+          >
             <span class="sr-only">Search payments</span>
             <input
               v-model="searchTerm"
@@ -44,7 +56,9 @@
               class="w-full bg-transparent text-sm text-[#E6EDF7] outline-none placeholder:text-[#6D7A88]"
             />
           </label>
-          <label class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3">
+          <label
+            class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3"
+          >
             <span class="sr-only">Filter payments</span>
             <select
               v-model="statusFilter"
@@ -86,24 +100,33 @@
           :key="payment.id"
           class="rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-5"
         >
-          <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div
+            class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"
+          >
             <div>
-              <p class="font-semibold text-[#E6EDF7]">{{ payment.reference }}</p>
+              <p class="font-semibold text-[#E6EDF7]">
+                {{ payment.reference }}
+              </p>
               <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">
-                {{ payment.method }} payment linked to {{ payment.orderReference }}
+                {{ payment.method }} payment linked to
+                {{ payment.orderReference }}
               </p>
               <p class="mt-2 text-sm text-[#8E9AA7]">{{ payment.customer }}</p>
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-              <span class="text-sm font-semibold text-[#D8E1F0]">{{ payment.amount }}</span>
+              <span class="text-sm font-semibold text-[#D8E1F0]">{{
+                payment.amount
+              }}</span>
               <span
                 class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
                 :class="statusClass(payment.status)"
               >
                 {{ payment.status }}
               </span>
-              <span class="text-sm text-[#8E9AA7]">{{ formatDate(payment.createdAt) }}</span>
+              <span class="text-sm text-[#8E9AA7]">{{
+                formatDate(payment.createdAt)
+              }}</span>
             </div>
           </div>
         </div>
@@ -117,7 +140,7 @@ import { computed, onMounted, ref } from "vue";
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "admin"
+  middleware: "admin",
 });
 
 const loading = ref(true);
@@ -129,30 +152,30 @@ const summary = ref({
   totalPayments: 0,
   succeededPayments: 0,
   pendingPayments: 0,
-  grossRevenue: "EUR 0.00"
+  grossRevenue: "EUR 0.00",
 });
 
 const summaries = computed(() => [
   {
     label: "Total payments",
     value: summary.value.totalPayments,
-    description: "Nombre total de paiements en base."
+    description: "Nombre total de paiements en base.",
   },
   {
     label: "Succeeded",
     value: summary.value.succeededPayments,
-    description: "Paiements marques comme reussis."
+    description: "Paiements marques comme reussis.",
   },
   {
     label: "Pending",
     value: summary.value.pendingPayments,
-    description: "Paiements encore en attente."
+    description: "Paiements encore en attente.",
   },
   {
     label: "Gross revenue",
     value: summary.value.grossRevenue,
-    description: "Somme actuelle des paiements reussis."
-  }
+    description: "Somme actuelle des paiements reussis.",
+  },
 ]);
 
 const filteredPayments = computed(() => {
@@ -165,7 +188,8 @@ const filteredPayments = computed(() => {
       payment.orderReference.toLowerCase().includes(normalizedSearch) ||
       payment.customer.toLowerCase().includes(normalizedSearch);
 
-    const matchesStatus = statusFilter.value === "all" || payment.status === statusFilter.value;
+    const matchesStatus =
+      statusFilter.value === "all" || payment.status === statusFilter.value;
 
     return matchesSearch && matchesStatus;
   });
@@ -181,7 +205,7 @@ async function loadPayments() {
 
   try {
     const response = await $fetch("/api/admin/payments", {
-      credentials: "include"
+      credentials: "include",
     });
 
     payments.value = response.payments || [];
@@ -197,7 +221,8 @@ async function loadPayments() {
       return;
     }
 
-    errorMessage.value = error?.data?.message || "Unable to load admin payments.";
+    errorMessage.value =
+      error?.data?.message || "Unable to load admin payments.";
   } finally {
     loading.value = false;
   }
@@ -221,7 +246,7 @@ function formatDate(value) {
   }
 
   return new Intl.DateTimeFormat("fr-FR", {
-    dateStyle: "medium"
+    dateStyle: "medium",
   }).format(new Date(value));
 }
 </script>

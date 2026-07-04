@@ -3,14 +3,21 @@
     <section
       class="mx-auto w-full max-w-[1120px] rounded-[32px] border border-[#1A1F2A] bg-[#01050E] p-8 shadow-[0_32px_90px_rgba(0,0,0,0.22)]"
     >
-      <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+      <div
+        class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"
+      >
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Account Settings</p>
-          <h1 class="mt-4 text-[clamp(2rem,2.5vw,2.8rem)] font-semibold leading-[1.05]">
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+            Account Settings
+          </p>
+          <h1
+            class="mt-4 text-[clamp(2rem,2.5vw,2.8rem)] font-semibold leading-[1.05]"
+          >
             Manage your account preferences
           </h1>
           <p class="mt-4 max-w-2xl text-[#A0ADB4] leading-7">
-            Update your information, change your password, and manage your account security.
+            Update your information, change your password, and manage your
+            account security.
           </p>
         </div>
         <NuxtLink
@@ -30,6 +37,6 @@
 
 <script setup>
 definePageMeta({
-  middleware: "auth"
+  middleware: "auth",
 });
 </script>

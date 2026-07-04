@@ -4,15 +4,22 @@
       <header
         class="rounded-[32px] border border-[#151E30] bg-[radial-gradient(circle_at_top_left,_rgba(74,108,247,0.16),_transparent_30%),linear-gradient(180deg,_#070B14,_#04070D)] p-8"
       >
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div
+          class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+        >
           <div>
-            <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">Liste de souhaits</p>
-            <h1 class="mt-4 text-[clamp(2.2rem,5vw,3.8rem)] font-semibold leading-[0.98] text-white">
+            <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
+              Liste de souhaits
+            </p>
+            <h1
+              class="mt-4 text-[clamp(2.2rem,5vw,3.8rem)] font-semibold leading-[0.98] text-white"
+            >
               Vos oeuvres favorites
             </h1>
             <p class="mt-4 max-w-3xl text-sm leading-7 text-[#96A4B8]">
-              Retrouve ici les oeuvres que tu as sauvegardees et bascule-les ensuite dans tes
-              collections personnelles si tu veux organiser tes reperes.
+              Retrouve ici les oeuvres que tu as sauvegardees et bascule-les
+              ensuite dans tes collections personnelles si tu veux organiser tes
+              reperes.
             </p>
           </div>
 
@@ -40,7 +47,10 @@
         </div>
       </header>
 
-      <section v-if="pending" class="rounded-[28px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]">
+      <section
+        v-if="pending"
+        class="rounded-[28px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]"
+      >
         Chargement de vos favoris...
       </section>
       <section
@@ -53,7 +63,8 @@
         v-else-if="!artworks.length"
         class="rounded-[28px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]"
       >
-        Aucun favori pour le moment. Va explorer le catalogue pour commencer a remplir cette page.
+        Aucun favori pour le moment. Va explorer le catalogue pour commencer a
+        remplir cette page.
       </section>
       <section v-else class="grid gap-6 lg:grid-cols-3">
         <ArtworkCard
@@ -80,21 +91,22 @@ const auth = useAuthStore();
 const { data, pending, error, refresh } = await useFetch("/api/favorites/me", {
   credentials: "include",
   default: () => ({
-    artworks: []
-  })
+    artworks: [],
+  }),
 });
 
 const artworks = computed(() => data.value?.artworks || []);
 const errorMessage = computed(() => error.value?.data?.message || "");
 
-const { actionMessage, favoriteLoading, toggleFavorite } = useMarketplaceActions(auth);
+const { actionMessage, favoriteLoading, toggleFavorite } =
+  useMarketplaceActions(auth);
 
 async function handleFavoriteToggle(artwork) {
   const success = await toggleFavorite(artwork);
 
   if (success && !artwork.isFavorite) {
     data.value = {
-      artworks: artworks.value.filter((item) => item.id !== artwork.id)
+      artworks: artworks.value.filter((item) => item.id !== artwork.id),
     };
     return;
   }

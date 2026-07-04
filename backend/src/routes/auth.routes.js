@@ -5,7 +5,7 @@ const {
   resendVerificationEmail,
   requestPasswordReset,
   resetPassword,
-  verifyEmail
+  verifyEmail,
 } = require("../services/auth.service");
 const {
   getSessionCookieOptions,
@@ -13,14 +13,17 @@ const {
   getClearSessionCookieOptions,
   getClearRefreshCookieOptions,
   rotateRefreshToken,
-  revokeRefreshToken
+  revokeRefreshToken,
 } = require("../services/session.service");
-const { authRateLimit, strictAuthRateLimit } = require("../middlewares/rate-limit.middleware");
+const {
+  authRateLimit,
+  strictAuthRateLimit,
+} = require("../middlewares/rate-limit.middleware");
 const { authRequired } = require("../middlewares/auth-required.middleware");
 const userRepository = require("../repositories/user.repository");
 const {
   getPasswordConfirmationError,
-  getPasswordValidationError
+  getPasswordValidationError,
 } = require("../utils/password-validation");
 const { serializeAuthUser } = require("../utils/serialize-auth-user");
 const { isAdminUser } = require("../middlewares/admin-required.middleware");
@@ -35,7 +38,7 @@ const {
   getGoogleAuthorizationUrl,
   getGoogleOAuthLinkCookieOptions,
   getGoogleOAuthStateCookieOptions,
-  linkGoogleAccountWithPassword
+  linkGoogleAccountWithPassword,
 } = require("../services/google-oauth.service");
 const {
   startLoginWithCode,
@@ -43,7 +46,7 @@ const {
   getLoginChallengeCookieOptions,
   getClearLoginChallengeCookieOptions,
   getRememberDeviceCookieOptions,
-  getClearRememberDeviceCookieOptions
+  getClearRememberDeviceCookieOptions,
 } = require("../services/two-factor-login.service");
 const router = express.Router();
 
@@ -60,8 +63,16 @@ function buildAppRedirect(path, searchParams = {}) {
 }
 
 function setAuthCookies(res, result) {
-  res.cookie(env.sessionCookieName, result.accessToken, getSessionCookieOptions());
-  res.cookie(env.refreshCookieName, result.refreshToken, getRefreshCookieOptions());
+  res.cookie(
+    env.sessionCookieName,
+    result.accessToken,
+    getSessionCookieOptions(),
+  );
+  res.cookie(
+    env.refreshCookieName,
+    result.refreshToken,
+    getRefreshCookieOptions(),
+  );
 }
 
 function getAuthenticatedAppPath(user) {
@@ -74,14 +85,14 @@ router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
 
     if (!email || !password) {
       return res.status(400).json({
-        message: "Email and password are required"
+        message: "Email and password are required",
       });
     }
 
     const result = await startLoginWithCode({
       email,
       password,
-      rememberDeviceToken: req.cookies?.[env.rememberDeviceCookieName]
+      rememberDeviceToken: req.cookies?.[env.rememberDeviceCookieName],
     });
 
     if (result.bypassCode) {
@@ -91,25 +102,29 @@ router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
         message: "Login successful",
         requiresCode: false,
         redirectTo: getAuthenticatedAppPath(result.user),
-        user: serializeAuthUser(result.user)
+        user: serializeAuthUser(result.user),
       });
     }
 
-    res.cookie(env.loginCodeCookieName, result.challengeToken, getLoginChallengeCookieOptions());
+    res.cookie(
+      env.loginCodeCookieName,
+      result.challengeToken,
+      getLoginChallengeCookieOptions(),
+    );
 
     return res.status(200).json({
       message: "Login code sent. Please check your email.",
-      requiresCode: true
+      requiresCode: true,
     });
   } catch (error) {
     if (error.message === "Email not verified") {
       return res.status(403).json({
-        message: "Please verify your email before logging in."
+        message: "Please verify your email before logging in.",
       });
     }
 
     return res.status(401).json({
-      message: "Invalid credentials"
+      message: "Invalid credentials",
     });
   }
 });
@@ -118,7 +133,11 @@ router.get("/auth/google", authRateLimit, (req, res) => {
   try {
     const { authorizationUrl, state } = getGoogleAuthorizationUrl();
 
-    res.cookie(env.googleOAuth.stateCookieName, state, getGoogleOAuthStateCookieOptions());
+    res.cookie(
+      env.googleOAuth.stateCookieName,
+      state,
+      getGoogleOAuthStateCookieOptions(),
+    );
 
     return res.redirect(authorizationUrl);
   } catch (_error) {
@@ -130,13 +149,16 @@ router.get("/auth/google/callback", authRateLimit, async (req, res) => {
   const { code, error, state } = req.query;
   const stateCookie = req.cookies?.[env.googleOAuth.stateCookieName];
 
-  res.clearCookie(env.googleOAuth.stateCookieName, getClearGoogleOAuthStateCookieOptions());
+  res.clearCookie(
+    env.googleOAuth.stateCookieName,
+    getClearGoogleOAuthStateCookieOptions(),
+  );
 
   if (error) {
     return res.redirect(
       buildAppRedirect("/login", {
-        google: error === "access_denied" ? "cancelled" : "error"
-      })
+        google: error === "access_denied" ? "cancelled" : "error",
+      }),
     );
   }
 
@@ -151,19 +173,22 @@ router.get("/auth/google/callback", authRateLimit, async (req, res) => {
       res.cookie(
         env.googleOAuth.linkCookieName,
         result.linkToken,
-        getGoogleOAuthLinkCookieOptions()
+        getGoogleOAuthLinkCookieOptions(),
       );
 
       return res.redirect(
         buildAppRedirect("/login", {
           googleLink: "required",
-          email: result.email
-        })
+          email: result.email,
+        }),
       );
     }
 
     setAuthCookies(res, result);
-    res.clearCookie(env.googleOAuth.linkCookieName, getClearGoogleOAuthLinkCookieOptions());
+    res.clearCookie(
+      env.googleOAuth.linkCookieName,
+      getClearGoogleOAuthLinkCookieOptions(),
+    );
 
     return res.redirect(buildAppRedirect(getAuthenticatedAppPath(result.user)));
   } catch (_error) {
@@ -178,32 +203,38 @@ router.post("/auth/google/link", authRateLimit, async (req, res) => {
 
     if (!password || !linkToken) {
       return res.status(400).json({
-        message: "Google sign-in session and password are required"
+        message: "Google sign-in session and password are required",
       });
     }
 
     const result = await linkGoogleAccountWithPassword({
       linkToken,
-      password
+      password,
     });
 
     setAuthCookies(res, result);
-    res.clearCookie(env.googleOAuth.linkCookieName, getClearGoogleOAuthLinkCookieOptions());
+    res.clearCookie(
+      env.googleOAuth.linkCookieName,
+      getClearGoogleOAuthLinkCookieOptions(),
+    );
 
     return res.status(200).json({
       message: "Google account linked successfully",
       redirectTo: getAuthenticatedAppPath(result.user),
-      user: serializeAuthUser(result.user)
+      user: serializeAuthUser(result.user),
     });
   } catch (error) {
-    if (error instanceof GoogleOAuthError && error.code === "GOOGLE_LINK_INVALID_PASSWORD") {
+    if (
+      error instanceof GoogleOAuthError &&
+      error.code === "GOOGLE_LINK_INVALID_PASSWORD"
+    ) {
       return res.status(401).json({
-        message: "Password is incorrect"
+        message: "Password is incorrect",
       });
     }
 
     return res.status(400).json({
-      message: "Unable to complete Google sign-in"
+      message: "Unable to complete Google sign-in",
     });
   }
 });
@@ -214,7 +245,8 @@ router.post("/auth/register", authRateLimit, async (req, res) => {
 
     if (!username || !email || !phone || !password || !confirmPassword) {
       return res.status(400).json({
-        message: "Username, email, phone, password and confirmation are required"
+        message:
+          "Username, email, phone, password and confirmation are required",
       });
     }
 
@@ -224,7 +256,7 @@ router.post("/auth/register", authRateLimit, async (req, res) => {
 
     if (passwordError) {
       return res.status(400).json({
-        message: passwordError
+        message: passwordError,
       });
     }
 
@@ -232,7 +264,7 @@ router.post("/auth/register", authRateLimit, async (req, res) => {
       username,
       email,
       phone,
-      password
+      password,
     });
 
     return res.status(201).json({
@@ -241,51 +273,55 @@ router.post("/auth/register", authRateLimit, async (req, res) => {
         id: user.id,
         email: user.email,
         username: user.username,
-        phone: user.phone
-      }
+        phone: user.phone,
+      },
     });
   } catch (error) {
     if (error.message === "Email already in use") {
       return res.status(409).json({
-        message: error.message
+        message: error.message,
       });
     }
 
     console.error("Registration error:", error);
     return res.status(500).json({
       message: "Registration failed",
-      error: error.message
+      error: error.message,
     });
   }
 });
 
-router.post("/auth/resend-verification-email", authRateLimit, async (req, res) => {
-  try {
-    const { email } = req.body;
+router.post(
+  "/auth/resend-verification-email",
+  authRateLimit,
+  async (req, res) => {
+    try {
+      const { email } = req.body;
 
-    if (!email) {
-      return res.status(400).json({
-        message: "Email is required"
+      if (!email) {
+        return res.status(400).json({
+          message: "Email is required",
+        });
+      }
+
+      await resendVerificationEmail(email);
+
+      return res.status(200).json({
+        message: "Verification email sent. Please check your inbox.",
+      });
+    } catch (error) {
+      if (error.message === "Email already verified") {
+        return res.status(409).json({
+          message: "Email is already verified.",
+        });
+      }
+
+      return res.status(200).json({
+        message: "If this email exists, a verification email has been sent.",
       });
     }
-
-    await resendVerificationEmail(email);
-
-    return res.status(200).json({
-      message: "Verification email sent. Please check your inbox."
-    });
-  } catch (error) {
-    if (error.message === "Email already verified") {
-      return res.status(409).json({
-        message: "Email is already verified."
-      });
-    }
-
-    return res.status(200).json({
-      message: "If this email exists, a verification email has been sent."
-    });
-  }
-});
+  },
+);
 
 router.get("/auth/verify-email", async (req, res) => {
   try {
@@ -293,25 +329,25 @@ router.get("/auth/verify-email", async (req, res) => {
 
     if (!token) {
       return res.status(400).json({
-        message: "Verification token is required"
+        message: "Verification token is required",
       });
     }
 
     await verifyEmail(token);
 
     return res.status(200).json({
-      message: "Email verified successfully"
+      message: "Email verified successfully",
     });
   } catch (_error) {
     return res.status(400).json({
-      message: "Invalid or expired verification token"
+      message: "Invalid or expired verification token",
     });
   }
 });
 
 router.get("/auth/me", authRequired, async (req, res) => {
   return res.status(200).json({
-    user: serializeAuthUser(req.user)
+    user: serializeAuthUser(req.user),
   });
 });
 
@@ -332,25 +368,25 @@ router.patch("/auth/me", authRequired, async (req, res) => {
 
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({
-        message: "No profile fields provided to update"
+        message: "No profile fields provided to update",
       });
     }
 
     const updatedUser = await userRepository.updateUser(req.user.id, updates);
 
     return res.status(200).json({
-      user: serializeAuthUser(updatedUser)
+      user: serializeAuthUser(updatedUser),
     });
   } catch (error) {
     if (error.code === "P2002") {
       return res.status(409).json({
-        message: "Email is already in use"
+        message: "Email is already in use",
       });
     }
 
     console.error("Profile update error:", error);
     return res.status(500).json({
-      message: "Unable to update profile"
+      message: "Unable to update profile",
     });
   }
 });
@@ -361,13 +397,13 @@ router.patch("/auth/password", authRequired, async (req, res) => {
 
     if (!currentPassword || !newPassword || !confirmPassword) {
       return res.status(400).json({
-        message: "Current password, new password and confirmation are required"
+        message: "Current password, new password and confirmation are required",
       });
     }
 
     if (newPassword !== confirmPassword) {
       return res.status(400).json({
-        message: getPasswordConfirmationError(newPassword, confirmPassword)
+        message: getPasswordConfirmationError(newPassword, confirmPassword),
       });
     }
 
@@ -375,13 +411,13 @@ router.patch("/auth/password", authRequired, async (req, res) => {
 
     if (passwordError) {
       return res.status(400).json({
-        message: passwordError
+        message: passwordError,
       });
     }
 
     if (newPassword === currentPassword) {
       return res.status(400).json({
-        message: "New password must be different from current password"
+        message: "New password must be different from current password",
       });
     }
 
@@ -389,7 +425,7 @@ router.patch("/auth/password", authRequired, async (req, res) => {
 
     if (!isValid) {
       return res.status(401).json({
-        message: "Current password is incorrect"
+        message: "Current password is incorrect",
       });
     }
 
@@ -397,12 +433,12 @@ router.patch("/auth/password", authRequired, async (req, res) => {
     await userRepository.updatePassword(req.user.id, newPasswordHash);
 
     return res.status(200).json({
-      message: "Password updated successfully"
+      message: "Password updated successfully",
     });
   } catch (error) {
     console.error("Password update error:", error);
     return res.status(500).json({
-      message: "Unable to update password"
+      message: "Unable to update password",
     });
   }
 });
@@ -412,11 +448,17 @@ router.post("/auth/logout", async (req, res) => {
 
   res.clearCookie(env.sessionCookieName, getClearSessionCookieOptions());
   res.clearCookie(env.refreshCookieName, getClearRefreshCookieOptions());
-  res.clearCookie(env.loginCodeCookieName, getClearLoginChallengeCookieOptions());
-  res.clearCookie(env.rememberDeviceCookieName, getClearRememberDeviceCookieOptions());
+  res.clearCookie(
+    env.loginCodeCookieName,
+    getClearLoginChallengeCookieOptions(),
+  );
+  res.clearCookie(
+    env.rememberDeviceCookieName,
+    getClearRememberDeviceCookieOptions(),
+  );
 
   return res.status(200).json({
-    message: "Logged out"
+    message: "Logged out",
   });
 });
 
@@ -426,18 +468,18 @@ router.post("/auth/forgot-password", authRateLimit, async (req, res) => {
 
     if (!email) {
       return res.status(400).json({
-        message: "Email is required"
+        message: "Email is required",
       });
     }
 
     await requestPasswordReset(email);
 
     return res.status(200).json({
-      message: "If this email exists, a password reset link has been sent."
+      message: "If this email exists, a password reset link has been sent.",
     });
   } catch (_error) {
     return res.status(200).json({
-      message: "If this email exists, a password reset link has been sent."
+      message: "If this email exists, a password reset link has been sent.",
     });
   }
 });
@@ -448,7 +490,7 @@ router.post("/auth/reset-password", async (req, res) => {
 
     if (!token || !password || !confirmPassword) {
       return res.status(400).json({
-        message: "Token, password and confirmation are required"
+        message: "Token, password and confirmation are required",
       });
     }
 
@@ -458,77 +500,84 @@ router.post("/auth/reset-password", async (req, res) => {
 
     if (passwordError) {
       return res.status(400).json({
-        message: passwordError
+        message: passwordError,
       });
     }
 
     await resetPassword({
       token,
-      password
+      password,
     });
 
     return res.status(200).json({
-      message: "Password reset successfully. You can now log in."
+      message: "Password reset successfully. You can now log in.",
     });
   } catch (_error) {
     return res.status(400).json({
-      message: "Invalid or expired reset link"
+      message: "Invalid or expired reset link",
     });
   }
 });
 
-router.post("/auth/verify-login-code", strictAuthRateLimit, async (req, res) => {
-  try {
-    const { code, rememberDevice } = req.body;
-    const challengeToken = req.cookies?.[env.loginCodeCookieName];
+router.post(
+  "/auth/verify-login-code",
+  strictAuthRateLimit,
+  async (req, res) => {
+    try {
+      const { code, rememberDevice } = req.body;
+      const challengeToken = req.cookies?.[env.loginCodeCookieName];
 
-    if (!challengeToken || !code) {
-      return res.status(400).json({
-        message: "Login code is required"
+      if (!challengeToken || !code) {
+        return res.status(400).json({
+          message: "Login code is required",
+        });
+      }
+
+      const result = await verifyLoginCode({
+        challengeToken,
+        code,
+        rememberDevice: Boolean(rememberDevice),
+        userAgent: req.get("user-agent"),
+      });
+
+      res.clearCookie(
+        env.loginCodeCookieName,
+        getClearLoginChallengeCookieOptions(),
+      );
+
+      setAuthCookies(res, result);
+
+      if (result.rememberDeviceToken) {
+        res.cookie(
+          env.rememberDeviceCookieName,
+          result.rememberDeviceToken,
+          getRememberDeviceCookieOptions(),
+        );
+      }
+
+      return res.status(200).json({
+        message: "Login successful",
+        redirectTo: getAuthenticatedAppPath(result.user),
+        user: serializeAuthUser(result.user),
+      });
+    } catch (error) {
+      if (env.nodeEnv !== "production") {
+        console.error("Login code verification failed:", error);
+      }
+
+      return res.status(401).json({
+        message: "Invalid or expired login code",
       });
     }
-
-    const result = await verifyLoginCode({
-      challengeToken,
-      code,
-      rememberDevice: Boolean(rememberDevice),
-      userAgent: req.get("user-agent")
-    });
-
-    res.clearCookie(env.loginCodeCookieName, getClearLoginChallengeCookieOptions());
-
-    setAuthCookies(res, result);
-
-    if (result.rememberDeviceToken) {
-      res.cookie(
-        env.rememberDeviceCookieName,
-        result.rememberDeviceToken,
-        getRememberDeviceCookieOptions()
-      );
-    }
-
-    return res.status(200).json({
-      message: "Login successful",
-      redirectTo: getAuthenticatedAppPath(result.user),
-      user: serializeAuthUser(result.user)
-    });
-  } catch (error) {
-    if (env.nodeEnv !== "production") {
-      console.error("Login code verification failed:", error);
-    }
-
-    return res.status(401).json({
-      message: "Invalid or expired login code"
-    });
-  }
-});
+  },
+);
 
 router.post("/auth/refresh", async (req, res) => {
   const refreshToken = req.cookies?.[env.refreshCookieName];
 
   if (!refreshToken) {
     return res.status(401).json({
-      message: "Not authenticated"
+      message: "Not authenticated",
     });
   }
 
@@ -539,15 +588,23 @@ router.post("/auth/refresh", async (req, res) => {
     res.clearCookie(env.refreshCookieName, getClearRefreshCookieOptions());
 
     return res.status(401).json({
-      message: "Invalid or expired session"
+      message: "Invalid or expired session",
     });
   }
 
-  res.cookie(env.sessionCookieName, session.accessToken, getSessionCookieOptions());
-  res.cookie(env.refreshCookieName, session.refreshToken, getRefreshCookieOptions());
+  res.cookie(
+    env.sessionCookieName,
+    session.accessToken,
+    getSessionCookieOptions(),
+  );
+  res.cookie(
+    env.refreshCookieName,
+    session.refreshToken,
+    getRefreshCookieOptions(),
+  );
 
   return res.status(200).json({
-    message: "Session refreshed"
+    message: "Session refreshed",
   });
 });
 
