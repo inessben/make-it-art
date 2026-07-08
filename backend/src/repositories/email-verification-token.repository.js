@@ -2,7 +2,7 @@ const prisma = require("../lib/prisma");
 
 async function createToken(data) {
   return prisma.emailVerificationToken.create({
-    data
+    data,
   });
 }
 
@@ -12,20 +12,20 @@ async function findValidTokenByHash(tokenHash) {
       tokenHash,
       usedAt: null,
       expiresAt: {
-        gt: new Date()
-      }
+        gt: new Date(),
+      },
     },
     include: {
-      user: true
-    }
+      user: true,
+    },
   });
 }
 async function markTokenAsUsed(id) {
   return prisma.emailVerificationToken.update({
     where: { id },
     data: {
-      usedAt: new Date()
-    }
+      usedAt: new Date(),
+    },
   });
 }
 
@@ -33,11 +33,11 @@ async function markUnusedTokensAsUsed(userId) {
   return prisma.emailVerificationToken.updateMany({
     where: {
       userId,
-      usedAt: null
+      usedAt: null,
     },
     data: {
-      usedAt: new Date()
-    }
+      usedAt: new Date(),
+    },
   });
 }
 
@@ -45,5 +45,5 @@ module.exports = {
   createToken,
   findValidTokenByHash,
   markTokenAsUsed,
-  markUnusedTokensAsUsed
+  markUnusedTokensAsUsed,
 };

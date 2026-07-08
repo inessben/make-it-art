@@ -4,22 +4,22 @@ async function listPaymentsForAdmin() {
   return prisma.payment.findMany({
     orderBy: [
       {
-        createdAt: "desc"
+        createdAt: "desc",
       },
       {
-        id: "desc"
-      }
+        id: "desc",
+      },
     ],
     include: {
       order: {
         include: {
-          user: true
-        }
-      }
-    }
+          user: true,
+        },
+      },
+    },
   });
 }
 
 module.exports = {
-  listPaymentsForAdmin
+  listPaymentsForAdmin,
 };

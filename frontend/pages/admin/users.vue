@@ -23,19 +23,31 @@
         <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
           {{ summaryCard.label }}
         </p>
-        <p class="mt-4 text-3xl font-semibold text-white">{{ summaryCard.value }}</p>
-        <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">{{ summaryCard.description }}</p>
+        <p class="mt-4 text-3xl font-semibold text-white">
+          {{ summaryCard.value }}
+        </p>
+        <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
+          {{ summaryCard.description }}
+        </p>
       </article>
     </section>
 
     <section class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div
+        class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+      >
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Listing</p>
-          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Tableau utilisateurs</h2>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+            Listing
+          </p>
+          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
+            Tableau utilisateurs
+          </h2>
         </div>
         <div class="grid gap-3 sm:grid-cols-2">
-          <label class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3">
+          <label
+            class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3"
+          >
             <span class="sr-only">Search users</span>
             <input
               v-model="searchTerm"
@@ -44,7 +56,9 @@
               class="w-full bg-transparent text-sm text-[#E6EDF7] outline-none placeholder:text-[#6D7A88]"
             />
           </label>
-          <label class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3">
+          <label
+            class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3"
+          >
             <span class="sr-only">Filter by status</span>
             <select
               v-model="statusFilter"
@@ -80,11 +94,16 @@
         Aucun utilisateur ne correspond aux filtres actuels.
       </div>
 
-      <div v-else class="mt-6 overflow-hidden rounded-[22px] border border-[#1A1F2A]">
+      <div
+        v-else
+        class="mt-6 overflow-hidden rounded-[22px] border border-[#1A1F2A]"
+      >
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-[#1A1F2A]">
             <thead class="bg-[#01050E]">
-              <tr class="text-left text-xs uppercase tracking-[0.18em] text-[#6D7A88]">
+              <tr
+                class="text-left text-xs uppercase tracking-[0.18em] text-[#6D7A88]"
+              >
                 <th class="px-5 py-4 font-medium">User</th>
                 <th class="px-5 py-4 font-medium">Role</th>
                 <th class="px-5 py-4 font-medium">Status</th>
@@ -95,10 +114,14 @@
             <tbody class="divide-y divide-[#1A1F2A] bg-[#090017]">
               <tr v-for="user in filteredUsers" :key="user.id">
                 <td class="px-5 py-4">
-                  <p class="font-semibold text-[#E6EDF7]">{{ user.username }}</p>
+                  <p class="font-semibold text-[#E6EDF7]">
+                    {{ user.username }}
+                  </p>
                   <p class="mt-1 text-sm text-[#8E9AA7]">{{ user.email }}</p>
                 </td>
-                <td class="px-5 py-4 text-sm text-[#D8E1F0]">{{ user.role }}</td>
+                <td class="px-5 py-4 text-sm text-[#D8E1F0]">
+                  {{ user.role }}
+                </td>
                 <td class="px-5 py-4">
                   <span
                     class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
@@ -107,8 +130,12 @@
                     {{ user.status }}
                   </span>
                 </td>
-                <td class="px-5 py-4 text-sm text-[#D8E1F0]">{{ user.ordersCount }}</td>
-                <td class="px-5 py-4 text-sm text-[#8E9AA7]">{{ formatDate(user.createdAt) }}</td>
+                <td class="px-5 py-4 text-sm text-[#D8E1F0]">
+                  {{ user.ordersCount }}
+                </td>
+                <td class="px-5 py-4 text-sm text-[#8E9AA7]">
+                  {{ formatDate(user.createdAt) }}
+                </td>
               </tr>
             </tbody>
           </table>
@@ -123,7 +150,7 @@ import { computed, onMounted, ref } from "vue";
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "admin"
+  middleware: "admin",
 });
 
 const loading = ref(true);
@@ -135,30 +162,30 @@ const summary = ref({
   totalUsers: 0,
   activeUsers: 0,
   pendingVerificationUsers: 0,
-  adminUsers: 0
+  adminUsers: 0,
 });
 
 const summaries = computed(() => [
   {
     label: "Total users",
     value: summary.value.totalUsers,
-    description: "Nombre total de comptes en base."
+    description: "Nombre total de comptes en base.",
   },
   {
     label: "Active users",
     value: summary.value.activeUsers,
-    description: "Comptes actuellement actifs sur la plateforme."
+    description: "Comptes actuellement actifs sur la plateforme.",
   },
   {
     label: "Pending verification",
     value: summary.value.pendingVerificationUsers,
-    description: "Utilisateurs encore non verifies."
+    description: "Utilisateurs encore non verifies.",
   },
   {
     label: "Admins",
     value: summary.value.adminUsers,
-    description: "Comptes ayant acces au backoffice."
-  }
+    description: "Comptes ayant acces au backoffice.",
+  },
 ]);
 
 const filteredUsers = computed(() => {
@@ -170,7 +197,8 @@ const filteredUsers = computed(() => {
       user.username.toLowerCase().includes(normalizedSearch) ||
       user.email.toLowerCase().includes(normalizedSearch);
 
-    const matchesStatus = statusFilter.value === "all" || user.status === statusFilter.value;
+    const matchesStatus =
+      statusFilter.value === "all" || user.status === statusFilter.value;
 
     return matchesSearch && matchesStatus;
   });
@@ -186,7 +214,7 @@ async function loadUsers() {
 
   try {
     const response = await $fetch("/api/admin/users", {
-      credentials: "include"
+      credentials: "include",
     });
 
     users.value = response.users || [];
@@ -230,7 +258,7 @@ function formatDate(value) {
   }
 
   return new Intl.DateTimeFormat("fr-FR", {
-    dateStyle: "medium"
+    dateStyle: "medium",
   }).format(new Date(value));
 }
 </script>

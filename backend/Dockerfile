@@ -4,6 +4,18 @@ WORKDIR /app
 
 ARG NPM_REGISTRY=https://registry.npmjs.org
 
+RUN apk add --no-cache \
+    python3 \
+    py3-pip \
+    build-base \
+    musl-dev \
+    libffi-dev \
+    jpeg-dev \
+    freetype-dev \
+    zlib-dev \
+    ttf-dejavu \
+ && python3 -m pip install --no-cache-dir --break-system-packages pillow reportlab
+
 COPY package*.json ./
 
 RUN npm config set registry ${NPM_REGISTRY} \
@@ -31,3 +43,5 @@ CMD npx prisma migrate deploy && npm run dev
 EXPOSE 4000
 
 CMD ["npm", "run", "dev"]
+
+ENV PDF_PYTHON_PATH=/usr/bin/python3

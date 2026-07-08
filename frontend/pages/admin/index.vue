@@ -20,9 +20,15 @@
         :key="statCard.label"
         class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6"
       >
-        <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">{{ statCard.label }}</p>
-        <p class="mt-4 text-3xl font-semibold text-white">{{ statCard.value }}</p>
-        <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">{{ statCard.description }}</p>
+        <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+          {{ statCard.label }}
+        </p>
+        <p class="mt-4 text-3xl font-semibold text-white">
+          {{ statCard.value }}
+        </p>
+        <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
+          {{ statCard.description }}
+        </p>
       </article>
     </section>
 
@@ -30,10 +36,16 @@
       <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
         <div class="flex items-end justify-between gap-4">
           <div>
-            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Activite recente</p>
-            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Derniers signaux utiles</h2>
+            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+              Activite recente
+            </p>
+            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
+              Derniers signaux utiles
+            </h2>
           </div>
-          <span class="rounded-full bg-[#4A6CF7]/10 px-4 py-2 text-sm font-semibold text-[#4A6CF7]">
+          <span
+            class="rounded-full bg-[#4A6CF7]/10 px-4 py-2 text-sm font-semibold text-[#4A6CF7]"
+          >
             Live data
           </span>
         </div>
@@ -58,10 +70,16 @@
             :key="activity.title"
             class="rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-5"
           >
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div
+              class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+            >
               <div>
-                <p class="text-sm font-semibold text-[#E6EDF7]">{{ activity.title }}</p>
-                <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">{{ activity.description }}</p>
+                <p class="text-sm font-semibold text-[#E6EDF7]">
+                  {{ activity.title }}
+                </p>
+                <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">
+                  {{ activity.description }}
+                </p>
               </div>
               <span class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
                 {{ activity.tag }}
@@ -72,7 +90,9 @@
       </article>
 
       <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-        <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Raccourcis</p>
+        <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+          Raccourcis
+        </p>
         <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Acces rapides</h2>
 
         <div class="mt-6 grid gap-4">
@@ -82,8 +102,12 @@
             :to="shortcut.route"
             class="rounded-[20px] border border-[#1A1F2A] bg-[#01050E] px-5 py-4 transition hover:border-[#2A3345] hover:bg-[#111827]"
           >
-            <p class="text-sm font-semibold text-[#E6EDF7]">{{ shortcut.label }}</p>
-            <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">{{ shortcut.description }}</p>
+            <p class="text-sm font-semibold text-[#E6EDF7]">
+              {{ shortcut.label }}
+            </p>
+            <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">
+              {{ shortcut.description }}
+            </p>
           </NuxtLink>
         </div>
       </article>
@@ -96,7 +120,7 @@ import { onMounted, ref } from "vue";
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "admin"
+  middleware: "admin",
 });
 
 const loading = ref(true);
@@ -115,7 +139,7 @@ async function loadDashboard() {
 
   try {
     const response = await $fetch("/api/admin/dashboard", {
-      credentials: "include"
+      credentials: "include",
     });
 
     stats.value = response.stats || [];
@@ -132,7 +156,8 @@ async function loadDashboard() {
       return;
     }
 
-    errorMessage.value = error?.data?.message || "Unable to load admin dashboard.";
+    errorMessage.value =
+      error?.data?.message || "Unable to load admin dashboard.";
   } finally {
     loading.value = false;
   }

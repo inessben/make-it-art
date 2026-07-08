@@ -11,6 +11,9 @@ model User {
   username                String?
   email                   String?                  @unique
   passwordHash            String?                  @map("password_hash")
+  oauthProvider           String?                  @map("oauth_provider")
+  oauthSubject            String?                  @map("oauth_subject")
+  oauthLinkedAt           DateTime?                @map("oauth_linked_at")
   role                    String?
   createdAt               DateTime?                @map("created_at")
   bio                     String?
@@ -21,6 +24,7 @@ model User {
   admin                   Admin?
   artistApplicationDraft  ArtistApplicationDraft?
   artist                  Artist?
+  reviewedArtistApplications ArtistApplicationDraft[] @relation("artist_application_reviewed_by")
   auditLogs               AuditLog[]
   consents                ConsentRGPD[]
   emailVerificationTokens EmailVerificationToken[] @relation("emailVerificationTokens")
@@ -30,10 +34,12 @@ model User {
   orders                  Order[]
   ownershipTokens         OwnershipToken[]
   passwordResetTokens     PasswordResetToken[]     @relation("passwordResetTokens")
+  personalCollections     Collection[]             @relation("user_collections")
   refreshTokens           RefreshToken[]
   rememberedDevices       RememberedDevice[]       @relation("rememberedDevices")
   galleries               UserGallery[]
 
+  @@unique([oauthProvider, oauthSubject])
   @@map("user")
 }
 
@@ -41,12 +47,23 @@ model ArtistApplicationDraft {
   id                 Int       @id @default(autoincrement())
   userId             Int       @unique @map("user_id")
   currentStep        Int       @default(1) @map("current_step")
+  status             String    @default("draft")
   payload            Json?
   completedAt        DateTime? @map("completed_at")
+  submittedAt        DateTime? @map("submitted_at")
+  reviewedAt         DateTime? @map("reviewed_at")
+  reviewedByAdminId  Int?      @map("reviewed_by_admin_id")
+  reviewNote         String?   @map("review_note")
+  contractAcceptedAt DateTime? @map("contract_accepted_at")
+  contractSignedAt   DateTime? @map("contract_signed_at")
+  contractVersion    String?   @map("contract_version")
+  signatureDataUrl   String?   @map("signature_data_url")
+  contractPdf        Bytes?    @map("contract_pdf")
   lastReminderSentAt DateTime? @map("last_reminder_sent_at")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
   user               User      @relation(fields: [userId], references: [id])
+  reviewedByAdmin    User?     @relation("artist_application_reviewed_by", fields: [reviewedByAdminId], references: [id])
 
   @@map("artist_application_draft")
 }
@@ -133,11 +150,14 @@ model Category {
 
 model Collection {
   id          Int              @id @default(autoincrement())
-  artistId    Int              @map("artist_id")
+  artistId    Int?             @map("artist_id")
+  userId      Int?             @map("user_id")
   title       String?
   description String?
+  isPrivate   Boolean          @default(false) @map("is_private")
   createdAt   DateTime?        @map("created_at")
-  artist      Artist           @relation(fields: [artistId], references: [id])
+  artist      Artist?          @relation(fields: [artistId], references: [id])
+  user        User?            @relation("user_collections", fields: [userId], references: [id])
   items       CollectionItem[]
 
   @@map("collection")

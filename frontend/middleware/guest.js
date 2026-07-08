@@ -12,7 +12,7 @@ export default defineNuxtRouteMiddleware(async () => {
     await auth.fetchCurrentUser();
 
     if (auth.isAuthenticated) {
-      return navigateTo("/profile", { replace: true });
+      return navigateTo(auth.defaultAuthenticatedRoute, { replace: true });
     }
   } catch {
     auth.user = null;
