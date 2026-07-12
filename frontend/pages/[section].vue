@@ -54,10 +54,6 @@ const sections = {
     description:
       "Gérez votre portfolio artistique et vos informations de présentation.",
   },
-  wishlist: {
-    title: "Liste de souhaits",
-    description: "Retrouvez vos œuvres préférées et vos favoris.",
-  },
   orders: {
     title: "Historique des commandes",
     description: "Consultez vos commandes passées et leur statut.",
@@ -86,7 +82,6 @@ const sections = {
 
 const allowedSections = [
   "artist-profile",
-  "wishlist",
   "orders",
   "payment-methods",
   "wallet",

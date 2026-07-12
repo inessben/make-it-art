@@ -113,7 +113,7 @@ function matchesSearch(value, search) {
     .includes(search);
 }
 
-function applyArtworkFilters(artworks, { search, style, artType }) {
+function applyArtworkFilters(artworks, { search, style, artType, categoryId }) {
   return artworks.filter((artwork) => {
     const payload = extractArtistApplicationPayload(
       artwork.artist?.user?.artistApplicationDraft,
@@ -141,7 +141,12 @@ function applyArtworkFilters(artworks, { search, style, artType }) {
     const matchesArtType =
       !normalizedArtType || matchesSearch(payload.artType, normalizedArtType);
 
-    return matchesSearchTerm && matchesStyle && matchesArtType;
+    const matchesCategory =
+      !categoryId || Number(artwork.categoryId) === categoryId;
+
+    return (
+      matchesSearchTerm && matchesStyle && matchesArtType && matchesCategory
+    );
   });
 }
 
@@ -247,6 +252,7 @@ async function listPublicArtworks({
   search = "",
   style = "",
   artType = "",
+  categoryId = null,
   sort = "latest",
   limit = 24,
 } = {}) {
@@ -263,6 +269,7 @@ async function listPublicArtworks({
     search,
     style,
     artType,
+    categoryId,
   });
 
   return sortArtworks(filtered, sort).slice(0, limit);

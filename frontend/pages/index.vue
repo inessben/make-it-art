@@ -80,6 +80,13 @@
               Rencontrer les artistes
             </NuxtLink>
             <NuxtLink
+              v-if="auth.isVerifiedArtist"
+              to="/artworks/new"
+              class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#F2C97D] bg-[#F2C97D]/10 px-7 text-sm font-semibold text-[#F7D990] transition hover:bg-[#F2C97D]/20"
+            >
+              Publier une oeuvre
+            </NuxtLink>
+            <NuxtLink
               v-if="showCollectorShortcut"
               to="/collections"
               class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#24314F] bg-transparent px-7 text-sm font-semibold text-[#C9D6FF] transition hover:border-[#4A6CF7]"
@@ -148,6 +155,34 @@
     </section>
 
     <section class="mx-auto grid w-full max-w-[1240px] gap-14 px-6 py-16">
+      <section
+        v-if="categories.length"
+        class="grid gap-5 rounded-[28px] border border-[#151E30] bg-[#070B14] p-6"
+      >
+        <div>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
+            Categories
+          </p>
+          <h2 class="mt-3 text-2xl font-semibold text-white">
+            Explore par univers creatif
+          </h2>
+          <p class="mt-3 max-w-2xl text-sm leading-7 text-[#96A4B8]">
+            Filtre le catalogue par categorie pour trouver plus vite le type
+            d'oeuvre qui t'inspire.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <NuxtLink
+            v-for="category in categories"
+            :key="category.id"
+            :to="`/artworks?category=${category.id}`"
+            class="inline-flex min-h-10 items-center justify-center rounded-full border border-[#24314F] bg-[#0C111D] px-4 text-sm font-semibold text-[#C9D6FF] transition hover:border-[#4A6CF7] hover:bg-[#141C2E]"
+          >
+            {{ category.name }}
+          </NuxtLink>
+        </div>
+      </section>
+
       <div
         class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
       >
@@ -235,7 +270,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRequestHeaders } from "#app";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "~/stores/auth";
@@ -245,6 +280,7 @@ import ArtistCard from "~/components/marketplace/ArtistCard.vue";
 
 const auth = useAuthStore();
 const { user } = storeToRefs(auth);
+const categories = ref([]);
 const requestHeaders = import.meta.server
   ? useRequestHeaders(["cookie"])
   : undefined;
@@ -296,6 +332,16 @@ const {
 } = useMarketplaceActions(auth);
 
 onMounted(async () => {
+  try {
+    const response = await $fetch("/api/categories", {
+      credentials: "include",
+    });
+
+    categories.value = response.categories || [];
+  } catch {
+    categories.value = [];
+  }
+
   if (!auth.user) {
     try {
       await auth.fetchCurrentUser();

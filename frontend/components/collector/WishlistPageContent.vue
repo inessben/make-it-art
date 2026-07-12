@@ -17,13 +17,26 @@
               Vos oeuvres favorites
             </h1>
             <p class="mt-4 max-w-3xl text-sm leading-7 text-[#96A4B8]">
-              Retrouve ici les oeuvres que tu as sauvegardees et bascule-les
-              ensuite dans tes collections personnelles si tu veux organiser tes
-              reperes.
+              Retrouve ici les oeuvres que tu as sauvegardees depuis le
+              catalogue. Clique sur « En favori » pour retirer une oeuvre de
+              cette liste.
+            </p>
+            <p
+              v-if="!pending && artworks.length"
+              class="mt-3 text-sm font-medium text-[#C9D6FF]"
+            >
+              {{ artworks.length }} oeuvre{{ artworks.length > 1 ? "s" : "" }}
+              sauvegardee{{ artworks.length > 1 ? "s" : "" }}
             </p>
           </div>
 
           <div class="flex flex-wrap gap-3">
+            <NuxtLink
+              to="/artworks"
+              class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
+            >
+              Explorer le catalogue
+            </NuxtLink>
             <NuxtLink
               to="/collections"
               class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#24314F] bg-[#0C111D] px-6 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#141C2E]"
@@ -61,10 +74,20 @@
       </section>
       <section
         v-else-if="!artworks.length"
-        class="rounded-[28px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]"
+        class="grid gap-6 rounded-[28px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]"
       >
-        Aucun favori pour le moment. Va explorer le catalogue pour commencer a
-        remplir cette page.
+        <p>
+          Aucun favori pour le moment. Explore le catalogue et clique sur
+          « Favori » sur une oeuvre pour la sauvegarder ici.
+        </p>
+        <div>
+          <NuxtLink
+            to="/artworks"
+            class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
+          >
+            Decouvrir les oeuvres
+          </NuxtLink>
+        </div>
       </section>
       <section v-else class="grid gap-6 lg:grid-cols-3">
         <ArtworkCard
@@ -81,14 +104,19 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
+import { useRequestHeaders } from "#app";
 import { useAuthStore } from "~/stores/auth";
 import ArtworkCard from "~/components/marketplace/ArtworkCard.vue";
 import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
 
 const auth = useAuthStore();
+const requestHeaders = import.meta.server
+  ? useRequestHeaders(["cookie"])
+  : undefined;
 
 const { data, pending, error, refresh } = await useFetch("/api/favorites/me", {
+  headers: requestHeaders,
   credentials: "include",
   default: () => ({
     artworks: [],
@@ -115,4 +143,15 @@ async function handleFavoriteToggle(artwork) {
     await refresh();
   }
 }
+
+onMounted(async () => {
+  if (!auth.user) {
+    try {
+      await auth.fetchCurrentUser();
+      await refresh();
+    } catch {
+      // Le middleware auth redirige vers /login si la session est invalide.
+    }
+  }
+});
 </script>

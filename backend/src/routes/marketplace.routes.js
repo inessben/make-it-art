@@ -4,6 +4,7 @@ const { isAdminUser } = require("../middlewares/admin-required.middleware");
 const { getUserFromRequest } = require("../services/session.service");
 const marketplaceRepository = require("../repositories/marketplace.repository");
 const collectorRepository = require("../repositories/collector.repository");
+const categoryRepository = require("../repositories/category.repository");
 const {
   serializeArtwork,
   serializeArtistSummary,
@@ -92,6 +93,30 @@ router.get("/marketplace/overview", attachViewer, async (req, res) => {
   }
 });
 
+router.get("/categories", async (_req, res) => {
+  try {
+    const categories = await categoryRepository.listCategories();
+
+    return res.status(200).json({
+      categories: categories.map((category) => ({
+        id: category.id,
+        name: normalizeText(category.name) || "Sans categorie",
+      })),
+    });
+  } catch (error) {
+    console.error("Categories fetch error:", error);
+    return res.status(500).json({
+      message: "Impossible de charger les categories.",
+    });
+  }
+});
+
+function normalizeCategoryId(value) {
+  const parsed = Number.parseInt(value, 10);
+
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
 router.get("/artworks", attachViewer, async (req, res) => {
   try {
     const artworks = await marketplaceRepository.listPublicArtworks({
@@ -99,6 +124,7 @@ router.get("/artworks", attachViewer, async (req, res) => {
       search: normalizeText(req.query.search).toLowerCase(),
       style: normalizeText(req.query.style).toLowerCase(),
       artType: normalizeText(req.query.artType).toLowerCase(),
+      categoryId: normalizeCategoryId(req.query.category),
       sort: normalizeText(req.query.sort) || "latest",
       limit: normalizeLimit(req.query.limit, 24, 80),
     });
@@ -315,7 +341,10 @@ router.get(
       );
 
       return res.status(200).json({
-        artworks: artworks.map((artwork) => serializeArtwork(artwork)),
+        artworks: artworks.map((artwork) => ({
+          ...serializeArtwork(artwork),
+          isFavorite: true,
+        })),
       });
     } catch (error) {
       console.error("Favorites fetch error:", error);
