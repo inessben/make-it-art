@@ -5,6 +5,7 @@ export function useMarketplaceActions(auth) {
   const favoriteLoading = ref({});
   const followLoading = ref({});
   const actionMessage = ref("");
+  const actionStatus = ref("");
 
   function setLoading(target, id, value) {
     target.value = {
@@ -50,6 +51,7 @@ export function useMarketplaceActions(auth) {
 
   async function toggleFavorite(artwork) {
     actionMessage.value = "";
+    actionStatus.value = "";
 
     if (!(await ensureCollectorSession())) {
       return false;
@@ -67,13 +69,15 @@ export function useMarketplaceActions(auth) {
 
       updateArtworkFavoriteState(artwork, nextState);
       actionMessage.value = nextState
-        ? "Oeuvre ajoutee a vos favoris."
-        : "Oeuvre retiree de vos favoris.";
+        ? "Artwork added to your favorites."
+        : "Artwork removed from your favorites.";
+      actionStatus.value = "success";
 
       return true;
     } catch (error) {
       actionMessage.value =
-        error?.data?.message || "Impossible de mettre a jour vos favoris.";
+        error?.data?.message || "Unable to update your favorites.";
+      actionStatus.value = "error";
       return false;
     } finally {
       setLoading(favoriteLoading, artwork.id, false);
@@ -82,6 +86,7 @@ export function useMarketplaceActions(auth) {
 
   async function toggleFollow(artist) {
     actionMessage.value = "";
+    actionStatus.value = "";
 
     if (!(await ensureCollectorSession())) {
       return false;
@@ -99,13 +104,15 @@ export function useMarketplaceActions(auth) {
 
       updateArtistFollowState(artist, nextState);
       actionMessage.value = nextState
-        ? "Vous suivez maintenant cet artiste."
-        : "Vous ne suivez plus cet artiste.";
+        ? "You are now following this artist."
+        : "You are no longer following this artist.";
+      actionStatus.value = "success";
 
       return true;
     } catch (error) {
       actionMessage.value =
-        error?.data?.message || "Impossible de mettre a jour ce suivi.";
+        error?.data?.message || "Unable to update this follow status.";
+      actionStatus.value = "error";
       return false;
     } finally {
       setLoading(followLoading, artist.id, false);
@@ -114,6 +121,7 @@ export function useMarketplaceActions(auth) {
 
   return {
     actionMessage,
+    actionStatus,
     favoriteLoading,
     followLoading,
     toggleFavorite,

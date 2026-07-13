@@ -21,7 +21,7 @@ function ensureCollectorAccount(req, res, next) {
   if (isAdminUser(req.user)) {
     return res.status(403).json({
       message:
-        "Les comptes admin ne peuvent pas utiliser les fonctionnalites collectionneur.",
+        "Admin accounts cannot use collector features.",
     });
   }
 
@@ -52,21 +52,21 @@ function mapRepositoryError(error) {
   if (error?.message === "ARTWORK_NOT_FOUND") {
     return {
       status: 404,
-      message: "Oeuvre introuvable.",
+      message: "Artwork not found.",
     };
   }
 
   if (error?.message === "ARTIST_NOT_FOUND") {
     return {
       status: 404,
-      message: "Artiste introuvable.",
+      message: "Artist not found.",
     };
   }
 
   if (error?.message === "COLLECTION_NOT_FOUND") {
     return {
       status: 404,
-      message: "Collection introuvable.",
+      message: "Collection not found.",
     };
   }
 
@@ -87,7 +87,7 @@ router.get("/marketplace/overview", attachViewer, async (req, res) => {
   } catch (error) {
     console.error("Marketplace overview error:", error);
     return res.status(500).json({
-      message: "Impossible de charger la page de decouverte.",
+      message: "Unable to load the discovery page.",
     });
   }
 });
@@ -109,7 +109,7 @@ router.get("/artworks", attachViewer, async (req, res) => {
   } catch (error) {
     console.error("Public artworks fetch error:", error);
     return res.status(500).json({
-      message: "Impossible de charger le catalogue des oeuvres.",
+      message: "Unable to load the artwork catalogue.",
     });
   }
 });
@@ -124,7 +124,7 @@ router.get("/artworks/:id(\\d+)", attachViewer, async (req, res) => {
 
     if (!artwork) {
       return res.status(404).json({
-        message: "Oeuvre introuvable.",
+        message: "Artwork not found.",
       });
     }
 
@@ -143,7 +143,7 @@ router.get("/artworks/:id(\\d+)", attachViewer, async (req, res) => {
   } catch (error) {
     console.error("Public artwork detail error:", error);
     return res.status(500).json({
-      message: "Impossible de charger cette oeuvre.",
+      message: "Unable to load this artwork.",
     });
   }
 });
@@ -160,7 +160,7 @@ router.post(
       });
 
       return res.status(200).json({
-        message: "Oeuvre ajoutee aux favoris.",
+        message: "Artwork added to favorites.",
       });
     } catch (error) {
       const mappedError = mapRepositoryError(error);
@@ -173,7 +173,7 @@ router.post(
 
       console.error("Favorite create error:", error);
       return res.status(500).json({
-        message: "Impossible d'ajouter cette oeuvre aux favoris.",
+        message: "Unable to add this artwork to favorites.",
       });
     }
   },
@@ -191,12 +191,12 @@ router.delete(
       });
 
       return res.status(200).json({
-        message: "Oeuvre retiree des favoris.",
+        message: "Artwork removed from favorites.",
       });
     } catch (error) {
       console.error("Favorite delete error:", error);
       return res.status(500).json({
-        message: "Impossible de retirer cette oeuvre des favoris.",
+        message: "Unable to remove this artwork from favorites.",
       });
     }
   },
@@ -219,7 +219,7 @@ router.get("/artists", attachViewer, async (req, res) => {
   } catch (error) {
     console.error("Public artists fetch error:", error);
     return res.status(500).json({
-      message: "Impossible de charger les artistes.",
+      message: "Unable to load artists.",
     });
   }
 });
@@ -233,7 +233,7 @@ router.get("/artists/:id(\\d+)", attachViewer, async (req, res) => {
 
     if (!artist) {
       return res.status(404).json({
-        message: "Artiste introuvable.",
+        message: "Artist not found.",
       });
     }
 
@@ -245,7 +245,7 @@ router.get("/artists/:id(\\d+)", attachViewer, async (req, res) => {
   } catch (error) {
     console.error("Public artist detail error:", error);
     return res.status(500).json({
-      message: "Impossible de charger ce profil artiste.",
+      message: "Unable to load this artist profile.",
     });
   }
 });
@@ -262,7 +262,7 @@ router.post(
       });
 
       return res.status(200).json({
-        message: "Vous suivez maintenant cet artiste.",
+        message: "You are now following this artist.",
       });
     } catch (error) {
       const mappedError = mapRepositoryError(error);
@@ -275,7 +275,7 @@ router.post(
 
       console.error("Follow create error:", error);
       return res.status(500).json({
-        message: "Impossible de suivre cet artiste.",
+        message: "Unable to follow this artist.",
       });
     }
   },
@@ -293,12 +293,12 @@ router.delete(
       });
 
       return res.status(200).json({
-        message: "Vous ne suivez plus cet artiste.",
+        message: "You are no longer following this artist.",
       });
     } catch (error) {
       console.error("Follow delete error:", error);
       return res.status(500).json({
-        message: "Impossible de ne plus suivre cet artiste.",
+        message: "Unable to unfollow this artist.",
       });
     }
   },
@@ -320,7 +320,7 @@ router.get(
     } catch (error) {
       console.error("Favorites fetch error:", error);
       return res.status(500).json({
-        message: "Impossible de charger vos favoris.",
+        message: "Unable to load your favorites.",
       });
     }
   },
@@ -349,7 +349,7 @@ router.get(
     } catch (error) {
       console.error("Personal collections fetch error:", error);
       return res.status(500).json({
-        message: "Impossible de charger vos collections.",
+        message: "Unable to load your collections.",
       });
     }
   },
@@ -365,7 +365,7 @@ router.post(
 
       if (!title) {
         return res.status(400).json({
-          message: "Le titre de la collection est requis.",
+          message: "The collection title is required.",
         });
       }
 
@@ -377,13 +377,13 @@ router.post(
       });
 
       return res.status(201).json({
-        message: "Collection creee.",
+        message: "Collection created.",
         collection: serializeCollection(collection),
       });
     } catch (error) {
       console.error("Personal collection create error:", error);
       return res.status(500).json({
-        message: "Impossible de creer cette collection.",
+        message: "Unable to create this collection.",
       });
     }
   },
@@ -399,7 +399,7 @@ router.patch(
 
       if (!title) {
         return res.status(400).json({
-          message: "Le titre de la collection est requis.",
+          message: "The collection title is required.",
         });
       }
 
@@ -412,7 +412,7 @@ router.patch(
       });
 
       return res.status(200).json({
-        message: "Collection mise a jour.",
+        message: "Collection updated.",
         collection: serializeCollection(collection),
       });
     } catch (error) {
@@ -426,7 +426,7 @@ router.patch(
 
       console.error("Personal collection update error:", error);
       return res.status(500).json({
-        message: "Impossible de mettre a jour cette collection.",
+        message: "Unable to update this collection.",
       });
     }
   },
@@ -444,7 +444,7 @@ router.delete(
       });
 
       return res.status(200).json({
-        message: "Collection supprimee.",
+        message: "Collection deleted.",
       });
     } catch (error) {
       const mappedError = mapRepositoryError(error);
@@ -457,7 +457,7 @@ router.delete(
 
       console.error("Personal collection delete error:", error);
       return res.status(500).json({
-        message: "Impossible de supprimer cette collection.",
+        message: "Unable to delete this collection.",
       });
     }
   },
@@ -473,7 +473,7 @@ router.post(
 
       if (!Number.isInteger(artworkId)) {
         return res.status(400).json({
-          message: "L'oeuvre a ajouter est invalide.",
+          message: "The selected artwork is invalid.",
         });
       }
 
@@ -485,7 +485,7 @@ router.post(
         });
 
       return res.status(200).json({
-        message: "Oeuvre ajoutee a la collection.",
+        message: "Artwork added to the collection.",
         collection: serializeCollection(collection),
       });
     } catch (error) {
@@ -499,7 +499,7 @@ router.post(
 
       console.error("Add artwork to personal collection error:", error);
       return res.status(500).json({
-        message: "Impossible d'ajouter cette oeuvre a la collection.",
+        message: "Unable to add this artwork to the collection.",
       });
     }
   },
@@ -519,7 +519,7 @@ router.delete(
         });
 
       return res.status(200).json({
-        message: "Oeuvre retiree de la collection.",
+        message: "Artwork removed from the collection.",
         collection: serializeCollection(collection),
       });
     } catch (error) {
@@ -533,7 +533,7 @@ router.delete(
 
       console.error("Remove artwork from personal collection error:", error);
       return res.status(500).json({
-        message: "Impossible de retirer cette oeuvre de la collection.",
+        message: "Unable to remove this artwork from the collection.",
       });
     }
   },

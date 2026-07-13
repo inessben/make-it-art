@@ -10,7 +10,7 @@ import {
 
 describe("google auth helpers", () => {
   test("exposes the Google sign-in option label and redirect URL", () => {
-    assert.equal(GOOGLE_LOGIN_LABEL, "Se connecter avec Google");
+    assert.equal(GOOGLE_LOGIN_LABEL, "Sign in with Google");
     assert.equal(GOOGLE_LOGIN_URL, "/api/auth/google");
   });
 
@@ -37,21 +37,21 @@ describe("google auth helpers", () => {
   test("returns a clear message when Google sign-in is cancelled", () => {
     assert.equal(
       getGoogleLoginMessage("cancelled"),
-      "La connexion Google a ete annulee.",
+      "Google sign-in was cancelled.",
     );
   });
 
   test("returns a safe message when Google sign-in fails", () => {
     assert.equal(
       getGoogleLoginMessage("error"),
-      "La connexion Google n'a pas abouti. Veuillez reessayer.",
+      "Google sign-in was unsuccessful. Please try again.",
     );
   });
 
   test("returns a clear message when Google sign-in is unavailable", () => {
     assert.equal(
       getGoogleLoginMessage("unavailable"),
-      "La connexion Google est temporairement indisponible.",
+      "Google sign-in is temporarily unavailable.",
     );
   });
 

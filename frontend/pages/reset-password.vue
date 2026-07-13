@@ -1,5 +1,10 @@
 <template>
-  <AuthPanel title="Reset password" max-width="420px" @submit="handleSubmit">
+  <AuthPanel
+    title="Reset password"
+    description="Choose a strong new password for your Make It Art account."
+    max-width="440px"
+    @submit="handleSubmit"
+  >
     <PasswordField
       id="password"
       v-model="password"
@@ -84,13 +89,11 @@ async function handleSubmit() {
 
 <style scoped>
 .auth-link {
-  margin-top: 8px;
-  text-align: center;
-  font-size: 0.94rem;
+  @apply mt-2 text-center text-body-1;
 }
 
 .auth-link a {
-  color: #3273dc;
+  @apply text-violet-700;
   font-weight: 700;
   text-decoration: none;
 }

@@ -1,5 +1,10 @@
 <template>
-  <AuthPanel title="Register" max-width="420px" @submit="handleRegister">
+  <AuthPanel
+    title="Create your account"
+    description="Join the marketplace to collect digital art and follow independent artists."
+    max-width="480px"
+    @submit="handleRegister"
+  >
     <TextField
       id="username"
       v-model="form.username"
@@ -46,6 +51,11 @@
     />
 
     <FormMessage :message="message" />
+
+    <p class="text-center text-body-1 text-slate-400">
+      Already have an account?
+      <NuxtLink class="font-semibold text-violet-400 hover:underline" to="/login">Sign in</NuxtLink>
+    </p>
   </AuthPanel>
 </template>
 

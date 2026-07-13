@@ -60,7 +60,7 @@ test("renderArtistContract includes the signature date and time in the contract 
 
   assert.match(
     contractText,
-    /Date et heure de signature : .*15:45.*Europe\/Paris/,
+    /Signature date and time: .*15:45.*Europe\/Paris/,
   );
 });
 

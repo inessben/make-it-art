@@ -129,11 +129,11 @@ function validateArtistApplicationPayload(
   { requireAcceptances = false } = {},
 ) {
   if (!payload.displayName) {
-    return "Le nom d'artiste est requis.";
+    return "Artist name is required.";
   }
 
   if (!payload.firstName || !payload.lastName) {
-    return "Le prenom et le nom legal sont requis.";
+    return "Legal first and last names are required.";
   }
 
   if (
@@ -142,34 +142,34 @@ function validateArtistApplicationPayload(
     !payload.postalCode ||
     !payload.country
   ) {
-    return "L'adresse legale complete est requise.";
+    return "A complete legal address is required.";
   }
 
   if (!payload.taxId) {
-    return "Le numero d'identification fiscale est requis.";
+    return "A tax identification number is required.";
   }
 
   if (!payload.bio) {
-    return "La bio artiste est requise.";
+    return "Artist bio is required.";
   }
 
   if (!payload.artType) {
-    return "Le type d'art principal est requis.";
+    return "A primary art type is required.";
   }
 
   if (payload.styles.length === 0) {
-    return "Ajoutez au moins un style ou une specialite.";
+    return "Add at least one style or specialty.";
   }
 
   if (!isValidOptionalUrl(payload.portfolioUrl)) {
-    return "Le lien de portfolio doit etre une URL valide.";
+    return "The portfolio link must be a valid URL.";
   }
 
   if (
     requireAcceptances &&
     (!payload.termsAccepted || !payload.commissionAccepted)
   ) {
-    return "Les validations obligatoires doivent etre acceptees.";
+    return "All required confirmations must be accepted.";
   }
 
   return null;
@@ -187,7 +187,7 @@ function isApplicationLocked(application) {
 
 function buildContractFilename(
   applicationOrArtistPayload,
-  fallbackName = "artiste",
+  fallbackName = "artist",
 ) {
   const displayName =
     normalizeText(applicationOrArtistPayload?.displayName) ||
@@ -199,7 +199,7 @@ function buildContractFilename(
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-  return `make-it-art-artist-contract-${safeName || "artiste"}.pdf`;
+  return `make-it-art-artist-contract-${safeName || "artist"}.pdf`;
 }
 
 async function resolveApplicationContractPdf(application, fallbackUser) {
@@ -389,13 +389,13 @@ router.post("/artists/me", async (req, res) => {
 
     if (!contractAccepted) {
       return res.status(400).json({
-        message: "Le contrat doit etre accepte avant la soumission.",
+        message: "The agreement must be accepted before submission.",
       });
     }
 
     if (!signatureDataUrl.startsWith("data:image/")) {
       return res.status(400).json({
-        message: "La signature de l'artiste est requise.",
+        message: "The artist's signature is required.",
       });
     }
 
@@ -456,7 +456,7 @@ router.get("/artists/me/contract.pdf", async (req, res) => {
     );
     const filename = buildContractFilename(
       payload,
-      req.user.username || "artiste",
+      req.user.username || "artist",
     );
     const shouldDownload = ["1", "true", "yes"].includes(
       String(req.query.download || "").toLowerCase(),

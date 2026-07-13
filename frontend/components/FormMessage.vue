@@ -1,5 +1,5 @@
 <template>
-  <p v-if="message">{{ message }}</p>
+  <p v-if="message" role="status">{{ message }}</p>
 </template>
 
 <script setup>
@@ -13,7 +13,6 @@ defineProps({
 
 <style scoped>
 p {
-  margin: 2px 0 0;
-  color: #5b6578;
+  @apply border border-slate-800 bg-slate-900/70 px-4 py-3 text-body-1 leading-6 text-slate-300;
 }
 </style>

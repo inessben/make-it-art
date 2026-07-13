@@ -251,7 +251,7 @@ test("POST /artworks/:id/favorite stores a favorite for a collector account", as
   });
 
   assert.equal(response.status, 200);
-  assert.equal(response.body.message, "Oeuvre ajoutee aux favoris.");
+  assert.equal(response.body.message, "Artwork added to favorites.");
   assert.deepEqual(calls.addFavorite[0], {
     userId: collectorUser.id,
     artworkId: 12,
@@ -272,7 +272,7 @@ test("POST /artworks/:id/favorite blocks admin accounts from collector actions",
   assert.equal(response.status, 403);
   assert.equal(
     response.body.message,
-    "Les comptes admin ne peuvent pas utiliser les fonctionnalites collectionneur.",
+    "Admin accounts cannot use collector features.",
   );
 });
 
@@ -297,7 +297,7 @@ test("POST /collections/me validates the title before creating a collection", as
   });
 
   assert.equal(response.status, 400);
-  assert.equal(response.body.message, "Le titre de la collection est requis.");
+  assert.equal(response.body.message, "The collection title is required.");
 });
 
 test("POST /collections/me creates a personal collection for the collector", async (t) => {

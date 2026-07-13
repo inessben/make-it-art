@@ -1,13 +1,19 @@
 <template>
   <main class="auth-page">
-    <form
-      class="auth-form"
-      :style="{ maxWidth }"
-      @submit.prevent="$emit('submit')"
-    >
-      <h1>{{ title }}</h1>
-      <slot />
-    </form>
+    <section class="auth-shell" :style="{ maxWidth }">
+      <NuxtLink to="/" class="auth-brand" aria-label="Make It Art home">
+        <img src="/logo.png" alt="" />
+        <span>MAKE IT ART</span>
+      </NuxtLink>
+      <form class="auth-form" @submit.prevent="$emit('submit')">
+        <header>
+          <p class="auth-kicker">MAKE IT ART ACCOUNT</p>
+          <h1>{{ title }}</h1>
+          <p v-if="description" class="auth-description">{{ description }}</p>
+        </header>
+        <slot />
+      </form>
+    </section>
   </main>
 </template>
 
@@ -21,6 +27,10 @@ defineProps({
     type: String,
     default: "420px",
   },
+  description: {
+    type: String,
+    default: "",
+  },
 });
 
 defineEmits(["submit"]);
@@ -28,34 +38,42 @@ defineEmits(["submit"]);
 
 <style scoped>
 .auth-page {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
+  @apply grid min-h-screen place-items-center bg-black px-4 py-10 text-slate-100 sm:px-6;
   background:
     radial-gradient(
       circle at top left,
-      rgba(50, 115, 220, 0.12),
-      transparent 34%
+      rgb(88 0 200 / 0.3),
+      transparent 40%
     ),
-    linear-gradient(135deg, #f7f8fb 0%, #eef2f7 100%);
-  color: #172033;
+    radial-gradient(circle at bottom right, rgb(123 44 255 / 0.12), transparent 32%),
+    theme("colors.black");
+}
+
+.auth-shell {
+  @apply grid w-full gap-6;
+}
+
+.auth-brand {
+  @apply mx-auto flex items-center gap-3 text-title-4 text-slate-100;
+}
+
+.auth-brand img {
+  @apply h-12 w-10 object-contain;
 }
 
 .auth-form {
-  width: 100%;
-  display: grid;
-  gap: 10px;
-  padding: 28px;
-  border: 1px solid #dfe5ef;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 18px 45px rgba(23, 32, 51, 0.12);
+  @apply grid w-full gap-5 rounded-2xl border border-slate-800 bg-slate-950/95 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.45)] sm:p-8;
 }
 
 h1 {
-  margin: 0 0 8px;
-  font-size: 1.8rem;
-  font-weight: 700;
+  @apply mt-2 text-title-2 text-slate-100;
+}
+
+.auth-kicker {
+  @apply text-subtitle-2 font-semibold uppercase tracking-[0.2em] text-violet-400;
+}
+
+.auth-description {
+  @apply mt-3 text-body-1 leading-6 text-slate-400;
 }
 </style>

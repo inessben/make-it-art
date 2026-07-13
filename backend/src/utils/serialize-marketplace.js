@@ -35,7 +35,7 @@ function serializeArtistSummary(artist) {
     displayName:
       normalizeText(artist.displayName) ||
       normalizeText(artist.user?.username) ||
-      "Artiste",
+      "Artist",
     verified: Boolean(artist.verified),
     bio: normalizeText(artist.user?.bio),
     artType: normalizeText(payload.artType),
@@ -77,7 +77,7 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     category: artwork.category
       ? {
           id: artwork.category.id,
-          name: normalizeText(artwork.category.name) || "Sans categorie",
+          name: normalizeText(artwork.category.name) || "Uncategorized",
         }
       : null,
     artist: includeArtist ? serializeArtistSummary(artwork.artist) : null,
@@ -97,7 +97,7 @@ function serializeCollection(collection) {
 
   return {
     id: collection.id,
-    title: normalizeText(collection.title) || "Collection sans titre",
+    title: normalizeText(collection.title) || "Untitled collection",
     description: normalizeText(collection.description),
     isPrivate: Boolean(collection.isPrivate),
     createdAt: collection.createdAt || null,

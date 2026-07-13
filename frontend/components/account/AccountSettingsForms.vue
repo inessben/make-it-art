@@ -1,339 +1,317 @@
 <template>
-  <div class="space-y-8">
-    <div class="flex flex-col gap-3">
-      <div
-        v-if="successMessage"
-        class="rounded-2xl border border-[#1A1F2A] bg-[#11243a] px-5 py-4 text-sm text-[#B9E3FF]"
-      >
-        {{ successMessage }}
-      </div>
-      <div
-        v-if="errorMessage"
-        class="rounded-2xl border border-[#7f1d1d] bg-[#2b1014] px-5 py-4 text-sm text-[#FECACA]"
-      >
-        {{ errorMessage }}
-      </div>
-    </div>
-
-    <form
-      class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-8"
-      @submit.prevent="saveProfile"
+  <main
+    :class="
+      props.embedded
+        ? 'text-slate-100'
+        : 'min-h-screen bg-black text-slate-100'
+    "
+  >
+    <div
+      :class="
+        props.embedded
+          ? 'w-full'
+          : 'mx-auto grid w-full max-w-[1440px] gap-8 px-5 py-8 lg:grid-cols-[258px_minmax(0,1fr)]'
+      "
     >
-      <div
-        class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+      <AccountSettingsSidebar v-if="!props.embedded" />
+
+      <section
+        :class="
+          props.embedded ? 'min-w-0' : 'min-w-0 pb-16 pt-1 lg:px-4'
+        "
       >
-        <div>
-          <h2 class="text-lg font-semibold text-[#E6EDF7]">
-            Profile Information
-          </h2>
-          <p class="mt-2 text-sm text-[#A0ADB4]">
-            Update your personal information.
+        <header v-if="!props.embedded">
+          <h1 class="text-title-2">General Settings</h1>
+          <p class="mt-2 text-body-1 text-slate-400">
+            Manage your digital presence and account identity.
           </p>
-        </div>
-        <button
-          type="submit"
-          class="inline-flex items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 py-3 text-sm font-semibold text-[#000000] transition hover:bg-[#3b70f0]"
+        </header>
+
+        <div
+          v-if="successMessage"
+          class="mt-7 border border-green-900 bg-green-950 px-5 py-4 text-footer text-green-200"
         >
-          Save Changes
-        </button>
-      </div>
-
-      <div class="mt-8 grid gap-6 lg:grid-cols-2">
-        <label class="grid gap-2 text-sm text-[#A0ADB4]">
-          <span class="font-medium text-[#E6EDF7]">First Name</span>
-          <input
-            v-model="firstName"
-            type="text"
-            placeholder="John"
-            class="w-full rounded-xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3 text-sm text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7] focus:ring-2 focus:ring-[#4A6CF7]/30"
-          />
-        </label>
-        <label class="grid gap-2 text-sm text-[#A0ADB4]">
-          <span class="font-medium text-[#E6EDF7]">Last Name</span>
-          <input
-            v-model="lastName"
-            type="text"
-            placeholder="Doe"
-            class="w-full rounded-xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3 text-sm text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7] focus:ring-2 focus:ring-[#4A6CF7]/30"
-          />
-        </label>
-      </div>
-
-      <div class="mt-6 grid gap-6">
-        <label class="grid gap-2 text-sm text-[#A0ADB4]">
-          <span class="font-medium text-[#E6EDF7]">Email</span>
-          <input
-            v-model="email"
-            type="email"
-            placeholder="john.doe@example.com"
-            class="w-full rounded-xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3 text-sm text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7] focus:ring-2 focus:ring-[#4A6CF7]/30"
-          />
-        </label>
-        <label class="grid gap-2 text-sm text-[#A0ADB4]">
-          <span class="font-medium text-[#E6EDF7]">Bio</span>
-          <textarea
-            v-model="bio"
-            rows="4"
-            placeholder="Art enthusiast and collector"
-            class="w-full rounded-xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3 text-sm text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7] focus:ring-2 focus:ring-[#4A6CF7]/30"
-          ></textarea>
-        </label>
-      </div>
-    </form>
-
-    <form
-      class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-8"
-      @submit.prevent="updatePassword"
-    >
-      <div
-        class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
-      >
-        <div>
-          <h2 class="text-lg font-semibold text-[#E6EDF7]">Change Password</h2>
-          <p class="mt-2 text-sm text-[#A0ADB4]">
-            Change your password to improve security.
-          </p>
+          {{ successMessage }}
         </div>
-        <button
-          type="submit"
-          class="inline-flex items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 py-3 text-sm font-semibold text-[#000000] transition hover:bg-[#3b70f0]"
+        <div
+          v-if="errorMessage"
+          class="mt-7 border border-red-900 bg-red-950 px-5 py-4 text-footer text-red-200"
         >
-          Update Password
-        </button>
-      </div>
-
-      <div class="mt-8 grid gap-6">
-        <label class="grid gap-2 text-sm text-[#A0ADB4]">
-          <span class="font-medium text-[#E6EDF7]">Current Password</span>
-          <input
-            v-model="currentPassword"
-            type="password"
-            class="w-full rounded-xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3 text-sm text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7] focus:ring-2 focus:ring-[#4A6CF7]/30"
-          />
-        </label>
-        <label class="grid gap-2 text-sm text-[#A0ADB4]">
-          <span class="font-medium text-[#E6EDF7]">New Password</span>
-          <input
-            v-model="newPassword"
-            type="password"
-            class="w-full rounded-xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3 text-sm text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7] focus:ring-2 focus:ring-[#4A6CF7]/30"
-          />
-        </label>
-        <label class="grid gap-2 text-sm text-[#A0ADB4]">
-          <span class="font-medium text-[#E6EDF7]">Confirm New Password</span>
-          <input
-            v-model="confirmPassword"
-            type="password"
-            class="w-full rounded-xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3 text-sm text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7] focus:ring-2 focus:ring-[#4A6CF7]/30"
-          />
-        </label>
-      </div>
-    </form>
-
-    <section
-      v-if="showArtistContractSection"
-      class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-8"
-    >
-      <div
-        class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div>
-          <h2 class="text-lg font-semibold text-[#E6EDF7]">Contrat artiste</h2>
-          <p class="mt-2 max-w-2xl text-sm leading-7 text-[#A0ADB4]">
-            Retrouvez ici votre contrat signe en PDF pour le consulter ou le
-            telecharger a tout moment.
-          </p>
-          <p
-            v-if="artistContractSignedAtLabel"
-            class="mt-3 text-sm font-medium text-[#B8C5D9]"
-          >
-            Signe le {{ artistContractSignedAtLabel }}
-          </p>
-          <p
-            v-if="artistContractVersion"
-            class="mt-1 text-xs uppercase tracking-[0.16em] text-[#4A6CF7]"
-          >
-            {{ artistContractVersion }}
-          </p>
+          {{ errorMessage }}
         </div>
 
-        <div class="flex flex-wrap gap-3">
-          <a
-            href="/api/artists/me/contract.pdf"
-            target="_blank"
-            rel="noreferrer"
-            class="inline-flex items-center justify-center rounded-2xl border border-[#4A6CF7] bg-[#4A6CF7]/10 px-6 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#4A6CF7]/20"
-          >
-            Ouvrir le PDF
-          </a>
-          <a
-            href="/api/artists/me/contract.pdf?download=1"
-            class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-6 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
-          >
-            Telecharger le PDF
-          </a>
-        </div>
-      </div>
-    </section>
+        <form
+          :class="
+            props.embedded
+              ? 'border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6'
+              : 'mt-8 rounded-lg border border-slate-800 bg-slate-950/70 p-4 sm:p-6'
+          "
+          @submit.prevent="saveProfile"
+        >
+          <div class="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 class="text-title-3">Profile Information</h2>
+              <p class="mt-2 text-footer text-slate-500">
+                This is how other collectors will see you in the marketplace.
+              </p>
+            </div>
+            <div
+              class="h-24 w-24 shrink-0 rounded-xl border-2 border-slate-750 bg-slate-900"
+              aria-label="Avatar placeholder"
+            />
+          </div>
 
-    <section class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-8">
-      <div
-        class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div>
-          <h2 class="text-lg font-semibold text-[#E6EDF7]">Danger Zone</h2>
-          <p class="mt-2 max-w-2xl text-sm leading-7 text-[#A0ADB4]">
-            Once your account is deleted, there is no turning back. Be sure.
+          <div class="mt-10 grid gap-6 md:grid-cols-2">
+            <label class="grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
+              >Display name
+              <input
+                v-model.trim="profile.username"
+                :disabled="savingProfile"
+                type="text"
+                autocomplete="name"
+                class="h-14 border-b border-slate-750 bg-slate-900 px-5 text-body-1 normal-case tracking-normal text-slate-100 outline-none focus:border-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </label>
+            <label class="grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
+              >Email address
+              <input
+                v-model.trim="profile.email"
+                :disabled="savingProfile"
+                type="email"
+                autocomplete="email"
+                class="h-14 border-b border-slate-750 bg-slate-900 px-5 text-body-1 normal-case tracking-normal text-slate-100 outline-none focus:border-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </label>
+          </div>
+
+          <label class="mt-8 grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
+            >Collector bio
+            <textarea
+              v-model.trim="profile.bio"
+              :disabled="savingProfile"
+              rows="4"
+              class="resize-none border-b border-slate-750 bg-slate-900 px-5 py-4 text-body-1 normal-case leading-6 tracking-normal text-slate-100 outline-none focus:border-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </label>
+
+          <div class="mt-8 flex flex-wrap gap-5">
+            <button
+              type="button"
+              class="h-12 border border-slate-800 px-8 text-subtitle-2 uppercase tracking-[0.12em]"
+              @click="resetProfile"
+            >
+              Discard changes
+            </button>
+            <button
+              type="submit"
+              class="h-12 bg-slate-100 px-12 text-subtitle-2 uppercase tracking-[0.12em] text-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="savingProfile"
+            >
+              {{ savingProfile ? "Saving..." : "Save changes" }}
+            </button>
+          </div>
+        </form>
+
+        <form
+          :class="
+            props.embedded
+              ? 'mt-6 border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6'
+              : 'mt-8 rounded-lg border border-slate-800 bg-slate-950/70 p-4 sm:p-6'
+          "
+          @submit.prevent="updatePassword"
+        >
+          <h2 class="text-title-3">Account Security</h2>
+          <p class="mt-2 text-footer text-slate-500">
+            Update the password associated with your account.
           </p>
-        </div>
+
+          <div class="mt-8 grid gap-5">
+            <label class="grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
+              >Current password
+              <input
+                v-model="password.current"
+                :disabled="savingPassword"
+                type="password"
+                autocomplete="current-password"
+                class="h-12 border-b border-slate-750 bg-slate-900 px-5 text-body-1 text-slate-100 outline-none focus:border-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </label>
+            <div class="grid gap-5 md:grid-cols-2">
+              <label class="grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
+                >New password
+                <input
+                  v-model="password.next"
+                  :disabled="savingPassword"
+                  type="password"
+                  autocomplete="new-password"
+                  class="h-12 border-b border-slate-750 bg-slate-900 px-5 text-body-1 text-slate-100 outline-none focus:border-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </label>
+              <label class="grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
+                >Confirm password
+                <input
+                  v-model="password.confirmation"
+                  :disabled="savingPassword"
+                  type="password"
+                  autocomplete="new-password"
+                  class="h-12 border-b border-slate-750 bg-slate-900 px-5 text-body-1 text-slate-100 outline-none focus:border-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </label>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            class="mt-7 h-12 bg-violet-600 px-10 text-subtitle-2 uppercase tracking-[0.12em] text-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="savingPassword"
+          >
+            {{ savingPassword ? "Updating..." : "Update password" }}
+          </button>
+        </form>
+
+        <section
+          v-if="showArtistContractSection"
+          :class="
+            props.embedded
+              ? 'mt-6 border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-6'
+              : 'mt-8 rounded-lg border border-slate-800 bg-slate-950/70 p-6'
+          "
+        >
+          <h2 class="text-title-3">Artist Contract</h2>
+          <p v-if="artistContractSignedAtLabel" class="mt-3 text-footer text-slate-400">
+            Signed on {{ artistContractSignedAtLabel }}
+          </p>
+          <div class="mt-6 flex flex-wrap gap-4">
+            <a
+              href="/api/artists/me/contract.pdf"
+              target="_blank"
+              rel="noreferrer"
+              class="border border-violet-700 px-6 py-3 text-footer text-violet-200"
+              >Open PDF</a
+            ><a
+              href="/api/artists/me/contract.pdf?download=1"
+              class="border border-slate-800 px-6 py-3 text-footer"
+              >Download PDF</a
+            >
+          </div>
+        </section>
+
         <button
+          v-if="!props.embedded"
           type="button"
-          class="inline-flex items-center justify-center rounded-2xl bg-[#F43F5E] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#ef4266]"
-          @click="deleteAccount"
+          class="mt-10 ml-auto flex items-center gap-2 text-footer text-red-300"
+          @click="handleLogout"
         >
-          Delete Account
+          Sign Out
         </button>
-      </div>
-    </section>
-  </div>
+      </section>
+    </div>
+  </main>
 </template>
 
 <script setup>
-import { computed, ref, watchEffect } from "vue";
+import { computed, reactive, ref, watchEffect } from "vue";
+import { navigateTo } from "#app";
 import { storeToRefs } from "pinia";
+import AccountSettingsSidebar from "~/components/account/AccountSettingsSidebar.vue";
 import { useAuthStore } from "~/stores/auth";
 import {
   getPasswordConfirmationError,
-  getPasswordValidationError,
+  getPasswordValidationError
 } from "~/utils/password-validation";
+
+const props = defineProps({
+  embedded: {
+    type: Boolean,
+    default: false
+  }
+});
 
 const auth = useAuthStore();
 const { user } = storeToRefs(auth);
-
-const firstName = ref("");
-const lastName = ref("");
-const email = ref("");
-const bio = ref("");
-const currentPassword = ref("");
-const newPassword = ref("");
-const confirmPassword = ref("");
+const profile = reactive({ username: "", email: "", bio: "" });
+const password = reactive({ current: "", next: "", confirmation: "" });
+const savingProfile = ref(false);
+const savingPassword = ref(false);
 const successMessage = ref("");
 const errorMessage = ref("");
-
 const artistContractSignedAtLabel = computed(() => {
-  const signedAt = user.value?.artistApplication?.contractSignedAt;
-
-  if (!signedAt) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(signedAt));
+  const value = user.value?.artistApplication?.contractSignedAt;
+  return value
+    ? new Intl.DateTimeFormat("en-US", { day: "2-digit", month: "long", year: "numeric" }).format(
+        new Date(value)
+      )
+    : "";
 });
-
-const artistContractVersion = computed(
-  () => user.value?.artistApplication?.contractVersion || "",
+const showArtistContractSection = computed(
+  () => !auth.isAdmin && auth.isArtist && Boolean(user.value?.artistApplication?.hasContractPdf)
 );
-const showArtistContractSection = computed(() => {
-  if (auth.isAdmin) {
-    return false;
-  }
 
-  const application = user.value?.artistApplication;
+watchEffect(() => resetProfile());
 
-  return Boolean(
-    auth.isArtist &&
-    application &&
-    (application.hasContractPdf ||
-      application.contractSignedAt ||
-      application.contractVersion ||
-      application.status === "approved"),
-  );
-});
-
-watchEffect(() => {
-  if (user.value) {
-    const fullName = user.value.username || "";
-    const [first = "", last = ""] = fullName.split(" ");
-    firstName.value = first;
-    lastName.value = last;
-    email.value = user.value.email || "";
-    bio.value = user.value.bio || "";
-  }
-});
+function resetProfile() {
+  profile.username = user.value?.username || "";
+  profile.email = user.value?.email || "";
+  profile.bio = user.value?.bio || "";
+}
 
 async function saveProfile() {
+  savingProfile.value = true;
   successMessage.value = "";
   errorMessage.value = "";
-
   try {
     const response = await $fetch("/api/auth/me", {
       method: "PATCH",
       credentials: "include",
-      body: {
-        username: `${firstName.value} ${lastName.value}`.trim(),
-        email: email.value,
-        bio: bio.value,
-      },
+      body: { username: profile.username, email: profile.email, bio: profile.bio }
     });
-
     auth.user = response.user;
     successMessage.value = "Profile updated successfully.";
   } catch (error) {
     errorMessage.value = error?.data?.message || "Unable to update profile.";
+  } finally {
+    savingProfile.value = false;
   }
 }
 
 async function updatePassword() {
   successMessage.value = "";
   errorMessage.value = "";
-
-  if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
+  if (!password.current || !password.next || !password.confirmation) {
     errorMessage.value = "Please fill in all password fields.";
     return;
   }
-
-  const passwordError =
-    getPasswordValidationError(newPassword.value) ||
-    getPasswordConfirmationError(newPassword.value, confirmPassword.value);
-
-  if (passwordError) {
-    errorMessage.value = passwordError;
+  const validationError =
+    getPasswordValidationError(password.next) ||
+    getPasswordConfirmationError(password.next, password.confirmation);
+  if (validationError) {
+    errorMessage.value = validationError;
     return;
   }
-
-  if (newPassword.value === currentPassword.value) {
-    errorMessage.value =
-      "The new password must be different from the current one.";
-    return;
-  }
-
+  savingPassword.value = true;
   try {
     await $fetch("/api/auth/password", {
       method: "PATCH",
       credentials: "include",
       body: {
-        currentPassword: currentPassword.value,
-        newPassword: newPassword.value,
-        confirmPassword: confirmPassword.value,
-      },
+        currentPassword: password.current,
+        newPassword: password.next,
+        confirmPassword: password.confirmation
+      }
     });
-
+    password.current = "";
+    password.next = "";
+    password.confirmation = "";
     successMessage.value = "Password updated successfully.";
-    currentPassword.value = "";
-    newPassword.value = "";
-    confirmPassword.value = "";
   } catch (error) {
     errorMessage.value = error?.data?.message || "Unable to update password.";
+  } finally {
+    savingPassword.value = false;
   }
 }
 
-function deleteAccount() {
-  console.log("Delete account requested");
+async function handleLogout() {
+  await auth.logout();
+  await navigateTo("/login");
 }
 </script>

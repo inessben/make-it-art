@@ -160,9 +160,9 @@ function serializeAdminArtist(artist) {
   return {
     id: artist.id,
     userId: artist.userId,
-    name: artist.displayName || artist.user?.username || "Artiste sans nom",
-    email: artist.user?.email || "Email non renseigne",
-    bio: artist.user?.bio || "Aucune bio pour le moment.",
+    name: artist.displayName || artist.user?.username || "Unnamed artist",
+    email: artist.user?.email || "Email not provided",
+    bio: artist.user?.bio || "No bio yet.",
     verified: Boolean(artist.verified),
     isActive: Boolean(artist.user?.isActive),
     isAdmin: isAdminUser(artist.user),
@@ -183,18 +183,18 @@ function serializeAdminArtistApplication(application) {
     .join(" ")
     .trim();
   const displayName =
-    payload.displayName || application.user?.username || "Artiste sans nom";
+    payload.displayName || application.user?.username || "Unnamed artist";
 
   return {
     id: application.id,
     userId: application.userId,
-    applicantName: applicantName || application.user?.username || "Utilisateur",
+    applicantName: applicantName || application.user?.username || "User",
     displayName,
-    email: application.user?.email || "Email non renseigne",
-    phone: application.user?.phone || "Telephone non renseigne",
+    email: application.user?.email || "Email not provided",
+    phone: application.user?.phone || "Phone not provided",
     status: application.status || ARTIST_APPLICATION_STATUS.DRAFT,
     bio: payload.bio || application.user?.bio || "",
-    artType: payload.artType || "Non renseigne",
+    artType: payload.artType || "Not provided",
     styles: Array.isArray(payload.styles) ? payload.styles : [],
     portfolioUrl: payload.portfolioUrl || "",
     socialHandle: payload.socialHandle || "",
@@ -228,8 +228,8 @@ router.get("/admin/users", authRequired, adminRequired, async (_req, res) => {
 
     const payload = users.map((user) => ({
       id: user.id,
-      username: user.username || "Utilisateur",
-      email: user.email || "Email non renseigne",
+      username: user.username || "User",
+      email: user.email || "Email not provided",
       role: buildUserRole(user),
       status: buildUserStatus(user),
       isActive: Boolean(user.isActive),
@@ -467,7 +467,7 @@ router.get(
         payload.displayName ||
         application.user?.username ||
         application.user?.email ||
-        "artiste";
+        "artist";
       const safeName = String(nameSource)
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
@@ -480,7 +480,7 @@ router.get(
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader(
         "Content-Disposition",
-        `inline; filename="make-it-art-artist-contract-${safeName || "artiste"}.pdf"`,
+        `inline; filename="make-it-art-artist-contract-${safeName || "artist"}.pdf"`,
       );
       res.setHeader("Content-Length", pdfBuffer.length);
       res.setHeader("Cache-Control", "no-store, max-age=0");
@@ -558,8 +558,8 @@ router.get("/admin/orders", authRequired, adminRequired, async (_req, res) => {
       return {
         id: order.id,
         reference: `#ORD-${String(order.id).padStart(4, "0")}`,
-        customer: order.user?.username || order.user?.email || "Utilisateur",
-        customerEmail: order.user?.email || "Email non renseigne",
+        customer: order.user?.username || order.user?.email || "User",
+        customerEmail: order.user?.email || "Email not provided",
         status: buildOrderStatus(order),
         amountValue,
         amount: formatCurrencyAmount(amountValue),
@@ -607,7 +607,7 @@ router.get(
           customer:
             payment.order?.user?.username ||
             payment.order?.user?.email ||
-            "Utilisateur",
+            "User",
           method: payment.method || "Unknown",
           status: buildPaymentStatus(payment),
           amountValue,
@@ -673,73 +673,73 @@ router.get(
           {
             label: "Users",
             value: users.length,
-            description: "Tous les comptes inscrits sur la plateforme.",
+            description: "All accounts registered on the platform.",
           },
           {
             label: "Artists",
             value: artists.length,
-            description: "Profils artistes a suivre ou verifier.",
+            description: "Artist profiles to review or verify.",
           },
           {
             label: "Orders",
             value: orders.length,
-            description: "Commandes enregistrees dans la base.",
+            description: "Orders currently stored in the database.",
           },
           {
             label: "Revenue",
             value: formatCurrencyAmount(grossRevenue),
-            description: "Somme des paiements reussis actuellement en base.",
+            description: "Total value of successful payments in the database.",
           },
         ],
         activities: [
           {
-            title: "Dernier utilisateur cree",
+            title: "Latest user",
             description: latestUser
-              ? `${latestUser.username || latestUser.email || "Utilisateur"} a rejoint la plateforme.`
-              : "Aucun utilisateur en base pour le moment.",
+              ? `${latestUser.username || latestUser.email || "User"} joined the platform.`
+              : "No users are currently available.",
             tag: "US",
           },
           {
-            title: "Dernier profil artiste",
+            title: "Latest artist profile",
             description: latestArtist
-              ? `${latestArtist.displayName || latestArtist.user?.username || "Artiste"} est le profil artiste le plus recent.`
-              : "Aucun profil artiste cree pour le moment.",
+              ? `${latestArtist.displayName || latestArtist.user?.username || "Artist"} is the most recent artist profile.`
+              : "No artist profiles have been created yet.",
             tag: "AR",
           },
           {
-            title: "Derniere commande",
+            title: "Latest order",
             description: latestOrder
-              ? `Commande #ORD-${String(latestOrder.id).padStart(4, "0")} au statut ${buildOrderStatus(latestOrder)}.`
-              : "Aucune commande en base pour le moment.",
+              ? `Order #ORD-${String(latestOrder.id).padStart(4, "0")} has status ${buildOrderStatus(latestOrder)}.`
+              : "No orders are currently available.",
             tag: "OR",
           },
           {
-            title: "Dernier paiement",
+            title: "Latest payment",
             description: latestPayment
-              ? `Paiement PAY-${String(latestPayment.id).padStart(5, "0")} au statut ${buildPaymentStatus(latestPayment)}.`
-              : "Aucun paiement en base pour le moment.",
+              ? `Payment PAY-${String(latestPayment.id).padStart(5, "0")} has status ${buildPaymentStatus(latestPayment)}.`
+              : "No payments are currently available.",
             tag: "PY",
           },
         ],
         shortcuts: [
           {
-            label: "Aller vers users",
-            description: "Superviser les comptes, statuts et roles.",
+            label: "Go to users",
+            description: "Review accounts, statuses and roles.",
             route: "/admin/users",
           },
           {
-            label: "Aller vers orders",
-            description: "Verifier les commandes, statuts et clients lies.",
+            label: "Go to orders",
+            description: "Review orders, statuses and associated customers.",
             route: "/admin/orders",
           },
           {
-            label: "Aller vers payments",
-            description: "Suivre les transactions et le revenu observe.",
+            label: "Go to payments",
+            description: "Track transactions and recorded revenue.",
             route: "/admin/payments",
           },
           {
-            label: "Aller vers settings",
-            description: "Mettre a jour le compte admin et sa securite.",
+            label: "Go to settings",
+            description: "Update the admin account and its security settings.",
             route: "/admin/settings",
           },
         ],

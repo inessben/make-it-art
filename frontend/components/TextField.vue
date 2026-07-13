@@ -46,33 +46,18 @@ defineEmits(["update:modelValue"]);
 
 <style scoped>
 .text-field {
-  display: grid;
-  gap: 10px;
+  @apply grid gap-2.5;
 }
 
 label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #33415c;
+  @apply text-body-1 font-semibold text-slate-500;
 }
 
 input {
-  min-height: 44px;
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #c8d2e2;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #172033;
-  font: inherit;
-  outline: none;
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
+  @apply min-h-12 w-full border border-slate-800 bg-slate-900 px-4 py-3 text-body-1 text-slate-100 outline-none transition placeholder:text-slate-500;
 }
 
 input:focus {
-  border-color: #3273dc;
-  box-shadow: 0 0 0 3px rgba(50, 115, 220, 0.16);
+  @apply border-violet-600 ring-2 ring-violet-700/20;
 }
 </style>

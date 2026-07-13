@@ -2,6 +2,10 @@
   "name": "@make-it-art/frontend",
   "private": true,
   "type": "module",
+  "imports": {
+    "#app-manifest": "./nuxt-internal/app-manifest.mjs",
+    "#internal/nuxt/paths": "./nuxt-internal/paths.mjs"
+  },
   "scripts": {
     "dev": "nuxt dev --host 0.0.0.0 --port 3000",
     "build": "nuxt build",

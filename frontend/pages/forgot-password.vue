@@ -1,5 +1,10 @@
 <template>
-  <AuthPanel title="Forgot password" max-width="420px" @submit="handleSubmit">
+  <AuthPanel
+    title="Forgot password"
+    description="Enter your account email and we will send you a secure reset link."
+    max-width="440px"
+    @submit="handleSubmit"
+  >
     <TextField
       id="email"
       v-model="email"
@@ -54,13 +59,11 @@ async function handleSubmit() {
 
 <style scoped>
 .auth-link {
-  margin-top: 8px;
-  text-align: center;
-  font-size: 0.94rem;
+  @apply mt-2 text-center text-body-1;
 }
 
 .auth-link a {
-  color: #3273dc;
+  @apply text-violet-700;
   font-weight: 700;
   text-decoration: none;
 }

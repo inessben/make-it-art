@@ -1,39 +1,39 @@
 <template>
-  <main class="min-h-screen bg-[#000000] px-6 py-10 text-[#E6EDF7]">
+  <main class="min-h-screen bg-black px-4 py-6 text-slate-100 sm:px-6 sm:py-10">
     <section
-      class="mx-auto w-full max-w-[1120px] rounded-[32px] border border-[#1A1F2A] bg-[#01050E] p-8 shadow-[0_32px_90px_rgba(0,0,0,0.22)]"
+      class="mx-auto w-full max-w-[1120px] rounded-2xl border border-slate-800 bg-slate-950 p-4 shadow-[0_32px_90px_rgba(0,0,0,0.22)] sm:rounded-[32px] sm:p-8"
     >
       <div
         class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"
       >
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-            Paramètres
+          <p class="text-xs uppercase tracking-widest text-violet-700">
+            Settings
           </p>
           <h1
-            class="mt-4 text-[clamp(2rem,2.5vw,2.8rem)] font-semibold leading-[1.05]"
+            class="mt-4 text-title-2"
           >
-            Paramètres du compte
+            Account settings
           </h1>
-          <p class="mt-4 max-w-2xl text-[#A0ADB4] leading-7">
-            Réglez vos préférences générales de compte et vos paramètres de
-            confidentialité.
+          <p class="mt-4 max-w-2xl text-slate-400 leading-7">
+            Manage your general account and privacy preferences.
           </p>
         </div>
         <button
           type="button"
-          class="inline-flex items-center justify-center rounded-2xl border border-[#4A6CF7] bg-transparent px-6 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:border-[#6d8bff] hover:text-[#ffffff]"
+          class="inline-flex items-center justify-center rounded-2xl border border-violet-700 bg-transparent px-6 py-3 text-sm font-semibold text-slate-100 transition hover:border-violet-600 hover:text-white"
           @click="navigateBack"
         >
-          Retour au profil
+          Back to profile
         </button>
       </div>
 
-      <div
-        class="mt-10 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-8 text-[#A0ADB4]"
-      >
-        <p>Contenu spécifique aux paramètres de compte sera ajouté ici.</p>
-      </div>
+      <AppStatePanel
+        class="mt-10"
+        type="disabled"
+        title="Additional settings unavailable"
+        message="Additional privacy and account preferences will be enabled in a future release."
+      />
     </section>
   </main>
 </template>
@@ -46,6 +46,6 @@ definePageMeta({
 });
 
 function navigateBack() {
-  return navigateTo("/profile");
+  return navigateTo("/account-settings");
 }
 </script>

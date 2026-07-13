@@ -1,200 +1,199 @@
 <template>
-  <main class="min-h-screen bg-[#02040A] px-6 py-10 text-[#E6EDF7]">
+  <main class="min-h-screen bg-black px-4 py-8 text-slate-100 sm:px-6 sm:py-10">
     <section class="mx-auto grid w-full max-w-[1240px] gap-8">
       <header
-        class="rounded-[32px] border border-[#151E30] bg-[radial-gradient(circle_at_top_left,_rgba(74,108,247,0.16),_transparent_30%),linear-gradient(180deg,_#070B14,_#04070D)] p-8"
+        class="rounded-[32px] border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-8"
       >
         <div
           class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
         >
           <div>
-            <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
+            <p class="text-xs uppercase tracking-widest text-violet-400">
               Collections personnelles
             </p>
             <h1
-              class="mt-4 text-[clamp(2.2rem,5vw,3.8rem)] font-semibold leading-[0.98] text-white"
+              class="mt-4 text-title-1 text-white"
             >
-              Organise ta curation
+              Organize your curation
             </h1>
-            <p class="mt-4 max-w-3xl text-sm leading-7 text-[#96A4B8]">
-              Cree des collections, garde-les privees si tu veux, puis ajoute ou
-              retire des oeuvres pour structurer ta veille collectionneur.
+            <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-400">
+              Create collections, keep them private when needed, and organize
+              artworks for future acquisitions.
             </p>
           </div>
 
           <div class="flex flex-wrap gap-3">
             <NuxtLink
               to="/wishlist"
-              class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#24314F] bg-[#0C111D] px-6 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#141C2E]"
+              class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-750 bg-slate-850 px-6 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
             >
-              Mes favoris
+              My wishlist
             </NuxtLink>
             <NuxtLink
-              to="/profile"
-              class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#24314F] bg-transparent px-6 text-sm font-semibold text-[#C9D6FF] transition hover:border-[#4A6CF7]"
+              to="/account-settings"
+              class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-750 bg-transparent px-6 text-sm font-semibold text-violet-200 transition hover:border-violet-700"
             >
-              Retour au profil
+              Back to profile
             </NuxtLink>
           </div>
         </div>
 
         <div
           v-if="pageMessage"
-          class="mt-8 inline-flex rounded-2xl border border-[#203357] bg-[#091121] px-5 py-3 text-sm text-[#BFD0FF]"
+          class="mt-8 inline-flex rounded-2xl border border-slate-750 bg-slate-850 px-5 py-3 text-sm text-violet-200"
         >
           {{ pageMessage }}
         </div>
       </header>
 
       <section
-        class="grid gap-4 rounded-[28px] border border-[#151E30] bg-[#070B14] p-6 lg:grid-cols-[1fr_1fr_0.7fr_auto]"
+        class="grid gap-4 rounded-[28px] border border-slate-800 bg-slate-900 p-6 lg:grid-cols-[1fr_1fr_0.7fr_auto]"
       >
-        <label class="grid gap-2 text-sm text-[#9EABBE]">
-          <span class="font-medium text-[#E6EDF7]">Titre</span>
+        <label class="grid gap-2 text-sm text-slate-400">
+          <span class="font-medium text-slate-100">Title</span>
           <input
             v-model.trim="newCollection.title"
             type="text"
             placeholder="Cyber discoveries"
-            class="rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7]"
+            class="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-violet-700"
           />
         </label>
 
-        <label class="grid gap-2 text-sm text-[#9EABBE]">
-          <span class="font-medium text-[#E6EDF7]">Description</span>
+        <label class="grid gap-2 text-sm text-slate-400">
+          <span class="font-medium text-slate-100">Description</span>
           <input
             v-model.trim="newCollection.description"
             type="text"
-            placeholder="Mes reperes pour de futures acquisitions"
-            class="rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7]"
+            placeholder="My references for future acquisitions"
+            class="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-violet-700"
           />
         </label>
 
         <label
-          class="flex items-center gap-3 rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-sm text-[#D7E3FF]"
+          class="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-violet-200"
         >
           <input v-model="newCollection.isPrivate" type="checkbox" />
-          <span>Collection privee</span>
+          <span>Private collection</span>
         </label>
 
         <button
           type="button"
-          class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
+          class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-violet-700 px-6 text-sm font-semibold text-black transition hover:bg-violet-600"
           :disabled="createLoading"
           @click="createCollection"
         >
-          {{ createLoading ? "Creation..." : "Creer la collection" }}
+          {{ createLoading ? "Creating..." : "Create collection" }}
         </button>
       </section>
 
       <section
         v-if="pending"
-        class="rounded-[28px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]"
+        class="rounded-[28px] border border-slate-800 bg-slate-900 p-8 text-slate-400"
       >
-        Chargement de vos collections...
+        Loading your collections...
       </section>
       <section
         v-else-if="errorMessage"
-        class="rounded-[28px] border border-[#6C1F2D] bg-[#261018] p-8 text-[#FBC8D0]"
+        class="rounded-[28px] border border-red-900 bg-red-950 p-8 text-red-200"
       >
         {{ errorMessage }}
       </section>
       <section
         v-else-if="!collections.length"
-        class="rounded-[28px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]"
+        class="rounded-[28px] border border-slate-800 bg-slate-900 p-8 text-slate-400"
       >
-        Aucune collection pour le moment. Cree ta premiere liste pour structurer
-        tes coups de coeur.
+        No collections yet. Create your first list to organize your favorites.
       </section>
       <section v-else class="grid gap-6">
         <article
           v-for="collection in collections"
           :key="collection.id"
-          class="grid gap-6 rounded-[32px] border border-[#151E30] bg-[#070B14] p-6"
+          class="grid gap-6 rounded-[32px] border border-slate-800 bg-slate-900 p-6"
         >
           <div class="grid gap-4 lg:grid-cols-[1fr_1fr_0.7fr_auto]">
-            <label class="grid gap-2 text-sm text-[#9EABBE]">
-              <span class="font-medium text-[#E6EDF7]">Titre</span>
+            <label class="grid gap-2 text-sm text-slate-400">
+              <span class="font-medium text-slate-100">Title</span>
               <input
                 v-model.trim="drafts[collection.id].title"
                 type="text"
-                class="rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7]"
+                class="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-violet-700"
               />
             </label>
 
-            <label class="grid gap-2 text-sm text-[#9EABBE]">
-              <span class="font-medium text-[#E6EDF7]">Description</span>
+            <label class="grid gap-2 text-sm text-slate-400">
+              <span class="font-medium text-slate-100">Description</span>
               <input
                 v-model.trim="drafts[collection.id].description"
                 type="text"
-                class="rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7]"
+                class="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-violet-700"
               />
             </label>
 
             <label
-              class="flex items-center gap-3 rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-sm text-[#D7E3FF]"
+              class="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-violet-200"
             >
               <input
                 v-model="drafts[collection.id].isPrivate"
                 type="checkbox"
               />
-              <span>Collection privee</span>
+              <span>Private collection</span>
             </label>
 
             <div class="flex flex-wrap gap-3">
               <button
                 type="button"
-                class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#24314F] bg-[#0C111D] px-5 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#141C2E]"
+                class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-750 bg-slate-850 px-5 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
                 :disabled="Boolean(saveLoading[collection.id])"
                 @click="saveCollection(collection.id)"
               >
                 {{
-                  saveLoading[collection.id] ? "Sauvegarde..." : "Sauvegarder"
+                  saveLoading[collection.id] ? "Saving..." : "Save"
                 }}
               </button>
               <button
                 type="button"
-                class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#6C1F2D] bg-[#1D0B10] px-5 text-sm font-semibold text-[#FBC8D0] transition hover:bg-[#2A1218]"
+                class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-red-900 bg-red-950 px-5 text-sm font-semibold text-red-200 transition hover:bg-red-950/80"
                 :disabled="Boolean(deleteLoading[collection.id])"
                 @click="deleteCollection(collection.id)"
               >
                 {{
-                  deleteLoading[collection.id] ? "Suppression..." : "Supprimer"
+                  deleteLoading[collection.id] ? "Deleting..." : "Delete"
                 }}
               </button>
             </div>
           </div>
 
           <div
-            class="grid gap-4 rounded-[28px] border border-[#151E30] bg-[#050912] p-5 lg:grid-cols-[1fr_auto]"
+            class="grid gap-4 rounded-[28px] border border-slate-800 bg-slate-950 p-5 lg:grid-cols-[1fr_auto]"
           >
-            <label class="grid gap-2 text-sm text-[#9EABBE]">
-              <span class="font-medium text-[#E6EDF7]">Ajouter une oeuvre</span>
+            <label class="grid gap-2 text-sm text-slate-400">
+              <span class="font-medium text-slate-100">Add an artwork</span>
               <select
                 v-model="drafts[collection.id].selectedArtworkId"
-                class="rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7]"
+                class="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-violet-700"
               >
-                <option value="">Choisir une oeuvre</option>
+                <option value="">Choose an artwork</option>
                 <option
                   v-for="artwork in artworkOptions"
                   :key="artwork.id"
                   :value="String(artwork.id)"
                 >
                   {{ artwork.title }} -
-                  {{ artwork.artist?.displayName || "Artiste" }}
+                  {{ artwork.artist?.displayName || "Artist" }}
                 </option>
               </select>
             </label>
 
             <button
               type="button"
-              class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
+              class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-violet-700 px-6 text-sm font-semibold text-black transition hover:bg-violet-600"
               :disabled="Boolean(addArtworkLoading[collection.id])"
               @click="addArtwork(collection.id)"
             >
               {{
                 addArtworkLoading[collection.id]
-                  ? "Ajout..."
-                  : "Ajouter l'oeuvre"
+                  ? "Adding..."
+                  : "Add artwork"
               }}
             </button>
           </div>
@@ -203,26 +202,26 @@
             <article
               v-for="item in collection.items"
               :key="item.id"
-              class="grid gap-4 rounded-[24px] border border-[#151E30] bg-[#050912] p-5"
+              class="grid gap-4 rounded-[24px] border border-slate-800 bg-slate-950 p-5"
             >
               <div>
                 <NuxtLink
                   :to="`/artworks/${item.id}`"
-                  class="text-lg font-semibold text-white transition hover:text-[#D2DEFF]"
+                  class="text-lg font-semibold text-white transition hover:text-violet-200"
                 >
                   {{ item.title }}
                 </NuxtLink>
-                <p class="mt-2 text-sm text-[#8D9BB2]">
-                  {{ item.artist?.displayName || "Artiste" }}
+                <p class="mt-2 text-sm text-slate-500">
+                  {{ item.artist?.displayName || "Artist" }}
                 </p>
-                <p class="mt-2 text-sm text-[#A4B0C0]">
-                  {{ item.category?.name || "Oeuvre numerique" }}
+                <p class="mt-2 text-sm text-slate-400">
+                  {{ item.category?.name || "Digital artwork" }}
                 </p>
               </div>
 
               <button
                 type="button"
-                class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#24314F] bg-[#0C111D] px-4 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#141C2E]"
+                class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-750 bg-slate-850 px-4 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
                 :disabled="
                   Boolean(removeArtworkLoading[`${collection.id}-${item.id}`])
                 "
@@ -230,18 +229,17 @@
               >
                 {{
                   removeArtworkLoading[`${collection.id}-${item.id}`]
-                    ? "Retrait..."
-                    : "Retirer de la collection"
+                    ? "Removing..."
+                    : "Remove from collection"
                 }}
               </button>
             </article>
           </div>
           <div
             v-else
-            class="rounded-[24px] border border-dashed border-[#1F2A44] bg-[#040811] p-5 text-sm text-[#96A4B8]"
+            class="rounded-[24px] border border-dashed border-slate-750 bg-slate-950 p-5 text-sm text-slate-400"
           >
-            Cette collection est encore vide. Utilise le select ci-dessus pour y
-            ajouter une oeuvre.
+            This collection is empty. Use the selector above to add an artwork.
           </div>
         </article>
       </section>
@@ -330,7 +328,7 @@ async function createCollection() {
   pageMessage.value = "";
 
   if (!newCollection.value.title.trim()) {
-    pageMessage.value = "Le titre de la collection est requis.";
+    pageMessage.value = "The collection title is required.";
     return;
   }
 
@@ -365,10 +363,10 @@ async function createCollection() {
       description: "",
       isPrivate: false,
     };
-    pageMessage.value = "Collection creee.";
+    pageMessage.value = "Collection created.";
   } catch (error) {
     pageMessage.value =
-      error?.data?.message || "Impossible de creer cette collection.";
+      error?.data?.message || "Unable to create this collection.";
   } finally {
     createLoading.value = false;
   }
@@ -379,7 +377,7 @@ async function saveCollection(collectionId) {
   const draft = drafts.value[collectionId];
 
   if (!draft?.title?.trim()) {
-    pageMessage.value = "Le titre de la collection est requis.";
+    pageMessage.value = "The collection title is required.";
     return;
   }
 
@@ -397,10 +395,10 @@ async function saveCollection(collectionId) {
     });
 
     replaceCollection(response.collection);
-    pageMessage.value = "Collection mise a jour.";
+    pageMessage.value = "Collection updated.";
   } catch (error) {
     pageMessage.value =
-      error?.data?.message || "Impossible de mettre a jour cette collection.";
+      error?.data?.message || "Unable to update this collection.";
   } finally {
     setLoading(saveLoading, collectionId, false);
   }
@@ -427,10 +425,10 @@ async function deleteCollection(collectionId) {
     };
     delete nextDrafts[collectionId];
     drafts.value = nextDrafts;
-    pageMessage.value = "Collection supprimee.";
+    pageMessage.value = "Collection deleted.";
   } catch (error) {
     pageMessage.value =
-      error?.data?.message || "Impossible de supprimer cette collection.";
+      error?.data?.message || "Unable to delete this collection.";
   } finally {
     setLoading(deleteLoading, collectionId, false);
   }
@@ -441,7 +439,7 @@ async function addArtwork(collectionId) {
   const draft = drafts.value[collectionId];
 
   if (!draft?.selectedArtworkId) {
-    pageMessage.value = "Choisis une oeuvre a ajouter.";
+    pageMessage.value = "Choose an artwork to add.";
     return;
   }
 
@@ -461,11 +459,11 @@ async function addArtwork(collectionId) {
 
     replaceCollection(response.collection);
     drafts.value[collectionId].selectedArtworkId = "";
-    pageMessage.value = "Oeuvre ajoutee a la collection.";
+    pageMessage.value = "Artwork added to the collection.";
   } catch (error) {
     pageMessage.value =
       error?.data?.message ||
-      "Impossible d'ajouter cette oeuvre a la collection.";
+      "Unable to add this artwork to the collection.";
   } finally {
     setLoading(addArtworkLoading, collectionId, false);
   }
@@ -486,11 +484,11 @@ async function removeArtwork(collectionId, artworkId) {
     );
 
     replaceCollection(response.collection);
-    pageMessage.value = "Oeuvre retiree de la collection.";
+    pageMessage.value = "Artwork removed from the collection.";
   } catch (error) {
     pageMessage.value =
       error?.data?.message ||
-      "Impossible de retirer cette oeuvre de la collection.";
+      "Unable to remove this artwork from the collection.";
   } finally {
     setLoading(removeArtworkLoading, loadingKey, false);
   }

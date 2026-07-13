@@ -56,74 +56,41 @@ const showPassword = ref(false);
 
 <style scoped>
 .password-field {
-  display: grid;
-  gap: 10px;
+  @apply grid gap-2.5;
 }
 
 label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #33415c;
+  @apply text-body-1 font-semibold text-slate-500;
 }
 
 .password-control {
-  position: relative;
+  @apply relative;
 }
 
 input {
-  min-height: 44px;
-  border-radius: 6px;
-  font: inherit;
+  @apply min-h-12;
 }
 
 input {
-  min-width: 0;
-  width: 100%;
-  padding: 10px 46px 10px 12px;
-  border: 1px solid #c8d2e2;
-  background: #ffffff;
-  color: #172033;
-  outline: none;
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
+  @apply min-w-0 w-full border border-slate-800 bg-slate-900 py-3 pl-4 pr-12 text-body-1 text-slate-100 outline-none transition;
 }
 
 input:focus {
-  border-color: #3273dc;
-  box-shadow: 0 0 0 3px rgba(50, 115, 220, 0.16);
+  @apply border-violet-600 ring-2 ring-violet-700/20;
 }
 
 .password-toggle {
-  position: absolute;
-  top: 50%;
-  right: 8px;
-  display: inline-flex;
-  width: 32px;
-  height: 32px;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: #5b6578;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    color 0.18s ease;
+  @apply absolute right-2 top-1/2 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-slate-400 transition;
   transform: translateY(-50%);
 }
 
 .password-toggle:hover,
 .password-toggle:focus-visible {
-  background: #f3f6fb;
-  color: #172033;
+  @apply bg-slate-800 text-slate-100;
 }
 
 .password-toggle:focus-visible {
-  outline: 2px solid rgba(50, 115, 220, 0.42);
-  outline-offset: 2px;
+  @apply outline outline-2 outline-offset-2 outline-violet-700/40;
 }
 
 .password-toggle svg {
