@@ -1,7 +1,6 @@
 <template>
   <AuthPanel
     title="Create your account"
-    description="Join the marketplace to collect digital art and follow independent artists."
     max-width="480px"
     @submit="handleRegister"
   >

@@ -1,7 +1,6 @@
 <template>
   <AuthPanel
     title="Welcome back"
-    description="Sign in securely with your email and password or continue with Google."
     max-width="440px"
     @submit="handleSubmit"
   >

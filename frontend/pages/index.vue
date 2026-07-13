@@ -141,19 +141,20 @@
       <div
         class="relative mx-auto mt-10 grid w-full max-w-[1180px] overflow-hidden border border-violet-950 bg-slate-950/95 md:grid-cols-2"
       >
-        <form class="flex flex-col justify-center border-b border-violet-950 px-6 py-10 md:border-b-0 md:border-r sm:px-10" @submit.prevent="subscribe">
-          <p class="text-body-1 text-slate-300">
-            Subscribe for exclusive access to early drops and artist features.
+        <div class="flex flex-col justify-center border-b border-violet-950 px-6 py-10 md:border-b-0 md:border-r sm:px-10">
+          <p class="text-body-1 leading-7 text-slate-300">
+            Meet collectors and artists, share your work and join the Make It Art community.
           </p>
-          <label class="mt-7 grid gap-2 text-subtitle-2 uppercase tracking-[0.12em] text-slate-400">
-            Email address
-            <span class="flex flex-col gap-3 sm:flex-row">
-              <input v-model.trim="newsletterEmail" required type="email" autocomplete="email" class="ui-field" placeholder="you@example.com" />
-              <button type="submit" class="ui-button-secondary shrink-0">Subscribe</button>
-            </span>
-          </label>
-          <p v-if="newsletterMessage" class="mt-3 text-footer text-violet-400" role="status">{{ newsletterMessage }}</p>
-        </form>
+          <a
+            href="https://discord.com/invite/TsF3jMGDr3"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="mt-7 inline-flex min-h-14 items-center justify-center gap-3 bg-slate-100 px-7 text-button-2 font-semibold text-black transition-colors hover:bg-slate-300"
+          >
+            <img class="h-6 w-8" src="/icons/discord.svg" alt="" />
+            Join our Discord community
+          </a>
+        </div>
         <div class="flex flex-col justify-center px-6 py-10 sm:px-10">
           <p class="text-body-1 leading-7 text-slate-300">
             Are you an artist ready to sell your work? Submit your profile for curation.
@@ -168,15 +169,3 @@
     </section>
   </main>
 </template>
-
-<script setup>
-import { ref } from "vue";
-
-const newsletterEmail = ref("");
-const newsletterMessage = ref("");
-
-function subscribe() {
-  newsletterMessage.value = "Thank you. You are on the early-access list.";
-  newsletterEmail.value = "";
-}
-</script>

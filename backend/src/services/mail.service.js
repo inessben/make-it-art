@@ -29,11 +29,11 @@ async function sendVerificationEmail({ to, username, verificationUrl }) {
   await transporter.sendMail({
     from: env.smtp.from,
     to,
-    subject: "Verify your Make It Art account",
+    subject: "Verify your ACCOUNT",
     text: [
       `Hi ${displayName},`,
       "",
-      "Thanks for creating your Make It Art account.",
+      "Thanks for creating your ACCOUNT.",
       "Please verify your email address by opening this link:",
       verificationUrl,
       "",
@@ -43,7 +43,7 @@ async function sendVerificationEmail({ to, username, verificationUrl }) {
       <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #172033;">
         <h1 style="font-size: 22px;">Verify your email</h1>
         <p>Hi ${displayName},</p>
-        <p>Thanks for creating your Make It Art account.</p>
+        <p>Thanks for creating your ACCOUNT.</p>
         <p>
           <a href="${verificationUrl}" style="display: inline-block; padding: 10px 14px; background: #172033; color: #ffffff; text-decoration: none; border-radius: 6px;">
             Verify my email

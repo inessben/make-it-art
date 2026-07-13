@@ -1,7 +1,7 @@
 <template>
   <AuthPanel
     title="Reset password"
-    description="Choose a strong new password for your Make It Art account."
+    description="Choose a strong new password for your account.""
     max-width="440px"
     @submit="handleSubmit"
   >
