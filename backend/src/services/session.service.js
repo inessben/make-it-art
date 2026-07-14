@@ -12,12 +12,12 @@ function createAccessToken(user) {
   return jwt.sign(
     {
       sub: String(user.id),
-      email: user.email
+      email: user.email,
     },
     env.jwtSecret,
     {
-      expiresIn: "15m"
-    }
+      expiresIn: "15m",
+    },
   );
 }
 
@@ -35,7 +35,7 @@ function getRefreshTokenKey(token) {
 
 async function storeRefreshToken(userId, refreshToken) {
   await redis.set(getRefreshTokenKey(refreshToken), String(userId), {
-    EX: REFRESH_TOKEN_TTL_SECONDS
+    EX: REFRESH_TOKEN_TTL_SECONDS,
   });
 }
 
@@ -47,7 +47,7 @@ async function createSession(user) {
 
   return {
     accessToken,
-    refreshToken
+    refreshToken,
   };
 }
 
@@ -84,7 +84,7 @@ function getSessionCookieOptions() {
     sameSite: "lax",
     secure: env.nodeEnv === "production",
     maxAge: ACCESS_TOKEN_MAX_AGE_MS,
-    path: "/"
+    path: "/",
   };
 }
 
@@ -94,7 +94,7 @@ function getRefreshCookieOptions() {
     sameSite: "lax",
     secure: env.nodeEnv === "production",
     maxAge: REFRESH_TOKEN_MAX_AGE_MS,
-    path: "/"
+    path: "/",
   };
 }
 
@@ -103,7 +103,7 @@ function getClearSessionCookieOptions() {
     httpOnly: true,
     sameSite: "lax",
     secure: env.nodeEnv === "production",
-    path: "/"
+    path: "/",
   };
 }
 
@@ -112,7 +112,7 @@ function getClearRefreshCookieOptions() {
     httpOnly: true,
     sameSite: "lax",
     secure: env.nodeEnv === "production",
-    path: "/"
+    path: "/",
   };
 }
 
@@ -145,5 +145,5 @@ module.exports = {
   getRefreshCookieOptions,
   getClearSessionCookieOptions,
   getClearRefreshCookieOptions,
-  getUserFromRequest
+  getUserFromRequest,
 };

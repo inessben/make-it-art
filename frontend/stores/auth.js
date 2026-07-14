@@ -3,11 +3,40 @@ import { defineStore } from "pinia";
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     user: null,
-    loading: false
+    loading: false,
   }),
 
   getters: {
-    isAuthenticated: (state) => Boolean(state.user)
+    isAuthenticated: (state) => Boolean(state.user),
+    isAdmin: (state) =>
+      state.user?.isAdmin === true || state.user?.role === "admin",
+    isArtist(state) {
+      if (this.isAdmin) {
+        return false;
+      }
+
+      return state.user?.isArtist === true || Boolean(state.user?.artist);
+    },
+    hasArtistApplication(state) {
+      if (this.isAdmin) {
+        return false;
+      }
+
+      return Boolean(state.user?.artistApplication);
+    },
+    artistApplicationStatus(state) {
+      if (this.isAdmin) {
+        return null;
+      }
+
+      return state.user?.artistApplication?.status || null;
+    },
+    defaultAuthenticatedRoute() {
+      return this.isAdmin ? "/admin" : "/";
+    },
+    settingsRoute() {
+      return this.isAdmin ? "/admin/settings" : "/account-settings";
+    },
   },
 
   actions: {
@@ -16,7 +45,7 @@ export const useAuthStore = defineStore("auth", {
 
       try {
         const response = await $fetch("/api/auth/me", {
-          credentials: "include"
+          credentials: "include",
         });
         this.user = response.user;
 
@@ -29,11 +58,11 @@ export const useAuthStore = defineStore("auth", {
 
         await $fetch("/api/auth/refresh", {
           method: "POST",
-          credentials: "include"
+          credentials: "include",
         });
 
         const retryResponse = await $fetch("/api/auth/me", {
-          credentials: "include"
+          credentials: "include",
         });
         this.user = retryResponse.user;
 
@@ -46,10 +75,10 @@ export const useAuthStore = defineStore("auth", {
     async logout() {
       await $fetch("/api/auth/logout", {
         method: "POST",
-        credentials: "include"
+        credentials: "include",
       });
 
       this.user = null;
-    }
-  }
+    },
+  },
 });

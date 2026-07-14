@@ -75,6 +75,20 @@ Useful local URLs:
 - Backend health: `http://localhost:4000/health`
 - Mailpit inbox: `http://localhost:8025`
 
+## Google OAuth login
+
+To enable Google sign-in, create OAuth2 credentials in Google Cloud Console and set:
+
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REDIRECT_URI`
+
+Local default redirect URI:
+
+```bash
+http://localhost/api/auth/google/callback
+```
+
 ## Production deployment
 
 The repository now includes a dedicated production stack for `https://www.makeitart.io`:

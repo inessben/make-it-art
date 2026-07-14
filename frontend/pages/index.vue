@@ -1,39 +1,171 @@
-<script setup lang="ts">
-const config = useRuntimeConfig();
-const { data, pending, error } = await useFetch(`${config.public.apiBase}/health`);
-</script>
-
 <template>
-  <main class="page-home min-h-screen bg-slate-950 text-slate-100">
-    <div class="mx-auto max-w-4xl px-6 py-16">
-      <h1 class="page-home__title text-4xl font-bold tracking-tight">Make It Art</h1>
-      <p class="mt-3 text-slate-300">
-        Base project ready: Nuxt + Tailwind + Sass + Express + Docker + Nginx.
-      </p>
+  <main class="overflow-hidden bg-black text-slate-100">
+    <section
+      class="flex min-h-[790px] items-start justify-center px-6 pt-[112px] text-center lg:min-h-[840px] lg:pt-[140px]"
+    >
+      <div class="flex flex-col items-center">
+        <h1 class="flex flex-col items-center uppercase">
+          <span class="text-title-2 font-light leading-[0.95] text-slate-100 sm:text-title-1 lg:text-big-title-4">Welcome to</span>
+          <span class="text-title-1 font-black leading-[0.9] text-violet-600 sm:text-big-title-4 lg:text-big-title-3">Make It Art</span>
+        </h1>
+        <p class="mt-7 text-title-4 uppercase tracking-[0.28em] text-slate-500">
+          Digital arts curations &amp; artists marketplace
+        </p>
+        <div class="mt-14 flex flex-wrap justify-center gap-6">
+          <NuxtLink
+            to="/artworks"
+            class="inline-flex h-16 min-w-[238px] items-center justify-center bg-violet-600 px-8 text-subtitle-2 font-bold uppercase tracking-[0.22em] text-black transition-colors hover:bg-violet-400"
+          >
+            Start exploring
+          </NuxtLink>
+          <NuxtLink
+            to="/artists"
+            class="inline-flex h-16 min-w-[238px] items-center justify-center border border-slate-800 bg-black px-8 text-subtitle-2 font-bold uppercase tracking-[0.22em] text-slate-100 transition-colors hover:border-violet-600"
+          >
+            View galleries
+          </NuxtLink>
+        </div>
+      </div>
+    </section>
 
-      <section class="page-home__card mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-6">
-        <h2 class="text-xl font-semibold">Backend status</h2>
-        <p v-if="pending" class="mt-2 text-slate-400">Checking backend...</p>
-        <p v-else-if="error" class="mt-2 text-red-400">API unavailable for now.</p>
-        <pre
-          v-else
-          class="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-cyan-300"
-          >{{ data }}</pre
+    <section class="mx-auto w-full max-w-[1392px] px-6 pb-28">
+      <div>
+        <h2 class="text-title-2 uppercase text-slate-100">Browse by categories</h2>
+        <p class="mt-2 text-body-1 text-slate-400">
+          Discover art across diverse digital disciplines.
+        </p>
+      </div>
+
+      <div
+        class="mt-14 grid grid-cols-1 gap-5 lg:grid-cols-5"
+        aria-label="Category placeholders"
+      >
+        <div class="min-h-[322px] border border-slate-900 bg-slate-950 lg:col-span-2" />
+        <div class="min-h-[322px] border border-slate-900 bg-slate-950 lg:col-span-3" />
+        <div class="min-h-[322px] border border-slate-900 bg-slate-950 lg:col-span-5" />
+      </div>
+
+      <div class="mt-6 flex justify-end">
+        <NuxtLink
+          to="/artworks"
+          class="inline-flex items-center gap-3 text-footer text-slate-400 underline underline-offset-4 transition-colors hover:text-violet-400"
         >
-      </section>
+          all categories → <span aria-hidden="true"></span>
+        </NuxtLink>
+      </div>
+    </section>
 
-      <section class="mt-8 grid gap-4 sm:grid-cols-2">
-        <article class="rounded-xl border border-slate-800 bg-slate-900 p-4">
-          <h3 class="font-semibold">Frontend stack</h3>
-          <p class="mt-2 text-sm text-slate-300">Nuxt, Tailwind, Sass (BEM-ready).</p>
-        </article>
-        <article class="rounded-xl border border-slate-800 bg-slate-900 p-4">
-          <h3 class="font-semibold">Infra stack</h3>
-          <p class="mt-2 text-sm text-slate-300">
-            Docker Compose, Nginx reverse proxy, CI templates.
+    <section class="mx-auto w-full max-w-[1440px] pb-28">
+      <div class="px-6">
+        <h2 class="text-title-2 uppercase text-slate-100">Featured artworks</h2>
+        <p class="mt-2 text-body-1 text-slate-400">
+          Hand-picked digital masterpieces from our global roster.
+        </p>
+      </div>
+
+      <div
+        class="mt-14 grid grid-cols-1 gap-12 px-6 sm:grid-cols-2 lg:grid-cols-4"
+        aria-label="Featured artwork placeholders"
+      >
+        <div class="min-h-[462px] border border-slate-900 bg-slate-950" />
+        <div class="min-h-[462px] border border-slate-900 bg-slate-950" />
+        <div class="min-h-[462px] border border-slate-900 bg-slate-950" />
+        <div class="min-h-[462px] border border-slate-900 bg-slate-950" />
+      </div>
+
+      <div class="mt-16 flex justify-end px-6">
+        <NuxtLink
+          to="/artworks"
+          class="inline-flex items-center gap-3 text-footer text-slate-400 underline underline-offset-4 transition-colors hover:text-violet-400"
+        >
+          more artworks → <span aria-hidden="true"></span>
+        </NuxtLink>
+      </div>
+    </section>
+
+    <section class="mx-auto w-full max-w-[1392px] px-6 pb-36">
+      <div>
+        <h2 class="text-title-2 uppercase text-slate-100">Some artists</h2>
+        <p class="mt-2 text-body-1 text-slate-400">
+          Discover art across diverse digital disciplines.
+        </p>
+      </div>
+
+      <div class="relative mt-14 px-16">
+        <button
+          type="button"
+          class="absolute left-0 top-1/2 flex h-14 w-10 -translate-y-1/2 items-center justify-center text-title-3 text-slate-100"
+          aria-label="Previous artists"
+        >
+          ‹
+        </button>
+        <div
+          class="grid grid-cols-1 gap-6 md:grid-cols-3"
+          aria-label="Artist profile placeholders"
+        >
+          <div class="min-h-[370px] border border-slate-800 bg-slate-950" />
+          <div class="min-h-[370px] border border-slate-800 bg-slate-950" />
+          <div class="min-h-[370px] border border-slate-800 bg-slate-950" />
+        </div>
+        <button
+          type="button"
+          class="absolute right-0 top-1/2 flex h-14 w-10 -translate-y-1/2 items-center justify-center text-title-3 text-slate-100"
+          aria-label="Next artists"
+        >
+          ›
+        </button>
+      </div>
+
+      <div class="mx-16 mt-5 grid grid-cols-3 gap-4" aria-hidden="true">
+        <span class="h-1 bg-slate-500" /><span class="h-1 bg-slate-500" /><span
+          class="h-1 bg-slate-500"
+        />
+      </div>
+      <div class="mt-16 flex justify-end">
+        <NuxtLink
+          to="/artists"
+          class="inline-flex items-center gap-3 text-footer text-slate-400 underline underline-offset-4 transition-colors hover:text-violet-400"
+        >
+          all artists → <span aria-hidden="true"></span>
+        </NuxtLink>
+      </div>
+    </section>
+
+    <section
+      class="relative border-y border-violet-950 bg-gradient-to-b from-violet-950 to-black px-5 py-16 sm:px-6 sm:py-20"
+    >
+      <h2 class="text-center text-title-2 uppercase text-slate-100 sm:text-title-1">Join the collective</h2>
+      <p class="mx-auto mt-4 max-w-2xl text-center text-body-1 leading-7 text-slate-400">
+        Get early access to curated drops or apply to showcase your work on Make It Art.
+      </p>
+      <div
+        class="relative mx-auto mt-10 grid w-full max-w-[1180px] overflow-hidden border border-violet-950 bg-slate-950/95 md:grid-cols-2"
+      >
+        <div class="flex flex-col justify-center border-b border-violet-950 px-6 py-10 md:border-b-0 md:border-r sm:px-10">
+          <p class="text-body-1 leading-7 text-slate-300">
+            Meet collectors and artists, share your work and join the Make It Art community.
           </p>
-        </article>
-      </section>
-    </div>
+          <a
+            href="https://discord.com/invite/TsF3jMGDr3"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="mt-7 inline-flex min-h-14 items-center justify-center gap-3 bg-slate-100 px-7 text-button-2 font-semibold text-black transition-colors hover:bg-slate-300"
+          >
+            <img class="h-6 w-8" src="/icons/discord.svg" alt="" />
+            Join our Discord community
+          </a>
+        </div>
+        <div class="flex flex-col justify-center px-6 py-10 sm:px-10">
+          <p class="text-body-1 leading-7 text-slate-300">
+            Are you an artist ready to sell your work? Submit your profile for curation.
+          </p>
+          <NuxtLink
+            to="/become-artist"
+            class="ui-button-primary mt-7"
+            >Become an artist</NuxtLink
+          >
+        </div>
+      </div>
+    </section>
   </main>
 </template>

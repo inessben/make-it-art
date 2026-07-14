@@ -8,42 +8,30 @@
 defineProps({
   label: {
     type: String,
-    required: true
+    required: true,
   },
   loadingLabel: {
     type: String,
-    required: true
+    required: true,
   },
   loading: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 </script>
 
 <style scoped>
 button {
-  min-height: 44px;
-  margin-top: 8px;
-  border: 0;
-  border-radius: 6px;
-  background: #172033;
-  color: #ffffff;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    transform 0.18s ease;
+  @apply mt-1 min-h-12 cursor-pointer border border-violet-600 bg-violet-600 px-6 text-body-2 text-white transition;
 }
 
 button:hover:not(:disabled) {
-  background: #26344f;
+  @apply bg-violet-600;
   transform: translateY(-1px);
 }
 
 button:disabled {
-  cursor: not-allowed;
-  opacity: 0.68;
+  @apply cursor-not-allowed opacity-70;
 }
 </style>

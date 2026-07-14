@@ -12,31 +12,41 @@
         @input="$emit('update:modelValue', $event.target.value)"
       />
 
-      <button type="button" class="password-toggle" @click="showPassword = !showPassword">
-        {{ showPassword ? "Hide" : "Show" }}
+      <button
+        type="button"
+        class="password-toggle"
+        :aria-label="showPassword ? 'Hide password' : 'Show password'"
+        :title="showPassword ? 'Hide password' : 'Show password'"
+        @click="showPassword = !showPassword"
+      >
+        <EyeIcon v-if="!showPassword" />
+        <EyeOffIcon v-else />
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
+import EyeIcon from "~/components/icons/EyeIcon.vue";
+import EyeOffIcon from "~/components/icons/EyeOffIcon.vue";
+
 defineProps({
   id: {
     type: String,
-    required: true
+    required: true,
   },
   label: {
     type: String,
-    default: "Password"
+    default: "Password",
   },
   modelValue: {
     type: String,
-    required: true
+    required: true,
   },
   autocomplete: {
     type: String,
-    default: "current-password"
-  }
+    default: "current-password",
+  },
 });
 
 defineEmits(["update:modelValue"]);
@@ -46,63 +56,45 @@ const showPassword = ref(false);
 
 <style scoped>
 .password-field {
-  display: grid;
-  gap: 10px;
+  @apply grid gap-2.5;
 }
 
 label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #33415c;
+  @apply text-body-1 font-semibold text-slate-500;
 }
 
 .password-control {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-  align-items: center;
-}
-
-input,
-button {
-  min-height: 44px;
-  border-radius: 6px;
-  font: inherit;
+  @apply relative;
 }
 
 input {
-  min-width: 0;
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #c8d2e2;
-  background: #ffffff;
-  color: #172033;
-  outline: none;
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
+  @apply min-h-12;
+}
+
+input {
+  @apply min-w-0 w-full border border-slate-800 bg-slate-900 py-3 pl-4 pr-12 text-body-1 text-slate-100 outline-none transition;
 }
 
 input:focus {
-  border-color: #3273dc;
-  box-shadow: 0 0 0 3px rgba(50, 115, 220, 0.16);
+  @apply border-violet-600 ring-2 ring-violet-700/20;
 }
 
 .password-toggle {
-  margin-top: 0;
-  padding: 0 14px;
-  border: 1px solid #c8d2e2;
-  background: #ffffff;
-  color: #172033;
-  font-weight: 700;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    border-color 0.18s ease;
+  @apply absolute right-2 top-1/2 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-slate-400 transition;
+  transform: translateY(-50%);
 }
 
-.password-toggle:hover {
-  background: #f3f6fb;
-  border-color: #aebbd0;
+.password-toggle:hover,
+.password-toggle:focus-visible {
+  @apply bg-slate-800 text-slate-100;
+}
+
+.password-toggle:focus-visible {
+  @apply outline outline-2 outline-offset-2 outline-violet-700/40;
+}
+
+.password-toggle svg {
+  width: 18px;
+  height: 18px;
 }
 </style>

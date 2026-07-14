@@ -9,13 +9,13 @@ function createTransporter() {
   const transportConfig = {
     host: env.smtp.host,
     port: env.smtp.port,
-    secure: env.smtp.secure
+    secure: env.smtp.secure,
   };
 
   if (env.smtp.user || env.smtp.pass) {
     transportConfig.auth = {
       user: env.smtp.user,
-      pass: env.smtp.pass
+      pass: env.smtp.pass,
     };
   }
 
@@ -29,21 +29,21 @@ async function sendVerificationEmail({ to, username, verificationUrl }) {
   await transporter.sendMail({
     from: env.smtp.from,
     to,
-    subject: "Verify your Make It Art account",
+    subject: "Verify your ACCOUNT",
     text: [
       `Hi ${displayName},`,
       "",
-      "Thanks for creating your Make It Art account.",
+      "Thanks for creating your ACCOUNT.",
       "Please verify your email address by opening this link:",
       verificationUrl,
       "",
-      "This link expires in 1 hour."
+      "This link expires in 1 hour.",
     ].join("\n"),
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #172033;">
         <h1 style="font-size: 22px;">Verify your email</h1>
         <p>Hi ${displayName},</p>
-        <p>Thanks for creating your Make It Art account.</p>
+        <p>Thanks for creating your ACCOUNT.</p>
         <p>
           <a href="${verificationUrl}" style="display: inline-block; padding: 10px 14px; background: #172033; color: #ffffff; text-decoration: none; border-radius: 6px;">
             Verify my email
@@ -53,7 +53,7 @@ async function sendVerificationEmail({ to, username, verificationUrl }) {
         <p><a href="${verificationUrl}">${verificationUrl}</a></p>
         <p>This link expires in 1 hour.</p>
       </div>
-    `
+    `,
   });
 }
 async function sendPasswordResetEmail({ to, username, resetUrl }) {
@@ -72,7 +72,7 @@ async function sendPasswordResetEmail({ to, username, resetUrl }) {
       resetUrl,
       "",
       "This link expires in 1 hour.",
-      "If you did not request this, you can ignore this email."
+      "If you did not request this, you can ignore this email.",
     ].join("\n"),
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #172033;">
@@ -89,7 +89,7 @@ async function sendPasswordResetEmail({ to, username, resetUrl }) {
         <p>This link expires in 1 hour.</p>
         <p>If you did not request this, you can ignore this email.</p>
       </div>
-    `
+    `,
   });
 }
 async function sendLoginCodeEmail({ to, username, code }) {
@@ -107,7 +107,7 @@ async function sendLoginCodeEmail({ to, username, code }) {
       code,
       "",
       "This code expires in 10 minutes.",
-      "If you did not try to sign in, you can ignore this email."
+      "If you did not try to sign in, you can ignore this email.",
     ].join("\n"),
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #172033;">
@@ -118,12 +118,12 @@ async function sendLoginCodeEmail({ to, username, code }) {
         <p>This code expires in 10 minutes.</p>
         <p>If you did not try to sign in, you can ignore this email.</p>
       </div>
-    `
+    `,
   });
 }
 
 module.exports = {
   sendVerificationEmail,
   sendPasswordResetEmail,
-  sendLoginCodeEmail
+  sendLoginCodeEmail,
 };
