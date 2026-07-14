@@ -21,6 +21,10 @@ const contractServicePath =
   require.resolve("../src/services/artist-contract.service");
 const serializeAuthUserPath =
   require.resolve("../src/utils/serialize-auth-user");
+const uploadArtworkMiddlewarePath =
+  require.resolve("../src/middlewares/upload-artwork.middleware");
+const artistRequiredMiddlewarePath =
+  require.resolve("../src/middlewares/artist-required.middleware");
 
 const authUser = {
   id: 7,
@@ -57,6 +61,8 @@ function buildAuthMiddleware(user) {
 
 async function startArtistArtworkRoutesApp(t, overrides = {}) {
   const currentAuthUser = overrides.authUser || authUser;
+  const currentArtist =
+    "artistResult" in overrides ? overrides.artistResult : verifiedArtist;
   const calls = {
     createArtwork: [],
     listArtworksByArtistId: [],
@@ -71,7 +77,7 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
     },
     [artistRepositoryPath]: {
       async findByUserId() {
-        return overrides.artistResult ?? verifiedArtist;
+        return currentArtist;
       },
     },
     [artworkRepositoryPath]: {
@@ -93,6 +99,7 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
             priceTokens: payload.price,
             favoriteCount: 0,
             protection: payload.protection,
+            imagePath: payload.imagePath || null,
             createdAt: new Date("2026-07-08T10:00:00.000Z"),
             category: {
               id: payload.categoryId || 1,
@@ -165,6 +172,33 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
         };
       },
     },
+    [uploadArtworkMiddlewarePath]: {
+      handleArtworkUpload(req, _res, next) {
+        req.file = {
+          filename: "test-artwork.jpg",
+        };
+        next();
+      },
+    },
+    [artistRequiredMiddlewarePath]: {
+      ensureVerifiedArtist(req, res, next) {
+        if (!currentArtist) {
+          return res.status(403).json({
+            message: "Seuls les artistes peuvent publier des oeuvres.",
+          });
+        }
+
+        if (!currentArtist.verified) {
+          return res.status(403).json({
+            message:
+              "Votre profil artiste doit etre valide avant de publier des oeuvres.",
+          });
+        }
+
+        req.artist = currentArtist;
+        return next();
+      },
+    },
   });
 
   const app = express();
@@ -228,6 +262,7 @@ test("POST /artists/me/artworks creates an artwork for a verified artist", async
     categoryId: 9,
     price: "120 tokens",
     protection: true,
+    imagePath: "artworks/test-artwork.jpg",
   });
 });
 

@@ -1,6 +1,7 @@
 const {
   extractArtistApplicationPayload,
 } = require("../services/artist-contract.service");
+const { buildArtworkImageUrl } = require("../services/artwork-media.service");
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -70,6 +71,7 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     priceValue: parsePriceValue(price),
     protection: Boolean(artwork.protection),
     createdAt: artwork.createdAt || null,
+    imageUrl: buildArtworkImageUrl(artwork.imagePath),
     favoriteCount: artwork.favoriteCount ?? artwork._count?.favorites ?? 0,
     isFavorite: Array.isArray(artwork.favorites)
       ? artwork.favorites.length > 0

@@ -9,10 +9,11 @@
             Checkout
           </p>
           <h1 class="mt-4 text-[clamp(2rem,2.6vw,3rem)] font-semibold leading-[1.05] text-white">
-            Paiement réel (non branché)
+            Finaliser l'achat
           </h1>
           <p class="mt-4 max-w-3xl text-sm leading-6 text-[#A0ADB4]">
-            Cette page simule un checkout, mais le parcours d'achat complet n'est pas connecté côté utilisateur.
+            Paiement simule : la commande est enregistree en base et les artistes
+            concernes recoivent une notification de vente.
           </p>
         </div>
 
@@ -30,7 +31,7 @@
 
       <section v-else class="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
         <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-          <h2 class="text-xl font-semibold text-white">Récap</h2>
+          <h2 class="text-xl font-semibold text-white">Recapitulatif</h2>
           <div class="mt-5 grid gap-3">
             <div
               v-for="item in cart.items"
@@ -61,16 +62,27 @@
               class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#24314F] bg-[#0C111D] px-6 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#141C2E]"
               @click="cart.clear()"
             >
-              Annuler (vider)
+              Vider le panier
             </button>
           </div>
         </article>
 
         <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
           <h2 class="text-xl font-semibold text-white">Paiement</h2>
-          <p class="mt-4 text-sm leading-6 text-[#A0ADB4]">
-            Placeholder : à brancher plus tard (Stripe / crypto / autre).
-          </p>
+
+          <div
+            v-if="successMessage"
+            class="mt-4 rounded-2xl border border-[#12301F] bg-[#081912] px-5 py-4 text-sm text-[#86EFAC]"
+          >
+            {{ successMessage }}
+          </div>
+
+          <div
+            v-if="errorMessage"
+            class="mt-4 rounded-2xl border border-[#7f1d1d] bg-[#2b1014] px-5 py-4 text-sm text-[#FECACA]"
+          >
+            {{ errorMessage }}
+          </div>
 
           <div class="mt-6 grid gap-4">
             <label class="grid gap-2 text-sm text-[#9EABBE]">
@@ -89,22 +101,19 @@
                 v-model="paymentMethod"
                 class="rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7]"
               >
-                <option value="card">Carte (placeholder)</option>
-                <option value="crypto">Crypto (placeholder)</option>
+                <option value="card">Carte bancaire (simulation)</option>
+                <option value="crypto">Crypto (simulation)</option>
               </select>
             </label>
 
             <button
               type="button"
-              class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black opacity-60"
-              disabled
+              class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6d8bff] disabled:cursor-not-allowed disabled:opacity-60"
+              :disabled="submitting"
+              @click="submitCheckout"
             >
-              Payer (à implémenter)
+              {{ submitting ? "Traitement..." : "Confirmer le paiement" }}
             </button>
-          </div>
-
-          <div class="mt-6 rounded-2xl border border-[#203357] bg-[#091121] px-5 py-4 text-sm text-[#BFD0FF]">
-            Aucun achat n'est créé en base pour l'instant : c'est volontaire (MVP).
           </div>
         </article>
       </section>
@@ -114,15 +123,76 @@
 
 <script setup>
 import { onMounted, ref } from "vue";
+import { navigateTo } from "#app";
+import { storeToRefs } from "pinia";
 import { useCartStore } from "~/stores/cart";
+import { useAuthStore } from "~/stores/auth";
 import { formatMarketplacePrice } from "~/utils/marketplace";
 
+definePageMeta({
+  middleware: "auth",
+});
+
 const cart = useCartStore();
+const auth = useAuthStore();
+const { user } = storeToRefs(auth);
+
 const billingEmail = ref("");
 const paymentMethod = ref("card");
+const submitting = ref(false);
+const errorMessage = ref("");
+const successMessage = ref("");
 
-onMounted(() => {
+onMounted(async () => {
   cart.hydrate();
-});
-</script>
 
+  try {
+    await auth.fetchCurrentUser();
+    billingEmail.value = user.value?.email || "";
+  } catch {
+    // handled by middleware
+  }
+});
+
+async function submitCheckout() {
+  if (cart.isEmpty || submitting.value) {
+    return;
+  }
+
+  submitting.value = true;
+  errorMessage.value = "";
+  successMessage.value = "";
+
+  try {
+    const response = await $fetch("/api/orders/checkout", {
+      method: "POST",
+      credentials: "include",
+      body: {
+        billingEmail: billingEmail.value,
+        paymentMethod: paymentMethod.value,
+        items: cart.items.map((item) => ({
+          artworkId: item.artwork.id,
+          quantity: item.quantity,
+        })),
+      },
+    });
+
+    cart.clear();
+    successMessage.value = `Commande ${response.order.reference} confirmee.`;
+
+    setTimeout(async () => {
+      await navigateTo("/profile");
+    }, 1200);
+  } catch (error) {
+    if (error?.statusCode === 401) {
+      await navigateTo("/login");
+      return;
+    }
+
+    errorMessage.value =
+      error?.data?.message || "Impossible de finaliser la commande.";
+  } finally {
+    submitting.value = false;
+  }
+}
+</script>

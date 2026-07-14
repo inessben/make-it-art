@@ -81,6 +81,13 @@
             </NuxtLink>
             <NuxtLink
               v-if="auth.isVerifiedArtist"
+              to="/artist"
+              class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#4A6CF7] bg-[#4A6CF7]/10 px-7 text-sm font-semibold text-[#C9D6FF] transition hover:bg-[#4A6CF7]/20"
+            >
+              Dashboard artiste
+            </NuxtLink>
+            <NuxtLink
+              v-if="auth.isVerifiedArtist"
               to="/artworks/new"
               class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#F2C97D] bg-[#F2C97D]/10 px-7 text-sm font-semibold text-[#F7D990] transition hover:bg-[#F2C97D]/20"
             >

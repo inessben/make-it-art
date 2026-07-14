@@ -255,7 +255,7 @@ const cards = computed(() => [
     ',
     title: "Notifications",
     route: "/notifications",
-    description: "Gérez vos préférences de notification",
+    description: "Alertes de vente et activite metier",
   },
   {
     icon: '\

@@ -24,6 +24,12 @@ const {
 } = require("../utils/serialize-marketplace");
 const { ensureBuffer } = require("../utils/ensure-buffer");
 const prisma = require("../lib/prisma");
+const { handleArtworkUpload } = require("../middlewares/upload-artwork.middleware");
+const { buildArtworkImagePath } = require("../services/artwork-media.service");
+const {
+  buildArtistDashboardPayload,
+  buildArtistSalesPayload,
+} = require("../services/artist-analytics.service");
 
 const router = express.Router();
 
@@ -201,7 +207,10 @@ function normalizeArtworkInput(input = {}) {
     description: normalizeText(input.description),
     categoryId: Number.isInteger(categoryId) && categoryId > 0 ? categoryId : null,
     price: normalizeText(input.price) || normalizeText(input.priceTokens),
-    protection: Boolean(input.protection),
+    protection:
+      input.protection === true ||
+      input.protection === "true" ||
+      input.protection === "1",
   };
 }
 
@@ -352,6 +361,41 @@ router.get("/artists/me", async (req, res) => {
     console.error("Artist profile fetch error:", error);
     return res.status(500).json({
       message: "Unable to load artist profile",
+    });
+  }
+});
+
+router.get("/artists/me/dashboard", ensureVerifiedArtist, async (req, res) => {
+  try {
+    const artworks = await artworkRepository.listArtworksByArtistId(req.artist.id);
+    const favoritesTotal = artworks.reduce(
+      (sum, artwork) => sum + (artwork.favoriteCount || 0),
+      0,
+    );
+
+    const dashboard = await buildArtistDashboardPayload(req.artist.id, {
+      artworks: req.artist._count?.artworks || artworks.length,
+      followers: req.artist._count?.followers || 0,
+      favorites: favoritesTotal,
+    });
+
+    return res.status(200).json(dashboard);
+  } catch (error) {
+    console.error("Artist dashboard fetch error:", error);
+    return res.status(500).json({
+      message: "Impossible de charger le dashboard artiste.",
+    });
+  }
+});
+
+router.get("/artists/me/sales", ensureVerifiedArtist, async (req, res) => {
+  try {
+    const payload = await buildArtistSalesPayload(req.artist.id);
+    return res.status(200).json(payload);
+  } catch (error) {
+    console.error("Artist sales fetch error:", error);
+    return res.status(500).json({
+      message: "Impossible de charger vos ventes.",
     });
   }
 });
@@ -639,8 +683,18 @@ router.get("/artists/me/artworks", ensureVerifiedArtist, async (req, res) => {
   }
 });
 
-router.post("/artists/me/artworks", ensureVerifiedArtist, async (req, res) => {
+router.post(
+  "/artists/me/artworks",
+  ensureVerifiedArtist,
+  handleArtworkUpload,
+  async (req, res) => {
   try {
+    if (!req.file) {
+      return res.status(400).json({
+        message: "Le fichier visuel de l'oeuvre est requis.",
+      });
+    }
+
     const input = normalizeArtworkInput(req.body);
     const validationError = validateArtworkInput(input);
 
@@ -658,6 +712,7 @@ router.post("/artists/me/artworks", ensureVerifiedArtist, async (req, res) => {
       categoryId,
       price: input.price,
       protection: input.protection,
+      imagePath: buildArtworkImagePath(req.file.filename),
     });
 
     return res.status(201).json({
@@ -678,7 +733,8 @@ router.post("/artists/me/artworks", ensureVerifiedArtist, async (req, res) => {
       message: "Impossible de publier cette oeuvre.",
     });
   }
-});
+  },
+);
 
 router.patch(
   "/artists/me/artworks/:id(\\d+)",

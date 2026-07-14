@@ -10,11 +10,15 @@ const {
 const {
   ensurePredefinedCategories,
 } = require("./repositories/category.repository");
+const {
+  ensureArtworkUploadDirectory,
+} = require("./services/artwork-media.service");
 
 async function startServer() {
   await connectRedis();
   await ensureDefaultAdminAccount();
   await ensurePredefinedCategories();
+  await ensureArtworkUploadDirectory();
 
   app.listen(env.port, () => {
     console.log(`Backend listening on port ${env.port}`);

@@ -26,20 +26,31 @@
         >
           <div class="grid gap-6">
             <div
-              class="flex min-h-[420px] items-center justify-center rounded-[30px] border border-[#1B2640] bg-[radial-gradient(circle_at_center,_rgba(74,108,247,0.18),_transparent_50%),linear-gradient(135deg,_#0F1628,_#05070D)] p-10"
+              class="overflow-hidden rounded-[30px] border border-[#1B2640] bg-[#050912]"
             >
-              <div class="text-center">
-                <p class="text-xs uppercase tracking-[0.22em] text-[#8AA2FF]">
-                  Artwork spotlight
-                </p>
-                <p
-                  class="mt-6 text-[clamp(3rem,8vw,6rem)] font-semibold text-white"
-                >
-                  {{ artwork.title }}
-                </p>
-                <p class="mt-4 text-sm text-[#96A4B8]">
-                  {{ artwork.category?.name || "Oeuvre numerique" }}
-                </p>
+              <img
+                v-if="artwork.imageUrl"
+                :src="artwork.imageUrl"
+                :alt="artwork.title"
+                class="max-h-[720px] w-full object-cover"
+              />
+              <div
+                v-else
+                class="flex min-h-[420px] items-center justify-center rounded-[30px] border border-[#1B2640] bg-[radial-gradient(circle_at_center,_rgba(74,108,247,0.18),_transparent_50%),linear-gradient(135deg,_#0F1628,_#05070D)] p-10"
+              >
+                <div class="text-center">
+                  <p class="text-xs uppercase tracking-[0.22em] text-[#8AA2FF]">
+                    Artwork spotlight
+                  </p>
+                  <p
+                    class="mt-6 text-[clamp(3rem,8vw,6rem)] font-semibold text-white"
+                  >
+                    {{ artwork.title }}
+                  </p>
+                  <p class="mt-4 text-sm text-[#96A4B8]">
+                    {{ artwork.category?.name || "Oeuvre numerique" }}
+                  </p>
+                </div>
               </div>
             </div>
 

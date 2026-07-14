@@ -203,8 +203,14 @@
 
           <div v-if="artist.verified" class="flex flex-wrap gap-3">
             <NuxtLink
-              to="/artworks/new"
+              to="/artist"
               class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6d8bff]"
+            >
+              Dashboard artiste
+            </NuxtLink>
+            <NuxtLink
+              to="/artworks/new"
+              class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-6 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
             >
               Publier une oeuvre
             </NuxtLink>
@@ -296,14 +302,32 @@
                 :key="artwork.id"
                 class="flex flex-col gap-4 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div>
-                  <p class="text-lg font-semibold text-white">
-                    {{ artwork.title }}
-                  </p>
-                  <p class="mt-2 text-sm text-[#A0ADB4]">
-                    {{ artwork.category?.name || "Sans categorie" }} ·
-                    {{ formatArtworkPrice(artwork) }}
-                  </p>
+                <div class="flex items-center gap-4">
+                  <div
+                    class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-[#1A2336] bg-[#03060D]"
+                  >
+                    <img
+                      v-if="artwork.imageUrl"
+                      :src="artwork.imageUrl"
+                      :alt="artwork.title"
+                      class="h-full w-full object-cover"
+                    />
+                    <div
+                      v-else
+                      class="flex h-full w-full items-center justify-center text-sm font-semibold text-[#8AA2FF]"
+                    >
+                      MIA
+                    </div>
+                  </div>
+                  <div>
+                    <p class="text-lg font-semibold text-white">
+                      {{ artwork.title }}
+                    </p>
+                    <p class="mt-2 text-sm text-[#A0ADB4]">
+                      {{ artwork.category?.name || "Sans categorie" }} ·
+                      {{ formatArtworkPrice(artwork) }}
+                    </p>
+                  </div>
                 </div>
                 <NuxtLink
                   :to="`/artworks/${artwork.id}`"

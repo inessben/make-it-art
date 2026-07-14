@@ -70,6 +70,7 @@ async function createArtwork({
   categoryId,
   price,
   protection,
+  imagePath,
 }) {
   return prisma.artwork.create({
     data: {
@@ -81,6 +82,7 @@ async function createArtwork({
       priceTokens: price,
       favoriteCount: 0,
       protection: Boolean(protection),
+      imagePath: imagePath || null,
       createdAt: new Date(),
     },
     include: artworkInclude,
@@ -95,6 +97,7 @@ async function updateArtwork({
   categoryId,
   price,
   protection,
+  imagePath,
 }) {
   const existing = await findOwnedArtwork({ artworkId, artistId });
 
@@ -113,6 +116,7 @@ async function updateArtwork({
       price,
       priceTokens: price,
       protection: Boolean(protection),
+      ...(imagePath ? { imagePath } : {}),
     },
     include: artworkInclude,
   });
