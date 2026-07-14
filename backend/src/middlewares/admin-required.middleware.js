@@ -5,13 +5,13 @@ function isAdminUser(user) {
 function adminRequired(req, res, next) {
   if (!req.user) {
     return res.status(401).json({
-      message: "Not authenticated",
+      message: "Not authenticated"
     });
   }
 
   if (!isAdminUser(req.user)) {
     return res.status(403).json({
-      message: "Admin access required",
+      message: "Admin access required"
     });
   }
 
@@ -20,5 +20,5 @@ function adminRequired(req, res, next) {
 
 module.exports = {
   adminRequired,
-  isAdminUser,
+  isAdminUser
 };

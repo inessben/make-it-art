@@ -1,35 +1,33 @@
 const prisma = require("../lib/prisma");
-const {
-  ARTIST_APPLICATION_STATUS,
-} = require("../constants/artist-application-status");
+const { ARTIST_APPLICATION_STATUS } = require("../constants/artist-application-status");
 
 function includeApplicationRelations() {
   return {
     user: {
       include: {
         admin: true,
-        artist: true,
-      },
+        artist: true
+      }
     },
     reviewedByAdmin: {
       include: {
-        admin: true,
-      },
-    },
+        admin: true
+      }
+    }
   };
 }
 
 async function findByUserId(userId) {
   return prisma.artistApplicationDraft.findUnique({
     where: { userId },
-    include: includeApplicationRelations(),
+    include: includeApplicationRelations()
   });
 }
 
 async function findById(id) {
   return prisma.artistApplicationDraft.findUnique({
     where: { id },
-    include: includeApplicationRelations(),
+    include: includeApplicationRelations()
   });
 }
 
@@ -40,22 +38,22 @@ async function listSubmittedApplications() {
         in: [
           ARTIST_APPLICATION_STATUS.PENDING,
           ARTIST_APPLICATION_STATUS.APPROVED,
-          ARTIST_APPLICATION_STATUS.REJECTED,
-        ],
-      },
+          ARTIST_APPLICATION_STATUS.REJECTED
+        ]
+      }
     },
     orderBy: [
       {
-        submittedAt: "desc",
+        submittedAt: "desc"
       },
       {
-        updatedAt: "desc",
+        updatedAt: "desc"
       },
       {
-        id: "desc",
-      },
+        id: "desc"
+      }
     ],
-    include: includeApplicationRelations(),
+    include: includeApplicationRelations()
   });
 }
 
@@ -76,7 +74,7 @@ async function saveDraft({ userId, currentStep, payload }) {
       contractSignedAt: null,
       contractVersion: null,
       signatureDataUrl: null,
-      contractPdf: null,
+      contractPdf: null
     },
     update: {
       currentStep,
@@ -91,9 +89,9 @@ async function saveDraft({ userId, currentStep, payload }) {
       contractSignedAt: null,
       contractVersion: null,
       signatureDataUrl: null,
-      contractPdf: null,
+      contractPdf: null
     },
-    include: includeApplicationRelations(),
+    include: includeApplicationRelations()
   });
 }
 
@@ -104,7 +102,7 @@ async function submitApplication({
   contractVersion,
   signatureDataUrl,
   contractPdf,
-  submittedAt = new Date(),
+  submittedAt = new Date()
 }) {
   return prisma.artistApplicationDraft.upsert({
     where: { userId },
@@ -122,7 +120,7 @@ async function submitApplication({
       contractSignedAt: submittedAt,
       contractVersion,
       signatureDataUrl,
-      contractPdf,
+      contractPdf
     },
     update: {
       currentStep,
@@ -137,9 +135,9 @@ async function submitApplication({
       contractSignedAt: submittedAt,
       contractVersion,
       signatureDataUrl,
-      contractPdf,
+      contractPdf
     },
-    include: includeApplicationRelations(),
+    include: includeApplicationRelations()
   });
 }
 
@@ -151,23 +149,20 @@ async function markApproved({ applicationId, reviewedByAdminId, reviewNote }) {
         status: ARTIST_APPLICATION_STATUS.APPROVED,
         reviewedAt: new Date(),
         reviewedByAdminId,
-        reviewNote: reviewNote || null,
-      },
+        reviewNote: reviewNote || null
+      }
     });
 
     const payload =
-      application.payload && typeof application.payload === "object"
-        ? application.payload
-        : {};
-    const displayName =
-      typeof payload.displayName === "string" ? payload.displayName.trim() : "";
+      application.payload && typeof application.payload === "object" ? application.payload : {};
+    const displayName = typeof payload.displayName === "string" ? payload.displayName.trim() : "";
     const bio = typeof payload.bio === "string" ? payload.bio.trim() : "";
 
     await tx.user.update({
       where: { id: application.userId },
       data: {
-        ...(bio ? { bio } : {}),
-      },
+        ...(bio ? { bio } : {})
+      }
     });
 
     await tx.artist.upsert({
@@ -176,17 +171,17 @@ async function markApproved({ applicationId, reviewedByAdminId, reviewNote }) {
         userId: application.userId,
         displayName,
         verified: true,
-        createdAt: application.submittedAt || new Date(),
+        createdAt: application.submittedAt || new Date()
       },
       update: {
         displayName,
-        verified: true,
-      },
+        verified: true
+      }
     });
 
     return tx.artistApplicationDraft.findUnique({
       where: { id: applicationId },
-      include: includeApplicationRelations(),
+      include: includeApplicationRelations()
     });
   });
 }
@@ -198,9 +193,9 @@ async function markRejected({ applicationId, reviewedByAdminId, reviewNote }) {
       status: ARTIST_APPLICATION_STATUS.REJECTED,
       reviewedAt: new Date(),
       reviewedByAdminId,
-      reviewNote: reviewNote || null,
+      reviewNote: reviewNote || null
     },
-    include: includeApplicationRelations(),
+    include: includeApplicationRelations()
   });
 }
 
@@ -209,7 +204,7 @@ async function updateStoredContract({
   contractVersion,
   contractPdf,
   contractSignedAt,
-  contractAcceptedAt,
+  contractAcceptedAt
 }) {
   return prisma.artistApplicationDraft.update({
     where: { id: applicationId },
@@ -217,9 +212,9 @@ async function updateStoredContract({
       contractVersion,
       contractPdf,
       ...(contractSignedAt ? { contractSignedAt } : {}),
-      ...(contractAcceptedAt ? { contractAcceptedAt } : {}),
+      ...(contractAcceptedAt ? { contractAcceptedAt } : {})
     },
-    include: includeApplicationRelations(),
+    include: includeApplicationRelations()
   });
 }
 
@@ -231,5 +226,5 @@ module.exports = {
   submitApplication,
   markApproved,
   markRejected,
-  updateStoredContract,
+  updateStoredContract
 };

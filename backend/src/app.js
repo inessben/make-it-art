@@ -11,8 +11,8 @@ app.set("trust proxy", 1);
 app.use(
   cors({
     origin: env.corsOrigin,
-    credentials: true,
-  }),
+    credentials: true
+  })
 );
 
 app.use(express.json());
@@ -22,7 +22,7 @@ app.use(cookieParser());
 app.get("/health", (_req, res) => {
   res.status(200).json({
     ...getHealthPayload(),
-    scope: "root",
+    scope: "root"
   });
 });
 

@@ -4,29 +4,29 @@ async function listArtworksForAdmin() {
   return prisma.artwork.findMany({
     orderBy: [
       {
-        createdAt: "desc",
+        createdAt: "desc"
       },
       {
-        id: "desc",
-      },
+        id: "desc"
+      }
     ],
     include: {
       category: true,
       artist: {
         include: {
-          user: true,
-        },
+          user: true
+        }
       },
       _count: {
         select: {
           favorites: true,
-          orderItems: true,
-        },
-      },
-    },
+          orderItems: true
+        }
+      }
+    }
   });
 }
 
 module.exports = {
-  listArtworksForAdmin,
+  listArtworksForAdmin
 };

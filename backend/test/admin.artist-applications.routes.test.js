@@ -5,27 +5,20 @@ const express = require("express");
 const { loadModuleWithMocks } = require("./helpers/mock-require");
 
 const routesPath = require.resolve("../src/routes/admin.routes");
-const authRequiredPath =
-  require.resolve("../src/middlewares/auth-required.middleware");
-const adminRequiredPath =
-  require.resolve("../src/middlewares/admin-required.middleware");
+const authRequiredPath = require.resolve("../src/middlewares/auth-required.middleware");
+const adminRequiredPath = require.resolve("../src/middlewares/admin-required.middleware");
 const applicationRepositoryPath =
   require.resolve("../src/repositories/artist-application-draft.repository");
-const userRepositoryPath =
-  require.resolve("../src/repositories/user.repository");
-const artistRepositoryPath =
-  require.resolve("../src/repositories/artist.repository");
-const artworkRepositoryPath =
-  require.resolve("../src/repositories/artwork.repository");
-const orderRepositoryPath =
-  require.resolve("../src/repositories/order.repository");
-const paymentRepositoryPath =
-  require.resolve("../src/repositories/payment.repository");
+const userRepositoryPath = require.resolve("../src/repositories/user.repository");
+const artistRepositoryPath = require.resolve("../src/repositories/artist.repository");
+const artworkRepositoryPath = require.resolve("../src/repositories/artwork.repository");
+const orderRepositoryPath = require.resolve("../src/repositories/order.repository");
+const paymentRepositoryPath = require.resolve("../src/repositories/payment.repository");
 
 const adminUser = {
   id: 1,
   email: "admin@example.com",
-  username: "Admin",
+  username: "Admin"
 };
 
 function authMiddleware(req, _res, next) {
@@ -40,7 +33,7 @@ function adminMiddleware(_req, _res, next) {
 async function startAdminRoutesApp(t, overrides = {}) {
   const calls = {
     markApproved: [],
-    markRejected: [],
+    markRejected: []
   };
 
   const applicationRepository = {
@@ -60,19 +53,19 @@ async function startAdminRoutesApp(t, overrides = {}) {
               addressLine1: "1 rue de Paris",
               city: "Paris",
               postalCode: "75001",
-              country: "France",
+              country: "France"
             },
             user: {
               email: "artist@example.com",
               phone: "0102030405",
               username: "Ada Lovelace",
-              artist: null,
+              artist: null
             },
             contractPdf: Buffer.from("pdf"),
             submittedAt: new Date("2026-07-04T11:00:00.000Z"),
             reviewedAt: null,
-            reviewNote: "",
-          },
+            reviewNote: ""
+          }
         ]
       );
     },
@@ -88,23 +81,23 @@ async function startAdminRoutesApp(t, overrides = {}) {
           firstName: "Ada",
           lastName: "Lovelace",
           artType: "Digital Art",
-          styles: ["Digital painting"],
+          styles: ["Digital painting"]
         },
         user: {
           email: "artist@example.com",
           phone: "0102030405",
           username: "Ada Lovelace",
           artist: {
-            verified: true,
-          },
+            verified: true
+          }
         },
         contractPdf: Buffer.from("pdf"),
         submittedAt: new Date("2026-07-04T11:00:00.000Z"),
         reviewedAt: new Date("2026-07-04T12:00:00.000Z"),
         reviewNote: payload.reviewNote,
         reviewedByAdmin: {
-          username: adminUser.username,
-        },
+          username: adminUser.username
+        }
       };
     },
     async markRejected(payload) {
@@ -119,43 +112,43 @@ async function startAdminRoutesApp(t, overrides = {}) {
           firstName: "Ada",
           lastName: "Lovelace",
           artType: "Digital Art",
-          styles: ["Digital painting"],
+          styles: ["Digital painting"]
         },
         user: {
           email: "artist@example.com",
           phone: "0102030405",
           username: "Ada Lovelace",
-          artist: null,
+          artist: null
         },
         contractPdf: Buffer.from("pdf"),
         submittedAt: new Date("2026-07-04T11:00:00.000Z"),
         reviewedAt: new Date("2026-07-04T12:00:00.000Z"),
         reviewNote: payload.reviewNote,
         reviewedByAdmin: {
-          username: adminUser.username,
-        },
+          username: adminUser.username
+        }
       };
     },
     async findById() {
       return overrides.findByIdResult || null;
-    },
+    }
   };
 
   const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
     [authRequiredPath]: {
-      authRequired: authMiddleware,
+      authRequired: authMiddleware
     },
     [adminRequiredPath]: {
       adminRequired: adminMiddleware,
       isAdminUser() {
         return true;
-      },
+      }
     },
     [applicationRepositoryPath]: applicationRepository,
     [userRepositoryPath]: {
       async listUsersForAdmin() {
         return [];
-      },
+      }
     },
     [artistRepositoryPath]: {
       async listArtistsForAdmin() {
@@ -163,23 +156,23 @@ async function startAdminRoutesApp(t, overrides = {}) {
       },
       async updateArtistVerification() {
         return null;
-      },
+      }
     },
     [artworkRepositoryPath]: {
       async listArtworksForAdmin() {
         return [];
-      },
+      }
     },
     [orderRepositoryPath]: {
       async listOrdersForAdmin() {
         return [];
-      },
+      }
     },
     [paymentRepositoryPath]: {
       async listPaymentsForAdmin() {
         return [];
-      },
-    },
+      }
+    }
   });
 
   const app = express();
@@ -201,7 +194,7 @@ async function startAdminRoutesApp(t, overrides = {}) {
 
   return {
     calls,
-    baseUrl: `http://127.0.0.1:${server.address().port}`,
+    baseUrl: `http://127.0.0.1:${server.address().port}`
   };
 }
 
@@ -209,14 +202,14 @@ async function requestJson(baseUrl, path, { method = "GET", body } = {}) {
   const response = await fetch(`${baseUrl}${path}`, {
     method,
     headers: body ? { "content-type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? JSON.stringify(body) : undefined
   });
 
   const payload = await response.json();
 
   return {
     status: response.status,
-    body: payload,
+    body: payload
   };
 }
 
@@ -227,7 +220,7 @@ async function requestBinary(baseUrl, path) {
   return {
     status: response.status,
     headers: response.headers,
-    body: buffer,
+    body: buffer
   };
 }
 
@@ -247,8 +240,8 @@ test("PATCH /admin/artist-applications/:id approves an application", async (t) =
     method: "PATCH",
     body: {
       status: "approved",
-      reviewNote: "Profil valide.",
-    },
+      reviewNote: "Profil valide."
+    }
   });
 
   assert.equal(response.status, 200);
@@ -259,29 +252,24 @@ test("PATCH /admin/artist-applications/:id approves an application", async (t) =
 });
 
 test("GET /admin/artist-applications/:id/contract.pdf returns a valid PDF response for Uint8Array data", async (t) => {
-  const pdfBytes = new Uint8Array(
-    Buffer.from("%PDF-1.4\nadmin-artist-contract"),
-  );
+  const pdfBytes = new Uint8Array(Buffer.from("%PDF-1.4\nadmin-artist-contract"));
   const { baseUrl } = await startAdminRoutesApp(t, {
     findByIdResult: {
       id: 44,
       userId: 7,
       status: "pending",
       payload: {
-        displayName: "Ada Art",
+        displayName: "Ada Art"
       },
       user: {
         email: "artist@example.com",
-        username: "Ada Lovelace",
+        username: "Ada Lovelace"
       },
-      contractPdf: pdfBytes,
-    },
+      contractPdf: pdfBytes
+    }
   });
 
-  const response = await requestBinary(
-    baseUrl,
-    "/admin/artist-applications/44/contract.pdf",
-  );
+  const response = await requestBinary(baseUrl, "/admin/artist-applications/44/contract.pdf");
 
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("content-type"), "application/pdf");

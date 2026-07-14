@@ -19,9 +19,9 @@ const authRateLimit = asExpressMiddleware(
     },
     keyGenerator: ipKeyGenerator,
     message: {
-      message: "Too many authentication attempts. Please try again later.",
-    },
-  }),
+      message: "Too many authentication attempts. Please try again later."
+    }
+  })
 );
 
 const strictAuthRateLimit = asExpressMiddleware(
@@ -36,12 +36,12 @@ const strictAuthRateLimit = asExpressMiddleware(
     },
     keyGenerator: ipKeyGenerator,
     message: {
-      message: "Too many attempts. Please try again later.",
-    },
-  }),
+      message: "Too many attempts. Please try again later."
+    }
+  })
 );
 
 module.exports = {
   authRateLimit,
-  strictAuthRateLimit,
+  strictAuthRateLimit
 };
