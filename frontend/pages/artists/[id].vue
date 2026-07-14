@@ -88,8 +88,8 @@
                   followLoading[artist.id]
                     ? "Mise a jour..."
                     : artist.isFollowed
-                      ? "Ne plus suivre"
-                      : "Suivre cet artiste"
+                      ? "Unfollow"
+                      : "Follow"
                 }}
               </button>
 

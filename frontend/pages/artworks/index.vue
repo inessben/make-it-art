@@ -33,7 +33,7 @@
       </header>
 
       <section
-        class="grid gap-4 rounded-[28px] border border-[#151E30] bg-[#070B14] p-6 lg:grid-cols-[1.4fr_1fr_1fr_0.9fr]"
+        class="grid gap-4 rounded-[28px] border border-[#151E30] bg-[#070B14] p-6 lg:grid-cols-[1.2fr_1fr_1fr_1fr_0.9fr]"
       >
         <label class="grid gap-2 text-sm text-[#9EABBE]">
           <span class="font-medium text-[#E6EDF7]">Recherche</span>
@@ -43,6 +43,23 @@
             placeholder="Titre, artiste, categorie..."
             class="rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7]"
           />
+        </label>
+
+        <label class="grid gap-2 text-sm text-[#9EABBE]">
+          <span class="font-medium text-[#E6EDF7]">Categorie</span>
+          <select
+            v-model="filters.categoryId"
+            class="rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7]"
+          >
+            <option value="">Toutes les categories</option>
+            <option
+              v-for="category in categories"
+              :key="category.id"
+              :value="String(category.id)"
+            >
+              {{ category.name }}
+            </option>
+          </select>
         </label>
 
         <label class="grid gap-2 text-sm text-[#9EABBE]">
@@ -80,6 +97,38 @@
       </section>
 
       <section
+        v-if="categories.length"
+        class="flex flex-wrap gap-3 rounded-[28px] border border-[#151E30] bg-[#070B14] p-5"
+      >
+        <button
+          type="button"
+          class="inline-flex min-h-10 items-center justify-center rounded-full border px-4 text-sm font-semibold transition"
+          :class="
+            !filters.categoryId
+              ? 'border-[#4A6CF7] bg-[#4A6CF7]/12 text-[#D5E0FF]'
+              : 'border-[#24314F] bg-[#0C111D] text-[#C9D6FF] hover:border-[#4A6CF7]'
+          "
+          @click="filters.categoryId = ''"
+        >
+          Toutes
+        </button>
+        <button
+          v-for="category in categories"
+          :key="category.id"
+          type="button"
+          class="inline-flex min-h-10 items-center justify-center rounded-full border px-4 text-sm font-semibold transition"
+          :class="
+            filters.categoryId === String(category.id)
+              ? 'border-[#4A6CF7] bg-[#4A6CF7]/12 text-[#D5E0FF]'
+              : 'border-[#24314F] bg-[#0C111D] text-[#C9D6FF] hover:border-[#4A6CF7]'
+          "
+          @click="filters.categoryId = String(category.id)"
+        >
+          {{ category.name }}
+        </button>
+      </section>
+
+      <section
         v-if="pending"
         class="rounded-[28px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]"
       >
@@ -112,19 +161,23 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive } from "vue";
-import { useRequestHeaders } from "#app";
+import { computed, onMounted, reactive, ref } from "vue";
+import { useRequestHeaders, useRoute } from "#app";
 import { useAuthStore } from "~/stores/auth";
 import ArtworkCard from "~/components/marketplace/ArtworkCard.vue";
 import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
 
+const route = useRoute();
 const auth = useAuthStore();
 const requestHeaders = import.meta.server
   ? useRequestHeaders(["cookie"])
   : undefined;
 
+const categories = ref([]);
+
 const filters = reactive({
   search: "",
+  categoryId: String(route.query.category || ""),
   style: "",
   artType: "",
   sort: "latest",
@@ -132,6 +185,7 @@ const filters = reactive({
 
 const query = computed(() => ({
   search: filters.search || undefined,
+  category: filters.categoryId || undefined,
   style: filters.style || undefined,
   artType: filters.artType || undefined,
   sort: filters.sort,
@@ -153,6 +207,16 @@ const { actionMessage, favoriteLoading, toggleFavorite } =
   useMarketplaceActions(auth);
 
 onMounted(async () => {
+  try {
+    const response = await $fetch("/api/categories", {
+      credentials: "include",
+    });
+
+    categories.value = response.categories || [];
+  } catch {
+    categories.value = [];
+  }
+
   if (!auth.user) {
     try {
       await auth.fetchCurrentUser();

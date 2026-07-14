@@ -47,7 +47,9 @@
         :disabled="followLoading"
         @click="$emit('toggle-follow', artist)"
       >
-        {{ followLoading ? "..." : artist.isFollowed ? "Suivi" : "Suivre" }}
+        {{
+          followLoading ? "..." : artist.isFollowed ? "Following" : "Follow"
+        }}
       </button>
     </div>
 

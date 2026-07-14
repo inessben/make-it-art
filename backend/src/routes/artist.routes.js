@@ -1,8 +1,11 @@
 const express = require("express");
 const { authRequired } = require("../middlewares/auth-required.middleware");
 const { isAdminUser } = require("../middlewares/admin-required.middleware");
+const { ensureVerifiedArtist } = require("../middlewares/artist-required.middleware");
 const artistApplicationDraftRepository = require("../repositories/artist-application-draft.repository");
 const artistRepository = require("../repositories/artist.repository");
+const artworkRepository = require("../repositories/artwork.repository");
+const categoryRepository = require("../repositories/category.repository");
 const userRepository = require("../repositories/user.repository");
 const {
   ARTIST_APPLICATION_STATUS,
@@ -15,7 +18,12 @@ const {
   generateArtistContractPdf,
 } = require("../services/artist-contract.service");
 const { serializeAuthUser } = require("../utils/serialize-auth-user");
+const {
+  parsePriceValue,
+  serializeArtwork,
+} = require("../utils/serialize-marketplace");
 const { ensureBuffer } = require("../utils/ensure-buffer");
+const prisma = require("../lib/prisma");
 
 const router = express.Router();
 
@@ -185,6 +193,85 @@ function isApplicationLocked(application) {
   );
 }
 
+function normalizeArtworkInput(input = {}) {
+  const categoryId = Number.parseInt(input.categoryId, 10);
+
+  return {
+    title: normalizeText(input.title),
+    description: normalizeText(input.description),
+    categoryId: Number.isInteger(categoryId) && categoryId > 0 ? categoryId : null,
+    price: normalizeText(input.price) || normalizeText(input.priceTokens),
+    protection: Boolean(input.protection),
+  };
+}
+
+function validateArtworkInput(input) {
+  if (!input.title) {
+    return "Le titre de l'oeuvre est requis.";
+  }
+
+  if (input.title.length > 160) {
+    return "Le titre ne peut pas depasser 160 caracteres.";
+  }
+
+  if (!input.categoryId) {
+    return "La categorie de l'oeuvre est requise.";
+  }
+
+  if (!input.price) {
+    return "Le prix de l'oeuvre est requis.";
+  }
+
+  if (parsePriceValue(input.price) === null) {
+    return "Le prix doit contenir une valeur numerique valide.";
+  }
+
+  if (input.description.length > 4000) {
+    return "La description ne peut pas depasser 4000 caracteres.";
+  }
+
+  return null;
+}
+
+async function resolveCategoryId({ categoryId }) {
+  if (!categoryId) {
+    throw new Error("CATEGORY_REQUIRED");
+  }
+
+  const isAllowed = await categoryRepository.isPredefinedCategory(categoryId);
+
+  if (!isAllowed) {
+    throw new Error("CATEGORY_NOT_FOUND");
+  }
+
+  return categoryId;
+}
+
+function mapArtworkRouteError(error) {
+  if (error?.message === "ARTWORK_NOT_FOUND") {
+    return {
+      status: 404,
+      message: "Oeuvre introuvable.",
+    };
+  }
+
+  if (error?.message === "CATEGORY_NOT_FOUND") {
+    return {
+      status: 400,
+      message: "Categorie introuvable.",
+    };
+  }
+
+  if (error?.message === "CATEGORY_REQUIRED") {
+    return {
+      status: 400,
+      message: "La categorie de l'oeuvre est requise.",
+    };
+  }
+
+  return null;
+}
+
 function buildContractFilename(
   applicationOrArtistPayload,
   fallbackName = "artiste",
@@ -265,6 +352,57 @@ router.get("/artists/me", async (req, res) => {
     console.error("Artist profile fetch error:", error);
     return res.status(500).json({
       message: "Unable to load artist profile",
+    });
+  }
+});
+
+router.get("/artists/me/followers", async (req, res) => {
+  try {
+    const artist = await artistRepository.findByUserId(req.user.id);
+
+    if (!artist) {
+      return res.status(404).json({
+        message: "Profil artiste introuvable.",
+      });
+    }
+
+    const followers = await prisma.follow.findMany({
+      where: {
+        artistId: artist.id,
+      },
+      orderBy: [
+        {
+          createdAt: "desc",
+        },
+        {
+          id: "desc",
+        },
+      ],
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      followers: followers
+        .map((follow) => follow.user)
+        .filter(Boolean)
+        .map((user) => ({
+          id: user.id,
+          username: user.username || "Utilisateur",
+          email: user.email || "",
+        })),
+    });
+  } catch (error) {
+    console.error("Artist followers fetch error:", error);
+    return res.status(500).json({
+      message: "Impossible de charger vos followers.",
     });
   }
 });
@@ -483,5 +621,142 @@ router.get("/artists/me/contract.pdf", async (req, res) => {
     });
   }
 });
+
+router.get("/artists/me/artworks", ensureVerifiedArtist, async (req, res) => {
+  try {
+    const artworks = await artworkRepository.listArtworksByArtistId(
+      req.artist.id,
+    );
+
+    return res.status(200).json({
+      artworks: artworks.map((artwork) => serializeArtwork(artwork)),
+    });
+  } catch (error) {
+    console.error("Artist artworks fetch error:", error);
+    return res.status(500).json({
+      message: "Impossible de charger vos oeuvres.",
+    });
+  }
+});
+
+router.post("/artists/me/artworks", ensureVerifiedArtist, async (req, res) => {
+  try {
+    const input = normalizeArtworkInput(req.body);
+    const validationError = validateArtworkInput(input);
+
+    if (validationError) {
+      return res.status(400).json({
+        message: validationError,
+      });
+    }
+
+    const categoryId = await resolveCategoryId(input);
+    const artwork = await artworkRepository.createArtwork({
+      artistId: req.artist.id,
+      title: input.title,
+      description: input.description,
+      categoryId,
+      price: input.price,
+      protection: input.protection,
+    });
+
+    return res.status(201).json({
+      message: "Oeuvre publiee avec succes.",
+      artwork: serializeArtwork(artwork),
+    });
+  } catch (error) {
+    const mappedError = mapArtworkRouteError(error);
+
+    if (mappedError) {
+      return res.status(mappedError.status).json({
+        message: mappedError.message,
+      });
+    }
+
+    console.error("Artist artwork create error:", error);
+    return res.status(500).json({
+      message: "Impossible de publier cette oeuvre.",
+    });
+  }
+});
+
+router.patch(
+  "/artists/me/artworks/:id(\\d+)",
+  ensureVerifiedArtist,
+  async (req, res) => {
+    try {
+      const artworkId = Number.parseInt(req.params.id, 10);
+      const input = normalizeArtworkInput(req.body);
+      const validationError = validateArtworkInput(input);
+
+      if (validationError) {
+        return res.status(400).json({
+          message: validationError,
+        });
+      }
+
+      const categoryId = await resolveCategoryId(input);
+      const artwork = await artworkRepository.updateArtwork({
+        artworkId,
+        artistId: req.artist.id,
+        title: input.title,
+        description: input.description,
+        categoryId,
+        price: input.price,
+        protection: input.protection,
+      });
+
+      return res.status(200).json({
+        message: "Oeuvre mise a jour.",
+        artwork: serializeArtwork(artwork),
+      });
+    } catch (error) {
+      const mappedError = mapArtworkRouteError(error);
+
+      if (mappedError) {
+        return res.status(mappedError.status).json({
+          message: mappedError.message,
+        });
+      }
+
+      console.error("Artist artwork update error:", error);
+      return res.status(500).json({
+        message: "Impossible de mettre a jour cette oeuvre.",
+      });
+    }
+  },
+);
+
+router.delete(
+  "/artists/me/artworks/:id(\\d+)",
+  ensureVerifiedArtist,
+  async (req, res) => {
+    try {
+      const artworkId = Number.parseInt(req.params.id, 10);
+
+      await artworkRepository.deleteArtwork({
+        artworkId,
+        artistId: req.artist.id,
+      });
+
+      return res.status(200).json({
+        message: "Oeuvre supprimee.",
+      });
+    } catch (error) {
+      const mappedError = mapArtworkRouteError(error);
+
+      if (mappedError) {
+        return res.status(mappedError.status).json({
+          message: mappedError.message,
+        });
+      }
+
+      console.error("Artist artwork delete error:", error);
+      return res.status(500).json({
+        message: "Impossible de supprimer cette oeuvre.",
+      });
+    }
+  },
+);
 
 module.exports = router;

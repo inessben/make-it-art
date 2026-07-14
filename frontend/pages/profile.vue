@@ -77,8 +77,8 @@
       <section v-if="user" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <article
           v-for="card in cards"
-          :disabled="!canAccessCard(card)"
           :key="card.title"
+          :disabled="!canAccessCard(card)"
           :class="{ 'opacity-50 cursor-not-allowed': !canAccessCard(card) }"
           class="group cursor-pointer grid gap-4 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-5 transition duration-200 hover:-translate-y-1 hover:border-[#262D30]"
           @click="canAccessCard(card) ? goTo(card.route) : null"
@@ -87,6 +87,7 @@
             class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#4A6CF7]/10 text-2xl text-[#4A6CF7]"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- eslint-disable-next-line vue/no-v-html -->
               <g v-html="card.icon"></g>
             </svg>
           </div>
@@ -185,7 +186,29 @@ const cards = computed(() => [
     ',
     title: "Liste de souhaits",
     route: "/wishlist",
-    description: "Œuvres sauvegardées et favoris",
+    description: "Favoris, collections et suivi d'artistes",
+  },
+  {
+    icon: '\
+    <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="#E6EDF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\
+    <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="#E6EDF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\
+    <path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="#E6EDF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\
+    <path d="M17 3.13C17.8604 3.3503 18.623 3.8507 19.1676 4.55231C19.7122 5.25392 20.0078 6.11683 20.0078 7.005C20.0078 7.89317 20.7122 8.75608 19.1676 9.45769C18.623 10.1593 17.8604 10.6597 17 10.88" stroke="#E6EDF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\
+    ',
+    title: "Follows / Followers",
+    route: "/follows",
+    description: "Voir qui vous suivez et qui vous suit",
+  },
+  {
+    icon: '\
+    <path d="M6 6H22L20 14H8L6 6Z" stroke="#E6EDF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\
+    <path d="M6 6L4 2H1" stroke="#E6EDF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\
+    <path d="M8 22C9.10457 22 10 21.1046 10 20C10 18.8954 9.10457 18 8 18C6.89543 18 6 18.8954 6 20C6 21.1046 6.89543 22 8 22Z" stroke="#E6EDF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\
+    <path d="M20 22C21.1046 22 22 21.1046 22 20C22 18.8954 21.1046 18 20 18C18.8954 18 18 18.8954 18 20C18 21.1046 18.8954 22 20 22Z" stroke="#E6EDF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\
+    ',
+    title: "Panier",
+    route: "/cart",
+    description: "Ajouter / retirer des oeuvres et voir le recap",
   },
   {
     icon: '\
