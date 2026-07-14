@@ -23,6 +23,7 @@ const {
   serializeArtwork,
 } = require("../utils/serialize-marketplace");
 const { ensureBuffer } = require("../utils/ensure-buffer");
+const prisma = require("../lib/prisma");
 
 const router = express.Router();
 
@@ -351,6 +352,57 @@ router.get("/artists/me", async (req, res) => {
     console.error("Artist profile fetch error:", error);
     return res.status(500).json({
       message: "Unable to load artist profile",
+    });
+  }
+});
+
+router.get("/artists/me/followers", async (req, res) => {
+  try {
+    const artist = await artistRepository.findByUserId(req.user.id);
+
+    if (!artist) {
+      return res.status(404).json({
+        message: "Profil artiste introuvable.",
+      });
+    }
+
+    const followers = await prisma.follow.findMany({
+      where: {
+        artistId: artist.id,
+      },
+      orderBy: [
+        {
+          createdAt: "desc",
+        },
+        {
+          id: "desc",
+        },
+      ],
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      followers: followers
+        .map((follow) => follow.user)
+        .filter(Boolean)
+        .map((user) => ({
+          id: user.id,
+          username: user.username || "Utilisateur",
+          email: user.email || "",
+        })),
+    });
+  } catch (error) {
+    console.error("Artist followers fetch error:", error);
+    return res.status(500).json({
+      message: "Impossible de charger vos followers.",
     });
   }
 });

@@ -71,6 +71,13 @@ function mapRepositoryError(error) {
     };
   }
 
+  if (error?.message === "DEFAULT_FAVORITES_COLLECTION_PROTECTED") {
+    return {
+      status: 409,
+      message: "La collection Favoris ne peut pas etre supprimee.",
+    };
+  }
+
   return null;
 }
 
@@ -325,6 +332,26 @@ router.delete(
       console.error("Follow delete error:", error);
       return res.status(500).json({
         message: "Impossible de ne plus suivre cet artiste.",
+      });
+    }
+  },
+);
+
+router.get(
+  "/follows/me",
+  authRequired,
+  ensureCollectorAccount,
+  async (req, res) => {
+    try {
+      const artists = await collectorRepository.listFollowedArtists(req.user.id);
+
+      return res.status(200).json({
+        artists: artists.map((artist) => serializeArtistSummary(artist)),
+      });
+    } catch (error) {
+      console.error("Followed artists fetch error:", error);
+      return res.status(500).json({
+        message: "Impossible de charger vos abonnements.",
       });
     }
   },

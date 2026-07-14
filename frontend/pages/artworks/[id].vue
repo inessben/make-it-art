@@ -130,6 +130,19 @@
                 type="button"
                 class="inline-flex min-h-12 items-center justify-center rounded-2xl border px-6 text-sm font-semibold transition"
                 :class="
+                  isInCart
+                    ? 'border-[#F2C97D] bg-[#F2C97D]/10 text-[#F7D990]'
+                    : 'border-[#24314F] bg-[#0C111D] text-[#E6EDF7] hover:border-[#4A6CF7]'
+                "
+                @click="toggleCart()"
+              >
+                {{ isInCart ? "Retirer du panier" : "Ajouter au panier" }}
+              </button>
+
+              <button
+                type="button"
+                class="inline-flex min-h-12 items-center justify-center rounded-2xl border px-6 text-sm font-semibold transition"
+                :class="
                   artwork.artist?.isFollowed
                     ? 'border-[#F2C97D] bg-[#F2C97D]/10 text-[#F7D990]'
                     : 'border-[#24314F] bg-[#0C111D] text-[#E6EDF7] hover:border-[#4A6CF7]'
@@ -143,8 +156,8 @@
                   artwork.artist && followLoading[artwork.artist.id]
                     ? "Mise a jour..."
                     : artwork.artist?.isFollowed
-                      ? "Ne plus suivre"
-                      : "Suivre l'artiste"
+                      ? "Unfollow"
+                      : "Follow"
                 }}
               </button>
 
@@ -154,6 +167,13 @@
                 class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#24314F] bg-transparent px-6 text-sm font-semibold text-[#C9D6FF] transition hover:border-[#4A6CF7]"
               >
                 Voir le profil artiste
+              </NuxtLink>
+
+              <NuxtLink
+                to="/cart"
+                class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#24314F] bg-transparent px-6 text-sm font-semibold text-[#C9D6FF] transition hover:border-[#4A6CF7]"
+              >
+                Voir le panier
               </NuxtLink>
             </div>
 
@@ -176,9 +196,13 @@
                   <h2 class="mt-3 text-xl font-semibold text-white">
                     Sauvegarder cette oeuvre dans une collection
                   </h2>
+                  <p class="mt-2 text-sm text-[#96A4B8]">
+                    Utilise le bouton Favori pour la liste de souhaits. Ici, tu
+                    peux ranger l'oeuvre dans une collection personnelle.
+                  </p>
                 </div>
                 <NuxtLink
-                  to="/collections"
+                  to="/wishlist?tab=collections"
                   class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#24314F] bg-[#0B111C] px-4 text-sm font-semibold text-[#D5E0FF] transition hover:bg-[#12192A]"
                 >
                   Gérer
@@ -300,6 +324,7 @@ import { useRequestHeaders, useRoute } from "#app";
 import { useAuthStore } from "~/stores/auth";
 import ArtworkCard from "~/components/marketplace/ArtworkCard.vue";
 import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
+import { useCartStore } from "~/stores/cart";
 import {
   formatMarketplaceDate,
   formatMarketplacePrice,
@@ -307,6 +332,7 @@ import {
 
 const route = useRoute();
 const auth = useAuthStore();
+const cart = useCartStore();
 const requestHeaders = import.meta.server
   ? useRequestHeaders(["cookie"])
   : undefined;
@@ -338,6 +364,12 @@ const formattedDate = computed(() =>
 );
 const errorMessage = computed(() => error.value?.data?.message || "");
 const showCollectorTools = computed(() => auth.user && !auth.isAdmin);
+const isInCart = computed(() =>
+  Boolean(
+    artwork.value?.id &&
+      cart.items.some((item) => item.artwork?.id === artwork.value.id),
+  ),
+);
 
 const {
   actionMessage,
@@ -346,6 +378,21 @@ const {
   toggleFavorite,
   toggleFollow,
 } = useMarketplaceActions(auth);
+
+function toggleCart() {
+  cart.hydrate();
+
+  if (!artwork.value?.id) {
+    return;
+  }
+
+  if (isInCart.value) {
+    cart.removeArtwork(artwork.value.id);
+    return;
+  }
+
+  cart.addArtwork(artwork.value, 1);
+}
 
 async function loadCollections() {
   if (!showCollectorTools.value) {
@@ -360,7 +407,9 @@ async function loadCollections() {
       credentials: "include",
     });
 
-    personalCollections.value = response.collections || [];
+    personalCollections.value = (response.collections || []).filter(
+      (collection) => !collection.isDefaultFavorites,
+    );
   } catch (error) {
     collectionMessage.value =
       error?.data?.message || "Impossible de charger vos collections.";
@@ -410,6 +459,8 @@ async function addToCollection() {
 }
 
 onMounted(async () => {
+  cart.hydrate();
+
   if (!auth.user) {
     try {
       await auth.fetchCurrentUser();

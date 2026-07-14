@@ -88,10 +88,10 @@
             </NuxtLink>
             <NuxtLink
               v-if="showCollectorShortcut"
-              to="/collections"
+              to="/wishlist"
               class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#24314F] bg-transparent px-7 text-sm font-semibold text-[#C9D6FF] transition hover:border-[#4A6CF7]"
             >
-              Mes collections
+              Liste de souhaits
             </NuxtLink>
           </div>
 
