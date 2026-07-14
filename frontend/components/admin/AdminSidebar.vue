@@ -1,6 +1,10 @@
 <template>
-  <aside class="flex flex-col border-b border-slate-800 bg-slate-950/80 lg:min-h-[1160px] lg:border-b-0 lg:border-r">
-    <div class="flex min-h-[96px] items-center gap-4 border-b border-slate-800 px-5 lg:min-h-[116px] lg:px-8">
+  <aside
+    class="flex flex-col border-b border-slate-800 bg-slate-950/80 lg:min-h-[1160px] lg:border-b-0 lg:border-r"
+  >
+    <div
+      class="flex min-h-[96px] items-center gap-4 border-b border-slate-800 px-5 lg:min-h-[116px] lg:px-8"
+    >
       <div
         class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-slate-750 text-title-4 text-violet-400"
         aria-hidden="true"
@@ -9,7 +13,9 @@
       </div>
       <div class="min-w-0">
         <p class="truncate text-body-1 uppercase">{{ user?.username || "Administrator" }}</p>
-        <span class="mt-2 inline-flex border border-slate-750 px-2 py-0.5 text-subtitle-3 uppercase text-slate-400">
+        <span
+          class="mt-2 inline-flex border border-slate-750 px-2 py-0.5 text-subtitle-3 uppercase text-slate-400"
+        >
           Admin
         </span>
       </div>
@@ -103,9 +109,12 @@ const adminInitials = computed(() => getArtistInitials(user.value?.username || "
 const mainNavigation = adminNavigation.filter((item) => item.route !== "/admin/settings");
 const systemNavigation = adminNavigation.filter((item) => item.route === "/admin/settings");
 
-watch(() => route.fullPath, () => {
-  adminMenuOpen.value = false;
-});
+watch(
+  () => route.fullPath,
+  () => {
+    adminMenuOpen.value = false;
+  }
+);
 
 function isActive(targetRoute) {
   return targetRoute === "/admin" ? route.path === targetRoute : route.path.startsWith(targetRoute);

@@ -33,20 +33,20 @@ import EyeOffIcon from "~/components/icons/EyeOffIcon.vue";
 defineProps({
   id: {
     type: String,
-    required: true,
+    required: true
   },
   label: {
     type: String,
-    default: "Password",
+    default: "Password"
   },
   modelValue: {
     type: String,
-    required: true,
+    required: true
   },
   autocomplete: {
     type: String,
-    default: "current-password",
-  },
+    default: "current-password"
+  }
 });
 
 defineEmits(["update:modelValue"]);

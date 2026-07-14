@@ -43,9 +43,7 @@
 
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-3">
-                  <h1
-                    class="break-words text-title-2 text-white sm:text-title-1"
-                  >
+                  <h1 class="break-words text-title-2 text-white sm:text-title-1">
                     {{ artist.displayName }}
                   </h1>
                   <span
@@ -122,32 +120,20 @@
           </div>
 
           <div class="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-            <article
-              class="rounded-[24px] border border-slate-800 bg-slate-950 p-5"
-            >
-              <p class="text-xs uppercase tracking-widest text-slate-500">
-                Artworks
-              </p>
+            <article class="rounded-[24px] border border-slate-800 bg-slate-950 p-5">
+              <p class="text-xs uppercase tracking-widest text-slate-500">Artworks</p>
               <p class="mt-3 text-3xl font-semibold text-white">
                 {{ artist.stats?.artworks || 0 }}
               </p>
             </article>
-            <article
-              class="rounded-[24px] border border-slate-800 bg-slate-950 p-5"
-            >
-              <p class="text-xs uppercase tracking-widest text-slate-500">
-                Followers
-              </p>
+            <article class="rounded-[24px] border border-slate-800 bg-slate-950 p-5">
+              <p class="text-xs uppercase tracking-widest text-slate-500">Followers</p>
               <p class="mt-3 text-3xl font-semibold text-white">
                 {{ artist.stats?.followers || 0 }}
               </p>
             </article>
-            <article
-              class="rounded-[24px] border border-slate-800 bg-slate-950 p-5"
-            >
-              <p class="text-xs uppercase tracking-widest text-slate-500">
-                Collections
-              </p>
+            <article class="rounded-[24px] border border-slate-800 bg-slate-950 p-5">
+              <p class="text-xs uppercase tracking-widest text-slate-500">Collections</p>
               <p class="mt-3 text-3xl font-semibold text-white">
                 {{ artist.stats?.collections || 0 }}
               </p>
@@ -159,12 +145,8 @@
           <div class="grid gap-6">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p class="text-xs uppercase tracking-widest text-violet-400">
-                  Public portfolio
-                </p>
-                <h2 class="mt-3 text-2xl font-semibold text-white">
-                  Available artworks
-                </h2>
+                <p class="text-xs uppercase tracking-widest text-violet-400">Public portfolio</p>
+                <h2 class="mt-3 text-2xl font-semibold text-white">Available artworks</h2>
               </div>
               <NuxtLink
                 to="/artworks"
@@ -194,12 +176,8 @@
 
           <div class="grid gap-6">
             <div>
-              <p class="text-xs uppercase tracking-widest text-violet-400">
-                Artist collections
-              </p>
-              <h2 class="mt-3 text-2xl font-semibold text-white">
-                Series and selections
-              </h2>
+              <p class="text-xs uppercase tracking-widest text-violet-400">Artist collections</p>
+              <h2 class="mt-3 text-2xl font-semibold text-white">Series and selections</h2>
             </div>
 
             <div v-if="collections.length" class="grid gap-4">
@@ -214,10 +192,7 @@
                       {{ collection.title }}
                     </h3>
                     <p class="mt-3 text-sm leading-7 text-slate-400">
-                      {{
-                        collection.description ||
-                        "Collection currently being curated."
-                      }}
+                      {{ collection.description || "Collection currently being curated." }}
                     </p>
                   </div>
                   <span
@@ -265,29 +240,24 @@ import { getArtistInitials } from "~/utils/marketplace";
 
 const route = useRoute();
 const auth = useAuthStore();
-const requestHeaders = import.meta.server
-  ? useRequestHeaders(["cookie"])
-  : undefined;
+const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
 
-const { data, pending, error, refresh } = await useFetch(
-  `/api/artists/${route.params.id}`,
-  {
-    headers: requestHeaders,
-    credentials: "include",
-    default: () => ({
-      artist: null,
-      artworks: [],
-      collections: [],
-    }),
-  },
-);
+const { data, pending, error, refresh } = await useFetch(`/api/artists/${route.params.id}`, {
+  headers: requestHeaders,
+  credentials: "include",
+  default: () => ({
+    artist: null,
+    artworks: [],
+    collections: []
+  })
+});
 
 const artist = computed(() => data.value?.artist || null);
 const artworks = computed(() => data.value?.artworks || []);
 const collections = computed(() => data.value?.collections || []);
 const initials = computed(() => getArtistInitials(artist.value?.displayName));
 const errorMessage = computed(
-  () => error.value?.data?.message || "The artist profile is temporarily unavailable.",
+  () => error.value?.data?.message || "The artist profile is temporarily unavailable."
 );
 
 const {
@@ -296,7 +266,7 @@ const {
   favoriteLoading,
   followLoading,
   toggleFavorite,
-  toggleFollow,
+  toggleFollow
 } = useMarketplaceActions(auth);
 
 onMounted(async () => {

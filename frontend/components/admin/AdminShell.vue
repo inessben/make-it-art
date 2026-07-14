@@ -24,6 +24,6 @@
 defineProps({
   eyebrow: { type: String, default: "Admin" },
   title: { type: String, required: true },
-  description: { type: String, required: true },
+  description: { type: String, required: true }
 });
 </script>

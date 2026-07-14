@@ -1,11 +1,5 @@
 <template>
-  <main
-    :class="
-      props.embedded
-        ? 'text-slate-100'
-        : 'min-h-screen bg-black text-slate-100'
-    "
-  >
+  <main :class="props.embedded ? 'text-slate-100' : 'min-h-screen bg-black text-slate-100'">
     <div
       :class="
         props.embedded
@@ -15,11 +9,7 @@
     >
       <AccountSettingsSidebar v-if="!props.embedded" />
 
-      <section
-        :class="
-          props.embedded ? 'min-w-0' : 'min-w-0 pb-16 pt-1 lg:px-4'
-        "
-      >
+      <section :class="props.embedded ? 'min-w-0' : 'min-w-0 pb-16 pt-1 lg:px-4'">
         <header v-if="!props.embedded">
           <h1 class="text-title-2">General Settings</h1>
           <p class="mt-2 text-body-1 text-slate-400">

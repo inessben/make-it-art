@@ -4,7 +4,7 @@ function appConfig() {
   return {
     baseURL: process.env.NUXT_APP_BASE_URL || "/",
     buildAssetsDir: process.env.NUXT_APP_BUILD_ASSETS_DIR || "/_nuxt/",
-    cdnURL: process.env.NUXT_APP_CDN_URL || "",
+    cdnURL: process.env.NUXT_APP_CDN_URL || ""
   };
 }
 

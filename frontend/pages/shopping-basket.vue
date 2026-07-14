@@ -1,7 +1,11 @@
 <template>
   <main class="min-h-screen bg-black px-5 py-12 text-slate-100 sm:px-8">
-    <section class="mx-auto w-full max-w-[1280px] border border-slate-800 bg-slate-950/75 p-6 sm:p-10">
-      <header class="flex flex-col gap-6 border-b border-slate-800 pb-8 sm:flex-row sm:items-end sm:justify-between">
+    <section
+      class="mx-auto w-full max-w-[1280px] border border-slate-800 bg-slate-950/75 p-6 sm:p-10"
+    >
+      <header
+        class="flex flex-col gap-6 border-b border-slate-800 pb-8 sm:flex-row sm:items-end sm:justify-between"
+      >
         <div>
           <p class="text-subtitle-2 uppercase tracking-[0.14em] text-violet-400">Your selection</p>
           <h1 class="mt-3 text-title-2">Shopping basket</h1>

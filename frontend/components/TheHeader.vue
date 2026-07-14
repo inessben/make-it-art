@@ -59,10 +59,7 @@
           aria-label="Account navigation"
         >
           <template v-if="!auth.isAdmin">
-            <NuxtLink
-              to="/wallet"
-              class="transition-opacity hover:opacity-70"
-              aria-label="Wallet"
+            <NuxtLink to="/wallet" class="transition-opacity hover:opacity-70" aria-label="Wallet"
               ><img class="h-5 w-5 sm:h-6 sm:w-6" src="/icons/wallet.svg" alt=""
             /></NuxtLink>
             <NuxtLink

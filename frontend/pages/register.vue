@@ -1,31 +1,10 @@
 <template>
-  <AuthPanel
-    title="Create your account"
-    max-width="480px"
-    @submit="handleRegister"
-  >
-    <TextField
-      id="username"
-      v-model="form.username"
-      label="Username"
-      autocomplete="username"
-    />
+  <AuthPanel title="Create your account" max-width="480px" @submit="handleRegister">
+    <TextField id="username" v-model="form.username" label="Username" autocomplete="username" />
 
-    <TextField
-      id="email"
-      v-model="form.email"
-      label="Email"
-      type="email"
-      autocomplete="email"
-    />
+    <TextField id="email" v-model="form.email" label="Email" type="email" autocomplete="email" />
 
-    <TextField
-      id="phone"
-      v-model="form.phone"
-      label="Phone number"
-      type="tel"
-      autocomplete="tel"
-    />
+    <TextField id="phone" v-model="form.phone" label="Phone number" type="tel" autocomplete="tel" />
 
     <PasswordField
       id="password"
@@ -43,11 +22,7 @@
       autocomplete="new-password"
     />
 
-    <SubmitButton
-      label="Create account"
-      loading-label="Creating account..."
-      :loading="loading"
-    />
+    <SubmitButton label="Create account" loading-label="Creating account..." :loading="loading" />
 
     <FormMessage :message="message" />
 
@@ -62,11 +37,11 @@
 import { reactive, ref } from "vue";
 import {
   getPasswordConfirmationError,
-  getPasswordValidationError,
+  getPasswordValidationError
 } from "~/utils/password-validation";
 
 definePageMeta({
-  middleware: "guest",
+  middleware: "guest"
 });
 
 const form = reactive({
@@ -74,7 +49,7 @@ const form = reactive({
   email: "",
   phone: "",
   password: "",
-  confirmPassword: "",
+  confirmPassword: ""
 });
 
 const message = ref("");
@@ -103,8 +78,8 @@ async function handleRegister() {
         email: form.email,
         phone: form.phone,
         password: form.password,
-        confirmPassword: form.confirmPassword,
-      },
+        confirmPassword: form.confirmPassword
+      }
     });
 
     message.value = response.message || "Account created";

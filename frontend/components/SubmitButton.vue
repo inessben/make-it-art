@@ -8,16 +8,16 @@
 defineProps({
   label: {
     type: String,
-    required: true,
+    required: true
   },
   loadingLabel: {
     type: String,
-    required: true,
+    required: true
   },
   loading: {
     type: Boolean,
-    default: false,
-  },
+    default: false
+  }
 });
 </script>
 

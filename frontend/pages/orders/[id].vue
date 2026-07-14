@@ -60,7 +60,9 @@
 
         <div class="rounded-[24px] border border-slate-800 bg-violet-950 p-6">
           <h2 class="text-lg font-semibold text-slate-100">Purchased artworks</h2>
-          <p v-if="downloadMessage" class="mt-3 text-sm text-red-200" role="status">{{ downloadMessage }}</p>
+          <p v-if="downloadMessage" class="mt-3 text-sm text-red-200" role="status">
+            {{ downloadMessage }}
+          </p>
           <div class="mt-5 space-y-4">
             <article
               v-for="item in order.items"
@@ -157,7 +159,7 @@ async function downloadArtwork(item) {
   try {
     const file = await $fetch(`/api/orders/${route.params.id}/download/${item.id}`, {
       credentials: "include",
-      responseType: "blob",
+      responseType: "blob"
     });
     const url = URL.createObjectURL(file);
     const link = document.createElement("a");

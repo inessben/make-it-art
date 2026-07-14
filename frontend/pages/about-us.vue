@@ -13,9 +13,9 @@
           <span>Precision.</span>
         </h1>
         <p class="mt-10 max-w-[760px] text-body-1 leading-7 text-slate-400">
-          We bridge the void between raw human emotion and mathematical certainty. Also connecting
-          talented digital artists with art enthusiasts worldwide. We believe that digital art
-          deserves the same recognition and value as traditional art forms.
+          We bridge the void between raw human emotion certainty. Also connecting talented digital
+          artists with art enthusiasts worldwide. We believe that digital art deserves the same
+          recognition and value as traditional art forms.
         </p>
       </div>
 
@@ -31,7 +31,9 @@
     <section
       class="mx-auto grid min-h-[440px] w-full max-w-[1240px] items-center gap-16 px-6 py-20 lg:grid-cols-[0.9fr_1.1fr]"
     >
-      <h2 class="text-title-2 font-light uppercase leading-[1.02] tracking-[-0.04em] sm:text-title-1 lg:text-big-title-4">
+      <h2
+        class="text-title-2 font-light uppercase leading-[1.02] tracking-[-0.04em] sm:text-title-1 lg:text-big-title-4"
+      >
         Our<br />Mission
       </h2>
       <div class="border-l border-slate-500 pl-9">
@@ -89,7 +91,9 @@
       </div>
     </section>
 
-    <section class="mx-auto mt-14 min-h-[570px] w-full max-w-[1280px] bg-slate-950/55 px-6 py-16 sm:px-10 sm:py-24">
+    <section
+      class="mx-auto mt-14 min-h-[570px] w-full max-w-[1280px] bg-slate-950/55 px-6 py-16 sm:px-10 sm:py-24"
+    >
       <h2 class="text-center text-title-2 uppercase text-slate-100">Curation process</h2>
       <div class="mt-24 grid gap-16 md:grid-cols-3">
         <article class="flex flex-col items-center text-center">

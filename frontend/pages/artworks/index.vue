@@ -1,12 +1,16 @@
 <template>
   <main class="min-h-screen bg-black text-slate-100">
     <div class="mx-auto w-full max-w-[1320px] px-4 py-6 sm:px-5 sm:py-8">
-      <header class="flex flex-col gap-5 border-b border-slate-900 pb-6 sm:flex-row sm:items-end sm:justify-between">
+      <header
+        class="flex flex-col gap-5 border-b border-slate-900 pb-6 sm:flex-row sm:items-end sm:justify-between"
+      >
         <div>
           <p class="text-subtitle-2 uppercase tracking-[0.14em] text-violet-400">Marketplace</p>
           <h1 class="mt-3 text-title-2 text-slate-100">Digital artworks</h1>
           <p class="mt-2 text-body-1 text-slate-400">
-            Browse {{ filteredArtworks.length }} curated artwork{{ filteredArtworks.length === 1 ? "" : "s" }}.
+            Browse {{ filteredArtworks.length }} curated artwork{{
+              filteredArtworks.length === 1 ? "" : "s"
+            }}.
           </p>
         </div>
         <button
@@ -26,7 +30,9 @@
           class="border border-slate-800 bg-slate-950/70 px-5 py-6 lg:block lg:self-start"
           :class="showFilters ? 'block' : 'hidden'"
         >
-          <h2 class="text-subtitle-2 font-bold uppercase tracking-[0.12em] text-slate-500">Filters</h2>
+          <h2 class="text-subtitle-2 font-bold uppercase tracking-[0.12em] text-slate-500">
+            Filters
+          </h2>
 
           <label class="mt-7 grid gap-3 text-body-1 text-slate-300">
             Search
@@ -175,25 +181,22 @@ const categoryOptions = [
   { label: "Digital illustrations", value: "illustration" },
   { label: "3D motion", value: "3d-motion" },
   { label: "Graphical assets", value: "graphic" },
-  { label: "Photography", value: "photography" },
+  { label: "Photography", value: "photography" }
 ];
-const initialCategory =
-  typeof route.query.artType === "string" ? route.query.artType : "";
+const initialCategory = typeof route.query.artType === "string" ? route.query.artType : "";
 const selectedCategories = ref(initialCategory ? [initialCategory] : []);
-const requestHeaders = import.meta.server
-  ? useRequestHeaders(["cookie"])
-  : undefined;
+const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
 
 const { data, pending, error, refresh } = await useFetch("/api/artworks", {
   headers: requestHeaders,
   credentials: "include",
   query: { limit: 80 },
-  default: () => ({ artworks: [] }),
+  default: () => ({ artworks: [] })
 });
 
 const artworks = computed(() => data.value?.artworks || []);
 const errorMessage = computed(
-  () => error.value?.data?.message || "The artwork catalogue is temporarily unavailable.",
+  () => error.value?.data?.message || "The artwork catalogue is temporarily unavailable."
 );
 const hasActiveFilters = computed(
   () =>
@@ -201,7 +204,7 @@ const hasActiveFilters = computed(
     selectedCategories.value.length > 0 ||
     minimumPrice.value !== "" ||
     maximumPrice.value !== "" ||
-    sortBy.value !== "latest",
+    sortBy.value !== "latest"
 );
 
 const filteredArtworks = computed(() => {
@@ -216,21 +219,21 @@ const filteredArtworks = computed(() => {
       artwork.description,
       artwork.category?.name,
       artwork.artist?.displayName,
-      artwork.artist?.artType,
-    ].join(" ").toLowerCase();
-    const categoryText = [artwork.category?.name, artwork.artist?.artType]
+      artwork.artist?.artType
+    ]
       .join(" ")
       .toLowerCase();
+    const categoryText = [artwork.category?.name, artwork.artist?.artType].join(" ").toLowerCase();
     const price = Number(artwork.priceValue);
     const matchesCategory =
       categories.length === 0 ||
-      categories.some((category) =>
-        categoryText.includes(category.replace("-", " ")),
-      );
+      categories.some((category) => categoryText.includes(category.replace("-", " ")));
     const matchesMinimum = !Number.isFinite(min) || (Number.isFinite(price) && price >= min);
     const matchesMaximum = !Number.isFinite(max) || (Number.isFinite(price) && price <= max);
 
-    return (!search || haystack.includes(search)) && matchesCategory && matchesMinimum && matchesMaximum;
+    return (
+      (!search || haystack.includes(search)) && matchesCategory && matchesMinimum && matchesMaximum
+    );
   });
 
   return [...result].sort((left, right) => {
@@ -238,17 +241,19 @@ const filteredArtworks = computed(() => {
       return Number(right.favoriteCount || 0) - Number(left.favoriteCount || 0);
     }
     if (sortBy.value === "price-asc" || sortBy.value === "price-desc") {
-      const leftPrice = Number.isFinite(Number(left.priceValue)) ? Number(left.priceValue) : Infinity;
-      const rightPrice = Number.isFinite(Number(right.priceValue)) ? Number(right.priceValue) : Infinity;
+      const leftPrice = Number.isFinite(Number(left.priceValue))
+        ? Number(left.priceValue)
+        : Infinity;
+      const rightPrice = Number.isFinite(Number(right.priceValue))
+        ? Number(right.priceValue)
+        : Infinity;
       return sortBy.value === "price-asc" ? leftPrice - rightPrice : rightPrice - leftPrice;
     }
     return new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime();
   });
 });
 
-const totalPages = computed(() =>
-  Math.max(1, Math.ceil(filteredArtworks.value.length / pageSize)),
-);
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredArtworks.value.length / pageSize)));
 const currentPage = computed(() => {
   const parsed = Number.parseInt(String(route.query.page || "1"), 10);
   return Math.min(Math.max(Number.isInteger(parsed) ? parsed : 1, 1), totalPages.value);
@@ -258,12 +263,8 @@ const paginatedArtworks = computed(() => {
   return filteredArtworks.value.slice(start, start + pageSize);
 });
 
-const {
-  actionMessage,
-  actionStatus,
-  favoriteLoading,
-  toggleFavorite,
-} = useMarketplaceActions(auth);
+const { actionMessage, actionStatus, favoriteLoading, toggleFavorite } =
+  useMarketplaceActions(auth);
 
 watch(
   [searchTerm, minimumPrice, maximumPrice, sortBy, selectedCategories],
@@ -273,14 +274,14 @@ watch(
     delete query.page;
     await router.replace({ path: route.path, query });
   },
-  { deep: true },
+  { deep: true }
 );
 
 watch(
   () => route.query.artType,
   (artType) => {
     selectedCategories.value = typeof artType === "string" ? [artType] : [];
-  },
+  }
 );
 
 onMounted(async () => {

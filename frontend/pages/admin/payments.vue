@@ -32,28 +32,15 @@
       </article>
     </section>
 
-    <AppStatePanel
-      v-if="successMessage"
-      compact
-      type="success"
-      :message="successMessage"
-    />
+    <AppStatePanel v-if="successMessage" compact type="success" :message="successMessage" />
     <section class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6">
-      <div
-        class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
-      >
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">
-            Transactions
-          </p>
-          <h2 class="mt-3 text-xl font-semibold text-slate-100">
-            Recent payments
-          </h2>
+          <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">Transactions</p>
+          <h2 class="mt-3 text-xl font-semibold text-slate-100">Recent payments</h2>
         </div>
         <div class="grid gap-3 sm:grid-cols-2">
-          <label
-            class="border border-slate-800 bg-black px-4 py-3"
-          >
+          <label class="border border-slate-800 bg-black px-4 py-3">
             <span class="sr-only">Search payments</span>
             <input
               v-model="searchTerm"
@@ -62,9 +49,7 @@
               class="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
             />
           </label>
-          <label
-            class="border border-slate-800 bg-black px-4 py-3"
-          >
+          <label class="border border-slate-800 bg-black px-4 py-3">
             <span class="sr-only">Filter payments</span>
             <select
               v-model="statusFilter"
@@ -106,9 +91,7 @@
           :key="payment.id"
           class="border border-slate-800 bg-black/30 p-5"
         >
-          <div
-            class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"
-          >
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p class="font-semibold text-slate-100">
                 {{ payment.reference }}
@@ -121,18 +104,14 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-              <span class="text-sm font-semibold text-slate-100">{{
-                payment.amount
-              }}</span>
+              <span class="text-sm font-semibold text-slate-100">{{ payment.amount }}</span>
               <span
                 class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
                 :class="statusClass(payment.status)"
               >
                 {{ payment.status }}
               </span>
-              <span class="text-sm text-slate-400">{{
-                formatDate(payment.createdAt)
-              }}</span>
+              <span class="text-sm text-slate-400">{{ formatDate(payment.createdAt) }}</span>
             </div>
           </div>
         </div>
@@ -146,7 +125,7 @@ import { computed, onMounted, ref } from "vue";
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "admin",
+  middleware: "admin"
 });
 
 const loading = ref(true);
@@ -159,30 +138,30 @@ const summary = ref({
   totalPayments: 0,
   succeededPayments: 0,
   pendingPayments: 0,
-  grossRevenue: "EUR 0.00",
+  grossRevenue: "EUR 0.00"
 });
 
 const summaries = computed(() => [
   {
     label: "Total payments",
     value: summary.value.totalPayments,
-    description: "Total number of payments in the database.",
+    description: "Total number of payments in the database."
   },
   {
     label: "Succeeded",
     value: summary.value.succeededPayments,
-    description: "Payments marked as successful.",
+    description: "Payments marked as successful."
   },
   {
     label: "Pending",
     value: summary.value.pendingPayments,
-    description: "Payments still pending.",
+    description: "Payments still pending."
   },
   {
     label: "Gross revenue",
     value: summary.value.grossRevenue,
-    description: "Current total of successful payments.",
-  },
+    description: "Current total of successful payments."
+  }
 ]);
 
 const filteredPayments = computed(() => {
@@ -195,8 +174,7 @@ const filteredPayments = computed(() => {
       payment.orderReference.toLowerCase().includes(normalizedSearch) ||
       payment.customer.toLowerCase().includes(normalizedSearch);
 
-    const matchesStatus =
-      statusFilter.value === "all" || payment.status === statusFilter.value;
+    const matchesStatus = statusFilter.value === "all" || payment.status === statusFilter.value;
 
     return matchesSearch && matchesStatus;
   });
@@ -213,7 +191,7 @@ async function loadPayments(showSuccess = false) {
 
   try {
     const response = await $fetch("/api/admin/payments", {
-      credentials: "include",
+      credentials: "include"
     });
 
     payments.value = response.payments || [];
@@ -232,8 +210,7 @@ async function loadPayments(showSuccess = false) {
       return;
     }
 
-    errorMessage.value =
-      error?.data?.message || "Unable to load admin payments.";
+    errorMessage.value = error?.data?.message || "Unable to load admin payments.";
   } finally {
     loading.value = false;
   }
@@ -257,7 +234,7 @@ function formatDate(value) {
   }
 
   return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
+    dateStyle: "medium"
   }).format(new Date(value));
 }
 </script>

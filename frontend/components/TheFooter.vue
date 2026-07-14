@@ -17,8 +17,15 @@
           <p class="mt-7 text-footer leading-[1.7] text-slate-100">
             Art is the destination...<br />Your imagination, the process !
           </p>
-          <nav class="mt-10 flex flex-wrap items-center gap-8 md:mt-[66px]" aria-label="Social media">
-            <a href="https://x.com/makeitart_io" target="_blank" rel="noopener noreferrer" aria-label="Make It Art on X"
+          <nav
+            class="mt-10 flex flex-wrap items-center gap-8 md:mt-[66px]"
+            aria-label="Social media"
+          >
+            <a
+              href="https://x.com/makeitart_io"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Make It Art on X"
               ><img class="h-8 w-8" src="/icons/x.svg" alt=""
             /></a>
             <a
@@ -43,9 +50,13 @@
         <section class="md:pt-[38px]">
           <h2 class="text-title-3">Catalogue</h2>
           <nav class="mt-7 flex flex-col gap-[18px] text-footer">
-            <NuxtLink class="hover:text-violet-400" to="/artworks?artType=illustration">Digital Art</NuxtLink
-            ><NuxtLink class="hover:text-violet-400" to="/artworks?artType=photography">Photography</NuxtLink
-            ><NuxtLink class="hover:text-violet-400" to="/artworks?artType=graphic">Graphical Assets</NuxtLink>
+            <NuxtLink class="hover:text-violet-400" to="/artworks?artType=illustration"
+              >Digital Art</NuxtLink
+            ><NuxtLink class="hover:text-violet-400" to="/artworks?artType=photography"
+              >Photography</NuxtLink
+            ><NuxtLink class="hover:text-violet-400" to="/artworks?artType=graphic"
+              >Graphical Assets</NuxtLink
+            >
           </nav>
         </section>
         <section class="md:pt-[20px]">

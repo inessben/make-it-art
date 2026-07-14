@@ -5,7 +5,7 @@ const config: Partial<Config> = {
     "./app.vue",
     "./pages/**/*.{vue,js,ts}",
     "./components/**/*.{vue,js,ts}",
-    "./layouts/**/*.vue",
+    "./layouts/**/*.vue"
   ],
   theme: {
     extend: {
@@ -14,7 +14,7 @@ const config: Partial<Config> = {
         brand: {
           500: "#5800C8",
           600: "#7B2CFF",
-          700: "#5800C8",
+          700: "#5800C8"
         },
         slate: {
           950: "#01050E",
@@ -24,41 +24,24 @@ const config: Partial<Config> = {
           750: "#262D3D",
           500: "#6C7380",
           400: "#A0A7B4",
-          100: "#E6EDF7",
+          100: "#E6EDF7"
         },
         violet: {
           950: "#24005B",
           700: "#5800C8",
           600: "#7B2CFF",
           400: "#A277FF",
-          200: "#D1BCFF",
-        },
+          200: "#D1BCFF"
+        }
       },
       fontFamily: {
-        sans: [
-          "Hanken Grotesk",
-          "ui-sans-serif",
-          "system-ui",
-          "sans-serif",
-        ],
+        sans: ["Hanken Grotesk", "ui-sans-serif", "system-ui", "sans-serif"]
       },
       fontSize: {
-        "big-title-1": [
-          "200px",
-          { lineHeight: "normal", fontWeight: "900" },
-        ],
-        "big-title-2": [
-          "148px",
-          { lineHeight: "normal", fontWeight: "200" },
-        ],
-        "big-title-3": [
-          "120px",
-          { lineHeight: "normal", fontWeight: "400" },
-        ],
-        "big-title-4": [
-          "96px",
-          { lineHeight: "normal", fontWeight: "700" },
-        ],
+        "big-title-1": ["200px", { lineHeight: "normal", fontWeight: "900" }],
+        "big-title-2": ["148px", { lineHeight: "normal", fontWeight: "200" }],
+        "big-title-3": ["120px", { lineHeight: "normal", fontWeight: "400" }],
+        "big-title-4": ["96px", { lineHeight: "normal", fontWeight: "700" }],
         "title-1": ["64px", { lineHeight: "normal", fontWeight: "700" }],
         "title-2": ["40px", { lineHeight: "normal", fontWeight: "700" }],
         "title-3": ["24px", { lineHeight: "normal", fontWeight: "600" }],
@@ -71,11 +54,11 @@ const config: Partial<Config> = {
         "subtitle-3": ["10px", { lineHeight: "normal", fontWeight: "400" }],
         "button-1": ["24px", { lineHeight: "normal", fontWeight: "600" }],
         "button-2": ["18px", { lineHeight: "normal", fontWeight: "600" }],
-        footer: ["16px", { lineHeight: "normal", fontWeight: "400" }],
-      },
-    },
+        footer: ["16px", { lineHeight: "normal", fontWeight: "400" }]
+      }
+    }
   },
-  plugins: [],
+  plugins: []
 };
 
 export default config;
