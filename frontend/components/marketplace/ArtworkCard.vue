@@ -21,16 +21,12 @@
         :disabled="favoriteLoading"
         @click="$emit('toggle-favorite', artwork)"
       >
-        {{
-          favoriteLoading ? "..." : artwork.isFavorite ? "Favorited" : "Favorite"
-        }}
+        {{ favoriteLoading ? "..." : artwork.isFavorite ? "Favorited" : "Favorite" }}
       </button>
     </div>
 
     <div class="grid gap-3">
-      <div
-        class="flex flex-wrap items-center gap-2 text-xs uppercase tracking-widest"
-      >
+      <div class="flex flex-wrap items-center gap-2 text-xs uppercase tracking-widest">
         <span class="rounded-full bg-violet-700/10 px-3 py-1 text-violet-200">
           {{ artwork.category?.name || "Digital artwork" }}
         </span>
@@ -54,9 +50,7 @@
 
     <div class="mt-auto flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div class="grid gap-1">
-        <p class="text-xs uppercase tracking-widest text-slate-500">
-          Artist
-        </p>
+        <p class="text-xs uppercase tracking-widest text-slate-500">Artist</p>
         <NuxtLink
           v-if="artwork.artist"
           :to="`/artists/${artwork.artist.id}`"
@@ -64,9 +58,7 @@
         >
           {{ artwork.artist.displayName }}
         </NuxtLink>
-        <span v-else class="text-sm font-semibold text-slate-100"
-          >Unknown artist</span
-        >
+        <span v-else class="text-sm font-semibold text-slate-100">Unknown artist</span>
       </div>
 
       <div class="text-left sm:text-right">
@@ -74,9 +66,7 @@
         <p class="mt-1 text-lg font-semibold text-slate-100">
           {{ formattedPrice }}
         </p>
-        <p class="mt-1 text-xs text-slate-500">
-          {{ artwork.favoriteCount || 0 }} favorites
-        </p>
+        <p class="mt-1 text-xs text-slate-500">{{ artwork.favoriteCount || 0 }} favorites</p>
       </div>
     </div>
   </article>
@@ -87,36 +77,32 @@ import { computed } from "vue";
 import {
   formatMarketplaceDate,
   formatMarketplacePrice,
-  getArtistInitials,
+  getArtistInitials
 } from "~/utils/marketplace";
 
 const props = defineProps({
   artwork: {
     type: Object,
-    required: true,
+    required: true
   },
   favoriteLoading: {
     type: Boolean,
-    default: false,
+    default: false
   },
   showFavoriteAction: {
     type: Boolean,
-    default: false,
-  },
+    default: false
+  }
 });
 
 defineEmits(["toggle-favorite"]);
 
 const formattedPrice = computed(() => {
-  return formatMarketplacePrice(
-    props.artwork.priceValue ?? props.artwork.price,
-  );
+  return formatMarketplacePrice(props.artwork.priceValue ?? props.artwork.price);
 });
 
-const formattedDate = computed(() =>
-  formatMarketplaceDate(props.artwork.createdAt),
-);
+const formattedDate = computed(() => formatMarketplaceDate(props.artwork.createdAt));
 const initials = computed(() =>
-  getArtistInitials(props.artwork.artist?.displayName || props.artwork.title),
+  getArtistInitials(props.artwork.artist?.displayName || props.artwork.title)
 );
 </script>

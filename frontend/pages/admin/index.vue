@@ -4,7 +4,9 @@
       class="mx-auto grid w-full max-w-[1280px] border border-slate-900 lg:grid-cols-[320px_minmax(0,1fr)]"
     >
       <AdminSidebar class="lg:hidden" />
-      <aside class="hidden min-h-[1160px] flex-col border-r border-slate-800 bg-slate-950/80 lg:flex">
+      <aside
+        class="hidden min-h-[1160px] flex-col border-r border-slate-800 bg-slate-950/80 lg:flex"
+      >
         <div class="flex min-h-[116px] items-center gap-4 border-b border-slate-800 px-8">
           <div
             class="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-750 text-title-4 text-violet-400"

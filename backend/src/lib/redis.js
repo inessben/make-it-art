@@ -2,7 +2,7 @@ const { createClient } = require("redis");
 const env = require("../config/env");
 
 const redis = createClient({
-  url: env.redisUrl,
+  url: env.redisUrl
 });
 
 redis.on("error", (error) => {
@@ -17,5 +17,5 @@ async function connectRedis() {
 
 module.exports = {
   redis,
-  connectRedis,
+  connectRedis
 };

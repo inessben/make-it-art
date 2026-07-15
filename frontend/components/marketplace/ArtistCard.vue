@@ -21,9 +21,7 @@
             <span
               class="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-widest"
               :class="
-                artist.verified
-                  ? 'bg-violet-700/10 text-violet-200'
-                  : 'bg-amber-950 text-amber-300'
+                artist.verified ? 'bg-violet-700/10 text-violet-200' : 'bg-amber-950 text-amber-300'
               "
             >
               {{ artist.verified ? "Verified" : "Under review" }}
@@ -73,25 +71,19 @@
 
     <div class="grid gap-3 sm:grid-cols-3">
       <div class="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3">
-        <p class="text-xs uppercase tracking-widest text-slate-500">
-          Artworks
-        </p>
+        <p class="text-xs uppercase tracking-widest text-slate-500">Artworks</p>
         <p class="mt-2 text-xl font-semibold text-slate-100">
           {{ artist.stats?.artworks || 0 }}
         </p>
       </div>
       <div class="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3">
-        <p class="text-xs uppercase tracking-widest text-slate-500">
-          Followers
-        </p>
+        <p class="text-xs uppercase tracking-widest text-slate-500">Followers</p>
         <p class="mt-2 text-xl font-semibold text-slate-100">
           {{ artist.stats?.followers || 0 }}
         </p>
       </div>
       <div class="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3">
-        <p class="text-xs uppercase tracking-widest text-slate-500">
-          Collections
-        </p>
+        <p class="text-xs uppercase tracking-widest text-slate-500">Collections</p>
         <p class="mt-2 text-xl font-semibold text-slate-100">
           {{ artist.stats?.collections || 0 }}
         </p>
@@ -107,24 +99,22 @@ import { getArtistInitials } from "~/utils/marketplace";
 const props = defineProps({
   artist: {
     type: Object,
-    required: true,
+    required: true
   },
   followLoading: {
     type: Boolean,
-    default: false,
+    default: false
   },
   showFollowAction: {
     type: Boolean,
-    default: false,
-  },
+    default: false
+  }
 });
 
 defineEmits(["toggle-follow"]);
 
 const limitedStyles = computed(() => {
-  return Array.isArray(props.artist.styles)
-    ? props.artist.styles.slice(0, 4)
-    : [];
+  return Array.isArray(props.artist.styles) ? props.artist.styles.slice(0, 4) : [];
 });
 
 const initials = computed(() => getArtistInitials(props.artist.displayName));

@@ -52,14 +52,17 @@
               class="grid aspect-square min-h-[280px] place-items-center border border-slate-800 bg-gradient-to-br from-slate-950 via-black to-violet-950/50 p-6 text-center sm:min-h-[460px] lg:min-h-[650px]"
             >
               <div>
-                <div class="mx-auto grid h-24 w-24 place-items-center border border-violet-700/50 bg-black text-title-2 text-violet-300">
+                <div
+                  class="mx-auto grid h-24 w-24 place-items-center border border-violet-700/50 bg-black text-title-2 text-violet-300"
+                >
                   {{ artworkInitials }}
                 </div>
                 <p class="mt-6 text-subtitle-2 uppercase tracking-[0.14em] text-slate-500">
                   {{ artwork.category?.name || "Digital artwork" }}
                 </p>
                 <p class="mt-3 max-w-sm text-body-1 leading-7 text-slate-400">
-                  The artwork record is available. A media preview will appear when a deliverable file is attached.
+                  The artwork record is available. A media preview will appear when a deliverable
+                  file is attached.
                 </p>
               </div>
             </div>
@@ -67,7 +70,9 @@
 
           <div class="flex min-w-0 flex-col px-5 py-7 sm:px-8 sm:py-10 lg:px-10 lg:py-12">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <div class="grid h-12 w-12 shrink-0 place-items-center border border-slate-750 bg-black text-violet-300">
+              <div
+                class="grid h-12 w-12 shrink-0 place-items-center border border-slate-750 bg-black text-violet-300"
+              >
                 {{ artistInitials }}
               </div>
               <div class="min-w-0 flex-1">
@@ -89,7 +94,13 @@
                 :disabled="Boolean(followLoading[artwork.artist.id])"
                 @click="toggleFollow(artwork.artist)"
               >
-                {{ followLoading[artwork.artist.id] ? "Updating..." : artwork.artist.isFollowed ? "Following" : "Follow" }}
+                {{
+                  followLoading[artwork.artist.id]
+                    ? "Updating..."
+                    : artwork.artist.isFollowed
+                      ? "Following"
+                      : "Follow"
+                }}
               </button>
             </div>
 
@@ -101,7 +112,9 @@
             <div class="mt-9 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <article class="border border-slate-800 bg-black/30 p-4">
                 <p class="text-subtitle-2 uppercase text-slate-500">Category</p>
-                <p class="mt-3 text-body-1 text-slate-200">{{ artwork.category?.name || "Uncategorized" }}</p>
+                <p class="mt-3 text-body-1 text-slate-200">
+                  {{ artwork.category?.name || "Uncategorized" }}
+                </p>
               </article>
               <article class="border border-slate-800 bg-black/30 p-4">
                 <p class="text-subtitle-2 uppercase text-slate-500">Published</p>
@@ -109,7 +122,9 @@
               </article>
               <article class="border border-slate-800 bg-black/30 p-4">
                 <p class="text-subtitle-2 uppercase text-slate-500">Protection</p>
-                <p class="mt-3 text-body-1 text-slate-200">{{ artwork.protection ? "Protected" : "Standard" }}</p>
+                <p class="mt-3 text-body-1 text-slate-200">
+                  {{ artwork.protection ? "Protected" : "Standard" }}
+                </p>
               </article>
               <article class="border border-slate-800 bg-black/30 p-4">
                 <p class="text-subtitle-2 uppercase text-slate-500">Favorites</p>
@@ -133,7 +148,13 @@
                 :disabled="Boolean(favoriteLoading[artwork.id])"
                 @click="toggleFavorite(artwork)"
               >
-                {{ favoriteLoading[artwork.id] ? "Updating..." : artwork.isFavorite ? "Remove from wishlist" : "Add to wishlist" }}
+                {{
+                  favoriteLoading[artwork.id]
+                    ? "Updating..."
+                    : artwork.isFavorite
+                      ? "Remove from wishlist"
+                      : "Add to wishlist"
+                }}
               </button>
               <button
                 type="button"
@@ -149,7 +170,10 @@
 
         <section class="mt-12 border border-slate-900 bg-slate-950/50 p-4 sm:mt-16 sm:p-8">
           <h2 class="text-title-3 uppercase text-slate-100 sm:text-title-2">More by this artist</h2>
-          <div v-if="relatedArtworks.length" class="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div
+            v-if="relatedArtworks.length"
+            class="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+          >
             <ArtworkCard
               v-for="related in relatedArtworks"
               :key="related.id"
@@ -181,40 +205,29 @@ import { useAuthStore } from "~/stores/auth";
 import {
   formatMarketplaceDate,
   formatMarketplacePrice,
-  getArtistInitials,
+  getArtistInitials
 } from "~/utils/marketplace";
 
 const route = useRoute();
 const auth = useAuthStore();
-const requestHeaders = import.meta.server
-  ? useRequestHeaders(["cookie"])
-  : undefined;
-const { data, pending, error, refresh } = await useFetch(
-  `/api/artworks/${route.params.id}`,
-  {
-    headers: requestHeaders,
-    credentials: "include",
-    default: () => ({ artwork: null, relatedArtworks: [] }),
-  },
-);
+const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
+const { data, pending, error, refresh } = await useFetch(`/api/artworks/${route.params.id}`, {
+  headers: requestHeaders,
+  credentials: "include",
+  default: () => ({ artwork: null, relatedArtworks: [] })
+});
 
 const artwork = computed(() => data.value?.artwork || null);
 const relatedArtworks = computed(() => data.value?.relatedArtworks || []);
 const errorMessage = computed(
-  () => error.value?.data?.message || "The artwork details are temporarily unavailable.",
+  () => error.value?.data?.message || "The artwork details are temporarily unavailable."
 );
 const formattedPrice = computed(() =>
-  formatMarketplacePrice(artwork.value?.priceValue ?? artwork.value?.price),
+  formatMarketplacePrice(artwork.value?.priceValue ?? artwork.value?.price)
 );
-const formattedDate = computed(() =>
-  formatMarketplaceDate(artwork.value?.createdAt),
-);
-const artworkInitials = computed(() =>
-  getArtistInitials(artwork.value?.title || "Artwork"),
-);
-const artistInitials = computed(() =>
-  getArtistInitials(artwork.value?.artist?.displayName),
-);
+const formattedDate = computed(() => formatMarketplaceDate(artwork.value?.createdAt));
+const artworkInitials = computed(() => getArtistInitials(artwork.value?.title || "Artwork"));
+const artistInitials = computed(() => getArtistInitials(artwork.value?.artist?.displayName));
 
 const {
   actionMessage,
@@ -222,7 +235,7 @@ const {
   favoriteLoading,
   followLoading,
   toggleFavorite,
-  toggleFollow,
+  toggleFollow
 } = useMarketplaceActions(auth);
 
 onMounted(async () => {

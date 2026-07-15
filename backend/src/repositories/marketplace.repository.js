@@ -1,7 +1,5 @@
 const prisma = require("../lib/prisma");
-const {
-  extractArtistApplicationPayload,
-} = require("../services/artist-contract.service");
+const { extractArtistApplicationPayload } = require("../services/artist-contract.service");
 const { parsePriceValue } = require("../utils/serialize-marketplace");
 
 function buildArtworkInclude(viewerId) {
@@ -11,43 +9,43 @@ function buildArtworkInclude(viewerId) {
       include: {
         user: {
           include: {
-            artistApplicationDraft: true,
-          },
+            artistApplicationDraft: true
+          }
         },
         _count: {
           select: {
             artworks: true,
             followers: true,
-            collections: true,
-          },
+            collections: true
+          }
         },
         followers: viewerId
           ? {
               where: {
-                userId: viewerId,
+                userId: viewerId
               },
               select: {
-                id: true,
-              },
+                id: true
+              }
             }
-          : false,
-      },
+          : false
+      }
     },
     _count: {
       select: {
-        favorites: true,
-      },
+        favorites: true
+      }
     },
     favorites: viewerId
       ? {
           where: {
-            userId: viewerId,
+            userId: viewerId
           },
           select: {
-            id: true,
-          },
+            id: true
+          }
         }
-      : false,
+      : false
   };
 }
 
@@ -55,51 +53,51 @@ function buildArtistInclude(viewerId) {
   return {
     user: {
       include: {
-        artistApplicationDraft: true,
-      },
+        artistApplicationDraft: true
+      }
     },
     _count: {
       select: {
         artworks: true,
         followers: true,
-        collections: true,
-      },
+        collections: true
+      }
     },
     followers: viewerId
       ? {
           where: {
-            userId: viewerId,
+            userId: viewerId
           },
           select: {
-            id: true,
-          },
+            id: true
+          }
         }
       : false,
     collections: {
       where: {
         artistId: {
-          not: null,
-        },
+          not: null
+        }
       },
       orderBy: [
         {
-          createdAt: "desc",
+          createdAt: "desc"
         },
         {
-          id: "desc",
-        },
+          id: "desc"
+        }
       ],
       include: {
         items: {
           take: 4,
           include: {
             artwork: {
-              include: buildArtworkInclude(viewerId),
-            },
-          },
-        },
-      },
-    },
+              include: buildArtworkInclude(viewerId)
+            }
+          }
+        }
+      }
+    }
   };
 }
 
@@ -115,9 +113,7 @@ function matchesSearch(value, search) {
 
 function applyArtworkFilters(artworks, { search, style, artType }) {
   return artworks.filter((artwork) => {
-    const payload = extractArtistApplicationPayload(
-      artwork.artist?.user?.artistApplicationDraft,
-    );
+    const payload = extractArtistApplicationPayload(artwork.artist?.user?.artistApplicationDraft);
     const normalizedSearch = search.toLowerCase();
     const normalizedStyle = style.toLowerCase();
     const normalizedArtType = artType.toLowerCase();
@@ -138,8 +134,7 @@ function applyArtworkFilters(artworks, { search, style, artType }) {
       (Array.isArray(payload.styles) &&
         payload.styles.some((item) => matchesSearch(item, normalizedStyle)));
 
-    const matchesArtType =
-      !normalizedArtType || matchesSearch(payload.artType, normalizedArtType);
+    const matchesArtType = !normalizedArtType || matchesSearch(payload.artType, normalizedArtType);
 
     return matchesSearchTerm && matchesStyle && matchesArtType;
   });
@@ -148,10 +143,7 @@ function applyArtworkFilters(artworks, { search, style, artType }) {
 function sortArtworks(artworks, sort) {
   if (sort === "popular") {
     return artworks.sort((left, right) => {
-      return (
-        (right._count?.favorites || 0) - (left._count?.favorites || 0) ||
-        right.id - left.id
-      );
+      return (right._count?.favorites || 0) - (left._count?.favorites || 0) || right.id - left.id;
     });
   }
 
@@ -172,25 +164,21 @@ function sortArtworks(artworks, sort) {
         return -1;
       }
 
-      return sort === "price-asc"
-        ? leftPrice - rightPrice
-        : rightPrice - leftPrice;
+      return sort === "price-asc" ? leftPrice - rightPrice : rightPrice - leftPrice;
     });
   }
 
   return artworks.sort((left, right) => {
     return (
-      new Date(right.createdAt || 0).getTime() -
-        new Date(left.createdAt || 0).getTime() || right.id - left.id
+      new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime() ||
+      right.id - left.id
     );
   });
 }
 
 function applyArtistFilters(artists, { search, style, artType }) {
   return artists.filter((artist) => {
-    const payload = extractArtistApplicationPayload(
-      artist.user?.artistApplicationDraft,
-    );
+    const payload = extractArtistApplicationPayload(artist.user?.artistApplicationDraft);
     const normalizedSearch = search.toLowerCase();
     const normalizedStyle = style.toLowerCase();
     const normalizedArtType = artType.toLowerCase();
@@ -210,8 +198,7 @@ function applyArtistFilters(artists, { search, style, artType }) {
       (Array.isArray(payload.styles) &&
         payload.styles.some((item) => matchesSearch(item, normalizedStyle)));
 
-    const matchesArtType =
-      !normalizedArtType || matchesSearch(payload.artType, normalizedArtType);
+    const matchesArtType = !normalizedArtType || matchesSearch(payload.artType, normalizedArtType);
 
     return matchesSearchTerm && matchesStyle && matchesArtType;
   });
@@ -221,24 +208,20 @@ function sortArtists(artists, sort) {
   if (sort === "latest") {
     return artists.sort((left, right) => {
       return (
-        new Date(right.createdAt || 0).getTime() -
-          new Date(left.createdAt || 0).getTime() || right.id - left.id
+        new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime() ||
+        right.id - left.id
       );
     });
   }
 
   return artists.sort((left, right) => {
-    const followerDelta =
-      (right._count?.followers || 0) - (left._count?.followers || 0);
+    const followerDelta = (right._count?.followers || 0) - (left._count?.followers || 0);
 
     if (followerDelta !== 0) {
       return followerDelta;
     }
 
-    return (
-      (right._count?.artworks || 0) - (left._count?.artworks || 0) ||
-      right.id - left.id
-    );
+    return (right._count?.artworks || 0) - (left._count?.artworks || 0) || right.id - left.id;
   });
 }
 
@@ -248,21 +231,21 @@ async function listPublicArtworks({
   style = "",
   artType = "",
   sort = "latest",
-  limit = 24,
+  limit = 24
 } = {}) {
   const artworks = await prisma.artwork.findMany({
     where: {
       artist: {
-        verified: true,
-      },
+        verified: true
+      }
     },
-    include: buildArtworkInclude(viewerId),
+    include: buildArtworkInclude(viewerId)
   });
 
   const filtered = applyArtworkFilters(artworks, {
     search,
     style,
-    artType,
+    artType
   });
 
   return sortArtworks(filtered, sort).slice(0, limit);
@@ -271,9 +254,9 @@ async function listPublicArtworks({
 async function findPublicArtworkById({ artworkId, viewerId = null }) {
   const artwork = await prisma.artwork.findUnique({
     where: {
-      id: artworkId,
+      id: artworkId
     },
-    include: buildArtworkInclude(viewerId),
+    include: buildArtworkInclude(viewerId)
   });
 
   if (!artwork || !artwork.artist?.verified) {
@@ -288,28 +271,28 @@ async function listRelatedArtworks({
   artworkId,
   artistId,
   categoryId,
-  limit = 4,
+  limit = 4
 }) {
   const artistMatches = await prisma.artwork.findMany({
     where: {
       id: {
-        not: artworkId,
+        not: artworkId
       },
       artistId,
       artist: {
-        verified: true,
-      },
+        verified: true
+      }
     },
     take: limit,
     include: buildArtworkInclude(viewerId),
     orderBy: [
       {
-        createdAt: "desc",
+        createdAt: "desc"
       },
       {
-        id: "desc",
-      },
-    ],
+        id: "desc"
+      }
+    ]
   });
 
   if (artistMatches.length >= limit || !categoryId) {
@@ -319,23 +302,23 @@ async function listRelatedArtworks({
   const categoryMatches = await prisma.artwork.findMany({
     where: {
       id: {
-        notIn: [artworkId, ...artistMatches.map((item) => item.id)],
+        notIn: [artworkId, ...artistMatches.map((item) => item.id)]
       },
       categoryId,
       artist: {
-        verified: true,
-      },
+        verified: true
+      }
     },
     take: limit - artistMatches.length,
     include: buildArtworkInclude(viewerId),
     orderBy: [
       {
-        createdAt: "desc",
+        createdAt: "desc"
       },
       {
-        id: "desc",
-      },
-    ],
+        id: "desc"
+      }
+    ]
   });
 
   return [...artistMatches, ...categoryMatches];
@@ -347,19 +330,19 @@ async function listPublicArtists({
   style = "",
   artType = "",
   sort = "featured",
-  limit = 18,
+  limit = 18
 } = {}) {
   const artists = await prisma.artist.findMany({
     where: {
-      verified: true,
+      verified: true
     },
-    include: buildArtistInclude(viewerId),
+    include: buildArtistInclude(viewerId)
   });
 
   const filtered = applyArtistFilters(artists, {
     search,
     style,
-    artType,
+    artType
   });
 
   return sortArtists(filtered, sort).slice(0, limit);
@@ -368,7 +351,7 @@ async function listPublicArtists({
 async function findPublicArtistById({ artistId, viewerId = null }) {
   const artist = await prisma.artist.findUnique({
     where: {
-      id: artistId,
+      id: artistId
     },
     include: {
       ...buildArtistInclude(viewerId),
@@ -376,14 +359,14 @@ async function findPublicArtistById({ artistId, viewerId = null }) {
         include: buildArtworkInclude(viewerId),
         orderBy: [
           {
-            createdAt: "desc",
+            createdAt: "desc"
           },
           {
-            id: "desc",
-          },
-        ],
-      },
-    },
+            id: "desc"
+          }
+        ]
+      }
+    }
   });
 
   if (!artist || !artist.verified) {
@@ -398,25 +381,25 @@ async function getMarketplaceOverview({ viewerId = null } = {}) {
     listPublicArtworks({
       viewerId,
       limit: 6,
-      sort: "popular",
+      sort: "popular"
     }),
     listPublicArtists({
       viewerId,
       limit: 4,
-      sort: "featured",
+      sort: "featured"
     }),
     prisma.artwork.count({
       where: {
         artist: {
-          verified: true,
-        },
-      },
+          verified: true
+        }
+      }
     }),
     prisma.artist.count({
       where: {
-        verified: true,
-      },
-    }),
+        verified: true
+      }
+    })
   ]);
 
   return {
@@ -424,8 +407,8 @@ async function getMarketplaceOverview({ viewerId = null } = {}) {
     artists,
     stats: {
       artworks: artworksCount,
-      artists: artistsCount,
-    },
+      artists: artistsCount
+    }
   };
 }
 
@@ -433,7 +416,7 @@ async function listCollectionArtworkOptions({ viewerId, limit = 60 } = {}) {
   return listPublicArtworks({
     viewerId,
     limit,
-    sort: "latest",
+    sort: "latest"
   });
 }
 
@@ -444,5 +427,5 @@ module.exports = {
   listPublicArtists,
   findPublicArtistById,
   getMarketplaceOverview,
-  listCollectionArtworkOptions,
+  listCollectionArtworkOptions
 };

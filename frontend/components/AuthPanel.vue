@@ -20,16 +20,16 @@
 defineProps({
   title: {
     type: String,
-    required: true,
+    required: true
   },
   maxWidth: {
     type: String,
-    default: "420px",
+    default: "420px"
   },
   description: {
     type: String,
-    default: "",
-  },
+    default: ""
+  }
 });
 
 defineEmits(["submit"]);
@@ -42,11 +42,7 @@ defineEmits(["submit"]);
   height: 100dvh;
   padding-block: clamp(0.75rem, 2.5vh, 2rem);
   background:
-    radial-gradient(
-      circle at top left,
-      rgb(88 0 200 / 0.3),
-      transparent 40%
-    ),
+    radial-gradient(circle at top left, rgb(88 0 200 / 0.3), transparent 40%),
     radial-gradient(circle at bottom right, rgb(123 44 255 / 0.12), transparent 32%),
     theme("colors.black");
 }

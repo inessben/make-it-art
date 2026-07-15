@@ -7,39 +7,39 @@ function buildArtworkInclude(viewerId) {
       include: {
         user: {
           include: {
-            artistApplicationDraft: true,
-          },
+            artistApplicationDraft: true
+          }
         },
         _count: {
           select: {
             artworks: true,
             followers: true,
-            collections: true,
-          },
+            collections: true
+          }
         },
         followers: {
           where: {
-            userId: viewerId,
+            userId: viewerId
           },
           select: {
-            id: true,
-          },
-        },
-      },
+            id: true
+          }
+        }
+      }
     },
     _count: {
       select: {
-        favorites: true,
-      },
+        favorites: true
+      }
     },
     favorites: {
       where: {
-        userId: viewerId,
+        userId: viewerId
       },
       select: {
-        id: true,
-      },
-    },
+        id: true
+      }
+    }
   };
 }
 
@@ -48,15 +48,15 @@ function buildCollectionInclude(userId) {
     items: {
       orderBy: [
         {
-          id: "desc",
-        },
+          id: "desc"
+        }
       ],
       include: {
         artwork: {
-          include: buildArtworkInclude(userId),
-        },
-      },
-    },
+          include: buildArtworkInclude(userId)
+        }
+      }
+    }
   };
 }
 
@@ -65,9 +65,9 @@ async function ensurePublicArtwork(artworkId) {
     where: {
       id: artworkId,
       artist: {
-        verified: true,
-      },
-    },
+        verified: true
+      }
+    }
   });
 
   if (!artwork) {
@@ -81,8 +81,8 @@ async function ensurePublicArtist(artistId) {
   const artist = await prisma.artist.findFirst({
     where: {
       id: artistId,
-      verified: true,
-    },
+      verified: true
+    }
   });
 
   if (!artist) {
@@ -95,38 +95,38 @@ async function ensurePublicArtist(artistId) {
 async function syncArtworkFavoriteCount(tx, artworkId) {
   const count = await tx.favorite.count({
     where: {
-      artworkId,
-    },
+      artworkId
+    }
   });
 
   await tx.artwork.update({
     where: {
-      id: artworkId,
+      id: artworkId
     },
     data: {
-      favoriteCount: count,
-    },
+      favoriteCount: count
+    }
   });
 }
 
 async function listFavoriteArtworks(userId) {
   const favorites = await prisma.favorite.findMany({
     where: {
-      userId,
+      userId
     },
     orderBy: [
       {
-        createdAt: "desc",
+        createdAt: "desc"
       },
       {
-        id: "desc",
-      },
+        id: "desc"
+      }
     ],
     include: {
       artwork: {
-        include: buildArtworkInclude(userId),
-      },
-    },
+        include: buildArtworkInclude(userId)
+      }
+    }
   });
 
   return favorites.map((favorite) => favorite.artwork).filter(Boolean);
@@ -140,15 +140,15 @@ async function addFavorite({ userId, artworkId }) {
       where: {
         userId_artworkId: {
           userId,
-          artworkId,
-        },
+          artworkId
+        }
       },
       create: {
         userId,
         artworkId,
-        createdAt: new Date(),
+        createdAt: new Date()
       },
-      update: {},
+      update: {}
     });
 
     await syncArtworkFavoriteCount(tx, artworkId);
@@ -160,14 +160,14 @@ async function removeFavorite({ userId, artworkId }) {
     await tx.favorite.deleteMany({
       where: {
         userId,
-        artworkId,
-      },
+        artworkId
+      }
     });
 
     const artwork = await tx.artwork.findUnique({
       where: {
-        id: artworkId,
-      },
+        id: artworkId
+      }
     });
 
     if (artwork) {
@@ -183,15 +183,15 @@ async function followArtist({ userId, artistId }) {
     where: {
       userId_artistId: {
         userId,
-        artistId,
-      },
+        artistId
+      }
     },
     create: {
       userId,
       artistId,
-      createdAt: new Date(),
+      createdAt: new Date()
     },
-    update: {},
+    update: {}
   });
 }
 
@@ -199,43 +199,38 @@ async function unfollowArtist({ userId, artistId }) {
   await prisma.follow.deleteMany({
     where: {
       userId,
-      artistId,
-    },
+      artistId
+    }
   });
 }
 
 async function listPersonalCollections(userId) {
   return prisma.collection.findMany({
     where: {
-      userId,
+      userId
     },
     orderBy: [
       {
-        createdAt: "desc",
+        createdAt: "desc"
       },
       {
-        id: "desc",
-      },
+        id: "desc"
+      }
     ],
-    include: buildCollectionInclude(userId),
+    include: buildCollectionInclude(userId)
   });
 }
 
-async function createPersonalCollection({
-  userId,
-  title,
-  description,
-  isPrivate,
-}) {
+async function createPersonalCollection({ userId, title, description, isPrivate }) {
   return prisma.collection.create({
     data: {
       userId,
       title,
       description,
       isPrivate,
-      createdAt: new Date(),
+      createdAt: new Date()
     },
-    include: buildCollectionInclude(userId),
+    include: buildCollectionInclude(userId)
   });
 }
 
@@ -243,22 +238,16 @@ async function findPersonalCollectionById({ userId, collectionId }) {
   return prisma.collection.findFirst({
     where: {
       id: collectionId,
-      userId,
+      userId
     },
-    include: buildCollectionInclude(userId),
+    include: buildCollectionInclude(userId)
   });
 }
 
-async function updatePersonalCollection({
-  userId,
-  collectionId,
-  title,
-  description,
-  isPrivate,
-}) {
+async function updatePersonalCollection({ userId, collectionId, title, description, isPrivate }) {
   const existingCollection = await findPersonalCollectionById({
     userId,
-    collectionId,
+    collectionId
   });
 
   if (!existingCollection) {
@@ -267,21 +256,21 @@ async function updatePersonalCollection({
 
   return prisma.collection.update({
     where: {
-      id: collectionId,
+      id: collectionId
     },
     data: {
       title,
       description,
-      isPrivate,
+      isPrivate
     },
-    include: buildCollectionInclude(userId),
+    include: buildCollectionInclude(userId)
   });
 }
 
 async function deletePersonalCollection({ userId, collectionId }) {
   const existingCollection = await findPersonalCollectionById({
     userId,
-    collectionId,
+    collectionId
   });
 
   if (!existingCollection) {
@@ -290,19 +279,15 @@ async function deletePersonalCollection({ userId, collectionId }) {
 
   await prisma.collection.delete({
     where: {
-      id: collectionId,
-    },
+      id: collectionId
+    }
   });
 }
 
-async function addArtworkToPersonalCollection({
-  userId,
-  collectionId,
-  artworkId,
-}) {
+async function addArtworkToPersonalCollection({ userId, collectionId, artworkId }) {
   const existingCollection = await findPersonalCollectionById({
     userId,
-    collectionId,
+    collectionId
   });
 
   if (!existingCollection) {
@@ -314,33 +299,29 @@ async function addArtworkToPersonalCollection({
   const existingItem = await prisma.collectionItem.findFirst({
     where: {
       collectionId,
-      artworkId,
-    },
+      artworkId
+    }
   });
 
   if (!existingItem) {
     await prisma.collectionItem.create({
       data: {
         collectionId,
-        artworkId,
-      },
+        artworkId
+      }
     });
   }
 
   return findPersonalCollectionById({
     userId,
-    collectionId,
+    collectionId
   });
 }
 
-async function removeArtworkFromPersonalCollection({
-  userId,
-  collectionId,
-  artworkId,
-}) {
+async function removeArtworkFromPersonalCollection({ userId, collectionId, artworkId }) {
   const existingCollection = await findPersonalCollectionById({
     userId,
-    collectionId,
+    collectionId
   });
 
   if (!existingCollection) {
@@ -350,13 +331,13 @@ async function removeArtworkFromPersonalCollection({
   await prisma.collectionItem.deleteMany({
     where: {
       collectionId,
-      artworkId,
-    },
+      artworkId
+    }
   });
 
   return findPersonalCollectionById({
     userId,
-    collectionId,
+    collectionId
   });
 }
 
@@ -371,5 +352,5 @@ module.exports = {
   updatePersonalCollection,
   deletePersonalCollection,
   addArtworkToPersonalCollection,
-  removeArtworkFromPersonalCollection,
+  removeArtworkFromPersonalCollection
 };

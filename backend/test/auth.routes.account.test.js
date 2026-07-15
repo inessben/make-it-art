@@ -8,16 +8,11 @@ const { loadModuleWithMocks } = require("./helpers/mock-require");
 const routesPath = require.resolve("../src/routes/auth.routes");
 const authServicePath = require.resolve("../src/services/auth.service");
 const sessionServicePath = require.resolve("../src/services/session.service");
-const rateLimitPath =
-  require.resolve("../src/middlewares/rate-limit.middleware");
-const authRequiredPath =
-  require.resolve("../src/middlewares/auth-required.middleware");
-const userRepositoryPath =
-  require.resolve("../src/repositories/user.repository");
-const twoFactorLoginServicePath =
-  require.resolve("../src/services/two-factor-login.service");
-const serializeAuthUserPath =
-  require.resolve("../src/utils/serialize-auth-user");
+const rateLimitPath = require.resolve("../src/middlewares/rate-limit.middleware");
+const authRequiredPath = require.resolve("../src/middlewares/auth-required.middleware");
+const userRepositoryPath = require.resolve("../src/repositories/user.repository");
+const twoFactorLoginServicePath = require.resolve("../src/services/two-factor-login.service");
+const serializeAuthUserPath = require.resolve("../src/utils/serialize-auth-user");
 const envPath = require.resolve("../src/config/env");
 const argon2Path = require.resolve("argon2");
 
@@ -26,7 +21,7 @@ const env = {
   sessionCookieName: "mia_session",
   refreshCookieName: "mia_refresh",
   loginCodeCookieName: "mia_login_challenge",
-  rememberDeviceCookieName: "mia_remember_device",
+  rememberDeviceCookieName: "mia_remember_device"
 };
 
 const authUser = {
@@ -35,7 +30,7 @@ const authUser = {
   username: "Ada Lovelace",
   bio: "Collector",
   phone: "0102030405",
-  passwordHash: "current-password-hash",
+  passwordHash: "current-password-hash"
 };
 
 function middleware(_req, _res, next) {
@@ -46,7 +41,7 @@ function cookieOptions() {
   return {
     httpOnly: true,
     sameSite: "lax",
-    path: "/",
+    path: "/"
   };
 }
 
@@ -56,7 +51,7 @@ function serializeUser(user) {
     email: user.email,
     username: user.username,
     bio: user.bio,
-    phone: user.phone,
+    phone: user.phone
   };
 }
 
@@ -71,7 +66,7 @@ async function startAuthRoutesApp(t, overrides = {}) {
     updatePassword: [],
     updateUser: [],
     verifyCurrentPassword: [],
-    verifyEmail: [],
+    verifyEmail: []
   };
 
   const authService = {
@@ -111,7 +106,7 @@ async function startAuthRoutesApp(t, overrides = {}) {
       if (overrides.verifyEmailError) {
         throw new Error(overrides.verifyEmailError);
       }
-    },
+    }
   };
 
   const sessionService = {
@@ -125,7 +120,7 @@ async function startAuthRoutesApp(t, overrides = {}) {
     },
     async revokeRefreshToken(refreshToken) {
       calls.revokeRefreshToken.push(refreshToken);
-    },
+    }
   };
 
   const userRepository = {
@@ -138,12 +133,12 @@ async function startAuthRoutesApp(t, overrides = {}) {
 
       return {
         ...authUser,
-        ...updates,
+        ...updates
       };
     },
     async updatePassword(userId, passwordHash) {
       calls.updatePassword.push({ userId, passwordHash });
-    },
+    }
   };
 
   const argon2 = {
@@ -157,7 +152,7 @@ async function startAuthRoutesApp(t, overrides = {}) {
       }
 
       return `hashed:${password}`;
-    },
+    }
   };
 
   const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
@@ -165,13 +160,13 @@ async function startAuthRoutesApp(t, overrides = {}) {
     [sessionServicePath]: sessionService,
     [rateLimitPath]: {
       authRateLimit: middleware,
-      strictAuthRateLimit: middleware,
+      strictAuthRateLimit: middleware
     },
     [authRequiredPath]: {
       authRequired(req, _res, next) {
         req.user = overrides.currentUser || authUser;
         next();
-      },
+      }
     },
     [userRepositoryPath]: userRepository,
     [twoFactorLoginServicePath]: {
@@ -180,13 +175,13 @@ async function startAuthRoutesApp(t, overrides = {}) {
       getLoginChallengeCookieOptions: cookieOptions,
       getClearLoginChallengeCookieOptions: cookieOptions,
       getRememberDeviceCookieOptions: cookieOptions,
-      getClearRememberDeviceCookieOptions: cookieOptions,
+      getClearRememberDeviceCookieOptions: cookieOptions
     },
     [serializeAuthUserPath]: {
-      serializeAuthUser: serializeUser,
+      serializeAuthUser: serializeUser
     },
     [envPath]: env,
-    [argon2Path]: argon2,
+    [argon2Path]: argon2
   });
 
   const app = express();
@@ -209,7 +204,7 @@ async function startAuthRoutesApp(t, overrides = {}) {
 
   return {
     calls,
-    baseUrl: `http://127.0.0.1:${server.address().port}`,
+    baseUrl: `http://127.0.0.1:${server.address().port}`
   };
 }
 
@@ -218,9 +213,9 @@ async function requestJson(baseUrl, method, path, body, headers = {}) {
     method,
     headers: {
       ...(body === undefined ? {} : { "content-type": "application/json" }),
-      ...headers,
+      ...headers
     },
-    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    ...(body === undefined ? {} : { body: JSON.stringify(body) })
   });
 
   const payload = await response.json();
@@ -228,7 +223,7 @@ async function requestJson(baseUrl, method, path, body, headers = {}) {
   return {
     body: payload,
     headers: response.headers,
-    status: response.status,
+    status: response.status
   };
 }
 
@@ -246,13 +241,13 @@ test("POST /auth/register requires all fields", async (t) => {
   const { baseUrl, calls } = await startAuthRoutesApp(t);
 
   const response = await requestJson(baseUrl, "POST", "/auth/register", {
-    username: "Ada",
+    username: "Ada"
   });
 
   assert.equal(response.status, 400);
   assert.equal(
     response.body.message,
-    "Username, email, phone, password and confirmation are required",
+    "Username, email, phone, password and confirmation are required"
   );
   assert.deepEqual(calls.registerUser, []);
 });
@@ -265,7 +260,7 @@ test("POST /auth/register rejects weak passwords", async (t) => {
     email: "artist@example.com",
     phone: "0102030405",
     password: "short",
-    confirmPassword: "short",
+    confirmPassword: "short"
   });
 
   assert.equal(response.status, 400);
@@ -281,7 +276,7 @@ test("POST /auth/register rejects mismatched password confirmation", async (t) =
     email: "artist@example.com",
     phone: "0102030405",
     password: "Password1!",
-    confirmPassword: "Password2!",
+    confirmPassword: "Password2!"
   });
 
   assert.equal(response.status, 400);
@@ -297,33 +292,33 @@ test("POST /auth/register creates an account", async (t) => {
     email: "artist@example.com",
     phone: "0102030405",
     password: "Password1!",
-    confirmPassword: "Password1!",
+    confirmPassword: "Password1!"
   });
 
   assert.equal(response.status, 201);
   assert.equal(
     response.body.message,
-    "Account created. Please verify your email before logging in.",
+    "Account created. Please verify your email before logging in."
   );
   assert.deepEqual(response.body.user, {
     id: authUser.id,
     email: authUser.email,
     username: authUser.username,
-    phone: authUser.phone,
+    phone: authUser.phone
   });
   assert.deepEqual(calls.registerUser, [
     {
       username: "Ada",
       email: "artist@example.com",
       phone: "0102030405",
-      password: "Password1!",
-    },
+      password: "Password1!"
+    }
   ]);
 });
 
 test("POST /auth/register maps duplicate emails to 409", async (t) => {
   const { baseUrl } = await startAuthRoutesApp(t, {
-    registerError: "Email already in use",
+    registerError: "Email already in use"
   });
 
   const response = await requestJson(baseUrl, "POST", "/auth/register", {
@@ -331,7 +326,7 @@ test("POST /auth/register maps duplicate emails to 409", async (t) => {
     email: "artist@example.com",
     phone: "0102030405",
     password: "Password1!",
-    confirmPassword: "Password1!",
+    confirmPassword: "Password1!"
   });
 
   assert.equal(response.status, 409);
@@ -342,7 +337,7 @@ test("POST /auth/register maps unexpected errors to 500", async (t) => {
   t.mock.method(console, "error", () => {});
 
   const { baseUrl } = await startAuthRoutesApp(t, {
-    registerError: "database unavailable",
+    registerError: "database unavailable"
   });
 
   const response = await requestJson(baseUrl, "POST", "/auth/register", {
@@ -350,7 +345,7 @@ test("POST /auth/register maps unexpected errors to 500", async (t) => {
     email: "artist@example.com",
     phone: "0102030405",
     password: "Password1!",
-    confirmPassword: "Password1!",
+    confirmPassword: "Password1!"
   });
 
   assert.equal(response.status, 500);
@@ -364,7 +359,7 @@ test("POST /auth/resend-verification-email validates email and handles service o
     missingEmailApp.baseUrl,
     "POST",
     "/auth/resend-verification-email",
-    {},
+    {}
   );
 
   assert.equal(missingEmailResponse.status, 400);
@@ -376,29 +371,24 @@ test("POST /auth/resend-verification-email validates email and handles service o
     "POST",
     "/auth/resend-verification-email",
     {
-      email: "artist@example.com",
-    },
+      email: "artist@example.com"
+    }
   );
 
   assert.equal(successResponse.status, 200);
-  assert.equal(
-    successResponse.body.message,
-    "Verification email sent. Please check your inbox.",
-  );
-  assert.deepEqual(successApp.calls.resendVerificationEmail, [
-    "artist@example.com",
-  ]);
+  assert.equal(successResponse.body.message, "Verification email sent. Please check your inbox.");
+  assert.deepEqual(successApp.calls.resendVerificationEmail, ["artist@example.com"]);
 
   const verifiedApp = await startAuthRoutesApp(t, {
-    resendVerificationError: "Email already verified",
+    resendVerificationError: "Email already verified"
   });
   const verifiedResponse = await requestJson(
     verifiedApp.baseUrl,
     "POST",
     "/auth/resend-verification-email",
     {
-      email: "artist@example.com",
-    },
+      email: "artist@example.com"
+    }
   );
 
   assert.equal(verifiedResponse.status, 409);
@@ -410,20 +400,17 @@ test("GET /auth/verify-email validates token and maps success or failure", async
   const missingTokenResponse = await requestJson(
     missingTokenApp.baseUrl,
     "GET",
-    "/auth/verify-email",
+    "/auth/verify-email"
   );
 
   assert.equal(missingTokenResponse.status, 400);
-  assert.equal(
-    missingTokenResponse.body.message,
-    "Verification token is required",
-  );
+  assert.equal(missingTokenResponse.body.message, "Verification token is required");
 
   const successApp = await startAuthRoutesApp(t);
   const successResponse = await requestJson(
     successApp.baseUrl,
     "GET",
-    "/auth/verify-email?token=verification-token",
+    "/auth/verify-email?token=verification-token"
   );
 
   assert.equal(successResponse.status, 200);
@@ -431,19 +418,16 @@ test("GET /auth/verify-email validates token and maps success or failure", async
   assert.deepEqual(successApp.calls.verifyEmail, ["verification-token"]);
 
   const failureApp = await startAuthRoutesApp(t, {
-    verifyEmailError: "Invalid token",
+    verifyEmailError: "Invalid token"
   });
   const failureResponse = await requestJson(
     failureApp.baseUrl,
     "GET",
-    "/auth/verify-email?token=bad-token",
+    "/auth/verify-email?token=bad-token"
   );
 
   assert.equal(failureResponse.status, 400);
-  assert.equal(
-    failureResponse.body.message,
-    "Invalid or expired verification token",
-  );
+  assert.equal(failureResponse.body.message, "Invalid or expired verification token");
 });
 
 test("GET /auth/me returns the authenticated user", async (t) => {
@@ -461,26 +445,18 @@ test("PATCH /auth/me validates payload and updates profile fields", async (t) =>
     missingFieldsApp.baseUrl,
     "PATCH",
     "/auth/me",
-    {},
+    {}
   );
 
   assert.equal(missingFieldsResponse.status, 400);
-  assert.equal(
-    missingFieldsResponse.body.message,
-    "No profile fields provided to update",
-  );
+  assert.equal(missingFieldsResponse.body.message, "No profile fields provided to update");
 
   const successApp = await startAuthRoutesApp(t);
-  const successResponse = await requestJson(
-    successApp.baseUrl,
-    "PATCH",
-    "/auth/me",
-    {
-      username: "Grace Hopper",
-      email: " Grace@Example.COM ",
-      bio: "Engineer",
-    },
-  );
+  const successResponse = await requestJson(successApp.baseUrl, "PATCH", "/auth/me", {
+    username: "Grace Hopper",
+    email: " Grace@Example.COM ",
+    bio: "Engineer"
+  });
 
   assert.equal(successResponse.status, 200);
   assert.equal(successResponse.body.user.email, "grace@example.com");
@@ -490,24 +466,19 @@ test("PATCH /auth/me validates payload and updates profile fields", async (t) =>
       updates: {
         username: "Grace Hopper",
         email: "grace@example.com",
-        bio: "Engineer",
-      },
-    },
+        bio: "Engineer"
+      }
+    }
   ]);
 
   const duplicateEmailApp = await startAuthRoutesApp(t, {
     updateUserError: {
-      code: "P2002",
-    },
+      code: "P2002"
+    }
   });
-  const duplicateEmailResponse = await requestJson(
-    duplicateEmailApp.baseUrl,
-    "PATCH",
-    "/auth/me",
-    {
-      email: "used@example.com",
-    },
-  );
+  const duplicateEmailResponse = await requestJson(duplicateEmailApp.baseUrl, "PATCH", "/auth/me", {
+    email: "used@example.com"
+  });
 
   assert.equal(duplicateEmailResponse.status, 409);
   assert.equal(duplicateEmailResponse.body.message, "Email is already in use");
@@ -520,27 +491,22 @@ test("PATCH /auth/password validates fields before changing the password", async
     "PATCH",
     "/auth/password",
     {
-      currentPassword: "Current1!",
-    },
+      currentPassword: "Current1!"
+    }
   );
 
   assert.equal(missingFieldsResponse.status, 400);
   assert.equal(
     missingFieldsResponse.body.message,
-    "Current password, new password and confirmation are required",
+    "Current password, new password and confirmation are required"
   );
 
   const mismatchApp = await startAuthRoutesApp(t);
-  const mismatchResponse = await requestJson(
-    mismatchApp.baseUrl,
-    "PATCH",
-    "/auth/password",
-    {
-      currentPassword: "Current1!",
-      newPassword: "Password1!",
-      confirmPassword: "Password2!",
-    },
-  );
+  const mismatchResponse = await requestJson(mismatchApp.baseUrl, "PATCH", "/auth/password", {
+    currentPassword: "Current1!",
+    newPassword: "Password1!",
+    confirmPassword: "Password2!"
+  });
 
   assert.equal(mismatchResponse.status, 400);
   assert.equal(mismatchResponse.body.message, "Passwords do not match");
@@ -553,14 +519,14 @@ test("PATCH /auth/password validates fields before changing the password", async
     {
       currentPassword: "Current1!",
       newPassword: "password",
-      confirmPassword: "password",
-    },
+      confirmPassword: "password"
+    }
   );
 
   assert.equal(weakPasswordResponse.status, 400);
   assert.equal(
     weakPasswordResponse.body.message,
-    "Password must contain at least one uppercase letter",
+    "Password must contain at least one uppercase letter"
   );
 
   const unchangedPasswordApp = await startAuthRoutesApp(t);
@@ -571,20 +537,20 @@ test("PATCH /auth/password validates fields before changing the password", async
     {
       currentPassword: "Password1!",
       newPassword: "Password1!",
-      confirmPassword: "Password1!",
-    },
+      confirmPassword: "Password1!"
+    }
   );
 
   assert.equal(unchangedPasswordResponse.status, 400);
   assert.equal(
     unchangedPasswordResponse.body.message,
-    "New password must be different from current password",
+    "New password must be different from current password"
   );
 });
 
 test("PATCH /auth/password rejects invalid current password and accepts valid changes", async (t) => {
   const invalidCurrentApp = await startAuthRoutesApp(t, {
-    isCurrentPasswordValid: false,
+    isCurrentPasswordValid: false
   });
   const invalidCurrentResponse = await requestJson(
     invalidCurrentApp.baseUrl,
@@ -593,41 +559,33 @@ test("PATCH /auth/password rejects invalid current password and accepts valid ch
     {
       currentPassword: "Wrong1!",
       newPassword: "Password1!",
-      confirmPassword: "Password1!",
-    },
+      confirmPassword: "Password1!"
+    }
   );
 
   assert.equal(invalidCurrentResponse.status, 401);
-  assert.equal(
-    invalidCurrentResponse.body.message,
-    "Current password is incorrect",
-  );
+  assert.equal(invalidCurrentResponse.body.message, "Current password is incorrect");
 
   const successApp = await startAuthRoutesApp(t);
-  const successResponse = await requestJson(
-    successApp.baseUrl,
-    "PATCH",
-    "/auth/password",
-    {
-      currentPassword: "Current1!",
-      newPassword: "Password1!",
-      confirmPassword: "Password1!",
-    },
-  );
+  const successResponse = await requestJson(successApp.baseUrl, "PATCH", "/auth/password", {
+    currentPassword: "Current1!",
+    newPassword: "Password1!",
+    confirmPassword: "Password1!"
+  });
 
   assert.equal(successResponse.status, 200);
   assert.equal(successResponse.body.message, "Password updated successfully");
   assert.deepEqual(successApp.calls.verifyCurrentPassword, [
     {
       passwordHash: authUser.passwordHash,
-      password: "Current1!",
-    },
+      password: "Current1!"
+    }
   ]);
   assert.deepEqual(successApp.calls.updatePassword, [
     {
       userId: authUser.id,
-      passwordHash: "hashed:Password1!",
-    },
+      passwordHash: "hashed:Password1!"
+    }
   ]);
 });
 
@@ -640,8 +598,8 @@ test("POST /auth/logout revokes refresh token and clears auth cookies", async (t
     "/auth/logout",
     {},
     {
-      cookie: "mia_refresh=refresh-token",
-    },
+      cookie: "mia_refresh=refresh-token"
+    }
   );
 
   const cookies = getSetCookieHeaders(response.headers);
@@ -651,12 +609,8 @@ test("POST /auth/logout revokes refresh token and clears auth cookies", async (t
   assert.deepEqual(calls.revokeRefreshToken, ["refresh-token"]);
   assert.ok(cookies.some((cookie) => cookie.startsWith("mia_session=")));
   assert.ok(cookies.some((cookie) => cookie.startsWith("mia_refresh=")));
-  assert.ok(
-    cookies.some((cookie) => cookie.startsWith("mia_login_challenge=")),
-  );
-  assert.ok(
-    cookies.some((cookie) => cookie.startsWith("mia_remember_device=")),
-  );
+  assert.ok(cookies.some((cookie) => cookie.startsWith("mia_login_challenge=")));
+  assert.ok(cookies.some((cookie) => cookie.startsWith("mia_remember_device=")));
 });
 
 test("POST /auth/forgot-password validates email and keeps responses generic", async (t) => {
@@ -665,47 +619,35 @@ test("POST /auth/forgot-password validates email and keeps responses generic", a
     missingEmailApp.baseUrl,
     "POST",
     "/auth/forgot-password",
-    {},
+    {}
   );
 
   assert.equal(missingEmailResponse.status, 400);
   assert.equal(missingEmailResponse.body.message, "Email is required");
 
   const successApp = await startAuthRoutesApp(t);
-  const successResponse = await requestJson(
-    successApp.baseUrl,
-    "POST",
-    "/auth/forgot-password",
-    {
-      email: "artist@example.com",
-    },
-  );
+  const successResponse = await requestJson(successApp.baseUrl, "POST", "/auth/forgot-password", {
+    email: "artist@example.com"
+  });
 
   assert.equal(successResponse.status, 200);
   assert.equal(
     successResponse.body.message,
-    "If this email exists, a password reset link has been sent.",
+    "If this email exists, a password reset link has been sent."
   );
-  assert.deepEqual(successApp.calls.requestPasswordReset, [
-    "artist@example.com",
-  ]);
+  assert.deepEqual(successApp.calls.requestPasswordReset, ["artist@example.com"]);
 
   const failureApp = await startAuthRoutesApp(t, {
-    requestPasswordResetError: "email service down",
+    requestPasswordResetError: "email service down"
   });
-  const failureResponse = await requestJson(
-    failureApp.baseUrl,
-    "POST",
-    "/auth/forgot-password",
-    {
-      email: "artist@example.com",
-    },
-  );
+  const failureResponse = await requestJson(failureApp.baseUrl, "POST", "/auth/forgot-password", {
+    email: "artist@example.com"
+  });
 
   assert.equal(failureResponse.status, 200);
   assert.equal(
     failureResponse.body.message,
-    "If this email exists, a password reset link has been sent.",
+    "If this email exists, a password reset link has been sent."
   );
 });
 
@@ -716,68 +658,47 @@ test("POST /auth/reset-password validates input and resets valid passwords", asy
     "POST",
     "/auth/reset-password",
     {
-      token: "reset-token",
-    },
+      token: "reset-token"
+    }
   );
 
   assert.equal(missingFieldsResponse.status, 400);
-  assert.equal(
-    missingFieldsResponse.body.message,
-    "Token, password and confirmation are required",
-  );
+  assert.equal(missingFieldsResponse.body.message, "Token, password and confirmation are required");
 
   const mismatchApp = await startAuthRoutesApp(t);
-  const mismatchResponse = await requestJson(
-    mismatchApp.baseUrl,
-    "POST",
-    "/auth/reset-password",
-    {
-      token: "reset-token",
-      password: "Password1!",
-      confirmPassword: "Password2!",
-    },
-  );
+  const mismatchResponse = await requestJson(mismatchApp.baseUrl, "POST", "/auth/reset-password", {
+    token: "reset-token",
+    password: "Password1!",
+    confirmPassword: "Password2!"
+  });
 
   assert.equal(mismatchResponse.status, 400);
   assert.equal(mismatchResponse.body.message, "Passwords do not match");
 
   const successApp = await startAuthRoutesApp(t);
-  const successResponse = await requestJson(
-    successApp.baseUrl,
-    "POST",
-    "/auth/reset-password",
-    {
-      token: "reset-token",
-      password: "Password1!",
-      confirmPassword: "Password1!",
-    },
-  );
+  const successResponse = await requestJson(successApp.baseUrl, "POST", "/auth/reset-password", {
+    token: "reset-token",
+    password: "Password1!",
+    confirmPassword: "Password1!"
+  });
 
   assert.equal(successResponse.status, 200);
-  assert.equal(
-    successResponse.body.message,
-    "Password reset successfully. You can now log in.",
-  );
+  assert.equal(successResponse.body.message, "Password reset successfully. You can now log in.");
   assert.deepEqual(successApp.calls.resetPassword, [
     {
       token: "reset-token",
-      password: "Password1!",
-    },
+      password: "Password1!"
+    }
   ]);
 
   const failureApp = await startAuthRoutesApp(t, {
-    resetPasswordError: "Invalid token",
+    resetPasswordError: "Invalid token"
   });
-  const failureResponse = await requestJson(
-    failureApp.baseUrl,
-    "POST",
-    "/auth/reset-password",
-    {
-      token: "bad-token",
-      password: "Password1!",
-      confirmPassword: "Password1!",
-    },
-  );
+  const failureResponse = await requestJson(failureApp.baseUrl, "POST", "/auth/reset-password", {
+    token: "bad-token",
+    password: "Password1!",
+    confirmPassword: "Password1!"
+  });
 
   assert.equal(failureResponse.status, 400);
   assert.equal(failureResponse.body.message, "Invalid or expired reset link");
@@ -789,7 +710,7 @@ test("POST /auth/refresh validates refresh token and rotates valid sessions", as
     missingTokenApp.baseUrl,
     "POST",
     "/auth/refresh",
-    {},
+    {}
   );
 
   assert.equal(missingTokenResponse.status, 401);
@@ -802,8 +723,8 @@ test("POST /auth/refresh validates refresh token and rotates valid sessions", as
     "/auth/refresh",
     {},
     {
-      cookie: "mia_refresh=expired-token",
-    },
+      cookie: "mia_refresh=expired-token"
+    }
   );
 
   assert.equal(invalidTokenResponse.status, 401);
@@ -813,8 +734,8 @@ test("POST /auth/refresh validates refresh token and rotates valid sessions", as
   const successApp = await startAuthRoutesApp(t, {
     rotateRefreshTokenResult: {
       accessToken: "new-access-token",
-      refreshToken: "new-refresh-token",
-    },
+      refreshToken: "new-refresh-token"
+    }
   });
   const successResponse = await requestJson(
     successApp.baseUrl,
@@ -822,20 +743,14 @@ test("POST /auth/refresh validates refresh token and rotates valid sessions", as
     "/auth/refresh",
     {},
     {
-      cookie: "mia_refresh=refresh-token",
-    },
+      cookie: "mia_refresh=refresh-token"
+    }
   );
 
   const cookies = getSetCookieHeaders(successResponse.headers);
 
   assert.equal(successResponse.status, 200);
   assert.equal(successResponse.body.message, "Session refreshed");
-  assert.ok(
-    cookies.some((cookie) => cookie.startsWith("mia_session=new-access-token")),
-  );
-  assert.ok(
-    cookies.some((cookie) =>
-      cookie.startsWith("mia_refresh=new-refresh-token"),
-    ),
-  );
+  assert.ok(cookies.some((cookie) => cookie.startsWith("mia_session=new-access-token")));
+  assert.ok(cookies.some((cookie) => cookie.startsWith("mia_refresh=new-refresh-token")));
 });

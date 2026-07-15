@@ -4,21 +4,15 @@
       <header
         class="rounded-[32px] border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-8"
       >
-        <div
-          class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
-        >
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p class="text-xs uppercase tracking-widest text-violet-400">
               Collections personnelles
             </p>
-            <h1
-              class="mt-4 text-title-1 text-white"
-            >
-              Organize your curation
-            </h1>
+            <h1 class="mt-4 text-title-1 text-white">Organize your curation</h1>
             <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-400">
-              Create collections, keep them private when needed, and organize
-              artworks for future acquisitions.
+              Create collections, keep them private when needed, and organize artworks for future
+              acquisitions.
             </p>
           </div>
 
@@ -132,10 +126,7 @@
             <label
               class="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-violet-200"
             >
-              <input
-                v-model="drafts[collection.id].isPrivate"
-                type="checkbox"
-              />
+              <input v-model="drafts[collection.id].isPrivate" type="checkbox" />
               <span>Private collection</span>
             </label>
 
@@ -146,9 +137,7 @@
                 :disabled="Boolean(saveLoading[collection.id])"
                 @click="saveCollection(collection.id)"
               >
-                {{
-                  saveLoading[collection.id] ? "Saving..." : "Save"
-                }}
+                {{ saveLoading[collection.id] ? "Saving..." : "Save" }}
               </button>
               <button
                 type="button"
@@ -156,9 +145,7 @@
                 :disabled="Boolean(deleteLoading[collection.id])"
                 @click="deleteCollection(collection.id)"
               >
-                {{
-                  deleteLoading[collection.id] ? "Deleting..." : "Delete"
-                }}
+                {{ deleteLoading[collection.id] ? "Deleting..." : "Delete" }}
               </button>
             </div>
           </div>
@@ -190,11 +177,7 @@
               :disabled="Boolean(addArtworkLoading[collection.id])"
               @click="addArtwork(collection.id)"
             >
-              {{
-                addArtworkLoading[collection.id]
-                  ? "Adding..."
-                  : "Add artwork"
-              }}
+              {{ addArtworkLoading[collection.id] ? "Adding..." : "Add artwork" }}
             </button>
           </div>
 
@@ -222,9 +205,7 @@
               <button
                 type="button"
                 class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-750 bg-slate-850 px-4 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
-                :disabled="
-                  Boolean(removeArtworkLoading[`${collection.id}-${item.id}`])
-                "
+                :disabled="Boolean(removeArtworkLoading[`${collection.id}-${item.id}`])"
                 @click="removeArtwork(collection.id, item.id)"
               >
                 {{
@@ -253,7 +234,7 @@ import { navigateTo } from "#app";
 import { useAuthStore } from "~/stores/auth";
 
 definePageMeta({
-  middleware: "auth",
+  middleware: "auth"
 });
 
 const auth = useAuthStore();
@@ -272,15 +253,15 @@ const drafts = ref({});
 const newCollection = ref({
   title: "",
   description: "",
-  isPrivate: false,
+  isPrivate: false
 });
 
 const { data, pending, error } = await useFetch("/api/collections/me", {
   credentials: "include",
   default: () => ({
     collections: [],
-    artworkOptions: [],
-  }),
+    artworkOptions: []
+  })
 });
 
 const collections = computed(() => data.value?.collections || []);
@@ -290,7 +271,7 @@ const errorMessage = computed(() => error.value?.data?.message || "");
 function setLoading(target, key, value) {
   target.value = {
     ...target.value,
-    [key]: value,
+    [key]: value
   };
 }
 
@@ -302,8 +283,8 @@ function ensureDraft(collection) {
         title: collection.title,
         description: collection.description,
         isPrivate: collection.isPrivate,
-        selectedArtworkId: "",
-      },
+        selectedArtworkId: ""
+      }
     };
   }
 }
@@ -312,8 +293,8 @@ function replaceCollection(updatedCollection) {
   data.value = {
     ...(data.value || {}),
     collections: collections.value.map((collection) =>
-      collection.id === updatedCollection.id ? updatedCollection : collection,
-    ),
+      collection.id === updatedCollection.id ? updatedCollection : collection
+    )
   };
   ensureDraft(updatedCollection);
 }
@@ -341,13 +322,13 @@ async function createCollection() {
       body: {
         title: newCollection.value.title,
         description: newCollection.value.description,
-        isPrivate: newCollection.value.isPrivate,
-      },
+        isPrivate: newCollection.value.isPrivate
+      }
     });
 
     data.value = {
       ...(data.value || {}),
-      collections: [response.collection, ...collections.value],
+      collections: [response.collection, ...collections.value]
     };
     drafts.value = {
       ...drafts.value,
@@ -355,18 +336,17 @@ async function createCollection() {
         title: response.collection.title,
         description: response.collection.description,
         isPrivate: response.collection.isPrivate,
-        selectedArtworkId: "",
-      },
+        selectedArtworkId: ""
+      }
     };
     newCollection.value = {
       title: "",
       description: "",
-      isPrivate: false,
+      isPrivate: false
     };
     pageMessage.value = "Collection created.";
   } catch (error) {
-    pageMessage.value =
-      error?.data?.message || "Unable to create this collection.";
+    pageMessage.value = error?.data?.message || "Unable to create this collection.";
   } finally {
     createLoading.value = false;
   }
@@ -390,15 +370,14 @@ async function saveCollection(collectionId) {
       body: {
         title: draft.title,
         description: draft.description,
-        isPrivate: draft.isPrivate,
-      },
+        isPrivate: draft.isPrivate
+      }
     });
 
     replaceCollection(response.collection);
     pageMessage.value = "Collection updated.";
   } catch (error) {
-    pageMessage.value =
-      error?.data?.message || "Unable to update this collection.";
+    pageMessage.value = error?.data?.message || "Unable to update this collection.";
   } finally {
     setLoading(saveLoading, collectionId, false);
   }
@@ -411,24 +390,21 @@ async function deleteCollection(collectionId) {
   try {
     await $fetch(`/api/collections/me/${collectionId}`, {
       method: "DELETE",
-      credentials: "include",
+      credentials: "include"
     });
 
     data.value = {
       ...(data.value || {}),
-      collections: collections.value.filter(
-        (collection) => collection.id !== collectionId,
-      ),
+      collections: collections.value.filter((collection) => collection.id !== collectionId)
     };
     const nextDrafts = {
-      ...drafts.value,
+      ...drafts.value
     };
     delete nextDrafts[collectionId];
     drafts.value = nextDrafts;
     pageMessage.value = "Collection deleted.";
   } catch (error) {
-    pageMessage.value =
-      error?.data?.message || "Unable to delete this collection.";
+    pageMessage.value = error?.data?.message || "Unable to delete this collection.";
   } finally {
     setLoading(deleteLoading, collectionId, false);
   }
@@ -446,24 +422,19 @@ async function addArtwork(collectionId) {
   setLoading(addArtworkLoading, collectionId, true);
 
   try {
-    const response = await $fetch(
-      `/api/collections/me/${collectionId}/artworks`,
-      {
-        method: "POST",
-        credentials: "include",
-        body: {
-          artworkId: Number(draft.selectedArtworkId),
-        },
-      },
-    );
+    const response = await $fetch(`/api/collections/me/${collectionId}/artworks`, {
+      method: "POST",
+      credentials: "include",
+      body: {
+        artworkId: Number(draft.selectedArtworkId)
+      }
+    });
 
     replaceCollection(response.collection);
     drafts.value[collectionId].selectedArtworkId = "";
     pageMessage.value = "Artwork added to the collection.";
   } catch (error) {
-    pageMessage.value =
-      error?.data?.message ||
-      "Unable to add this artwork to the collection.";
+    pageMessage.value = error?.data?.message || "Unable to add this artwork to the collection.";
   } finally {
     setLoading(addArtworkLoading, collectionId, false);
   }
@@ -475,20 +446,16 @@ async function removeArtwork(collectionId, artworkId) {
   setLoading(removeArtworkLoading, loadingKey, true);
 
   try {
-    const response = await $fetch(
-      `/api/collections/me/${collectionId}/artworks/${artworkId}`,
-      {
-        method: "DELETE",
-        credentials: "include",
-      },
-    );
+    const response = await $fetch(`/api/collections/me/${collectionId}/artworks/${artworkId}`, {
+      method: "DELETE",
+      credentials: "include"
+    });
 
     replaceCollection(response.collection);
     pageMessage.value = "Artwork removed from the collection.";
   } catch (error) {
     pageMessage.value =
-      error?.data?.message ||
-      "Unable to remove this artwork from the collection.";
+      error?.data?.message || "Unable to remove this artwork from the collection.";
   } finally {
     setLoading(removeArtworkLoading, loadingKey, false);
   }

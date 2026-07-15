@@ -5,7 +5,7 @@ async function authRequired(req, res, next) {
 
   if (!user) {
     return res.status(401).json({
-      message: "Not authenticated",
+      message: "Not authenticated"
     });
   }
 
@@ -14,5 +14,5 @@ async function authRequired(req, res, next) {
 }
 
 module.exports = {
-  authRequired,
+  authRequired
 };

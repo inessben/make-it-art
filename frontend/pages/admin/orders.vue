@@ -33,21 +33,13 @@
     </section>
 
     <section class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6">
-      <div
-        class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
-      >
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">
-            Orders list
-          </p>
-          <h2 class="mt-3 text-xl font-semibold text-slate-100">
-            Order tracking
-          </h2>
+          <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">Orders list</p>
+          <h2 class="mt-3 text-xl font-semibold text-slate-100">Order tracking</h2>
         </div>
         <div class="grid gap-3 sm:grid-cols-2">
-          <label
-            class="border border-slate-800 bg-black px-4 py-3"
-          >
+          <label class="border border-slate-800 bg-black px-4 py-3">
             <span class="sr-only">Search orders</span>
             <input
               v-model="searchTerm"
@@ -56,9 +48,7 @@
               class="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
             />
           </label>
-          <label
-            class="border border-slate-800 bg-black px-4 py-3"
-          >
+          <label class="border border-slate-800 bg-black px-4 py-3">
             <span class="sr-only">Filter orders</span>
             <select
               v-model="statusFilter"
@@ -101,19 +91,14 @@
         No orders match the current filters.
       </div>
 
-      <div
-        v-else
-        class="mt-6 overflow-hidden border border-slate-800"
-      >
+      <div v-else class="mt-6 overflow-hidden border border-slate-800">
         <p class="border-b border-slate-800 px-4 py-3 text-subtitle-3 text-slate-500 sm:hidden">
           Swipe horizontally to view every column.
         </p>
         <div class="overflow-x-auto">
           <table class="min-w-[760px] divide-y divide-slate-800 sm:min-w-full">
             <thead class="bg-slate-950">
-              <tr
-                class="text-left text-xs uppercase tracking-widest text-slate-500"
-              >
+              <tr class="text-left text-xs uppercase tracking-widest text-slate-500">
                 <th class="px-5 py-4 font-medium">Order</th>
                 <th class="px-5 py-4 font-medium">Customer</th>
                 <th class="px-5 py-4 font-medium">Status</th>
@@ -127,9 +112,7 @@
                   <p class="font-semibold text-slate-100">
                     {{ order.reference }}
                   </p>
-                  <p class="mt-1 text-sm text-slate-400">
-                    {{ order.itemsCount }} items
-                  </p>
+                  <p class="mt-1 text-sm text-slate-400">{{ order.itemsCount }} items</p>
                 </td>
                 <td class="px-5 py-4">
                   <p class="text-sm text-slate-100">{{ order.customer }}</p>
@@ -165,7 +148,7 @@ import { computed, onMounted, ref } from "vue";
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "admin",
+  middleware: "admin"
 });
 
 const loading = ref(true);
@@ -178,30 +161,30 @@ const summary = ref({
   totalOrders: 0,
   paidOrders: 0,
   pendingOrders: 0,
-  refundedOrders: 0,
+  refundedOrders: 0
 });
 
 const summaries = computed(() => [
   {
     label: "Total orders",
     value: summary.value.totalOrders,
-    description: "Total number of orders in the database.",
+    description: "Total number of orders in the database."
   },
   {
     label: "Paid orders",
     value: summary.value.paidOrders,
-    description: "Orders marked as paid.",
+    description: "Orders marked as paid."
   },
   {
     label: "Pending orders",
     value: summary.value.pendingOrders,
-    description: "Orders still pending.",
+    description: "Orders still pending."
   },
   {
     label: "Refunded orders",
     value: summary.value.refundedOrders,
-    description: "Refunded orders.",
-  },
+    description: "Refunded orders."
+  }
 ]);
 
 const filteredOrders = computed(() => {
@@ -214,8 +197,7 @@ const filteredOrders = computed(() => {
       order.customer.toLowerCase().includes(normalizedSearch) ||
       order.customerEmail.toLowerCase().includes(normalizedSearch);
 
-    const matchesStatus =
-      statusFilter.value === "all" || order.status === statusFilter.value;
+    const matchesStatus = statusFilter.value === "all" || order.status === statusFilter.value;
 
     return matchesSearch && matchesStatus;
   });
@@ -232,7 +214,7 @@ async function loadOrders(showSuccess = false) {
 
   try {
     const response = await $fetch("/api/admin/orders", {
-      credentials: "include",
+      credentials: "include"
     });
 
     orders.value = response.orders || [];
@@ -275,7 +257,7 @@ function formatDate(value) {
   }
 
   return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
+    dateStyle: "medium"
   }).format(new Date(value));
 }
 </script>

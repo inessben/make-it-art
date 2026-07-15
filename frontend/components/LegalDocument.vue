@@ -1,10 +1,16 @@
 <template>
   <main class="bg-black px-4 py-10 text-slate-100 sm:px-6 sm:py-16 lg:py-20">
     <article class="ui-card mx-auto max-w-5xl overflow-hidden">
-      <header class="border-b border-slate-800 bg-gradient-to-br from-violet-950/70 to-slate-950 px-6 py-10 sm:px-10 sm:py-14">
-        <p class="text-subtitle-2 font-semibold uppercase tracking-[0.22em] text-violet-400">{{ label }}</p>
+      <header
+        class="border-b border-slate-800 bg-gradient-to-br from-violet-950/70 to-slate-950 px-6 py-10 sm:px-10 sm:py-14"
+      >
+        <p class="text-subtitle-2 font-semibold uppercase tracking-[0.22em] text-violet-400">
+          {{ label }}
+        </p>
         <h1 class="mt-4 text-title-2 sm:text-title-1">{{ title }}</h1>
-        <div class="mt-6 flex flex-col gap-2 text-body-1 text-slate-400 sm:flex-row sm:flex-wrap sm:gap-x-8">
+        <div
+          class="mt-6 flex flex-col gap-2 text-body-1 text-slate-400 sm:flex-row sm:flex-wrap sm:gap-x-8"
+        >
           <p>Make it Art</p>
           <p>Last updated: {{ lastUpdated }}</p>
           <p>{{ compliance }}</p>
@@ -22,7 +28,7 @@ defineProps({
   label: { type: String, required: true },
   title: { type: String, required: true },
   lastUpdated: { type: String, default: "July 2026" },
-  compliance: { type: String, required: true },
+  compliance: { type: String, required: true }
 });
 </script>
 

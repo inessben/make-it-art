@@ -15,7 +15,8 @@
         v-else
         class="grid h-10 w-10 place-items-center rounded-full border border-violet-600 text-violet-400"
         aria-hidden="true"
-      >✓</span>
+        >✓</span
+      >
     </div>
     <FormMessage :message="message" />
     <NuxtLink v-if="complete" class="ui-button-primary" to="/login">Go to sign in</NuxtLink>

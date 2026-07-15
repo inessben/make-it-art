@@ -53,11 +53,7 @@
         </section>
 
         <section class="mt-12 overflow-hidden rounded border border-slate-800 bg-slate-950/70">
-          <AppStatePanel
-            v-if="loading"
-            type="loading"
-            message="Loading your order history..."
-          />
+          <AppStatePanel v-if="loading" type="loading" message="Loading your order history..." />
           <AppStatePanel
             v-else-if="error"
             type="error"
@@ -74,7 +70,9 @@
             <div class="overflow-x-auto">
               <table class="w-full min-w-[920px] table-fixed border-collapse text-left">
                 <thead>
-                  <tr class="h-16 border-b border-slate-800 text-subtitle-2 uppercase text-slate-100">
+                  <tr
+                    class="h-16 border-b border-slate-800 text-subtitle-2 uppercase text-slate-100"
+                  >
                     <th class="w-[35%] px-6 font-normal">Artwork</th>
                     <th class="w-[15%] px-4 font-normal">Status</th>
                     <th class="w-[24%] px-4 font-normal">Purchase date</th>
@@ -117,7 +115,9 @@
                         {{ transaction.status }}
                       </span>
                     </td>
-                    <td class="px-4 text-body-1 uppercase">{{ formatOrderDate(transaction.date) }}</td>
+                    <td class="px-4 text-body-1 uppercase">
+                      {{ formatOrderDate(transaction.date) }}
+                    </td>
                     <td class="px-4 text-right text-body-1 text-slate-400">
                       {{ formatTokenValue(transaction.value) }}
                     </td>
@@ -222,7 +222,9 @@ const filteredTransactions = computed(() =>
     ? transactions.value
     : transactions.value.filter((transaction) => transaction.status === selectedStatus.value)
 );
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredTransactions.value.length / pageSize)));
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredTransactions.value.length / pageSize))
+);
 const currentPage = computed(() => {
   const parsedPage = Number.parseInt(String(route.query.page || "1"), 10);
   return Math.min(Math.max(Number.isInteger(parsedPage) ? parsedPage : 1, 1), totalPages.value);

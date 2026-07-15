@@ -5,8 +5,14 @@
     >
       <div class="flex flex-col items-center">
         <h1 class="flex flex-col items-center uppercase">
-          <span class="text-title-2 font-light leading-[0.95] text-slate-100 sm:text-title-1 lg:text-big-title-4">Welcome to</span>
-          <span class="text-title-1 font-black leading-[0.9] text-violet-600 sm:text-big-title-4 lg:text-big-title-3">Make It Art</span>
+          <span
+            class="text-title-2 font-light leading-[0.95] text-slate-100 sm:text-title-1 lg:text-big-title-4"
+            >Welcome to</span
+          >
+          <span
+            class="text-title-1 font-black leading-[0.9] text-violet-600 sm:text-big-title-4 lg:text-big-title-3"
+            >Make It Art</span
+          >
         </h1>
         <p class="mt-7 text-title-4 uppercase tracking-[0.28em] text-slate-500">
           Digital arts curations &amp; artists marketplace
@@ -36,10 +42,7 @@
         </p>
       </div>
 
-      <div
-        class="mt-14 grid grid-cols-1 gap-5 lg:grid-cols-5"
-        aria-label="Category placeholders"
-      >
+      <div class="mt-14 grid grid-cols-1 gap-5 lg:grid-cols-5" aria-label="Category placeholders">
         <div class="min-h-[322px] border border-slate-900 bg-slate-950 lg:col-span-2" />
         <div class="min-h-[322px] border border-slate-900 bg-slate-950 lg:col-span-3" />
         <div class="min-h-[322px] border border-slate-900 bg-slate-950 lg:col-span-5" />
@@ -99,10 +102,7 @@
         >
           ‹
         </button>
-        <div
-          class="grid grid-cols-1 gap-6 md:grid-cols-3"
-          aria-label="Artist profile placeholders"
-        >
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-3" aria-label="Artist profile placeholders">
           <div class="min-h-[370px] border border-slate-800 bg-slate-950" />
           <div class="min-h-[370px] border border-slate-800 bg-slate-950" />
           <div class="min-h-[370px] border border-slate-800 bg-slate-950" />
@@ -134,14 +134,18 @@
     <section
       class="relative border-y border-violet-950 bg-gradient-to-b from-violet-950 to-black px-5 py-16 sm:px-6 sm:py-20"
     >
-      <h2 class="text-center text-title-2 uppercase text-slate-100 sm:text-title-1">Join the collective</h2>
+      <h2 class="text-center text-title-2 uppercase text-slate-100 sm:text-title-1">
+        Join the collective
+      </h2>
       <p class="mx-auto mt-4 max-w-2xl text-center text-body-1 leading-7 text-slate-400">
         Get early access to curated drops or apply to showcase your work on Make It Art.
       </p>
       <div
         class="relative mx-auto mt-10 grid w-full max-w-[1180px] overflow-hidden border border-violet-950 bg-slate-950/95 md:grid-cols-2"
       >
-        <div class="flex flex-col justify-center border-b border-violet-950 px-6 py-10 md:border-b-0 md:border-r sm:px-10">
+        <div
+          class="flex flex-col justify-center border-b border-violet-950 px-6 py-10 md:border-b-0 md:border-r sm:px-10"
+        >
           <p class="text-body-1 leading-7 text-slate-300">
             Meet collectors and artists, share your work and join the Make It Art community.
           </p>
@@ -159,11 +163,7 @@
           <p class="text-body-1 leading-7 text-slate-300">
             Are you an artist ready to sell your work? Submit your profile for curation.
           </p>
-          <NuxtLink
-            to="/become-artist"
-            class="ui-button-primary mt-7"
-            >Become an artist</NuxtLink
-          >
+          <NuxtLink to="/become-artist" class="ui-button-primary mt-7">Become an artist</NuxtLink>
         </div>
       </div>
     </section>
