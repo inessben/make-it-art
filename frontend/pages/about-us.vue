@@ -9,7 +9,7 @@
         >
           <span>Digital</span>
           <span>Soul.</span>
-          <span><strong class="font-light text-violet-700">Analog</strong></span>
+          <span><strong class=" text-violet-700">Analog</strong></span>
           <span>Precision.</span>
         </h1>
         <p class="mt-10 max-w-[760px] text-body-1 leading-7 text-slate-400">
