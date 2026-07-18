@@ -177,6 +177,7 @@ definePageMeta({
 });
 
 const config = useRuntimeConfig();
+const route = useRoute();
 const cartStore = useCartStore();
 const { cart: cartSummary } = storeToRefs(cartStore);
 const initializing = ref(true);
@@ -198,32 +199,47 @@ onMounted(async () => {
       throw new Error("Le paiement sécurisé n’est pas encore configuré.");
     }
 
-    await cartStore.fetchCart();
-
-    if (!cartSummary.value?.items?.length || !cartSummary.value.payable) {
-      throw new Error("Votre panier doit être vérifié avant le paiement.");
-    }
-
     const csrfResponse = await $fetch("/api/v1/security/csrf-token", {
       credentials: "include",
     });
-    const idempotencyKey = getOrCreateIdempotencyKey(
-      window.sessionStorage,
-      cartSummary.value,
-      () => createSecureUuid(window.crypto),
-    );
-    const checkoutResponse = await $fetch("/api/v1/orders/checkout", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "idempotency-key": idempotencyKey,
-        "x-csrf-token": csrfResponse.csrfToken,
-      },
-      body: {
-        cartVersion: cartSummary.value.version,
-        pricingFingerprint: cartSummary.value.pricingFingerprint,
-      },
-    });
+    const resumeOrderId = typeof route.query.order === "string" ? route.query.order : "";
+    let checkoutResponse;
+
+    if (resumeOrderId) {
+      checkoutResponse = await $fetch(
+        "/api/v1/orders/" + encodeURIComponent(resumeOrderId) + "/resume",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "x-csrf-token": csrfResponse.csrfToken },
+          body: {},
+        },
+      );
+    } else {
+      await cartStore.fetchCart();
+
+      if (!cartSummary.value?.items?.length || !cartSummary.value.payable) {
+        throw new Error("Votre panier doit être vérifié avant le paiement.");
+      }
+
+      const idempotencyKey = getOrCreateIdempotencyKey(
+        window.sessionStorage,
+        cartSummary.value,
+        () => createSecureUuid(window.crypto),
+      );
+      checkoutResponse = await $fetch("/api/v1/orders/checkout", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "idempotency-key": idempotencyKey,
+          "x-csrf-token": csrfResponse.csrfToken,
+        },
+        body: {
+          cartVersion: cartSummary.value.version,
+          pricingFingerprint: cartSummary.value.pricingFingerprint,
+        },
+      });
+    }
 
     order.value = checkoutResponse.order;
     clientSecret = checkoutResponse.payment.clientSecret;
@@ -231,6 +247,11 @@ onMounted(async () => {
       CHECKOUT_ORDER_STORAGE_KEY,
       order.value.id,
     );
+
+    if (!clientSecret) {
+      await navigateTo("/payment/return");
+      return;
+    }
 
     await nextTick();
     stripeClient = await loadStripe(publishableKey);
@@ -272,6 +293,7 @@ onMounted(async () => {
   } catch (error) {
     errorMessage.value = getSafePaymentError({
       message: error?.data?.message || error?.message,
+      supportReference: error?.data?.supportReference,
     });
   } finally {
     initializing.value = false;
@@ -324,7 +346,10 @@ async function confirmPayment() {
     clientSecret = "";
     await navigateTo("/payment/return");
   } catch (error) {
-    errorMessage.value = getSafePaymentError(error);
+    errorMessage.value = getSafePaymentError({
+      message: error?.data?.message || error?.message,
+      supportReference: error?.data?.supportReference
+    });
   } finally {
     submitting.value = false;
   }

@@ -90,3 +90,15 @@ test("payment errors never expose a client secret", () => {
     "Your card was declined."
   );
 });
+
+test("unexpected errors expose only a validated non-sensitive support reference", () => {
+  const message = getSafePaymentError({
+    message: "Payment is temporarily unavailable.",
+    supportReference: "7d5cb6c9-bb37-4bb5-a5bd-fb43c982ae62"
+  });
+  assert.match(message, /7d5cb6c9-bb37-4bb5-a5bd-fb43c982ae62/);
+  assert.doesNotMatch(
+    getSafePaymentError({ message: "Failed", supportReference: "pi_test_secret_value" }),
+    /pi_test_secret_value/
+  );
+});

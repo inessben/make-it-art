@@ -87,10 +87,16 @@ export function buildPaymentReturnUrl({ configuredBaseUrl, currentOrigin, nodeEn
 
 export function getSafePaymentError(error) {
   const message = typeof error?.message === "string" ? error.message.trim() : "";
+  const supportReference =
+    typeof error?.supportReference === "string" &&
+    IDEMPOTENCY_KEY_PATTERN.test(error.supportReference)
+      ? error.supportReference.toLowerCase()
+      : "";
 
-  if (!message || message.length > 240 || SENSITIVE_VALUE_PATTERN.test(message)) {
-    return "The payment could not be confirmed. Please review your details and try again.";
-  }
+  const safeMessage =
+    !message || message.length > 240 || SENSITIVE_VALUE_PATTERN.test(message)
+      ? "The payment could not be confirmed. Please review your details and try again."
+      : message;
 
-  return message;
+  return supportReference ? `${safeMessage} Support reference: ${supportReference}.` : safeMessage;
 }

@@ -1,7 +1,8 @@
 const crypto = require("node:crypto");
 const prisma = require("../lib/prisma");
 const { getStripeClient } = require("../lib/stripe");
-const { withLockedPayableCart } = require("./cart.service");
+const { getCartSummary, withLockedPayableCart } = require("./cart.service");
+const { cancelSupersededCheckouts, CheckoutRecoveryError } = require("./checkout-recovery.service");
 
 const RESERVATION_DURATION_MS = 15 * 60 * 1000;
 const STRIPE_MINIMUM_AMOUNT = 50;
@@ -100,7 +101,7 @@ async function createPendingCheckout({
 
     const payment = existingOrder.payments[0];
 
-    if (!payment || payment.idempotencyKey !== idempotencyKey) {
+    if (!payment) {
       throw new CheckoutError(
         "CHECKOUT_ALREADY_INITIALIZED",
         "This cart version already has a checkout operation",
@@ -287,6 +288,31 @@ async function initializeCheckout({
   clientIdempotencyKey,
   stripeClient = getStripeClient()
 }) {
+  const currentCart = await getCartSummary(userId);
+  if (
+    currentCart.version === cartVersion &&
+    currentCart.pricingFingerprint === pricingFingerprint
+  ) {
+    const superseded = await cancelSupersededCheckouts({
+      userId,
+      currentCartVersion: cartVersion,
+      currentPricingFingerprint: pricingFingerprint,
+      stripeClient
+    });
+
+    if (superseded.sameVersionCanceled) {
+      await prisma.cart.update({
+        where: { userId },
+        data: { version: { increment: 1 } }
+      });
+      throw new CheckoutRecoveryError(
+        "CHECKOUT_SNAPSHOT_CHANGED",
+        "Your cart changed and must be reviewed again",
+        409
+      );
+    }
+  }
+
   const idempotencyKey = deriveIdempotencyKey(userId, clientIdempotencyKey);
   const checkout = await createPendingCheckout({
     userId,

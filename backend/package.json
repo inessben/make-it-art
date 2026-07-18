@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
+    "payments:expire-checkouts": "node src/jobs/expire-checkouts.js",
     "test": "node --test \"test/**/*.test.js\"",
     "test:coverage": "node --test --experimental-test-coverage \"test/**/*.test.js\"",
     "lint": "eslint \"src/**/*.js\" \"test/**/*.js\" --max-warnings=0",

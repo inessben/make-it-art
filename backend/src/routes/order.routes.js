@@ -8,6 +8,7 @@ const {
 const { CartError } = require("../services/cart.service");
 const { CheckoutError, initializeCheckout } = require("../services/checkout.service");
 const { getOwnedOrder, listOwnedOrders } = require("../services/order-query.service");
+const { CheckoutRecoveryError, resumeCheckout } = require("../services/checkout-recovery.service");
 
 const router = express.Router();
 const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -63,17 +64,23 @@ function parseIdempotencyKey(value) {
 }
 
 function sendCheckoutError(res, error) {
-  if (error instanceof CartError || error instanceof CheckoutError) {
+  if (
+    error instanceof CartError ||
+    error instanceof CheckoutError ||
+    error instanceof CheckoutRecoveryError
+  ) {
     if (error.providerCode) {
       console.error("Stripe checkout provider error:", {
-        code: error.providerCode
+        code: error.providerCode,
+        supportReference: res.req.supportReference
       });
     }
 
     return res.status(error.status).json({
       message: error.message,
       code: error.code,
-      ...(error.cart ? { cart: error.cart } : {})
+      ...(error.cart ? { cart: error.cart } : {}),
+      ...(error.status >= 500 ? { supportReference: res.req.supportReference } : {})
     });
   }
 
@@ -86,11 +93,13 @@ function sendCheckoutError(res, error) {
 
   console.error("Checkout initialization failed:", {
     name: error.name,
-    code: error.code
+    code: error.code,
+    supportReference: res.req.supportReference
   });
   return res.status(500).json({
     message: "Checkout initialization failed",
-    code: "CHECKOUT_INITIALIZATION_FAILED"
+    code: "CHECKOUT_INITIALIZATION_FAILED",
+    supportReference: res.req.supportReference
   });
 }
 
@@ -121,6 +130,46 @@ router.post(
         },
         payment: {
           status: result.paymentStatus,
+          clientSecret: result.clientSecret
+        }
+      });
+    } catch (error) {
+      return sendCheckoutError(res, error);
+    }
+  }
+);
+
+router.post(
+  "/orders/:publicId/resume",
+  checkoutIpRateLimit,
+  authRequired,
+  checkoutUserRateLimit,
+  csrfProtection,
+  async (req, res) => {
+    res.set("Cache-Control", "private, no-store");
+
+    try {
+      assertOnlyFields(req.body, []);
+      if (!UUID_V4_PATTERN.test(req.params.publicId)) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      const result = await resumeCheckout({
+        userId: req.user.id,
+        publicId: req.params.publicId
+      });
+      if (!result) return res.status(404).json({ message: "Order not found" });
+
+      return res.status(200).json({
+        order: {
+          id: result.orderId,
+          status: result.orderStatus,
+          amount: result.amount,
+          currency: result.currency
+        },
+        payment: {
+          status: result.paymentStatus,
+          requiresConfirmation: result.requiresConfirmation,
           clientSecret: result.clientSecret
         }
       });

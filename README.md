@@ -130,6 +130,7 @@ Then update at least these values:
 - `SMTP_PASS`
 - `SMTP_FROM`
 - `STRIPE_SECRET_KEY` avec une clé serveur `sk_live_*`
+- `STRIPE_WEBHOOK_SECRET` avec le secret `whsec_*` propre à l'endpoint de production
 - `NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` avec la clé publique correspondante `pk_live_*`
 
 Important production defaults:
@@ -142,6 +143,11 @@ Important production defaults:
 La clé `STRIPE_SECRET_KEY` ne doit jamais être copiée dans une variable `NUXT_PUBLIC_*`. Avant
 d'activer Apple Pay, Google Pay ou Link, enregistrer chaque domaine et sous-domaine de paiement dans
 le Dashboard Stripe.
+
+Les checkouts non payés sont contrôlés chaque minute par le backend (`CHECKOUT_EXPIRATION_SWEEP_MS`).
+Une exécution manuelle et idempotente reste disponible dans le conteneur avec
+`docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml exec backend npm run payments:expire-checkouts` ;
+si Stripe ne confirme pas l'annulation, la réservation n'est pas libérée automatiquement.
 
 ### Deploy on the VPS
 

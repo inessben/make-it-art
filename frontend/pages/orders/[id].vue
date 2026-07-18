@@ -76,7 +76,7 @@
 
           <NuxtLink
             v-if="presentation.action?.to"
-            :to="presentation.action.to"
+            :to="orderActionTarget"
             class="mt-5 inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#4A6CF7] px-5 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
           >
             {{ presentation.action.label }}
@@ -197,6 +197,18 @@ const order = ref(null);
 const presentation = computed(() =>
   getOrderStatusPresentation(order.value?.status),
 );
+const orderActionTarget = computed(() => {
+  const target = presentation.value.action?.to;
+
+  if (target !== "/checkout") {
+    return target;
+  }
+
+  return {
+    path: "/checkout",
+    query: { order: order.value?.id },
+  };
+});
 const statusToneClass = computed(() => {
   const tones = {
     success: "bg-[#10261A] text-[#9DE2B4]",

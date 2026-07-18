@@ -44,6 +44,9 @@ module.exports = {
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY || "",
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
+    checkoutExpirationSweepMs: Number(
+      process.env.CHECKOUT_EXPIRATION_SWEEP_MS || 60000,
+    ),
   },
   smtp: {
     host: process.env.SMTP_HOST || "",

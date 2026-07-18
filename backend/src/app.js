@@ -5,9 +5,11 @@ const apiRoutes = require("./routes");
 const stripeWebhookRoutes = require("./routes/stripe-webhook.routes");
 const { getHealthPayload } = require("./services/health.service");
 const cookieParser = require("cookie-parser");
+const { requestContext } = require("./middlewares/request-context.middleware");
 
 const app = express();
 app.set("trust proxy", 1);
+app.use(requestContext);
 
 app.use(
   cors({

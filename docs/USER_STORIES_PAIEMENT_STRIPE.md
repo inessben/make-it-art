@@ -1,7 +1,7 @@
 # Epic DEV9 — Paiement Stripe réel et sécurisé
 
 > **Milestone :** M5 — E-Commerce Ready  
-> **Statut :** en cours — `PAY-US-01` à `PAY-US-07` implémentées
+> **Statut :** en cours — `PAY-US-01` à `PAY-US-08` implémentées
 > **Date :** 18 juillet 2026  
 > **Périmètre initial :** achats ponctuels d'œuvres numériques en EUR
 
@@ -225,6 +225,8 @@ Les transitions sont contrôlées côté serveur. Un événement ancien ne peut 
 - **AC-08 — Email :** Étant donné une commande `PAID`, quand l'email de confirmation est envoyé, alors il ne contient aucune donnée bancaire et ses liens exigent encore une autorisation ou une signature limitée conformément à DEV10.
 
 ### PAY-US-08 — Reprendre un paiement sans double débit
+
+**Statut :** ✅ Implémentée le 18 juillet 2026
 
 **Priorité :** P0  
 **Dépendances :** `PAY-US-03`, `PAY-US-04`, `PAY-US-07`
