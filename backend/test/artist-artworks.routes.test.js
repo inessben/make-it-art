@@ -168,6 +168,8 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
         };
       }
     }
+  }, {
+    invalidate: [artistRequiredPath],
   });
 
   const app = express();

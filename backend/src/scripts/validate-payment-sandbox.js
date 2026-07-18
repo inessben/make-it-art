@@ -8,7 +8,9 @@ if (/^pk_live_/.test(process.env.NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "")) {
   throw new Error("Live Stripe publishable keys are forbidden in development and CI");
 }
 
-const root = path.resolve(__dirname, "../../..");
+const backendRoot = path.resolve(__dirname, "../..");
+const workspaceRoot = path.dirname(backendRoot);
+const root = fs.existsSync(path.join(workspaceRoot, ".git")) ? workspaceRoot : backendRoot;
 const ignored = new Set([".git", "node_modules", ".nuxt", ".output"]);
 const secretPattern = /\b(?:sk|rk)_live_[A-Za-z0-9]{24,}\b|\bwhsec_[A-Za-z0-9_]{32,}\b/g;
 const findings = [];

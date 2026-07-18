@@ -1,11 +1,15 @@
--- PAY-US-01 adds an explicit fiat model. Legacy display columns are retained
--- temporarily for develop compatibility, but are never authoritative for a
--- Stripe amount. Refuse to guess the meaning of existing order/payment data.
+-- PAY-US-01 replaces the legacy token/string payment fields with an explicit
+-- fiat model. Refuse to guess the meaning of pre-existing financial data.
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM "order")
        OR EXISTS (SELECT 1 FROM "order_item")
-       OR EXISTS (SELECT 1 FROM "payment") THEN
+       OR EXISTS (SELECT 1 FROM "payment")
+       OR EXISTS (
+           SELECT 1
+           FROM "artwork"
+           WHERE "price" IS NOT NULL OR "price_tokens" IS NOT NULL
+       ) THEN
         RAISE EXCEPTION USING
             MESSAGE = 'PAY-US-01 cannot automatically convert legacy financial data',
             HINT = 'Reconcile legacy token/string amounts to integer EUR cents before applying this migration.';
@@ -46,12 +50,15 @@ CREATE TYPE "WebhookEventStatus" AS ENUM ('PENDING', 'PROCESSED', 'FAILED');
 
 -- AlterTable
 ALTER TABLE "artwork"
+    DROP COLUMN "price_tokens",
+    DROP COLUMN "price",
     ADD COLUMN "price_amount" INTEGER,
     ADD COLUMN "currency" "Currency" NOT NULL DEFAULT 'EUR';
 
 -- AlterTable
 ALTER TABLE "order"
     DROP COLUMN "status",
+    DROP COLUMN "total_token",
     ADD COLUMN "public_id" UUID NOT NULL DEFAULT gen_random_uuid(),
     ADD COLUMN "status" "OrderStatus" NOT NULL DEFAULT 'PENDING_PAYMENT',
     ADD COLUMN "checkout_version" INTEGER NOT NULL DEFAULT 1,
@@ -70,6 +77,7 @@ ALTER TABLE "order"
 
 -- AlterTable
 ALTER TABLE "order_item"
+    DROP COLUMN "price_tokens",
     ADD COLUMN "artwork_title" TEXT NOT NULL,
     ADD COLUMN "artist_name" TEXT NOT NULL,
     ADD COLUMN "quantity" INTEGER NOT NULL DEFAULT 1,
@@ -81,6 +89,8 @@ ALTER TABLE "order_item"
 
 -- AlterTable
 ALTER TABLE "payment"
+    DROP COLUMN "transaction_id",
+    DROP COLUMN "price",
     DROP COLUMN "status",
     ADD COLUMN "checkout_version" INTEGER NOT NULL DEFAULT 1,
     ADD COLUMN "provider" "PaymentProvider" NOT NULL DEFAULT 'STRIPE',

@@ -35,90 +35,98 @@ function intentMatchesOrder(intent, order) {
 }
 
 async function finalizeLocalCancellation({ prismaClient, order, reason, providerStatus }) {
-  return prismaClient.$transaction(
-    async (transaction) => {
-      await transaction.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${order.publicId}, 8))::text AS lock`;
-      const lockedOrder = await transaction.order.findUnique({
-        where: { id: order.id },
-        include: { reservations: true, payments: { orderBy: { checkoutVersion: "desc" } } }
-      });
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      return await prismaClient.$transaction(
+        async (transaction) => {
+          await transaction.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${order.publicId}, 8))::text AS lock`;
+          const lockedOrder = await transaction.order.findUnique({
+            where: { id: order.id },
+            include: { reservations: true, payments: { orderBy: { checkoutVersion: "desc" } } }
+          });
 
-      if (!lockedOrder || !OPEN_ORDER_STATUSES.includes(lockedOrder.status)) {
-        return false;
-      }
-
-      for (const reservation of lockedOrder.reservations.filter(
-        (candidate) => candidate.status === "ACTIVE"
-      )) {
-        const released = await transaction.artwork.updateMany({
-          where: {
-            id: reservation.artworkId,
-            reservedQuantity: { gte: reservation.quantity }
-          },
-          data: { reservedQuantity: { decrement: reservation.quantity } }
-        });
-
-        if (released.count !== 1) {
-          throw new CheckoutRecoveryError(
-            "INVENTORY_RELEASE_CONFLICT",
-            "The reservation could not be released safely",
-            500
-          );
-        }
-      }
-
-      const payment = lockedOrder.payments[0] || null;
-      await transaction.inventoryReservation.updateMany({
-        where: { orderId: lockedOrder.id, status: "ACTIVE" },
-        data: { status: reason === "expired" ? "EXPIRED" : "RELEASED" }
-      });
-      await transaction.order.update({
-        where: { id: lockedOrder.id },
-        data: { status: "CANCELED", canceledAt: new Date() }
-      });
-
-      const transitions = [
-        {
-          orderId: lockedOrder.id,
-          paymentId: payment?.id || null,
-          stripeEventId: `system:${reason}:${lockedOrder.publicId}`,
-          stripeObjectId: payment?.providerPaymentId || "not-created",
-          entityType: "ORDER",
-          previousStatus: lockedOrder.status,
-          nextStatus: "CANCELED",
-          reasonCode: `CHECKOUT_${reason.toUpperCase()}`
-        }
-      ];
-
-      if (payment && canTransitionPayment(payment.status, "CANCELED")) {
-        await transaction.payment.update({
-          where: { id: payment.id },
-          data: {
-            status: "CANCELED",
-            providerStatus,
-            canceledAt: new Date()
+          if (!lockedOrder || !OPEN_ORDER_STATUSES.includes(lockedOrder.status)) {
+            return false;
           }
-        });
-        transitions.push({
-          orderId: lockedOrder.id,
-          paymentId: payment.id,
-          stripeEventId: `system:${reason}:${lockedOrder.publicId}`,
-          stripeObjectId: payment.providerPaymentId || "not-created",
-          entityType: "PAYMENT",
-          previousStatus: payment.status,
-          nextStatus: "CANCELED",
-          reasonCode: `CHECKOUT_${reason.toUpperCase()}`
-        });
-      }
 
-      await transaction.financialTransition.createMany({
-        data: transitions,
-        skipDuplicates: true
-      });
-      return true;
-    },
-    { isolationLevel: "Serializable" }
-  );
+          for (const reservation of lockedOrder.reservations.filter(
+            (candidate) => candidate.status === "ACTIVE"
+          )) {
+            const released = await transaction.artwork.updateMany({
+              where: {
+                id: reservation.artworkId,
+                reservedQuantity: { gte: reservation.quantity }
+              },
+              data: { reservedQuantity: { decrement: reservation.quantity } }
+            });
+
+            if (released.count !== 1) {
+              throw new CheckoutRecoveryError(
+                "INVENTORY_RELEASE_CONFLICT",
+                "The reservation could not be released safely",
+                500
+              );
+            }
+          }
+
+          const payment = lockedOrder.payments[0] || null;
+          await transaction.inventoryReservation.updateMany({
+            where: { orderId: lockedOrder.id, status: "ACTIVE" },
+            data: { status: reason === "expired" ? "EXPIRED" : "RELEASED" }
+          });
+          await transaction.order.update({
+            where: { id: lockedOrder.id },
+            data: { status: "CANCELED", canceledAt: new Date() }
+          });
+
+          const transitions = [
+            {
+              orderId: lockedOrder.id,
+              paymentId: payment?.id || null,
+              stripeEventId: `system:${reason}:${lockedOrder.publicId}`,
+              stripeObjectId: payment?.providerPaymentId || "not-created",
+              entityType: "ORDER",
+              previousStatus: lockedOrder.status,
+              nextStatus: "CANCELED",
+              reasonCode: `CHECKOUT_${reason.toUpperCase()}`
+            }
+          ];
+
+          if (payment && canTransitionPayment(payment.status, "CANCELED")) {
+            await transaction.payment.update({
+              where: { id: payment.id },
+              data: {
+                status: "CANCELED",
+                providerStatus,
+                canceledAt: new Date()
+              }
+            });
+            transitions.push({
+              orderId: lockedOrder.id,
+              paymentId: payment.id,
+              stripeEventId: `system:${reason}:${lockedOrder.publicId}`,
+              stripeObjectId: payment.providerPaymentId || "not-created",
+              entityType: "PAYMENT",
+              previousStatus: payment.status,
+              nextStatus: "CANCELED",
+              reasonCode: `CHECKOUT_${reason.toUpperCase()}`
+            });
+          }
+
+          await transaction.financialTransition.createMany({
+            data: transitions,
+            skipDuplicates: true
+          });
+          return true;
+        },
+        { isolationLevel: "Serializable" }
+      );
+    } catch (error) {
+      if (error?.code !== "P2034" || attempt === 3) {
+        throw error;
+      }
+    }
+  }
 }
 
 async function cancelOrderSafely({
