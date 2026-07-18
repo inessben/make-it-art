@@ -49,15 +49,36 @@ function createPrismaStub() {
   };
 }
 
+function createProcessorStub() {
+  const eventIds = new Set();
+
+  return async ({ event, prismaClient }) => {
+    const duplicate = eventIds.has(event.id);
+    eventIds.add(event.id);
+    if (!duplicate) {
+      await prismaClient.stripeWebhookEvent.create({
+        data: {
+          eventId: event.id,
+          eventType: event.type,
+          stripeObjectId: event.data.object.id
+        }
+      });
+    }
+    return { duplicate, outcome: duplicate ? "already_processed" : "recorded" };
+  };
+}
+
 test("a signed supported event is durably recorded from its exact raw bytes", async () => {
   const payload = eventPayload();
   const prismaClient = createPrismaStub();
+  const processPaymentEvent = createProcessorStub();
   const result = await receiveStripeWebhook({
     rawBody: Buffer.from(payload),
     signature: sign(payload),
     stripeClient,
     webhookSecret,
-    prismaClient
+    prismaClient,
+    processPaymentEvent
   });
 
   assert.equal(result.duplicate, false);
@@ -101,7 +122,8 @@ test("the same Stripe event id is acknowledged without a second durable effect",
     signature: sign(payload),
     stripeClient,
     webhookSecret,
-    prismaClient
+    prismaClient,
+    processPaymentEvent: createProcessorStub()
   };
 
   const first = await receiveStripeWebhook(input);

@@ -1,7 +1,7 @@
 # Epic DEV9 — Paiement Stripe réel et sécurisé
 
 > **Milestone :** M5 — E-Commerce Ready  
-> **Statut :** en cours — `PAY-US-01` à `PAY-US-05` implémentées
+> **Statut :** en cours — `PAY-US-01` à `PAY-US-06` implémentées
 > **Date :** 18 juillet 2026  
 > **Périmètre initial :** achats ponctuels d'œuvres numériques en EUR
 
@@ -181,6 +181,8 @@ Les transitions sont contrôlées côté serveur. Un événement ancien ne peut 
 - **AC-09 — Transport :** Étant donné l'environnement de production, quand Stripe appelle l'endpoint, alors celui-ci est en HTTPS TLS 1.2 ou 1.3, n'effectue aucune redirection et utilise un secret distinct du sandbox.
 
 ### PAY-US-06 — Finaliser une commande exactement une fois
+
+**Statut :** ✅ Implémentée le 18 juillet 2026
 
 **Priorité :** P0  
 **Dépendance :** `PAY-US-05`

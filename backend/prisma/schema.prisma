@@ -55,6 +55,13 @@ enum InventoryReservationStatus {
   EXPIRED
 }
 
+enum FulfillmentTaskStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 model User {
   id                      Int                      @id @default(autoincrement())
   username                String?
@@ -269,32 +276,35 @@ model CartItem {
 }
 
 model Order {
-  id                 Int                    @id @default(autoincrement())
-  publicId           String                 @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
-  userId             Int                    @map("user_id")
-  cartId             Int                    @map("cart_id")
-  cartVersion        Int                    @map("cart_version")
-  pricingFingerprint String                 @map("pricing_fingerprint")
-  status             OrderStatus            @default(PENDING_PAYMENT)
-  checkoutVersion    Int                    @default(1) @map("checkout_version")
-  subtotalAmount     Int                    @map("subtotal_amount")
-  taxAmount          Int                    @default(0) @map("tax_amount")
-  feeAmount          Int                    @default(0) @map("fee_amount")
-  commissionAmount   Int                    @default(0) @map("commission_amount")
-  totalAmount        Int                    @map("total_amount")
+  id                   Int                    @id @default(autoincrement())
+  publicId             String                 @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  userId               Int                    @map("user_id")
+  cartId               Int                    @map("cart_id")
+  cartVersion          Int                    @map("cart_version")
+  pricingFingerprint   String                 @map("pricing_fingerprint")
+  status               OrderStatus            @default(PENDING_PAYMENT)
+  checkoutVersion      Int                    @default(1) @map("checkout_version")
+  subtotalAmount       Int                    @map("subtotal_amount")
+  taxAmount            Int                    @default(0) @map("tax_amount")
+  feeAmount            Int                    @default(0) @map("fee_amount")
+  commissionAmount     Int                    @default(0) @map("commission_amount")
+  totalAmount          Int                    @map("total_amount")
   // Legacy display field kept during the develop-to-fiat transition only.
-  totalToken         Int?                   @map("total_token")
-  currency           Currency               @default(EUR)
-  createdAt          DateTime               @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt          DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
-  paidAt             DateTime?              @map("paid_at") @db.Timestamp(6)
-  canceledAt         DateTime?              @map("canceled_at") @db.Timestamp(6)
-  expiresAt          DateTime               @map("expires_at") @db.Timestamp(6)
-  user               User                   @relation(fields: [userId], references: [id])
-  cart               Cart                   @relation(fields: [cartId], references: [id])
-  items              OrderItem[]
-  payments           Payment[]
-  reservations       InventoryReservation[]
+  totalToken           Int?                   @map("total_token")
+  currency             Currency               @default(EUR)
+  createdAt            DateTime               @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt            DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  paidAt               DateTime?              @map("paid_at") @db.Timestamp(6)
+  canceledAt           DateTime?              @map("canceled_at") @db.Timestamp(6)
+  expiresAt            DateTime               @map("expires_at") @db.Timestamp(6)
+  user                 User                   @relation(fields: [userId], references: [id])
+  cart                 Cart                   @relation(fields: [cartId], references: [id])
+  items                OrderItem[]
+  payments             Payment[]
+  reservations         InventoryReservation[]
+  financialTransitions FinancialTransition[]
+  fulfillmentTasks     FulfillmentTask[]
+  operatorAlerts       PaymentOperatorAlert[]
 
   @@unique([cartId, cartVersion])
   @@index([userId, status])
@@ -323,30 +333,32 @@ model OrderItem {
 }
 
 model Payment {
-  id                Int                  @id @default(autoincrement())
-  orderId           Int                  @map("order_id")
-  checkoutVersion   Int                  @default(1) @map("checkout_version")
-  provider          PaymentProvider      @default(STRIPE)
-  providerPaymentId String?              @unique @map("provider_payment_id")
-  providerStatus    String?              @map("provider_status")
-  idempotencyKey    String?              @unique @map("idempotency_key")
-  method            String?
+  id                   Int                    @id @default(autoincrement())
+  orderId              Int                    @map("order_id")
+  checkoutVersion      Int                    @default(1) @map("checkout_version")
+  provider             PaymentProvider        @default(STRIPE)
+  providerPaymentId    String?                @unique @map("provider_payment_id")
+  providerStatus       String?                @map("provider_status")
+  idempotencyKey       String?                @unique @map("idempotency_key")
+  method               String?
   // Temporary legacy references. Stripe reconciliation uses providerPaymentId
   // and amount exclusively.
-  transactionId     Int?                 @map("transaction_id")
-  price             String?
-  amount            Int
-  refundedAmount    Int                  @default(0) @map("refunded_amount")
-  currency          Currency             @default(EUR)
-  status            PaymentStatus        @default(PENDING)
-  failureCode       String?              @map("failure_code")
-  createdAt         DateTime             @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt         DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
-  succeededAt       DateTime?            @map("succeeded_at") @db.Timestamp(6)
-  failedAt          DateTime?            @map("failed_at") @db.Timestamp(6)
-  canceledAt        DateTime?            @map("canceled_at") @db.Timestamp(6)
-  order             Order                @relation(fields: [orderId], references: [id])
-  webhookEvents     StripeWebhookEvent[]
+  transactionId        Int?                   @map("transaction_id")
+  price                String?
+  amount               Int
+  refundedAmount       Int                    @default(0) @map("refunded_amount")
+  currency             Currency               @default(EUR)
+  status               PaymentStatus          @default(PENDING)
+  failureCode          String?                @map("failure_code")
+  createdAt            DateTime               @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt            DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  succeededAt          DateTime?              @map("succeeded_at") @db.Timestamp(6)
+  failedAt             DateTime?              @map("failed_at") @db.Timestamp(6)
+  canceledAt           DateTime?              @map("canceled_at") @db.Timestamp(6)
+  order                Order                  @relation(fields: [orderId], references: [id])
+  webhookEvents        StripeWebhookEvent[]
+  financialTransitions FinancialTransition[]
+  operatorAlerts       PaymentOperatorAlert[]
 
   @@unique([orderId, checkoutVersion])
   @@map("payment")
@@ -384,6 +396,58 @@ model InventoryReservation {
   @@unique([orderId, artworkId])
   @@index([artworkId, status, expiresAt])
   @@map("inventory_reservation")
+}
+
+model FinancialTransition {
+  id             Int      @id @default(autoincrement())
+  orderId        Int      @map("order_id")
+  paymentId      Int?     @map("payment_id")
+  stripeEventId  String   @map("stripe_event_id")
+  stripeObjectId String   @map("stripe_object_id")
+  entityType     String   @map("entity_type")
+  previousStatus String   @map("previous_status")
+  nextStatus     String   @map("next_status")
+  reasonCode     String   @map("reason_code")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  payment        Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@unique([stripeEventId, entityType, previousStatus, nextStatus])
+  @@index([orderId, createdAt])
+  @@map("financial_transition")
+}
+
+model FulfillmentTask {
+  id           Int                   @id @default(autoincrement())
+  orderId      Int                   @map("order_id")
+  taskType     String                @map("task_type")
+  taskKey      String                @unique @map("task_key")
+  status       FulfillmentTaskStatus @default(PENDING)
+  attemptCount Int                   @default(0) @map("attempt_count")
+  createdAt    DateTime              @default(now()) @map("created_at") @db.Timestamp(6)
+  processedAt  DateTime?             @map("processed_at") @db.Timestamp(6)
+  order        Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@map("fulfillment_task")
+}
+
+model PaymentOperatorAlert {
+  id             Int       @id @default(autoincrement())
+  orderId        Int       @map("order_id")
+  paymentId      Int?      @map("payment_id")
+  stripeEventId  String    @map("stripe_event_id")
+  stripeObjectId String    @map("stripe_object_id")
+  code           String
+  status         String    @default("OPEN")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  resolvedAt     DateTime? @map("resolved_at") @db.Timestamp(6)
+  order          Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  payment        Payment?  @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@unique([stripeEventId, code])
+  @@index([status, createdAt])
+  @@map("payment_operator_alert")
 }
 
 model Favorite {

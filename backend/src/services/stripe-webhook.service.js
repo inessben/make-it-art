@@ -1,6 +1,7 @@
 const prisma = require("../lib/prisma");
 const env = require("../config/env");
 const { getStripeClient } = require("../lib/stripe");
+const { processStripePaymentEvent } = require("./payment-finalization.service");
 
 const SUPPORTED_STRIPE_EVENT_TYPES = new Set([
   "payment_intent.processing",
@@ -40,16 +41,13 @@ function verifyStripeEvent({ rawBody, signature, stripeClient, webhookSecret }) 
   }
 }
 
-function isUniqueConstraintError(error) {
-  return error && error.code === "P2002";
-}
-
 async function receiveStripeWebhook({
   rawBody,
   signature,
   stripeClient,
   webhookSecret = env.stripe.webhookSecret,
-  prismaClient = prisma
+  prismaClient = prisma,
+  processPaymentEvent = processStripePaymentEvent
 }) {
   if (!webhookSecret || !webhookSecret.startsWith("whsec_")) {
     throw new StripeWebhookError(
@@ -74,28 +72,23 @@ async function receiveStripeWebhook({
     return { eventId: event.id, accepted: true, ignored: true, duplicate: false };
   }
 
-  const stripeObjectId =
-    event.data && event.data.object && typeof event.data.object.id === "string"
-      ? event.data.object.id
-      : null;
+  const processing = await processPaymentEvent({ event, prismaClient });
 
-  try {
-    await prismaClient.stripeWebhookEvent.create({
-      data: {
-        eventId: event.id,
-        eventType: event.type,
-        stripeObjectId
-      }
-    });
-  } catch (error) {
-    if (isUniqueConstraintError(error)) {
-      return { eventId: event.id, accepted: true, ignored: false, duplicate: true };
-    }
-
-    throw error;
+  if (processing.retryable) {
+    throw new StripeWebhookError(
+      "STRIPE_WEBHOOK_PROCESSING_RETRY",
+      "Stripe webhook processing must be retried",
+      500
+    );
   }
 
-  return { eventId: event.id, accepted: true, ignored: false, duplicate: false };
+  return {
+    eventId: event.id,
+    accepted: true,
+    ignored: false,
+    duplicate: processing.duplicate,
+    outcome: processing.outcome
+  };
 }
 
 module.exports = {
