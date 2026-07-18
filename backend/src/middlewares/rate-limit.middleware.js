@@ -99,11 +99,27 @@ const securityRateLimit = asExpressMiddleware(
   }),
 );
 
+const refundRateLimit = asExpressMiddleware(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: isProduction ? 10 : 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) =>
+      req.user ? `refund-admin:${req.user.id}` : ipKeyGenerator(req.ip),
+    message: {
+      message: "Too many refund requests. Please try again later.",
+      code: "REFUND_RATE_LIMITED",
+    },
+  }),
+);
+
 module.exports = {
   authRateLimit,
   strictAuthRateLimit,
   cartRateLimit,
   checkoutIpRateLimit,
   checkoutUserRateLimit,
-  securityRateLimit
+  securityRateLimit,
+  refundRateLimit
 };

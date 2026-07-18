@@ -134,12 +134,41 @@ test("the same Stripe event id is acknowledged without a second durable effect",
   assert.equal(prismaClient.rows.size, 1);
 });
 
-test("only the minimal payment lifecycle event set is persisted", async () => {
+test("signed refund events are dispatched to the refund processor", async () => {
+  const payload = eventPayload({
+    id: "evt_refund_signed",
+    type: "refund.updated",
+    data: { object: { id: "re_test_signed", status: "succeeded" } }
+  });
+  let refundCalls = 0;
+  const result = await receiveStripeWebhook({
+    rawBody: Buffer.from(payload),
+    signature: sign(payload),
+    stripeClient,
+    webhookSecret,
+    prismaClient: createPrismaStub(),
+    processPaymentEvent: async () => {
+      throw new Error("payment processor must not receive refund events");
+    },
+    processRefundEvent: async () => {
+      refundCalls += 1;
+      return { duplicate: false, outcome: "applied" };
+    }
+  });
+
+  assert.equal(refundCalls, 1);
+  assert.equal(result.outcome, "applied");
+});
+
+test("only the minimal payment and refund lifecycle event set is persisted", async () => {
   assert.deepEqual([...SUPPORTED_STRIPE_EVENT_TYPES].sort(), [
     "payment_intent.canceled",
     "payment_intent.payment_failed",
     "payment_intent.processing",
-    "payment_intent.succeeded"
+    "payment_intent.succeeded",
+    "refund.created",
+    "refund.failed",
+    "refund.updated"
   ]);
 
   const payload = eventPayload({ id: "evt_ignored", type: "customer.created" });

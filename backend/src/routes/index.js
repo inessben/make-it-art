@@ -9,6 +9,7 @@ const marketplaceRoutes = require("./marketplace.routes");
 const cartRoutes = require("./cart.routes");
 const securityRoutes = require("./security.routes");
 const orderRoutes = require("./order.routes");
+const refundRoutes = require("./refund.routes");
 
 const router = express.Router();
 
@@ -22,4 +23,5 @@ router.use(adminAnalyticsRoutes);
 router.use("/v1", cartRoutes);
 router.use("/v1", securityRoutes);
 router.use("/v1", orderRoutes);
+router.use("/v1", refundRoutes);
 module.exports = router;

@@ -10,7 +10,10 @@ const requiredEvents = [
   "payment_intent.processing",
   "payment_intent.succeeded",
   "payment_intent.payment_failed",
-  "payment_intent.canceled"
+  "payment_intent.canceled",
+  "refund.created",
+  "refund.updated",
+  "refund.failed"
 ];
 const configuredEvents = new Set(
   (process.env.STRIPE_WEBHOOK_EVENTS || "").split(",").map((value) => value.trim())

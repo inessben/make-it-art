@@ -2,12 +2,16 @@ const prisma = require("../lib/prisma");
 const env = require("../config/env");
 const { getStripeClient } = require("../lib/stripe");
 const { processStripePaymentEvent } = require("./payment-finalization.service");
+const { processStripeRefundEvent } = require("./refund-finalization.service");
 
 const SUPPORTED_STRIPE_EVENT_TYPES = new Set([
   "payment_intent.processing",
   "payment_intent.succeeded",
   "payment_intent.payment_failed",
-  "payment_intent.canceled"
+  "payment_intent.canceled",
+  "refund.created",
+  "refund.updated",
+  "refund.failed"
 ]);
 
 class StripeWebhookError extends Error {
@@ -47,7 +51,8 @@ async function receiveStripeWebhook({
   stripeClient,
   webhookSecret = env.stripe.webhookSecret,
   prismaClient = prisma,
-  processPaymentEvent = processStripePaymentEvent
+  processPaymentEvent = processStripePaymentEvent,
+  processRefundEvent = processStripeRefundEvent
 }) {
   if (!webhookSecret || !webhookSecret.startsWith("whsec_")) {
     throw new StripeWebhookError(
@@ -72,7 +77,9 @@ async function receiveStripeWebhook({
     return { eventId: event.id, accepted: true, ignored: true, duplicate: false };
   }
 
-  const processing = await processPaymentEvent({ event, prismaClient });
+  const processing = event.type.startsWith("refund.")
+    ? await processRefundEvent({ event, prismaClient })
+    : await processPaymentEvent({ event, prismaClient });
 
   if (processing.retryable) {
     throw new StripeWebhookError(

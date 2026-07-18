@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   getOrderPollingDelay,
   getOrderStatusPresentation,
+  getRefundStatusPresentation,
   MAX_ORDER_POLL_ATTEMPTS
 } from "../utils/order-status.js";
 
@@ -27,4 +28,12 @@ test("only processing orders poll with a bounded exponential backoff", () => {
     Array.from({ length: MAX_ORDER_POLL_ATTEMPTS }, (_, attempt) => getOrderPollingDelay(attempt)),
     [1500, 3000, 6000, 12000, 12000]
   );
+});
+
+test("refund states tell the customer whether money was returned", () => {
+  assert.match(getRefundStatusPresentation("PENDING").label, /progress/i);
+  assert.match(getRefundStatusPresentation("SUCCEEDED").label, /confirmed/i);
+  assert.doesNotMatch(getRefundStatusPresentation("FAILED").message, /returned/i);
+  assert.match(getOrderStatusPresentation("PARTIALLY_REFUNDED").title, /partially refunded/i);
+  assert.match(getOrderStatusPresentation("REFUNDED").message, /digital access.*revoked/i);
 });

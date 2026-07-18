@@ -21,6 +21,18 @@ test("the public order serializer excludes all provider and secret fields", () =
         clientSecret: "pi_secret_secret"
       }
     ],
+    refunds: [
+      {
+        publicId: "2b8b0e03-c3a4-4a0d-aa1b-89ff86922a52",
+        status: "SUCCEEDED",
+        amount: 500,
+        currency: "EUR",
+        providerReference: "safe-refund-reference",
+        providerRefundId: "re_secret_provider_id",
+        createdAt: new Date("2026-07-18T11:00:00Z"),
+        updatedAt: new Date("2026-07-18T11:01:00Z")
+      }
+    ],
     items: [
       {
         id: 1,
@@ -36,7 +48,11 @@ test("the public order serializer excludes all provider and secret fields", () =
   const json = JSON.stringify(serialized);
 
   assert.equal(serialized.payment.status, "SUCCEEDED");
-  assert.doesNotMatch(json, /pi_secret|idempotency|providerPaymentId|webhook|payload/i);
+  assert.equal(serialized.refunds[0].reference, "safe-refund-reference");
+  assert.doesNotMatch(
+    json,
+    /pi_secret|re_secret|idempotency|providerPaymentId|providerRefundId|webhook|payload/i
+  );
 });
 
 test("the paid email contains only an authenticated order link and no payment details", () => {

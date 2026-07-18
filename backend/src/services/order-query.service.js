@@ -12,6 +12,15 @@ function serializeOrder(order) {
     updatedAt: order.updatedAt,
     paidAt: order.paidAt,
     payment: payment ? { status: payment.status } : null,
+    refunds: order.refunds.map((refund) => ({
+      id: refund.publicId,
+      status: refund.status,
+      amount: refund.amount,
+      currency: refund.currency,
+      reference: refund.providerReference || null,
+      createdAt: refund.createdAt,
+      updatedAt: refund.updatedAt
+    })),
     items: order.items.map((item) => ({
       title: item.artworkTitle,
       artistName: item.artistName,
@@ -29,7 +38,8 @@ const safeOrderInclude = {
   payments: {
     orderBy: { checkoutVersion: "desc" },
     take: 1
-  }
+  },
+  refunds: { orderBy: { createdAt: "desc" } }
 };
 
 async function getOwnedOrder(userId, publicId, prismaClient = prisma) {

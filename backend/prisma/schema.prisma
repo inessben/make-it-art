@@ -60,6 +60,13 @@ enum FulfillmentTaskStatus {
   PROCESSING
   COMPLETED
   FAILED
+  CANCELED
+}
+
+enum RefundStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
 }
 
 model User {
@@ -96,6 +103,7 @@ model User {
   rememberedDevices       RememberedDevice[]       @relation("rememberedDevices")
   galleries               UserGallery[]
   cart                    Cart?
+  refundsRequested        Refund[]                 @relation("refundRequestedBy")
 
   @@unique([oauthProvider, oauthSubject])
   @@map("user")
@@ -305,6 +313,7 @@ model Order {
   financialTransitions FinancialTransition[]
   fulfillmentTasks     FulfillmentTask[]
   operatorAlerts       PaymentOperatorAlert[]
+  refunds              Refund[]
 
   @@unique([cartId, cartVersion])
   @@index([userId, status])
@@ -359,6 +368,7 @@ model Payment {
   webhookEvents        StripeWebhookEvent[]
   financialTransitions FinancialTransition[]
   operatorAlerts       PaymentOperatorAlert[]
+  refunds              Refund[]
 
   @@unique([orderId, checkoutVersion])
   @@map("payment")
@@ -370,15 +380,46 @@ model StripeWebhookEvent {
   eventType      String             @map("event_type")
   stripeObjectId String?            @map("stripe_object_id")
   paymentId      Int?               @map("payment_id")
+  refundId       Int?               @map("refund_id")
   status         WebhookEventStatus @default(PENDING)
   attemptCount   Int                @default(0) @map("attempt_count")
   lastErrorCode  String?            @map("last_error_code")
   createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamp(6)
   processedAt    DateTime?          @map("processed_at") @db.Timestamp(6)
   payment        Payment?           @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  refund         Refund?            @relation(fields: [refundId], references: [id], onDelete: SetNull)
 
   @@index([stripeObjectId, eventType])
   @@map("stripe_webhook_event")
+}
+
+model Refund {
+  id                Int                  @id @default(autoincrement())
+  publicId          String               @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  orderId           Int                  @map("order_id")
+  paymentId         Int                  @map("payment_id")
+  requestedByUserId Int                  @map("requested_by_user_id")
+  providerRefundId  String?              @unique @map("provider_refund_id")
+  providerStatus    String?              @map("provider_status")
+  providerReference String?              @map("provider_reference")
+  idempotencyKey    String               @unique @map("idempotency_key")
+  amount            Int
+  currency          Currency             @default(EUR)
+  status            RefundStatus         @default(PENDING)
+  reasonCode        String               @map("reason_code")
+  failureCode       String?              @map("failure_code")
+  createdAt         DateTime             @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt         DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  succeededAt       DateTime?            @map("succeeded_at") @db.Timestamp(6)
+  failedAt          DateTime?            @map("failed_at") @db.Timestamp(6)
+  order             Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  payment           Payment              @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  requestedBy       User                 @relation("refundRequestedBy", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  webhookEvents     StripeWebhookEvent[]
+
+  @@index([orderId, createdAt])
+  @@index([paymentId, status])
+  @@map("refund")
 }
 
 model InventoryReservation {

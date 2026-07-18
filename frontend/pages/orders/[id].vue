@@ -176,6 +176,54 @@
             affichées ici.
           </p>
         </div>
+
+        <section
+          v-if="order.refunds?.length"
+          class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6"
+          aria-labelledby="refunds-title"
+        >
+          <h2 id="refunds-title" class="text-lg font-semibold text-[#E6EDF7]">
+            Remboursements
+          </h2>
+          <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
+            Ces statuts proviennent de votre commande privée et sont confirmés
+            côté serveur.
+          </p>
+
+          <div class="mt-5 grid gap-4">
+            <article
+              v-for="refund in order.refunds"
+              :key="refund.id"
+              class="rounded-2xl border bg-[#0d1120] p-5"
+              :class="refundToneClass(refund.status)"
+            >
+              <div
+                class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
+              >
+                <div>
+                  <p class="font-semibold text-[#E6EDF7]">
+                    {{ getRefundStatusPresentation(refund.status).label }}
+                  </p>
+                  <p class="mt-2 max-w-2xl text-sm leading-6 text-[#A0ADB4]">
+                    {{ getRefundStatusPresentation(refund.status).message }}
+                  </p>
+                </div>
+                <p class="shrink-0 text-lg font-semibold text-[#E6EDF7]">
+                  {{ formatMoney(refund.amount, refund.currency) }}
+                </p>
+              </div>
+
+              <div
+                class="mt-4 flex flex-col gap-2 border-t border-[#1A1F2A] pt-4 text-xs text-[#71809A] sm:flex-row sm:justify-between"
+              >
+                <span>Demandé le {{ formatDate(refund.createdAt) }}</span>
+                <span v-if="refund.reference" class="break-all">
+                  Référence bancaire : {{ refund.reference }}
+                </span>
+              </div>
+            </article>
+          </div>
+        </section>
       </div>
     </section>
   </main>
@@ -184,7 +232,10 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { navigateTo, useRoute } from "#app";
-import { getOrderStatusPresentation } from "~/utils/order-status";
+import {
+  getOrderStatusPresentation,
+  getRefundStatusPresentation,
+} from "~/utils/order-status";
 
 definePageMeta({
   middleware: "auth",
@@ -282,6 +333,16 @@ function paymentStatusLabel(status) {
   };
 
   return labels[status] || "Indisponible";
+}
+
+function refundToneClass(status) {
+  const tones = {
+    PENDING: "border-[#1C3350]",
+    SUCCEEDED: "border-[#245C3C]",
+    FAILED: "border-[#6C1F2D]",
+  };
+
+  return tones[status] || "border-[#1A1F2A]";
 }
 
 function navigateBack() {
