@@ -7,6 +7,7 @@ const {
 } = require("../middlewares/rate-limit.middleware");
 const { CartError } = require("../services/cart.service");
 const { CheckoutError, initializeCheckout } = require("../services/checkout.service");
+const { getOwnedOrder, listOwnedOrders } = require("../services/order-query.service");
 
 const router = express.Router();
 const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -128,5 +129,37 @@ router.post(
     }
   }
 );
+
+router.get("/orders", authRequired, async (req, res) => {
+  res.set("Cache-Control", "private, no-store");
+
+  try {
+    return res.status(200).json({ orders: await listOwnedOrders(req.user.id) });
+  } catch (error) {
+    console.error("Order history lookup failed", { name: error.name, code: error.code });
+    return res.status(500).json({ message: "Order history is temporarily unavailable" });
+  }
+});
+
+router.get("/orders/:publicId", authRequired, async (req, res) => {
+  res.set("Cache-Control", "private, no-store");
+
+  if (!UUID_V4_PATTERN.test(req.params.publicId)) {
+    return res.status(404).json({ message: "Order not found" });
+  }
+
+  try {
+    const order = await getOwnedOrder(req.user.id, req.params.publicId);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    return res.status(200).json({ order });
+  } catch (error) {
+    console.error("Order lookup failed", { name: error.name, code: error.code });
+    return res.status(500).json({ message: "Order status is temporarily unavailable" });
+  }
+});
 
 module.exports = router;

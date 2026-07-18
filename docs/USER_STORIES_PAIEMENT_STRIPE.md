@@ -1,7 +1,7 @@
 # Epic DEV9 — Paiement Stripe réel et sécurisé
 
 > **Milestone :** M5 — E-Commerce Ready  
-> **Statut :** en cours — `PAY-US-01` à `PAY-US-06` implémentées
+> **Statut :** en cours — `PAY-US-01` à `PAY-US-07` implémentées
 > **Date :** 18 juillet 2026  
 > **Périmètre initial :** achats ponctuels d'œuvres numériques en EUR
 
@@ -203,6 +203,8 @@ Les transitions sont contrôlées côté serveur. Un événement ancien ne peut 
 - **AC-08 — Audit :** Étant donné une transition financière, quand elle est appliquée, alors son ancien état, son nouvel état, sa date et l'identifiant Stripe concerné sont auditables sans donnée bancaire.
 
 ### PAY-US-07 — Afficher une confirmation fiable et privée
+
+**Statut :** ✅ Implémentée le 18 juillet 2026
 
 **Priorité :** P0  
 **Dépendance :** `PAY-US-06`

@@ -159,9 +159,48 @@ async function sendLoginCodeEmail({ to, username, code }) {
   });
 }
 
+function buildPaymentConfirmationMessage({ to, username, orderPublicId }) {
+  const orderUrl = `${env.appBaseUrl}/orders/${encodeURIComponent(orderPublicId)}`;
+  const displayName = username || "collector";
+  const safeName = String(displayName)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+
+  return {
+    from: env.smtp.from,
+    to,
+    subject: "Your Make It Art order is confirmed",
+    text: [
+      `Hello ${displayName},`,
+      "Your order has been confirmed after secure verification by our payment provider.",
+      `View it after signing in: ${orderUrl}`,
+      "This message never contains card or bank details."
+    ].join("\n\n"),
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+        <h1 style="font-size: 22px;">Order confirmed</h1>
+        <p>Hello ${safeName},</p>
+        <p>Your order has been confirmed after secure verification by our payment provider.</p>
+        <p><a href="${orderUrl}">View your order after signing in</a></p>
+        <p>This message never contains card or bank details.</p>
+      </div>
+    `
+  };
+}
+
+async function sendPaymentConfirmationEmail(input) {
+  const transporter = createTransporter();
+  return transporter.sendMail(buildPaymentConfirmationMessage(input));
+}
+
 module.exports = {
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendAdminInvitationEmail,
-  sendLoginCodeEmail
+  sendLoginCodeEmail,
+  buildPaymentConfirmationMessage,
+  sendPaymentConfirmationEmail
 };

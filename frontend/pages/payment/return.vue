@@ -1,42 +1,111 @@
 <template>
-  <main class="return-page">
-    <section class="return-panel" aria-labelledby="return-title">
-      <p class="eyebrow">Payment submitted</p>
-      <h1 id="return-title">We are verifying your payment</h1>
-      <p>
-        Your bank may still be processing the transaction. Access to the artwork will only be
-        granted after Make It Art receives a valid confirmation directly from Stripe.
-      </p>
-      <p v-if="orderId" class="order-reference">Order reference: {{ orderId }}</p>
+  <main class="order-page">
+    <section class="order-panel" aria-labelledby="return-title">
+      <p class="eyebrow">Secure payment status</p>
+
+      <div v-if="loading" role="status">
+        <h1 id="return-title">Checking your order…</h1>
+        <p>We are reading the latest status from the Make It Art server.</p>
+      </div>
+
+      <div v-else-if="order" :class="['status-card', `status-${presentation.tone}`]">
+        <h1 id="return-title">{{ presentation.title }}</h1>
+        <p>{{ presentation.message }}</p>
+        <p class="order-reference">Order reference: {{ order.id }}</p>
+        <p v-if="presentation.poll && polling" role="status">
+          Verification continues automatically. You can also safely close this page.
+        </p>
+      </div>
+
+      <div v-else class="status-card status-warning" role="alert">
+        <h1 id="return-title">Order status unavailable</h1>
+        <p>{{ errorMessage }}</p>
+      </div>
+
       <p class="security-note">
-        Returning to this page is not proof that the payment succeeded. You can safely close it
-        while verification continues.
+        This page never trusts Stripe return parameters as proof of payment. Access is granted only
+        after a signed server confirmation.
       </p>
+
       <div class="actions">
-        <NuxtLink to="/profile" class="primary-link">View my account</NuxtLink>
-        <NuxtLink to="/cart">Return to cart</NuxtLink>
+        <NuxtLink
+          v-if="order && presentation.action"
+          :to="presentation.action.to || `/orders/${order.id}`"
+          class="primary-link"
+        >
+          {{ presentation.action.label }}
+        </NuxtLink>
+        <NuxtLink to="/orders">View order history</NuxtLink>
       </div>
     </section>
   </main>
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { CHECKOUT_ORDER_STORAGE_KEY } from "~/utils/checkout-security";
+import {
+  getOrderPollingDelay,
+  getOrderStatusPresentation,
+  MAX_ORDER_POLL_ATTEMPTS
+} from "~/utils/order-status";
 
 definePageMeta({
   middleware: ["payment-return", "auth"]
 });
 
-const orderId = ref("");
+const loading = ref(true);
+const polling = ref(false);
+const errorMessage = ref("Open your order history to find the latest server status.");
+const order = ref(null);
+const presentation = computed(() => getOrderStatusPresentation(order.value?.status));
+let pollingTimer = null;
+let pollingAttempt = 0;
 
-onMounted(() => {
-  orderId.value = window.sessionStorage.getItem(CHECKOUT_ORDER_STORAGE_KEY) || "";
+onMounted(async () => {
+  const orderId = window.sessionStorage.getItem(CHECKOUT_ORDER_STORAGE_KEY);
+
+  if (!orderId) {
+    loading.value = false;
+    return;
+  }
+
+  await loadOrder(orderId);
 });
+
+onBeforeUnmount(() => {
+  if (pollingTimer) window.clearTimeout(pollingTimer);
+});
+
+async function loadOrder(orderId) {
+  try {
+    const response = await $fetch(`/api/v1/orders/${encodeURIComponent(orderId)}`, {
+      credentials: "include"
+    });
+    order.value = response.order;
+
+    if (presentation.value.poll && pollingAttempt < MAX_ORDER_POLL_ATTEMPTS) {
+      schedulePoll(orderId);
+    } else {
+      polling.value = false;
+    }
+  } catch {
+    errorMessage.value = "The order could not be retrieved. Please use your private order history.";
+  } finally {
+    loading.value = false;
+  }
+}
+
+function schedulePoll(orderId) {
+  polling.value = true;
+  const delay = getOrderPollingDelay(pollingAttempt);
+  pollingAttempt += 1;
+  pollingTimer = window.setTimeout(() => loadOrder(orderId), delay);
+}
 </script>
 
 <style scoped>
-.return-page {
+.order-page {
   min-height: 100vh;
   display: grid;
   place-items: center;
@@ -45,17 +114,17 @@ onMounted(() => {
   color: #172033;
 }
 
-.return-panel {
-  width: min(620px, 100%);
+.order-panel {
+  width: min(660px, 100%);
   padding: 36px;
   border: 1px solid #dfe5ef;
   border-radius: 16px;
-  background: #ffffff;
+  background: #fff;
   box-shadow: 0 18px 45px rgba(23, 32, 51, 0.1);
 }
 
 .eyebrow {
-  margin: 0;
+  margin: 0 0 8px;
   color: #3273dc;
   font-size: 0.8rem;
   font-weight: 800;
@@ -64,17 +133,32 @@ onMounted(() => {
 }
 
 h1 {
-  margin: 8px 0 20px;
+  margin: 0 0 18px;
 }
 
 p {
   line-height: 1.6;
 }
 
+.status-card,
 .order-reference,
 .security-note {
   padding: 14px;
   border-radius: 8px;
+}
+
+.status-success {
+  background: #e9f7ef;
+}
+
+.status-error {
+  background: #fbe9ec;
+}
+
+.status-warning,
+.status-pending,
+.order-reference,
+.security-note {
   background: #f4f7fb;
 }
 
@@ -103,12 +187,12 @@ p {
   padding: 12px 18px;
   border-radius: 8px;
   background: #172033;
-  color: #ffffff !important;
+  color: #fff !important;
   text-decoration: none;
 }
 
 @media (max-width: 520px) {
-  .return-panel {
+  .order-panel {
     padding: 24px;
   }
 
