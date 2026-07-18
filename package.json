@@ -26,6 +26,8 @@
     "quality": "npm run lint && npm run format:check",
     "quality:fix": "npm run lint:fix && npm run format",
     "ci": "npm run quality && npm run test",
+    "security:audit": "npm --prefix backend run security:audit && npm --prefix frontend run security:audit",
+    "payments:validate-sandbox": "npm --prefix backend run payments:validate-sandbox",
     "precommit": "npm run quality",
     "prepush": "npm run ci"
   },

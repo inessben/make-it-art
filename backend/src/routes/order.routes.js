@@ -9,6 +9,7 @@ const { CartError } = require("../services/cart.service");
 const { CheckoutError, initializeCheckout } = require("../services/checkout.service");
 const { getOwnedOrder, listOwnedOrders } = require("../services/order-query.service");
 const { CheckoutRecoveryError, resumeCheckout } = require("../services/checkout-recovery.service");
+const { assertCheckoutEnabled } = require("../services/checkout-availability.service");
 
 const router = express.Router();
 const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -113,6 +114,7 @@ router.post(
     res.set("Cache-Control", "no-store");
 
     try {
+      assertCheckoutEnabled();
       assertOnlyFields(req.body, ["cartVersion", "pricingFingerprint"]);
       const result = await initializeCheckout({
         userId: req.user.id,

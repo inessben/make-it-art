@@ -1,7 +1,7 @@
 # Epic DEV9 — Paiement Stripe réel et sécurisé
 
 > **Milestone :** M5 — E-Commerce Ready  
-> **Statut :** en cours — `PAY-US-01` à `PAY-US-08` et `PAY-US-10` implémentées
+> **Statut :** en cours — `PAY-US-01` à `PAY-US-08`, `PAY-US-10` et `PAY-US-11` implémentées
 > **Date :** 18 juillet 2026  
 > **Périmètre initial :** achats ponctuels d'œuvres numériques en EUR
 
@@ -290,6 +290,8 @@ Les transitions sont contrôlées côté serveur. Un événement ancien ne peut 
 - **AC-10 — Conformité :** Étant donné la mise en production, quand le paiement est audité, alors la responsabilité PCI applicable est documentée ; l'utilisation de Stripe Elements n'est pas présentée comme une conformité automatique.
 
 ### PAY-US-11 — Valider la sécurité avant le mode live
+
+**Statut :** ✅ Implémentée le 18 juillet 2026 — preuves Stripe live à compléter avant activation
 
 **Priorité :** P0  
 **Dépendances :** toutes les US P0

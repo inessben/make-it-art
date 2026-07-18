@@ -28,9 +28,24 @@ jobs:
         run: npm run lint --workspaces=false
       - name: Frontend format check
         run: npm run format:check --workspaces=false
+      - name: Frontend tests and typecheck
+        run: npm test --workspaces=false && npm run typecheck --workspaces=false
+      - name: Frontend production dependency audit
+        run: npm audit --omit=dev --audit-level=high --workspaces=false
 
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: makeitart_test
+          POSTGRES_USER: mia_test
+          POSTGRES_PASSWORD: test_only_password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U mia_test -d makeitart_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
     defaults:
       run:
         working-directory: backend
@@ -43,10 +58,23 @@ jobs:
           node-version: 22
       - name: Install backend deps
         run: npm install --include=optional --workspaces=false --ignore-scripts --no-audit --no-fund
+      - name: Enforce Stripe sandbox and scan committed secrets
+        run: npm run payments:validate-sandbox --workspaces=false
       - name: Backend lint
         run: npm run lint --workspaces=false
       - name: Backend format check
         run: npm run format:check --workspaces=false
+      - name: Migrate test database
+        env:
+          DATABASE_URL: postgresql://mia_test:test_only_password@localhost:5432/makeitart_test
+        run: npx prisma migrate deploy && npx prisma generate
+      - name: Backend tests
+        env:
+          DATABASE_URL: postgresql://mia_test:test_only_password@localhost:5432/makeitart_test
+          JWT_SECRET: ci_test_secret_not_for_production
+        run: npm test --workspaces=false
+      - name: Backend production dependency audit
+        run: npm audit --omit=dev --audit-level=high --workspaces=false
 
   compose_config:
     runs-on: ubuntu-latest
