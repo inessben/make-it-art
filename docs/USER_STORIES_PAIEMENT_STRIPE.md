@@ -1,7 +1,7 @@
 # Epic DEV9 — Paiement Stripe réel et sécurisé
 
 > **Milestone :** M5 — E-Commerce Ready  
-> **Statut :** en cours — `PAY-US-01` à `PAY-US-04` implémentées  
+> **Statut :** en cours — `PAY-US-01` à `PAY-US-05` implémentées
 > **Date :** 18 juillet 2026  
 > **Périmètre initial :** achats ponctuels d'œuvres numériques en EUR
 
@@ -158,6 +158,8 @@ Les transitions sont contrôlées côté serveur. Un événement ancien ne peut 
 - **AC-09 — UX sûre :** Étant donné une erreur de paiement, quand elle est affichée, alors le message est compréhensible, accessible et non technique, sans révéler règle antifraude, secret ou donnée bancaire.
 
 ### PAY-US-05 — Recevoir un webhook Stripe signé et idempotent
+
+**Statut :** ✅ Implémentée le 18 juillet 2026
 
 **Priorité :** P0  
 **Dépendances :** `PAY-US-01`, configuration Stripe sandbox

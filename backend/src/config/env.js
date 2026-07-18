@@ -43,6 +43,7 @@ module.exports = {
   },
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY || "",
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
   },
   smtp: {
     host: process.env.SMTP_HOST || "",
