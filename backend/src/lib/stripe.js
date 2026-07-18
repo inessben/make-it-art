@@ -4,7 +4,7 @@ const env = require("../config/env");
 let stripeClient;
 
 function getStripeClient() {
-  if (!env.stripe.secretKey || !env.stripe.secretKey.startsWith("sk_")) {
+  if (!env.stripe.secretKey || !/^(sk|rk)_(test|live)_/.test(env.stripe.secretKey)) {
     const error = new Error("Stripe is not configured");
     error.code = "STRIPE_NOT_CONFIGURED";
     throw error;

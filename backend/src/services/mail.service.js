@@ -196,11 +196,26 @@ async function sendPaymentConfirmationEmail(input) {
   return transporter.sendMail(buildPaymentConfirmationMessage(input));
 }
 
+async function sendPaymentOperationsAlert({ code, count }) {
+  if (!env.paymentAlertEmail) return null;
+  const safeCode = String(code)
+    .replace(/[^A-Z0-9_:-]/g, "")
+    .slice(0, 120);
+  const safeCount = Number.isSafeInteger(count) ? count : 1;
+  return createTransporter().sendMail({
+    from: env.smtp.from,
+    to: env.paymentAlertEmail,
+    subject: `[Make It Art payment alert] ${safeCode}`,
+    text: `Payment operations alert\nCode: ${safeCode}\nCount: ${safeCount}\nNo bank or card data is included.`
+  });
+}
+
 module.exports = {
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendAdminInvitationEmail,
   sendLoginCodeEmail,
   buildPaymentConfirmationMessage,
-  sendPaymentConfirmationEmail
+  sendPaymentConfirmationEmail,
+  sendPaymentOperationsAlert
 };

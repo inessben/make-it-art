@@ -6,14 +6,31 @@ const stripeWebhookRoutes = require("./routes/stripe-webhook.routes");
 const { getHealthPayload } = require("./services/health.service");
 const cookieParser = require("cookie-parser");
 const { requestContext } = require("./middlewares/request-context.middleware");
+const { securityHeaders } = require("./middlewares/security-headers.middleware");
 
 const app = express();
 app.set("trust proxy", 1);
 app.use(requestContext);
+app.use(securityHeaders);
 
 app.use(
   cors({
-    origin: env.corsOrigin,
+    origin(origin, callback) {
+      const allowedOrigins = env.corsOrigin
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean);
+
+      if (
+        !origin ||
+        allowedOrigins.includes("*") ||
+        allowedOrigins.includes(origin)
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Origin is not allowed"));
+    },
     credentials: true
   })
 );

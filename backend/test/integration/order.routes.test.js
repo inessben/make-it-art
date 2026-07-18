@@ -23,6 +23,9 @@ databaseTest("order status is private, owner-scoped, minimal and never cached", 
     });
     assert.equal(ownerResponse.status, 200);
     assert.equal(ownerResponse.headers.get("cache-control"), "private, no-store");
+    assert.equal(ownerResponse.headers.get("x-content-type-options"), "nosniff");
+    assert.equal(ownerResponse.headers.get("x-frame-options"), "DENY");
+    assert.equal(ownerResponse.headers.get("referrer-policy"), "no-referrer");
     const ownerBody = await ownerResponse.json();
     assert.equal(ownerBody.order.id, fixture.order.publicId);
     assert.equal(ownerBody.order.payment.status, "PROCESSING");

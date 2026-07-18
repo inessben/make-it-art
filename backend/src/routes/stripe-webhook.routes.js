@@ -1,5 +1,6 @@
 const express = require("express");
 const { StripeWebhookError, receiveStripeWebhook } = require("../services/stripe-webhook.service");
+const { recordInvalidWebhookSignature } = require("../services/payment-monitoring.service");
 
 const router = express.Router();
 
@@ -19,6 +20,9 @@ router.post("/", express.raw({ type: "application/json", limit: "256kb" }), asyn
     });
   } catch (error) {
     if (error instanceof StripeWebhookError) {
+      if (error.code === "INVALID_STRIPE_SIGNATURE") {
+        recordInvalidWebhookSignature({ ip: req.ip }).catch(() => undefined);
+      }
       return res.status(error.status).json({
         received: false,
         code: error.code

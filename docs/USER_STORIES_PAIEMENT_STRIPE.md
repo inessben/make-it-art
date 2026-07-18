@@ -1,7 +1,7 @@
 # Epic DEV9 — Paiement Stripe réel et sécurisé
 
 > **Milestone :** M5 — E-Commerce Ready  
-> **Statut :** en cours — `PAY-US-01` à `PAY-US-08` implémentées
+> **Statut :** en cours — `PAY-US-01` à `PAY-US-08` et `PAY-US-10` implémentées
 > **Date :** 18 juillet 2026  
 > **Périmètre initial :** achats ponctuels d'œuvres numériques en EUR
 
@@ -266,6 +266,8 @@ Les transitions sont contrôlées côté serveur. Un événement ancien ne peut 
 - **AC-08 — Information client :** Étant donné un changement d'état du remboursement, quand il est confirmé ou échoue, alors le client reçoit une information claire avec la commande, le montant, la devise et, si disponible, la référence bancaire de remboursement.
 
 ### PAY-US-10 — Protéger les secrets, les logs et l'exploitation
+
+**Statut :** ✅ Implémentée le 18 juillet 2026
 
 **Priorité :** P0  
 **Dépendance :** transverse

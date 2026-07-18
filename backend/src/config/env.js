@@ -15,6 +15,7 @@ module.exports = {
   databaseUrl: process.env.DATABASE_URL || "",
   redisUrl: process.env.REDIS_URL || "",
   appBaseUrl: process.env.APP_BASE_URL || "http://localhost",
+  paymentAlertEmail: process.env.PAYMENT_ALERT_EMAIL || "",
   jwtSecret: process.env.JWT_SECRET || "dev_secret_change_me",
   sessionCookieName: process.env.SESSION_COOKIE_NAME || "mia_session",
   refreshCookieName: process.env.REFRESH_COOKIE_NAME || "mia_refresh",
@@ -46,6 +47,9 @@ module.exports = {
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
     checkoutExpirationSweepMs: Number(
       process.env.CHECKOUT_EXPIRATION_SWEEP_MS || 60000,
+    ),
+    reconciliationSweepMs: Number(
+      process.env.PAYMENT_RECONCILIATION_SWEEP_MS || 300000,
     ),
   },
   smtp: {
