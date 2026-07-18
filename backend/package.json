@@ -8,6 +8,7 @@
     "payments:expire-checkouts": "node src/jobs/expire-checkouts.js",
     "payments:validate-sandbox": "node src/scripts/validate-payment-sandbox.js",
     "payments:validate-go-live": "node src/scripts/validate-go-live.js",
+    "payments:seed-test": "node src/scripts/seed-payment-fixture.js",
     "security:audit": "npm audit --omit=dev --audit-level=high",
     "test": "node --test \"test/**/*.test.js\"",
     "test:coverage": "node --test --experimental-test-coverage \"test/**/*.test.js\"",

@@ -90,6 +90,11 @@ Local default redirect URI:
 http://localhost/api/auth/google/callback
 ```
 
+## Tests de paiement Stripe
+
+Le parcours complet de test Stripe (fixtures sandbox, URLs, cartes de test, webhooks, reprise et
+remboursements admin) est décrit dans [`docs/PAYMENT_TEST_PATHS.md`](docs/PAYMENT_TEST_PATHS.md).
+
 ## Production deployment
 
 The repository now includes a dedicated production stack for `https://www.makeitart.io`:
