@@ -109,7 +109,9 @@ services:
       CORS_ORIGIN: http://localhost
       APP_BASE_URL: http://localhost
       JWT_SECRET: ${JWT_SECRET:-dev_secret_change_me}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-mia_session}
+      CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-mia_csrf}
       LOGIN_CODE_COOKIE_NAME: ${LOGIN_CODE_COOKIE_NAME:-mia_login_challenge}
       REMEMBER_DEVICE_COOKIE_NAME: ${REMEMBER_DEVICE_COOKIE_NAME:-mia_remember_device}
       DATABASE_URL: postgresql://${POSTGRES_USER:-mia}:${POSTGRES_PASSWORD:-mia_dev_password}@db:5432/${POSTGRES_DB:-makeitart}
@@ -164,6 +166,8 @@ services:
       NUXT_PORT: 3000
       NUXT_PUBLIC_API_BASE: /api
       NUXT_API_PROXY_TARGET: http://backend:4000/api/**
+      NUXT_PUBLIC_APP_BASE_URL: ${NUXT_PUBLIC_APP_BASE_URL:-http://localhost}
+      NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
     ports:
       - "3000:3000"
     depends_on:

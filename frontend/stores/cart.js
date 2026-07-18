@@ -1,108 +1,102 @@
 import { defineStore } from "pinia";
 
-const STORAGE_KEY = "mia_cart_v1";
-
-function safeParse(json, fallback) {
-  try {
-    return JSON.parse(json);
-  } catch {
-    return fallback;
-  }
-}
-
 export const useCartStore = defineStore("cart", {
   state: () => ({
-    items: [],
-    hydrated: false
+    cart: null,
+    loading: false,
+    error: "",
+    validationMessage: "",
   }),
 
-  getters: {
-    count: (state) => state.items.reduce((sum, item) => sum + item.quantity, 0),
-    totalPriceValue: (state) =>
-      state.items.reduce((sum, item) => {
-        const price = Number(item.artwork?.priceValue ?? 0);
-        return sum + price * item.quantity;
-      }, 0),
-    isEmpty: (state) => state.items.length === 0
-  },
-
   actions: {
-    hydrate() {
-      if (this.hydrated) {
-        return;
+    async runCartRequest(request, fallbackMessage) {
+      this.loading = true;
+      this.error = "";
+      this.validationMessage = "";
+
+      try {
+        const response = await request();
+        this.cart = response.cart;
+        return response;
+      } catch (error) {
+        if (error?.data?.cart) {
+          this.cart = error.data.cart;
+        }
+
+        this.error = error?.data?.message || fallbackMessage;
+        throw error;
+      } finally {
+        this.loading = false;
       }
-
-      if (import.meta.server) {
-        this.hydrated = true;
-        return;
-      }
-
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? safeParse(raw, { items: [] }) : { items: [] };
-
-      this.items = Array.isArray(parsed.items) ? parsed.items : [];
-      this.hydrated = true;
     },
 
-    persist() {
-      if (import.meta.server) {
-        return;
-      }
-
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({
-          items: this.items
-        })
+    async fetchCart() {
+      return this.runCartRequest(
+        () =>
+          $fetch("/api/v1/cart", {
+            credentials: "include",
+          }),
+        "Impossible de charger votre panier.",
       );
     },
 
-    addArtwork(artwork, quantity = 1) {
-      this.hydrate();
-
-      if (!artwork?.id) {
-        return;
-      }
-
-      const qty = Number.isFinite(Number(quantity)) ? Number(quantity) : 1;
-      const safeQty = Math.max(1, Math.floor(qty));
-
-      const existing = this.items.find((item) => item.artwork?.id === artwork.id);
-
-      if (existing) {
-        existing.quantity += safeQty;
-      } else {
-        this.items.unshift({
-          artwork,
-          quantity: safeQty
-        });
-      }
-
-      this.persist();
+    async setItem(artworkId, quantity) {
+      return this.runCartRequest(
+        () =>
+          $fetch("/api/v1/cart/items", {
+            method: "POST",
+            credentials: "include",
+            body: { artworkId, quantity },
+          }),
+        "Impossible de mettre à jour cet article.",
+      );
     },
 
-    removeArtwork(artworkId) {
-      this.hydrate();
-      this.items = this.items.filter((item) => item.artwork?.id !== artworkId);
-      this.persist();
+    async removeItem(artworkId) {
+      return this.runCartRequest(
+        () =>
+          $fetch(`/api/v1/cart/items/${artworkId}`, {
+            method: "DELETE",
+            credentials: "include",
+          }),
+        "Impossible de retirer cet article.",
+      );
     },
 
-    setQuantity(artworkId, quantity) {
-      this.hydrate();
-      const existing = this.items.find((item) => item.artwork?.id === artworkId);
-      if (!existing) {
-        return;
+    async clearCart() {
+      return this.runCartRequest(
+        () =>
+          $fetch("/api/v1/cart", {
+            method: "DELETE",
+            credentials: "include",
+          }),
+        "Impossible de vider votre panier.",
+      );
+    },
+
+    async validateForCheckout() {
+      if (!this.cart) {
+        return false;
       }
 
-      const qty = Math.max(1, Math.floor(Number(quantity || 1)));
-      existing.quantity = qty;
-      this.persist();
+      try {
+        await this.runCartRequest(
+          () =>
+            $fetch("/api/v1/cart/validate", {
+              method: "POST",
+              credentials: "include",
+              body: {
+                cartVersion: this.cart.version,
+                pricingFingerprint: this.cart.pricingFingerprint,
+              },
+            }),
+          "Votre panier doit être vérifié avant le paiement.",
+        );
+        this.validationMessage = "Prix et disponibilité confirmés.";
+        return true;
+      } catch {
+        return false;
+      }
     },
-
-    clear() {
-      this.hydrate();
-      this.items = [];
-      this.persist();
-    }
-  }
+  },
 });

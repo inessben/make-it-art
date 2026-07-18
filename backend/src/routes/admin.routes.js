@@ -28,6 +28,27 @@ const {
 
 const router = express.Router();
 
+const ORDER_STATUS_LABELS = {
+  PENDING_PAYMENT: "Pending",
+  PAYMENT_PROCESSING: "Pending",
+  PAYMENT_FAILED: "Failed",
+  PAYMENT_REVIEW: "Pending",
+  PAID: "Paid",
+  CANCELED: "Canceled",
+  PARTIALLY_REFUNDED: "Partially refunded",
+  REFUNDED: "Refunded",
+};
+
+const PAYMENT_STATUS_LABELS = {
+  PENDING: "Pending",
+  PROCESSING: "Pending",
+  SUCCEEDED: "Succeeded",
+  FAILED: "Failed",
+  CANCELED: "Canceled",
+  PARTIALLY_REFUNDED: "Partially refunded",
+  REFUNDED: "Refunded",
+};
+
 function buildUserRole(user) {
   if (isSuperAdminUser(user)) {
     return "Super admin";
@@ -90,14 +111,22 @@ function buildArtworkStatus(artwork) {
 
 function buildOrderStatus(order) {
   if (order.status) {
-    return order.status;
+    return ORDER_STATUS_LABELS[order.status] || order.status;
   }
 
-  if (order.payments.some((payment) => payment.status === "Succeeded")) {
+  if (
+    order.payments.some(
+      (payment) => buildPaymentStatus(payment) === "Succeeded",
+    )
+  ) {
     return "Paid";
   }
 
-  if (order.payments.some((payment) => payment.status === "Refunded")) {
+  if (
+    order.payments.some(
+      (payment) => buildPaymentStatus(payment) === "Refunded",
+    )
+  ) {
     return "Refunded";
   }
 
@@ -106,7 +135,7 @@ function buildOrderStatus(order) {
 
 function buildPaymentStatus(payment) {
   if (payment.status) {
-    return payment.status;
+    return PAYMENT_STATUS_LABELS[payment.status] || payment.status;
   }
 
   return "Pending";
@@ -177,6 +206,33 @@ function parseAmount(value) {
 
 function formatCurrencyAmount(value) {
   return `EUR ${value.toFixed(2)}`;
+}
+
+function getPaymentAmountValue(payment) {
+  if (Number.isSafeInteger(payment.amount) && payment.amount >= 0) {
+    return payment.amount / 100;
+  }
+
+  return parseAmount(payment.price);
+}
+
+function getOrderAmountValue(order) {
+  if (Number.isSafeInteger(order.totalAmount) && order.totalAmount >= 0) {
+    return order.totalAmount / 100;
+  }
+
+  return order.payments.reduce(
+    (sum, payment) => sum + getPaymentAmountValue(payment),
+    0,
+  );
+}
+
+function getArtworkPriceLabel(artwork) {
+  if (Number.isSafeInteger(artwork.priceAmount) && artwork.priceAmount > 0) {
+    return formatCurrencyAmount(artwork.priceAmount / 100);
+  }
+
+  return artwork.price || artwork.priceTokens || "Price not set";
 }
 
 function serializeAdminArtist(artist) {
@@ -632,10 +688,7 @@ router.get("/admin/orders", authRequired, adminRequired, async (_req, res) => {
     const orders = await orderRepository.listOrdersForAdmin();
 
     const payload = orders.map((order) => {
-      const amountValue = order.payments.reduce(
-        (sum, payment) => sum + parseAmount(payment.price),
-        0
-      );
+      const amountValue = getOrderAmountValue(order);
 
       return {
         id: order.id,
@@ -674,7 +727,7 @@ router.get("/admin/payments", authRequired, adminRequired, async (_req, res) => 
     const payments = await paymentRepository.listPaymentsForAdmin();
 
     const payload = payments.map((payment) => {
-      const amountValue = parseAmount(payment.price);
+      const amountValue = getPaymentAmountValue(payment);
 
       return {
         id: payment.id,
@@ -723,9 +776,10 @@ router.get("/admin/dashboard", authRequired, adminRequired, async (_req, res) =>
     const succeededPayments = payments.filter(
       (payment) => buildPaymentStatus(payment) === "Succeeded"
     );
-    const grossRevenue = succeededPayments.reduce((sum, payment) => {
-      return sum + parseAmount(payment.price);
-    }, 0);
+    const grossRevenue = succeededPayments.reduce(
+      (sum, payment) => sum + getPaymentAmountValue(payment),
+      0
+    );
 
     const latestUser = users[0];
     const latestArtist = artists[0];

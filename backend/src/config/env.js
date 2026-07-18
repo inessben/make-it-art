@@ -18,6 +18,7 @@ module.exports = {
   jwtSecret: process.env.JWT_SECRET || "dev_secret_change_me",
   sessionCookieName: process.env.SESSION_COOKIE_NAME || "mia_session",
   refreshCookieName: process.env.REFRESH_COOKIE_NAME || "mia_refresh",
+  csrfCookieName: process.env.CSRF_COOKIE_NAME || "mia_csrf",
   loginCodeCookieName: process.env.LOGIN_CODE_COOKIE_NAME || "mia_login_challenge",
   rememberDeviceCookieName: process.env.REMEMBER_DEVICE_COOKIE_NAME || "mia_remember_device",
   googleOAuth: {
@@ -39,6 +40,9 @@ module.exports = {
     email: process.env.DEFAULT_ADMIN_EMAIL || "admin@art.com",
     password: process.env.DEFAULT_ADMIN_PASSWORD || "admin123",
     bypassLoginCode: defaultAdminBypassLoginCode && nodeEnv !== "production"
+  },
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY || "",
   },
   smtp: {
     host: process.env.SMTP_HOST || "",

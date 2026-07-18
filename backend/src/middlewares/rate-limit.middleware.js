@@ -41,7 +41,69 @@ const strictAuthRateLimit = asExpressMiddleware(
   })
 );
 
+const cartRateLimit = asExpressMiddleware(
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: isProduction ? 120 : 1000,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) =>
+      req.user ? `cart-user:${req.user.id}` : ipKeyGenerator(req.ip),
+    message: {
+      message: "Too many cart requests. Please try again later.",
+      code: "CART_RATE_LIMITED",
+    },
+  }),
+);
+
+const checkoutIpRateLimit = asExpressMiddleware(
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: isProduction ? 30 : 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: ipKeyGenerator,
+    message: {
+      message: "Too many checkout attempts. Please try again later.",
+      code: "CHECKOUT_RATE_LIMITED",
+    },
+  }),
+);
+
+const checkoutUserRateLimit = asExpressMiddleware(
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: isProduction ? 10 : 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => `checkout-user:${req.user.id}`,
+    message: {
+      message: "Too many checkout attempts. Please try again later.",
+      code: "CHECKOUT_RATE_LIMITED",
+    },
+  }),
+);
+
+const securityRateLimit = asExpressMiddleware(
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: isProduction ? 30 : 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) =>
+      req.user ? `security-user:${req.user.id}` : ipKeyGenerator(req.ip),
+    message: {
+      message: "Too many security token requests. Please try again later.",
+      code: "SECURITY_RATE_LIMITED",
+    },
+  }),
+);
+
 module.exports = {
   authRateLimit,
-  strictAuthRateLimit
+  strictAuthRateLimit,
+  cartRateLimit,
+  checkoutIpRateLimit,
+  checkoutUserRateLimit,
+  securityRateLimit
 };

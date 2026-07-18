@@ -55,14 +55,23 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     return null;
   }
 
-  const price = normalizeText(artwork.price) || normalizeText(artwork.priceTokens);
+  const hasFiatPrice =
+    Number.isSafeInteger(artwork.priceAmount) && artwork.priceAmount > 0;
+  const priceValue = hasFiatPrice
+    ? artwork.priceAmount / 100
+    : parsePriceValue(artwork.price || artwork.priceTokens);
+  const price = hasFiatPrice
+    ? `${priceValue.toFixed(2).replace(".", ",")} €`
+    : normalizeText(artwork.price) || normalizeText(artwork.priceTokens);
 
   return {
     id: artwork.id,
     title: normalizeText(artwork.title) || "Untitled artwork",
     description: normalizeText(artwork.description),
     price,
-    priceValue: parsePriceValue(price),
+    priceValue,
+    priceAmount: hasFiatPrice ? artwork.priceAmount : null,
+    currency: hasFiatPrice ? artwork.currency || "EUR" : null,
     protection: Boolean(artwork.protection),
     createdAt: artwork.createdAt || null,
     favoriteCount: artwork.favoriteCount ?? artwork._count?.favorites ?? 0,

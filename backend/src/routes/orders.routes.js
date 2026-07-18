@@ -4,6 +4,22 @@ const prisma = require("../lib/prisma");
 
 const router = express.Router();
 
+function formatAmount(amount, currency = "EUR") {
+  if (!Number.isSafeInteger(amount) || amount < 0) {
+    return null;
+  }
+
+  return `${(amount / 100).toFixed(2)} ${currency}`;
+}
+
+function getLegacyTotal(order) {
+  if (order.totalToken !== null && order.totalToken !== undefined) {
+    return order.totalToken;
+  }
+
+  return Number.isSafeInteger(order.totalAmount) ? order.totalAmount / 100 : 0;
+}
+
 router.get("/orders", authRequired, async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
@@ -21,15 +37,21 @@ router.get("/orders", authRequired, async (req, res) => {
     return res.status(200).json({
       orders: orders.map((order) => ({
         id: order.id,
+        publicId: order.publicId,
         number: `ORD-${String(order.id).padStart(6, "0")}`,
         status: order.status || "Processing",
-        totalToken: order.totalToken || 0,
+        totalToken: getLegacyTotal(order),
+        totalAmount: order.totalAmount,
+        currency: order.currency,
         createdAt: order.createdAt,
         itemCount: order.items.length,
         artworks: order.items.map((item) => ({
           id: item.artwork.id,
           title: item.artwork.title,
-          priceTokens: item.priceTokens
+          priceTokens:
+            item.priceTokens || formatAmount(item.unitAmount, item.currency),
+          unitAmount: item.unitAmount,
+          currency: item.currency,
         }))
       }))
     });
@@ -69,21 +91,32 @@ router.get("/orders/:id", authRequired, async (req, res) => {
     return res.status(200).json({
       order: {
         id: order.id,
+        publicId: order.publicId,
         number: `ORD-${String(order.id).padStart(6, "0")}`,
         status: order.status || "Processing",
-        totalToken: order.totalToken || 0,
+        totalToken: getLegacyTotal(order),
+        totalAmount: order.totalAmount,
+        currency: order.currency,
         createdAt: order.createdAt,
         items: order.items.map((item) => ({
           id: item.id,
           artworkId: item.artworkId,
           artworkTitle: item.artwork.title,
-          priceTokens: item.priceTokens
+          priceTokens:
+            item.priceTokens || formatAmount(item.unitAmount, item.currency),
+          unitAmount: item.unitAmount,
+          currency: item.currency,
         })),
         payments: order.payments.map((payment) => ({
           id: payment.id,
           method: payment.method,
-          transactionId: payment.transactionId,
-          price: payment.price,
+          transactionId:
+            payment.transactionId || payment.providerPaymentId || null,
+          providerPaymentId: payment.providerPaymentId,
+          price:
+            payment.price || formatAmount(payment.amount, payment.currency),
+          amount: payment.amount,
+          currency: payment.currency,
           status: payment.status,
           createdAt: payment.createdAt
         }))

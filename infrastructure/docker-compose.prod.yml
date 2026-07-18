@@ -98,7 +98,9 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-https://www.makeitart.io}
       APP_BASE_URL: ${APP_BASE_URL:-https://www.makeitart.io}
       JWT_SECRET: ${JWT_SECRET}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-mia_session}
+      CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-mia_csrf}
       REFRESH_COOKIE_NAME: ${REFRESH_COOKIE_NAME:-mia_refresh}
       LOGIN_CODE_COOKIE_NAME: ${LOGIN_CODE_COOKIE_NAME:-mia_login_challenge}
       REMEMBER_DEVICE_COOKIE_NAME: ${REMEMBER_DEVICE_COOKIE_NAME:-mia_remember_device}
@@ -155,6 +157,8 @@ services:
       NUXT_PORT: 3000
       NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-/api}
       NUXT_PUBLIC_UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
+      NUXT_PUBLIC_APP_BASE_URL: ${NUXT_PUBLIC_APP_BASE_URL:-https://www.makeitart.io}
+      NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
     depends_on:
       backend:
         condition: service_healthy

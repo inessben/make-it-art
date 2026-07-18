@@ -1,0 +1,92 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {
+  buildPaymentReturnUrl,
+  createSecureUuid,
+  getOrCreateIdempotencyKey,
+  getSafePaymentError,
+  isPublishableStripeKey
+} from "../utils/checkout-security.js";
+
+test("only Stripe publishable keys are accepted by the browser", () => {
+  assert.equal(isPublishableStripeKey("pk_test_public123"), true);
+  assert.equal(isPublishableStripeKey("pk_live_public123"), true);
+  assert.equal(isPublishableStripeKey("sk_test_secret123"), false);
+  assert.equal(isPublishableStripeKey("rk_live_restricted123"), false);
+  assert.equal(isPublishableStripeKey(""), false);
+});
+
+test("the return URL is fixed to the configured application origin", () => {
+  assert.equal(
+    buildPaymentReturnUrl({
+      configuredBaseUrl: "https://www.makeitart.io",
+      currentOrigin: "https://www.makeitart.io",
+      nodeEnv: "production"
+    }),
+    "https://www.makeitart.io/payment/return"
+  );
+
+  assert.throws(() =>
+    buildPaymentReturnUrl({
+      configuredBaseUrl: "https://evil.example",
+      currentOrigin: "https://www.makeitart.io",
+      nodeEnv: "production"
+    })
+  );
+  assert.throws(() =>
+    buildPaymentReturnUrl({
+      configuredBaseUrl: "http://www.makeitart.io",
+      currentOrigin: "http://www.makeitart.io",
+      nodeEnv: "production"
+    })
+  );
+});
+
+test("checkout retries reuse one secure idempotency key", () => {
+  const values = new Map();
+  const storage = {
+    getItem: (key) => values.get(key) || null,
+    setItem: (key, value) => values.set(key, value)
+  };
+  const cart = {
+    version: 4,
+    pricingFingerprint: "a".repeat(64)
+  };
+  let generated = 0;
+  const createUuid = () => {
+    generated += 1;
+    return "8c11aa36-8ad1-4a0d-92e8-753ef3458859";
+  };
+
+  assert.equal(
+    getOrCreateIdempotencyKey(storage, cart, createUuid),
+    "8c11aa36-8ad1-4a0d-92e8-753ef3458859"
+  );
+  assert.equal(
+    getOrCreateIdempotencyKey(storage, cart, createUuid),
+    "8c11aa36-8ad1-4a0d-92e8-753ef3458859"
+  );
+  assert.equal(generated, 1);
+});
+
+test("fallback UUID generation is RFC 4122 version 4", () => {
+  const uuid = createSecureUuid({
+    getRandomValues(bytes) {
+      bytes.fill(0xab);
+      return bytes;
+    }
+  });
+
+  assert.match(uuid, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+});
+
+test("payment errors never expose a client secret", () => {
+  assert.equal(
+    getSafePaymentError({ message: "Failed for pi_123_secret_sensitive" }),
+    "The payment could not be confirmed. Please review your details and try again."
+  );
+  assert.equal(
+    getSafePaymentError({ message: "Your card was declined." }),
+    "Your card was declined."
+  );
+});

@@ -231,6 +231,14 @@ async function resolveCategoryId({ categoryId }) {
 }
 
 function mapArtworkRouteError(error) {
+  if (error?.message === "INVALID_ARTWORK_PRICE") {
+    return {
+      status: 400,
+      message:
+        "Le prix doit etre un montant EUR positif avec deux decimales maximum.",
+    };
+  }
+
   if (error?.message === "ARTWORK_NOT_FOUND") {
     return {
       status: 404,

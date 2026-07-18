@@ -129,12 +129,19 @@ Then update at least these values:
 - `SMTP_USER`
 - `SMTP_PASS`
 - `SMTP_FROM`
+- `STRIPE_SECRET_KEY` avec une clé serveur `sk_live_*`
+- `NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` avec la clé publique correspondante `pk_live_*`
 
 Important production defaults:
 
 - `APP_BASE_URL=https://www.makeitart.io`
 - `CORS_ORIGIN=https://www.makeitart.io`
 - `NUXT_PUBLIC_API_BASE=/api`
+- `NUXT_PUBLIC_APP_BASE_URL=https://www.makeitart.io`
+
+La clé `STRIPE_SECRET_KEY` ne doit jamais être copiée dans une variable `NUXT_PUBLIC_*`. Avant
+d'activer Apple Pay, Google Pay ou Link, enregistrer chaque domaine et sous-domaine de paiement dans
+le Dashboard Stripe.
 
 ### Deploy on the VPS
 

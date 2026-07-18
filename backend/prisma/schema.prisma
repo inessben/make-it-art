@@ -6,6 +6,55 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Currency {
+  EUR
+}
+
+enum ArtworkSaleStatus {
+  DRAFT
+  AVAILABLE
+  SOLD_OUT
+  UNLISTED
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAYMENT_PROCESSING
+  PAYMENT_FAILED
+  PAYMENT_REVIEW
+  PAID
+  CANCELED
+  PARTIALLY_REFUNDED
+  REFUNDED
+}
+
+enum PaymentProvider {
+  STRIPE
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELED
+  PARTIALLY_REFUNDED
+  REFUNDED
+}
+
+enum WebhookEventStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+enum InventoryReservationStatus {
+  ACTIVE
+  CONSUMED
+  RELEASED
+  EXPIRED
+}
+
 model User {
   id                      Int                      @id @default(autoincrement())
   username                String?
@@ -39,6 +88,7 @@ model User {
   refreshTokens           RefreshToken[]
   rememberedDevices       RememberedDevice[]       @relation("rememberedDevices")
   galleries               UserGallery[]
+  cart                    Cart?
 
   @@unique([oauthProvider, oauthSubject])
   @@map("user")
@@ -93,29 +143,38 @@ model Admin {
 }
 
 model Artwork {
-  id              Int              @id @default(autoincrement())
-  artistId        Int              @map("artist_id")
-  title           String?
-  description     String?
-  categoryId      Int?             @map("category_id")
-  priceTokens     String?          @map("price_tokens")
-  favoriteCount   Int?             @map("favorite_count")
-  createdAt       DateTime?        @map("created_at")
-  protection      Boolean?
-  protectionId    Int?             @map("protection_id")
-  price           String?
-  moderationStatus String          @default("approved") @map("moderation_status")
-  moderationNote   String?         @map("moderation_note")
-  moderatedAt      DateTime?       @map("moderated_at")
-  moderatedByAdminId Int?          @map("moderated_by_admin_id")
-  artist          Artist           @relation(fields: [artistId], references: [id])
-  category        Category?        @relation(fields: [categoryId], references: [id])
-  collections     CollectionItem[]
-  favorites       Favorite[]
-  moderatedByAdmin User?           @relation("artwork_moderated_by", fields: [moderatedByAdminId], references: [id])
-  orderItems      OrderItem[]
-  ownershipTokens OwnershipToken[]
-  galleries       UserGallery[]
+  id               Int                    @id @default(autoincrement())
+  artistId         Int                    @map("artist_id")
+  title            String?
+  description      String?
+  categoryId       Int?                   @map("category_id")
+  // Temporary read compatibility for develop. Stripe checkout never reads
+  // these free-form legacy values; priceAmount is the only payable amount.
+  priceTokens      String?                 @map("price_tokens")
+  price            String?
+  priceAmount      Int?                   @map("price_amount")
+  currency         Currency               @default(EUR)
+  favoriteCount    Int?                   @map("favorite_count")
+  createdAt        DateTime?              @map("created_at")
+  protection       Boolean?
+  protectionId     Int?                   @map("protection_id")
+  artist           Artist                 @relation(fields: [artistId], references: [id])
+  category         Category?              @relation(fields: [categoryId], references: [id])
+  collections      CollectionItem[]
+  favorites        Favorite[]
+  moderationStatus String                  @default("approved") @map("moderation_status")
+  moderationNote   String?                 @map("moderation_note")
+  moderatedAt      DateTime?               @map("moderated_at")
+  moderatedByAdminId Int?                  @map("moderated_by_admin_id")
+  moderatedByAdmin User?                   @relation("artwork_moderated_by", fields: [moderatedByAdminId], references: [id])
+  orderItems       OrderItem[]
+  ownershipTokens  OwnershipToken[]
+  galleries        UserGallery[]
+  cartItems        CartItem[]
+  reservations     InventoryReservation[]
+  saleStatus       ArtworkSaleStatus      @default(DRAFT) @map("sale_status")
+  stockQuantity    Int                    @default(0) @map("stock_quantity")
+  reservedQuantity Int                    @default(0) @map("reserved_quantity")
 
   @@map("artwork")
 }
@@ -181,41 +240,150 @@ model CollectionItem {
   @@map("collection_item")
 }
 
-model Order {
-  id         Int         @id @default(autoincrement())
-  userId     Int         @map("user_id")
-  status     String?
-  totalToken Int?        @map("total_token")
-  createdAt  DateTime?   @map("created_at")
-  user       User        @relation(fields: [userId], references: [id])
-  items      OrderItem[]
-  payments   Payment[]
+model Cart {
+  id        Int        @id @default(autoincrement())
+  userId    Int        @unique @map("user_id")
+  version   Int        @default(1)
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  orders    Order[]
 
+  @@map("cart")
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  cartId    Int      @map("cart_id")
+  artworkId Int      @map("artwork_id")
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  artwork   Artwork  @relation(fields: [artworkId], references: [id])
+
+  @@unique([cartId, artworkId])
+  @@index([artworkId])
+  @@map("cart_item")
+}
+
+model Order {
+  id                 Int                    @id @default(autoincrement())
+  publicId           String                 @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  userId             Int                    @map("user_id")
+  cartId             Int                    @map("cart_id")
+  cartVersion        Int                    @map("cart_version")
+  pricingFingerprint String                 @map("pricing_fingerprint")
+  status             OrderStatus            @default(PENDING_PAYMENT)
+  checkoutVersion    Int                    @default(1) @map("checkout_version")
+  subtotalAmount     Int                    @map("subtotal_amount")
+  taxAmount          Int                    @default(0) @map("tax_amount")
+  feeAmount          Int                    @default(0) @map("fee_amount")
+  commissionAmount   Int                    @default(0) @map("commission_amount")
+  totalAmount        Int                    @map("total_amount")
+  // Legacy display field kept during the develop-to-fiat transition only.
+  totalToken         Int?                   @map("total_token")
+  currency           Currency               @default(EUR)
+  createdAt          DateTime               @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt          DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  paidAt             DateTime?              @map("paid_at") @db.Timestamp(6)
+  canceledAt         DateTime?              @map("canceled_at") @db.Timestamp(6)
+  expiresAt          DateTime               @map("expires_at") @db.Timestamp(6)
+  user               User                   @relation(fields: [userId], references: [id])
+  cart               Cart                   @relation(fields: [cartId], references: [id])
+  items              OrderItem[]
+  payments           Payment[]
+  reservations       InventoryReservation[]
+
+  @@unique([cartId, cartVersion])
+  @@index([userId, status])
   @@map("order")
 }
 
 model OrderItem {
-  id          Int     @id @default(autoincrement())
-  orderId     Int     @map("order_id")
-  artworkId   Int     @map("artwork_id")
-  priceTokens String? @map("price_tokens")
-  artwork     Artwork @relation(fields: [artworkId], references: [id])
-  order       Order   @relation(fields: [orderId], references: [id])
+  id               Int      @id @default(autoincrement())
+  orderId          Int      @map("order_id")
+  artworkId        Int      @map("artwork_id")
+  // Legacy display field; Stripe totals are unitAmount/subtotalAmount.
+  priceTokens      String?  @map("price_tokens")
+  artworkTitle     String   @map("artwork_title")
+  artistName       String   @map("artist_name")
+  quantity         Int      @default(1)
+  unitAmount       Int      @map("unit_amount")
+  subtotalAmount   Int      @map("subtotal_amount")
+  commissionAmount Int      @default(0) @map("commission_amount")
+  currency         Currency @default(EUR)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  artwork          Artwork  @relation(fields: [artworkId], references: [id])
+  order            Order    @relation(fields: [orderId], references: [id])
 
+  @@unique([orderId, artworkId])
   @@map("order_item")
 }
 
 model Payment {
-  id            Int       @id @default(autoincrement())
-  orderId       Int       @map("order_id")
-  method        String?
-  transactionId Int?      @map("transaction_id")
-  price         String?
-  status        String?
-  createdAt     DateTime? @map("created_at")
-  order         Order     @relation(fields: [orderId], references: [id])
+  id                Int                  @id @default(autoincrement())
+  orderId           Int                  @map("order_id")
+  checkoutVersion   Int                  @default(1) @map("checkout_version")
+  provider          PaymentProvider      @default(STRIPE)
+  providerPaymentId String?              @unique @map("provider_payment_id")
+  providerStatus    String?              @map("provider_status")
+  idempotencyKey    String?              @unique @map("idempotency_key")
+  method            String?
+  // Temporary legacy references. Stripe reconciliation uses providerPaymentId
+  // and amount exclusively.
+  transactionId     Int?                 @map("transaction_id")
+  price             String?
+  amount            Int
+  refundedAmount    Int                  @default(0) @map("refunded_amount")
+  currency          Currency             @default(EUR)
+  status            PaymentStatus        @default(PENDING)
+  failureCode       String?              @map("failure_code")
+  createdAt         DateTime             @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt         DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  succeededAt       DateTime?            @map("succeeded_at") @db.Timestamp(6)
+  failedAt          DateTime?            @map("failed_at") @db.Timestamp(6)
+  canceledAt        DateTime?            @map("canceled_at") @db.Timestamp(6)
+  order             Order                @relation(fields: [orderId], references: [id])
+  webhookEvents     StripeWebhookEvent[]
 
+  @@unique([orderId, checkoutVersion])
   @@map("payment")
+}
+
+model StripeWebhookEvent {
+  id             Int                @id @default(autoincrement())
+  eventId        String             @unique @map("event_id")
+  eventType      String             @map("event_type")
+  stripeObjectId String?            @map("stripe_object_id")
+  paymentId      Int?               @map("payment_id")
+  status         WebhookEventStatus @default(PENDING)
+  attemptCount   Int                @default(0) @map("attempt_count")
+  lastErrorCode  String?            @map("last_error_code")
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamp(6)
+  processedAt    DateTime?          @map("processed_at") @db.Timestamp(6)
+  payment        Payment?           @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@index([stripeObjectId, eventType])
+  @@map("stripe_webhook_event")
+}
+
+model InventoryReservation {
+  id        Int                        @id @default(autoincrement())
+  orderId   Int                        @map("order_id")
+  artworkId Int                        @map("artwork_id")
+  quantity  Int
+  status    InventoryReservationStatus @default(ACTIVE)
+  expiresAt DateTime                   @map("expires_at") @db.Timestamp(6)
+  createdAt DateTime                   @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime                   @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  order     Order                      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  artwork   Artwork                    @relation(fields: [artworkId], references: [id])
+
+  @@unique([orderId, artworkId])
+  @@index([artworkId, status, expiresAt])
+  @@map("inventory_reservation")
 }
 
 model Favorite {
