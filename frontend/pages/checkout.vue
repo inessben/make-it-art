@@ -98,6 +98,7 @@
           <form class="mt-6 grid gap-5" @submit.prevent="confirmPayment">
             <div
               id="payment-element"
+              ref="paymentElementContainer"
               aria-label="Coordonnées de paiement sécurisées"
             ></div>
 
@@ -183,6 +184,7 @@ const { cart: cartSummary } = storeToRefs(cartStore);
 const initializing = ref(true);
 const submitting = ref(false);
 const paymentElementReady = ref(false);
+const paymentElementContainer = ref(null);
 const errorMessage = ref("");
 const order = ref(null);
 
@@ -253,7 +255,6 @@ onMounted(async () => {
       return;
     }
 
-    await nextTick();
     stripeClient = await loadStripe(publishableKey);
 
     if (!stripeClient) {
@@ -289,7 +290,17 @@ onMounted(async () => {
       errorMessage.value =
         "Le formulaire de paiement n’a pas pu être chargé. Veuillez réessayer.";
     });
-    paymentElement.mount("#payment-element");
+
+    initializing.value = false;
+    await nextTick();
+
+    if (!paymentElementContainer.value) {
+      throw new Error(
+        "Le conteneur du formulaire de paiement sécurisé est indisponible.",
+      );
+    }
+
+    paymentElement.mount(paymentElementContainer.value);
   } catch (error) {
     errorMessage.value = getSafePaymentError({
       message: error?.data?.message || error?.message,
