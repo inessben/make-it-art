@@ -104,6 +104,7 @@ model Artwork {
   protectionId    Int?             @map("protection_id")
   price           String?
   imagePath       String?          @map("image_path")
+  isSold          Boolean          @default(false) @map("is_sold")
   artist          Artist           @relation(fields: [artistId], references: [id])
   category        Category?        @relation(fields: [categoryId], references: [id])
   collections     CollectionItem[]

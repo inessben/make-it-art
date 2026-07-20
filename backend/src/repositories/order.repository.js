@@ -84,6 +84,25 @@ async function createCheckoutOrder({
 
       orderItems.push(orderItem);
 
+      await tx.artwork.update({
+        where: {
+          id: lineItem.artworkId,
+        },
+        data: {
+          isSold: true,
+        },
+      });
+
+      await tx.ownershipToken.updateMany({
+        where: {
+          artworkId: lineItem.artworkId,
+          isCurrentOwner: true,
+        },
+        data: {
+          isCurrentOwner: false,
+        },
+      });
+
       await tx.ownershipToken.create({
         data: {
           artworkId: lineItem.artworkId,

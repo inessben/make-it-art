@@ -102,6 +102,12 @@
                 >
                   Protection activee
                 </span>
+                <span
+                  v-if="artwork.isSold"
+                  class="rounded-full bg-[#3A1A1A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#F5A8A8]"
+                >
+                  Plus disponible
+                </span>
               </div>
               <h1
                 class="mt-6 text-[clamp(2.4rem,5vw,4.1rem)] font-semibold leading-[0.96] text-white"
@@ -138,6 +144,7 @@
               </button>
 
               <button
+                v-if="!artwork.isSold"
                 type="button"
                 class="inline-flex min-h-12 items-center justify-center rounded-2xl border px-6 text-sm font-semibold transition"
                 :class="
@@ -149,6 +156,12 @@
               >
                 {{ isInCart ? "Retirer du panier" : "Ajouter au panier" }}
               </button>
+              <p
+                v-else
+                class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#3A1A1A] bg-[#1A0A0A] px-6 text-sm font-semibold text-[#F5A8A8]"
+              >
+                Cette oeuvre n'est plus disponible a l'achat
+              </p>
 
               <button
                 type="button"
@@ -393,7 +406,7 @@ const {
 function toggleCart() {
   cart.hydrate();
 
-  if (!artwork.value?.id) {
+  if (!artwork.value?.id || artwork.value.isSold) {
     return;
   }
 
@@ -471,6 +484,10 @@ async function addToCollection() {
 
 onMounted(async () => {
   cart.hydrate();
+
+  if (artwork.value?.isSold && artwork.value?.id) {
+    cart.removeArtwork(artwork.value.id);
+  }
 
   if (!auth.user) {
     try {

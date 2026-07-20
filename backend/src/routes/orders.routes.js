@@ -29,6 +29,11 @@ function mapCheckoutError(error) {
         status: 400,
         message: "Le prix d'une oeuvre est invalide.",
       };
+    case "ARTWORK_ALREADY_SOLD":
+      return {
+        status: 409,
+        message: "Une ou plusieurs oeuvres ne sont plus disponibles a l'achat.",
+      };
     default:
       return null;
   }

@@ -195,3 +195,22 @@ test("createCheckout still succeeds when artist sale email fails", async (t) => 
 
   assert.equal(result.order.id, 78);
 });
+
+test("createCheckout rejects artworks that are already sold", async (t) => {
+  const { service, restore } = loadCheckoutService({
+    artworks: [{ ...artwork, isSold: true }],
+  });
+
+  t.after(() => {
+    restore();
+  });
+
+  await assert.rejects(
+    () =>
+      service.createCheckout({
+        userId: buyer.id,
+        items: [{ artworkId: artwork.id, quantity: 1 }],
+      }),
+    (error) => error.message === "ARTWORK_ALREADY_SOLD",
+  );
+});

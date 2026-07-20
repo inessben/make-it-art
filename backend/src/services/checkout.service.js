@@ -64,6 +64,10 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
       throw new Error("CANNOT_BUY_OWN_ARTWORK");
     }
 
+    if (artwork.isSold) {
+      throw new Error("ARTWORK_ALREADY_SOLD");
+    }
+
     const unitPrice = parsePriceValue(artwork.price || artwork.priceTokens);
 
     if (unitPrice === null || unitPrice <= 0) {

@@ -73,6 +73,7 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     createdAt: artwork.createdAt || null,
     imageUrl: buildArtworkImageUrl(artwork.imagePath),
     favoriteCount: artwork.favoriteCount ?? artwork._count?.favorites ?? 0,
+    isSold: Boolean(artwork.isSold),
     isFavorite: Array.isArray(artwork.favorites)
       ? artwork.favorites.length > 0
       : false,

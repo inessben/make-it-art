@@ -55,6 +55,12 @@
         <span class="rounded-full bg-[#101728] px-3 py-1 text-[#8D9BB2]">
           {{ formattedDate }}
         </span>
+        <span
+          v-if="artwork.isSold"
+          class="rounded-full bg-[#3A1A1A] px-3 py-1 text-[#F5A8A8]"
+        >
+          Plus disponible
+        </span>
       </div>
 
       <div>

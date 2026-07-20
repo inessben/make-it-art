@@ -60,8 +60,8 @@ export const useCartStore = defineStore("cart", {
     addArtwork(artwork, quantity = 1) {
       this.hydrate();
 
-      if (!artwork?.id) {
-        return;
+      if (!artwork?.id || artwork.isSold) {
+        return false;
       }
 
       const qty = Number.isFinite(Number(quantity)) ? Number(quantity) : 1;
@@ -79,6 +79,7 @@ export const useCartStore = defineStore("cart", {
       }
 
       this.persist();
+      return true;
     },
 
     removeArtwork(artworkId) {
