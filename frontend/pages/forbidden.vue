@@ -1,34 +1,28 @@
 <template>
-  <main class="min-h-screen bg-[#000000] px-6 py-10 text-[#E6EDF7]">
+  <main class="min-h-screen bg-black px-4 py-6 text-slate-100 sm:px-6 sm:py-10">
     <section
-      class="mx-auto w-full max-w-[820px] rounded-[32px] border border-[#1A1F2A] bg-[#01050E] p-8 shadow-[0_32px_90px_rgba(0,0,0,0.22)]"
+      class="mx-auto w-full max-w-[820px] rounded-2xl border border-slate-800 bg-slate-950 p-5 shadow-[0_32px_90px_rgba(0,0,0,0.22)] sm:rounded-[32px] sm:p-8"
     >
-      <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-        Access control
-      </p>
-      <h1
-        class="mt-4 text-[clamp(2rem,2.5vw,2.8rem)] font-semibold leading-[1.05]"
-      >
-        Acces refuse
-      </h1>
-      <p class="mt-4 max-w-2xl text-[#A0ADB4] leading-7">
-        Cette zone est reservee aux comptes admin. Si tu dois y avoir acces, il
-        faut qu'un role admin soit defini pour ton utilisateur dans la base.
+      <p class="text-xs uppercase tracking-widest text-violet-700">Access control</p>
+      <h1 class="mt-4 text-title-2">Access denied</h1>
+      <p class="mt-4 max-w-2xl text-slate-400 leading-7">
+        This area is restricted to administrator accounts. To access it, an administrator role must
+        be assigned to your account in the database.
       </p>
 
       <div class="mt-8 grid gap-4 sm:grid-cols-2">
         <NuxtLink
           :to="primaryRoute"
-          class="inline-flex items-center justify-center rounded-2xl border border-[#4A6CF7] bg-[#4A6CF7]/10 px-6 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#4A6CF7]/20"
+          class="inline-flex items-center justify-center rounded-2xl border border-violet-700 bg-violet-700/10 px-6 py-3 text-sm font-semibold text-slate-100 transition hover:bg-violet-700/20"
         >
           {{ primaryLabel }}
         </NuxtLink>
 
         <NuxtLink
           to="/"
-          class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-6 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+          class="inline-flex items-center justify-center rounded-2xl border border-slate-800 bg-slate-850 px-6 py-3 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
         >
-          Revenir a l'accueil
+          Return home
         </NuxtLink>
       </div>
     </section>
@@ -48,7 +42,7 @@ const primaryRoute = computed(() => {
   }
 
   if (auth.isAuthenticated) {
-    return "/profile";
+    return "/account-settings";
   }
 
   return "/login";
@@ -56,14 +50,14 @@ const primaryRoute = computed(() => {
 
 const primaryLabel = computed(() => {
   if (auth.isAdmin) {
-    return "Aller au dashboard admin";
+    return "Go to admin dashboard";
   }
 
   if (auth.isAuthenticated) {
-    return "Retour au profil";
+    return "Back to profile";
   }
 
-  return "Aller a la connexion";
+  return "Go to sign in";
 });
 
 onMounted(async () => {

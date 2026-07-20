@@ -1,5 +1,10 @@
 <template>
-  <AuthPanel title="Reset password" max-width="420px" @submit="handleSubmit">
+  <AuthPanel
+    title="Reset password"
+    description="Choose a strong new password for your account."
+    max-width="440px"
+    @submit="handleSubmit"
+  >
     <PasswordField
       id="password"
       v-model="password"
@@ -16,11 +21,7 @@
       autocomplete="new-password"
     />
 
-    <SubmitButton
-      label="Reset password"
-      loading-label="Resetting..."
-      :loading="loading"
-    />
+    <SubmitButton label="Reset password" loading-label="Resetting..." :loading="loading" />
 
     <FormMessage :message="message" />
 
@@ -33,7 +34,7 @@
 <script setup>
 import {
   getPasswordConfirmationError,
-  getPasswordValidationError,
+  getPasswordValidationError
 } from "~/utils/password-validation";
 
 const route = useRoute();
@@ -65,12 +66,11 @@ async function handleSubmit() {
       body: {
         token: route.query.token,
         password: password.value,
-        confirmPassword: confirmPassword.value,
-      },
+        confirmPassword: confirmPassword.value
+      }
     });
 
-    message.value =
-      response.message || "Password reset successfully. You can now log in.";
+    message.value = response.message || "Password reset successfully. You can now log in.";
     success.value = true;
     password.value = "";
     confirmPassword.value = "";
@@ -84,13 +84,11 @@ async function handleSubmit() {
 
 <style scoped>
 .auth-link {
-  margin-top: 8px;
-  text-align: center;
-  font-size: 0.94rem;
+  @apply mt-2 text-center text-body-1;
 }
 
 .auth-link a {
-  color: #3273dc;
+  @apply text-violet-700;
   font-weight: 700;
   text-decoration: none;
 }

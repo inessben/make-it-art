@@ -17,7 +17,7 @@
         </div>
 
         <NuxtLink
-          to="/profile"
+          to="/account-settings"
           class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-5 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
         >
           Retour au profil

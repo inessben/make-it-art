@@ -1,44 +1,44 @@
 export const adminNavigation = [
   {
     label: "Dashboard",
-    description: "Vue globale du backoffice",
+    description: "Back-office overview",
     route: "/admin",
-    icon: "DB",
+    icon: "DB"
   },
   {
     label: "Users",
-    description: "Comptes et acces",
+    description: "Accounts and access",
     route: "/admin/users",
-    icon: "US",
+    icon: "US"
   },
   {
     label: "Artists",
-    description: "Profils artistes",
+    description: "Artist profiles",
     route: "/admin/artists",
-    icon: "AR",
+    icon: "AR"
   },
   {
     label: "Artworks",
-    description: "Moderation du contenu",
+    description: "Content moderation",
     route: "/admin/artworks",
-    icon: "AW",
+    icon: "AW"
   },
   {
     label: "Orders",
-    description: "Suivi des commandes",
+    description: "Order tracking",
     route: "/admin/orders",
-    icon: "OR",
+    icon: "OR"
   },
   {
     label: "Payments",
-    description: "Transactions et revenus",
+    description: "Transactions and revenue",
     route: "/admin/payments",
-    icon: "PY",
+    icon: "PY"
   },
   {
     label: "Settings",
-    description: "Compte admin et securite",
+    description: "Admin account and security",
     route: "/admin/settings",
-    icon: "ST",
-  },
+    icon: "ST"
+  }
 ];

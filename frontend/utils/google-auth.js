@@ -1,4 +1,4 @@
-export const GOOGLE_LOGIN_LABEL = "Se connecter avec Google";
+export const GOOGLE_LOGIN_LABEL = "Sign in with Google";
 export const GOOGLE_LOGIN_URL = "/api/auth/google";
 
 export function getGoogleLoginUrl(origin = "") {
@@ -9,10 +9,7 @@ export function getGoogleLoginUrl(origin = "") {
   try {
     const url = new URL(origin);
 
-    if (
-      (url.hostname === "localhost" || url.hostname === "127.0.0.1") &&
-      url.port === "3000"
-    ) {
+    if ((url.hostname === "localhost" || url.hostname === "127.0.0.1") && url.port === "3000") {
       return `http://localhost${GOOGLE_LOGIN_URL}`;
     }
   } catch {
@@ -24,15 +21,15 @@ export function getGoogleLoginUrl(origin = "") {
 
 export function getGoogleLoginMessage(status) {
   if (status === "cancelled") {
-    return "La connexion Google a ete annulee.";
+    return "Google sign-in was cancelled.";
   }
 
   if (status === "unavailable") {
-    return "La connexion Google est temporairement indisponible.";
+    return "Google sign-in is temporarily unavailable.";
   }
 
   if (status === "error") {
-    return "La connexion Google n'a pas abouti. Veuillez reessayer.";
+    return "Google sign-in was unsuccessful. Please try again.";
   }
 
   return "";

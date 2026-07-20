@@ -1,14 +1,14 @@
 <template>
   <AdminShell
-    title="Parametres admin"
-    description="Gerez votre compte administrateur, vos informations et la securite d'acces au backoffice."
+    title="Admin settings"
+    description="Manage your administrator account, profile information and back-office security."
   >
-    <AccountSettingsForms />
+    <AccountSettingsForms embedded />
   </AdminShell>
 </template>
 
 <script setup>
 definePageMeta({
-  middleware: "admin",
+  middleware: "admin"
 });
 </script>

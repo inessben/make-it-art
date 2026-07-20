@@ -1,9 +1,9 @@
 <template>
   <div class="grid gap-3">
-    <div class="rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-4">
+    <div class="rounded-[20px] border border-slate-800 bg-slate-950 p-4">
       <canvas
         ref="canvasRef"
-        class="h-44 w-full touch-none rounded-2xl bg-[#F8FAFC]"
+        class="signature-canvas h-44 w-full touch-none rounded-2xl bg-slate-50"
         @pointerdown="handlePointerDown"
         @pointermove="handlePointerMove"
         @pointerup="handlePointerUp"
@@ -13,13 +13,13 @@
     </div>
 
     <div class="flex flex-wrap items-center justify-between gap-3 text-sm">
-      <p class="text-[#A0ADB4]">
-        Signez a la souris ou au doigt. La signature sera integree au PDF final.
+      <p class="text-slate-400">
+        Sign with your mouse or finger. Your signature will be embedded in the final PDF.
       </p>
 
       <button
         type="button"
-        class="inline-flex min-h-10 items-center justify-center rounded-xl border border-[#1A1F2A] bg-[#10151E] px-4 font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+        class="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-850 px-4 font-semibold text-slate-100 transition hover:bg-slate-750"
         @click="clearSignature"
       >
         Effacer
@@ -34,8 +34,8 @@ import { onBeforeUnmount, onMounted, ref } from "vue";
 const props = defineProps({
   modelValue: {
     type: String,
-    default: "",
-  },
+    default: ""
+  }
 });
 
 const emit = defineEmits(["update:modelValue"]);
@@ -68,8 +68,8 @@ function setupCanvas() {
   context.lineJoin = "round";
   context.lineCap = "round";
   context.lineWidth = 2.2;
-  context.strokeStyle = "#111827";
-  context.fillStyle = "#F8FAFC";
+  context.strokeStyle = getCanvasToken("--signature-stroke");
+  context.fillStyle = getCanvasToken("--signature-fill");
   context.fillRect(0, 0, width, height);
 
   if (props.modelValue) {
@@ -83,8 +83,18 @@ function getPointerPosition(event) {
 
   return {
     x: event.clientX - bounds.left,
-    y: event.clientY - bounds.top,
+    y: event.clientY - bounds.top
   };
+}
+
+function getCanvasToken(name) {
+  const canvas = canvasRef.value;
+
+  if (!canvas) {
+    return "";
+  }
+
+  return getComputedStyle(canvas).getPropertyValue(name).trim();
 }
 
 function handlePointerDown(event) {
@@ -138,7 +148,7 @@ function clearSignature() {
   }
 
   context.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-  context.fillStyle = "#F8FAFC";
+  context.fillStyle = getCanvasToken("--signature-fill");
   context.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
   emit("update:modelValue", "");
 }
@@ -151,13 +161,7 @@ function restoreSignature(dataUrl) {
       return;
     }
 
-    context.drawImage(
-      image,
-      0,
-      0,
-      canvasRef.value.clientWidth,
-      canvasRef.value.clientHeight,
-    );
+    context.drawImage(image, 0, 0, canvasRef.value.clientWidth, canvasRef.value.clientHeight);
   };
   image.src = dataUrl;
 }
@@ -182,3 +186,10 @@ onBeforeUnmount(() => {
   resizeObserver?.disconnect();
 });
 </script>
+
+<style scoped>
+.signature-canvas {
+  --signature-stroke: theme("colors.slate.800");
+  --signature-fill: theme("colors.slate.50");
+}
+</style>

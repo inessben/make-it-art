@@ -1,83 +1,89 @@
 <template>
-  <main class="min-h-screen bg-[#000000] px-6 py-10 text-[#E6EDF7]">
+  <main class="min-h-screen bg-black px-4 py-8 text-slate-100 sm:px-6 sm:py-10">
     <section
-      class="mx-auto w-full max-w-[1120px] rounded-[32px] border border-[#1A1F2A] bg-[#01050E] p-8 shadow-[0_32px_90px_rgba(0,0,0,0.22)]"
+      class="mx-auto w-full max-w-[1120px] rounded-2xl border border-slate-800 bg-slate-950 p-4 shadow-[0_32px_90px_rgba(0,0,0,0.22)] sm:rounded-[32px] sm:p-8"
     >
       <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Détail de la commande</p>
-          <h1 class="mt-4 text-[clamp(2rem,2.5vw,2.8rem)] font-semibold leading-[1.05]">
-            {{ order?.number || "Commande introuvable" }}
+          <p class="text-xs uppercase tracking-widest text-violet-700">Order details</p>
+          <h1 class="mt-4 text-title-2">
+            {{ order?.number || "Order not found" }}
           </h1>
-          <p class="mt-4 max-w-2xl text-[#A0ADB4] leading-7">
+          <p class="mt-4 max-w-2xl text-slate-400 leading-7">
             {{
               order
-                ? `Statut : ${order.status}`
-                : "Vérifiez le numéro de commande ou revenez à votre historique."
+                ? `Status: ${order.status}`
+                : "Check the order number or return to your order history."
             }}
           </p>
         </div>
         <button
           type="button"
-          class="inline-flex items-center justify-center rounded-2xl border border-[#4A6CF7] bg-transparent px-6 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:border-[#6d8bff] hover:text-[#ffffff]"
+          class="inline-flex items-center justify-center rounded-2xl border border-violet-700 bg-transparent px-6 py-3 text-sm font-semibold text-slate-100 transition hover:border-violet-600 hover:text-white"
           @click="navigateBack"
         >
-          Retour aux commandes
+          Back to orders
         </button>
       </div>
 
       <div
         v-if="loading"
-        class="mt-10 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-8 text-[#A0ADB4]"
+        class="mt-10 rounded-[24px] border border-slate-800 bg-violet-950 p-8 text-slate-400"
       >
-        Chargement du détail de la commande...
+        Loading order details...
       </div>
 
       <div
         v-else-if="error"
-        class="mt-10 rounded-[24px] border border-[#7f1d1d] bg-[#2b1014] p-8 text-[#FECACA]"
+        class="mt-10 rounded-[24px] border border-red-900 bg-red-950 p-8 text-red-200"
       >
         {{ error }}
       </div>
 
       <div v-else class="mt-10 space-y-6">
-        <div class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
+        <div class="rounded-[24px] border border-slate-800 bg-violet-950 p-6">
           <div class="grid gap-4 sm:grid-cols-3">
             <div>
-              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Commande</p>
-              <p class="mt-2 text-lg font-semibold text-[#E6EDF7]">{{ order.number }}</p>
+              <p class="text-xs uppercase tracking-widest text-violet-700">Order</p>
+              <p class="mt-2 text-lg font-semibold text-slate-100">{{ order.number }}</p>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Date</p>
-              <p class="mt-2 text-lg text-[#A0ADB4]">{{ order.date }}</p>
+              <p class="text-xs uppercase tracking-widest text-violet-700">Date</p>
+              <p class="mt-2 text-lg text-slate-400">{{ order.date }}</p>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Montant</p>
-              <p class="mt-2 text-lg font-semibold text-[#E6EDF7]">{{ order.total }}</p>
+              <p class="text-xs uppercase tracking-widest text-violet-700">Amount</p>
+              <p class="mt-2 text-lg font-semibold text-slate-100">{{ order.total }}</p>
             </div>
           </div>
         </div>
 
-        <div class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-          <h2 class="text-lg font-semibold text-[#E6EDF7]">Articles</h2>
+        <div class="rounded-[24px] border border-slate-800 bg-violet-950 p-6">
+          <h2 class="text-lg font-semibold text-slate-100">Purchased artworks</h2>
+          <p v-if="downloadMessage" class="mt-3 text-sm text-red-200" role="status">
+            {{ downloadMessage }}
+          </p>
           <div class="mt-5 space-y-4">
             <article
               v-for="item in order.items"
               :key="item.id"
-              class="rounded-2xl border border-[#1A1F2A] bg-[#0d1120] p-4"
+              class="rounded-2xl border border-slate-800 bg-slate-850 p-4"
             >
               <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p class="text-sm text-[#A0ADB4]">{{ item.artworkTitle || "Oeuvre" }}</p>
-                  <p class="mt-1 text-base font-semibold text-[#E6EDF7]">
+                  <p class="text-sm text-slate-400">{{ item.artworkTitle || "Artwork" }}</p>
+                  <p class="mt-1 text-base font-semibold text-slate-100">
                     {{ item.priceTokens }} tokens
                   </p>
                 </div>
-                <span
-                  class="inline-flex items-center rounded-full bg-[#1c3350] px-3 py-2 text-xs uppercase text-[#67b7ff]"
+                <button
+                  type="button"
+                  class="ui-button-secondary"
+                  :disabled="Boolean(downloadLoading[item.id])"
+                  @click="downloadArtwork(item)"
                 >
-                  Article n°{{ item.id }}
-                </span>
+                  {{ downloadLoading[item.id] ? "Preparing..." : "Download artwork" }}
+                </button>
               </div>
             </article>
           </div>
@@ -85,17 +91,17 @@
 
         <div
           v-if="order.payments.length"
-          class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6"
+          class="rounded-[24px] border border-slate-800 bg-violet-950 p-6"
         >
-          <h2 class="text-lg font-semibold text-[#E6EDF7]">Paiement</h2>
+          <h2 class="text-lg font-semibold text-slate-100">Payment</h2>
           <div class="mt-5 grid gap-4 sm:grid-cols-2">
-            <div class="rounded-2xl border border-[#1A1F2A] bg-[#0d1120] p-4">
-              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Méthode</p>
-              <p class="mt-2 text-sm text-[#A0ADB4]">{{ order.payments[0].method || "—" }}</p>
+            <div class="rounded-2xl border border-slate-800 bg-slate-850 p-4">
+              <p class="text-xs uppercase tracking-widest text-violet-700">Method</p>
+              <p class="mt-2 text-sm text-slate-400">{{ order.payments[0].method || "—" }}</p>
             </div>
-            <div class="rounded-2xl border border-[#1A1F2A] bg-[#0d1120] p-4">
-              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Statut</p>
-              <p class="mt-2 text-sm text-[#A0ADB4]">{{ order.payments[0].status || "—" }}</p>
+            <div class="rounded-2xl border border-slate-800 bg-slate-850 p-4">
+              <p class="text-xs uppercase tracking-widest text-violet-700">Status</p>
+              <p class="mt-2 text-sm text-slate-400">{{ order.payments[0].status || "—" }}</p>
             </div>
           </div>
         </div>
@@ -112,6 +118,8 @@ const route = useRoute();
 const order = ref(null);
 const loading = ref(true);
 const error = ref(null);
+const downloadLoading = ref({});
+const downloadMessage = ref("");
 
 definePageMeta({
   middleware: "auth"
@@ -126,7 +134,7 @@ onMounted(async () => {
 
     order.value = {
       ...response.order,
-      date: new Date(response.order.createdAt).toLocaleDateString("fr-FR", {
+      date: new Date(response.order.createdAt).toLocaleDateString("en-US", {
         year: "numeric",
         month: "2-digit",
         day: "2-digit"
@@ -134,7 +142,7 @@ onMounted(async () => {
       total: `${response.order.totalToken} tokens`
     };
   } catch (fetchError) {
-    error.value = fetchError?.data?.message || "Impossible de charger le détail de la commande.";
+    error.value = fetchError?.data?.message || "Unable to load order details.";
   } finally {
     loading.value = false;
   }
@@ -142,5 +150,30 @@ onMounted(async () => {
 
 function navigateBack() {
   return navigateTo("/orders");
+}
+
+async function downloadArtwork(item) {
+  downloadMessage.value = "";
+  downloadLoading.value = { ...downloadLoading.value, [item.id]: true };
+
+  try {
+    const file = await $fetch(`/api/orders/${route.params.id}/download/${item.id}`, {
+      credentials: "include",
+      responseType: "blob"
+    });
+    const url = URL.createObjectURL(file);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${item.artworkTitle || "artwork"}.zip`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  } catch (downloadError) {
+    downloadMessage.value =
+      downloadError?.data?.message || "This download is not available yet. Please try again later.";
+  } finally {
+    downloadLoading.value = { ...downloadLoading.value, [item.id]: false };
+  }
 }
 </script>

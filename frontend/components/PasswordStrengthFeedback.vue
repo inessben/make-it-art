@@ -2,9 +2,7 @@
   <section class="password-strength" aria-live="polite">
     <div class="strength-heading">
       <span>Password strength</span>
-      <strong
-        :class="`strength-level strength-level-${strength.level.toLowerCase()}`"
-      >
+      <strong :class="`strength-level strength-level-${strength.level.toLowerCase()}`">
         {{ strength.level }}
       </strong>
     </div>
@@ -43,21 +41,16 @@
 
 <script setup>
 import { computed } from "vue";
-import {
-  getPasswordRequirementStates,
-  getPasswordStrength,
-} from "~/utils/password-validation";
+import { getPasswordRequirementStates, getPasswordStrength } from "~/utils/password-validation";
 
 const props = defineProps({
   password: {
     type: String,
-    default: "",
-  },
+    default: ""
+  }
 });
 
-const requirements = computed(() =>
-  getPasswordRequirementStates(props.password),
-);
+const requirements = computed(() => getPasswordRequirementStates(props.password));
 const strength = computed(() => getPasswordStrength(props.password));
 </script>
 
@@ -70,36 +63,27 @@ const strength = computed(() => getPasswordStrength(props.password));
 }
 
 .strength-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  color: #5b6578;
-  font-size: 0.8rem;
-  font-weight: 600;
+  @apply flex items-center justify-between gap-3 text-subtitle-2 font-semibold text-slate-500;
 }
 
 .strength-level {
-  font-size: 0.78rem;
+  @apply text-subtitle-2;
 }
 
 .strength-level-weak {
-  color: #b42318;
+  @apply text-red-700;
 }
 
 .strength-level-medium {
-  color: #b54708;
+  @apply text-amber-700;
 }
 
 .strength-level-strong {
-  color: #067647;
+  @apply text-green-700;
 }
 
 .strength-track {
-  height: 5px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #e4eaf3;
+  @apply h-1.5 overflow-hidden rounded-full bg-slate-100;
 }
 
 .strength-fill {
@@ -111,15 +95,15 @@ const strength = computed(() => getPasswordStrength(props.password));
 }
 
 .strength-fill-weak {
-  background: #f04438;
+  @apply bg-red-500;
 }
 
 .strength-fill-medium {
-  background: #f79009;
+  @apply bg-amber-500;
 }
 
 .strength-fill-strong {
-  background: #12b76a;
+  @apply bg-green-500;
 }
 
 .requirement-list {
@@ -133,27 +117,19 @@ const strength = computed(() => getPasswordStrength(props.password));
 .requirement-item {
   display: grid;
   grid-template-columns: 8px 1fr;
-  gap: 7px;
-  align-items: center;
-  color: #5b6578;
-  font-size: 0.78rem;
-  line-height: 1.25;
+  @apply items-center gap-2 text-subtitle-2 leading-tight text-slate-500;
 }
 
 .requirement-marker {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: #c8d2e2;
+  @apply h-2 w-2 rounded-full bg-slate-400;
 }
 
 .requirement-item-met {
-  color: #067647;
+  @apply text-green-700;
 }
 
 .requirement-item-met .requirement-marker {
-  border-color: #12b76a;
-  background: #12b76a;
+  @apply border-green-500 bg-green-500;
 }
 
 .requirement-label {

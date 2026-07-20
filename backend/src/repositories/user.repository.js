@@ -6,8 +6,8 @@ async function findByEmail(email) {
     include: {
       admin: true,
       artist: true,
-      artistApplicationDraft: true,
-    },
+      artistApplicationDraft: true
+    }
   });
 }
 
@@ -15,19 +15,19 @@ async function findByOAuthProvider(oauthProvider, oauthSubject) {
   return prisma.user.findFirst({
     where: {
       oauthProvider,
-      oauthSubject,
+      oauthSubject
     },
     include: {
       admin: true,
       artist: true,
-      artistApplicationDraft: true,
-    },
+      artistApplicationDraft: true
+    }
   });
 }
 
 async function createUser(data) {
   return prisma.user.create({
-    data,
+    data
   });
 }
 
@@ -37,8 +37,8 @@ async function createOAuthUser(data) {
     include: {
       admin: true,
       artist: true,
-      artistApplicationDraft: true,
-    },
+      artistApplicationDraft: true
+    }
   });
 }
 
@@ -47,8 +47,8 @@ async function verifyEmail(userId) {
     where: { id: userId },
     data: {
       verified: true,
-      isActive: true,
-    },
+      isActive: true
+    }
   });
 }
 async function findById(id) {
@@ -57,16 +57,16 @@ async function findById(id) {
     include: {
       admin: true,
       artist: true,
-      artistApplicationDraft: true,
-    },
+      artistApplicationDraft: true
+    }
   });
 }
 async function updatePassword(userId, passwordHash) {
   return prisma.user.update({
     where: { id: userId },
     data: {
-      passwordHash: passwordHash,
-    },
+      passwordHash: passwordHash
+    }
   });
 }
 
@@ -77,8 +77,8 @@ async function updateUser(userId, data) {
     include: {
       admin: true,
       artist: true,
-      artistApplicationDraft: true,
-    },
+      artistApplicationDraft: true
+    }
   });
 }
 
@@ -90,13 +90,13 @@ async function linkOAuthProvider(userId, { oauthProvider, oauthSubject }) {
       oauthSubject,
       oauthLinkedAt: new Date(),
       verified: true,
-      isActive: true,
+      isActive: true
     },
     include: {
       admin: true,
       artist: true,
-      artistApplicationDraft: true,
-    },
+      artistApplicationDraft: true
+    }
   });
 }
 
@@ -104,11 +104,11 @@ async function listUsersForAdmin() {
   return prisma.user.findMany({
     orderBy: [
       {
-        createdAt: "desc",
+        createdAt: "desc"
       },
       {
-        id: "desc",
-      },
+        id: "desc"
+      }
     ],
     include: {
       admin: true,
@@ -116,10 +116,10 @@ async function listUsersForAdmin() {
       artistApplicationDraft: true,
       _count: {
         select: {
-          orders: true,
-        },
-      },
-    },
+          orders: true
+        }
+      }
+    }
   });
 }
 
@@ -133,5 +133,5 @@ module.exports = {
   updatePassword,
   updateUser,
   linkOAuthProvider,
-  listUsersForAdmin,
+  listUsersForAdmin
 };

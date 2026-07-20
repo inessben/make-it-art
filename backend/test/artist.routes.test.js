@@ -5,24 +5,19 @@ const express = require("express");
 const { loadModuleWithMocks } = require("./helpers/mock-require");
 
 const routesPath = require.resolve("../src/routes/artist.routes");
-const authRequiredPath =
-  require.resolve("../src/middlewares/auth-required.middleware");
+const authRequiredPath = require.resolve("../src/middlewares/auth-required.middleware");
 const applicationRepositoryPath =
   require.resolve("../src/repositories/artist-application-draft.repository");
-const artistRepositoryPath =
-  require.resolve("../src/repositories/artist.repository");
-const userRepositoryPath =
-  require.resolve("../src/repositories/user.repository");
-const contractServicePath =
-  require.resolve("../src/services/artist-contract.service");
-const serializeAuthUserPath =
-  require.resolve("../src/utils/serialize-auth-user");
+const artistRepositoryPath = require.resolve("../src/repositories/artist.repository");
+const userRepositoryPath = require.resolve("../src/repositories/user.repository");
+const contractServicePath = require.resolve("../src/services/artist-contract.service");
+const serializeAuthUserPath = require.resolve("../src/utils/serialize-auth-user");
 
 const authUser = {
   id: 7,
   email: "artist@example.com",
   username: "Ada Lovelace",
-  phone: "0102030405",
+  phone: "0102030405"
 };
 
 function buildAuthMiddleware(authUser) {
@@ -30,14 +25,14 @@ function buildAuthMiddleware(authUser) {
     authRequired(req, _res, next) {
       req.user = authUser;
       next();
-    },
+    }
   };
 }
 
 async function startArtistRoutesApp(t, overrides = {}) {
   const currentAuthUser = overrides.authUser || authUser;
   const calls = {
-    submitApplication: [],
+    submitApplication: []
   };
 
   const applicationRepository = {
@@ -52,7 +47,7 @@ async function startArtistRoutesApp(t, overrides = {}) {
         currentStep,
         payload,
         createdAt: new Date("2026-07-04T10:00:00.000Z"),
-        updatedAt: new Date("2026-07-04T10:00:00.000Z"),
+        updatedAt: new Date("2026-07-04T10:00:00.000Z")
       };
     },
     async submitApplication(payload) {
@@ -67,7 +62,7 @@ async function startArtistRoutesApp(t, overrides = {}) {
           payload: payload.payload,
           submittedAt: new Date("2026-07-04T12:00:00.000Z"),
           contractVersion: payload.contractVersion,
-          contractPdf: Buffer.from("pdf"),
+          contractPdf: Buffer.from("pdf")
         }
       );
     },
@@ -81,9 +76,9 @@ async function startArtistRoutesApp(t, overrides = {}) {
         currentStep: 4,
         payload: overrides.findByUserIdResult?.payload || {},
         contractVersion: payload.contractVersion,
-        contractPdf: payload.contractPdf,
+        contractPdf: payload.contractPdf
       };
-    },
+    }
   };
 
   const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
@@ -92,7 +87,7 @@ async function startArtistRoutesApp(t, overrides = {}) {
     [artistRepositoryPath]: {
       async findByUserId() {
         return overrides.artistResult || null;
-      },
+      }
     },
     [userRepositoryPath]: {
       async findById() {
@@ -104,11 +99,11 @@ async function startArtistRoutesApp(t, overrides = {}) {
               id: 10,
               status: "pending",
               currentStep: 4,
-              submittedAt: new Date("2026-07-04T12:00:00.000Z"),
-            },
+              submittedAt: new Date("2026-07-04T12:00:00.000Z")
+            }
           }
         );
-      },
+      }
     },
     [contractServicePath]: {
       CONTRACT_VERSION: "make-it-art-artist-contract-v2",
@@ -126,7 +121,7 @@ async function startArtistRoutesApp(t, overrides = {}) {
       renderArtistContract() {
         return {
           contractText: "CONTRAT TEST",
-          contractVersion: "make-it-art-artist-contract-v2",
+          contractVersion: "make-it-art-artist-contract-v2"
         };
       },
       async generateArtistContractPdf() {
@@ -134,9 +129,9 @@ async function startArtistRoutesApp(t, overrides = {}) {
           contractVersion: "make-it-art-artist-contract-v2",
           contractText: "CONTRAT TEST",
           pdfBuffer: Buffer.from("pdf"),
-          signedAt: new Date("2026-07-04T12:34:00.000Z"),
+          signedAt: new Date("2026-07-04T12:34:00.000Z")
         };
-      },
+      }
     },
     [serializeAuthUserPath]: {
       serializeAuthUser(user) {
@@ -146,12 +141,12 @@ async function startArtistRoutesApp(t, overrides = {}) {
           artistApplication: user.artistApplicationDraft
             ? {
                 id: user.artistApplicationDraft.id,
-                status: user.artistApplicationDraft.status,
+                status: user.artistApplicationDraft.status
               }
-            : null,
+            : null
         };
-      },
-    },
+      }
+    }
   });
 
   const app = express();
@@ -173,7 +168,7 @@ async function startArtistRoutesApp(t, overrides = {}) {
 
   return {
     calls,
-    baseUrl: `http://127.0.0.1:${server.address().port}`,
+    baseUrl: `http://127.0.0.1:${server.address().port}`
   };
 }
 
@@ -181,14 +176,14 @@ async function requestJson(baseUrl, path, { method = "GET", body } = {}) {
   const response = await fetch(`${baseUrl}${path}`, {
     method,
     headers: body ? { "content-type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? JSON.stringify(body) : undefined
   });
 
   const payload = await response.json();
 
   return {
     status: response.status,
-    body: payload,
+    body: payload
   };
 }
 
@@ -199,7 +194,7 @@ async function requestBinary(baseUrl, path) {
   return {
     status: response.status,
     headers: response.headers,
-    body: buffer,
+    body: buffer
   };
 }
 
@@ -208,8 +203,8 @@ test("POST /artists/me/contract-preview validates required legal fields", async 
   const response = await requestJson(baseUrl, "/artists/me/contract-preview", {
     method: "POST",
     body: {
-      displayName: "Ada Art",
-    },
+      displayName: "Ada Art"
+    }
   });
 
   assert.equal(response.status, 400);
@@ -237,8 +232,8 @@ test("POST /artists/me submits a pending artist application with a signed contra
       termsAccepted: true,
       commissionAccepted: true,
       contractAccepted: true,
-      signatureDataUrl: "data:image/png;base64,QUJD",
-    },
+      signatureDataUrl: "data:image/png;base64,QUJD"
+    }
   });
 
   assert.equal(response.status, 200);
@@ -246,14 +241,8 @@ test("POST /artists/me submits a pending artist application with a signed contra
   assert.equal(response.body.user.artistApplication.status, "pending");
   assert.equal(calls.submitApplication.length, 1);
   assert.equal(calls.submitApplication[0].currentStep, 4);
-  assert.equal(
-    calls.submitApplication[0].contractVersion,
-    "make-it-art-artist-contract-v2",
-  );
-  assert.equal(
-    calls.submitApplication[0].submittedAt.toISOString(),
-    "2026-07-04T12:34:00.000Z",
-  );
+  assert.equal(calls.submitApplication[0].contractVersion, "make-it-art-artist-contract-v2");
+  assert.equal(calls.submitApplication[0].submittedAt.toISOString(), "2026-07-04T12:34:00.000Z");
   assert.ok(Buffer.isBuffer(calls.submitApplication[0].contractPdf));
 });
 
@@ -268,13 +257,13 @@ test("GET /artists/me returns both artist profile and application state", async 
       user: {
         email: authUser.email,
         username: authUser.username,
-        bio: "Digital artist",
+        bio: "Digital artist"
       },
       _count: {
         artworks: 0,
         followers: 0,
-        collections: 0,
-      },
+        collections: 0
+      }
     },
     findByUserIdResult: {
       id: 10,
@@ -282,9 +271,9 @@ test("GET /artists/me returns both artist profile and application state", async 
       status: "approved",
       currentStep: 4,
       payload: {
-        displayName: "Ada Art",
-      },
-    },
+        displayName: "Ada Art"
+      }
+    }
   });
 
   const response = await requestJson(baseUrl, "/artists/me");
@@ -300,17 +289,14 @@ test("artist application routes reject admin accounts", async (t) => {
       id: 1,
       email: "admin@example.com",
       username: "Admin",
-      role: "admin",
-    },
+      role: "admin"
+    }
   });
 
   const response = await requestJson(baseUrl, "/artists/me");
 
   assert.equal(response.status, 403);
-  assert.equal(
-    response.body.message,
-    "Admin accounts cannot access artist application routes",
-  );
+  assert.equal(response.body.message, "Admin accounts cannot access artist application routes");
 });
 
 test("artist router does not intercept unrelated admin routes", async (t) => {
@@ -319,28 +305,28 @@ test("artist router does not intercept unrelated admin routes", async (t) => {
       id: 1,
       email: "admin@example.com",
       username: "Admin",
-      role: "admin",
+      role: "admin"
     }),
     [applicationRepositoryPath]: {
       async findByUserId() {
         return null;
-      },
+      }
     },
     [artistRepositoryPath]: {
       async findByUserId() {
         return null;
-      },
+      }
     },
     [userRepositoryPath]: {
       async findById() {
         return null;
-      },
+      }
     },
     [contractServicePath]: {
       renderArtistContract() {
         return {
           contractText: "CONTRAT TEST",
-          contractVersion: "make-it-art-artist-contract-v1",
+          contractVersion: "make-it-art-artist-contract-v1"
         };
       },
       async generateArtistContractPdf() {
@@ -348,15 +334,15 @@ test("artist router does not intercept unrelated admin routes", async (t) => {
           contractVersion: "make-it-art-artist-contract-v1",
           contractText: "CONTRAT TEST",
           pdfBuffer: Buffer.from("pdf"),
-          signedAt: new Date("2026-07-04T12:34:00.000Z"),
+          signedAt: new Date("2026-07-04T12:34:00.000Z")
         };
-      },
+      }
     },
     [serializeAuthUserPath]: {
       serializeAuthUser(user) {
         return user;
-      },
-    },
+      }
+    }
   });
 
   const app = express();
@@ -364,7 +350,7 @@ test("artist router does not intercept unrelated admin routes", async (t) => {
   app.use(router);
   app.get("/admin/dashboard", (_req, res) => {
     res.status(200).json({
-      ok: true,
+      ok: true
     });
   });
 
@@ -383,7 +369,7 @@ test("artist router does not intercept unrelated admin routes", async (t) => {
 
   const response = await requestJson(
     `http://127.0.0.1:${server.address().port}`,
-    "/admin/dashboard",
+    "/admin/dashboard"
   );
 
   assert.equal(response.status, 200);
@@ -401,10 +387,10 @@ test("GET /artists/me/contract.pdf returns a valid PDF response for Uint8Array d
       payload: {
         displayName: "Ada Art",
         firstName: "Ada",
-        lastName: "Lovelace",
+        lastName: "Lovelace"
       },
-      contractPdf: pdfBytes,
-    },
+      contractPdf: pdfBytes
+    }
   });
 
   const response = await requestBinary(baseUrl, "/artists/me/contract.pdf");
@@ -415,9 +401,7 @@ test("GET /artists/me/contract.pdf returns a valid PDF response for Uint8Array d
 });
 
 test("GET /artists/me/contract.pdf supports forced download mode", async (t) => {
-  const pdfBytes = new Uint8Array(
-    Buffer.from("%PDF-1.4\nartist-contract-download"),
-  );
+  const pdfBytes = new Uint8Array(Buffer.from("%PDF-1.4\nartist-contract-download"));
   const { baseUrl } = await startArtistRoutesApp(t, {
     findByUserIdResult: {
       id: 11,
@@ -427,18 +411,15 @@ test("GET /artists/me/contract.pdf supports forced download mode", async (t) => 
       payload: {
         displayName: "Ada Art",
         firstName: "Ada",
-        lastName: "Lovelace",
+        lastName: "Lovelace"
       },
       contractVersion: "make-it-art-artist-contract-v2",
       contractPdf: pdfBytes,
-      user: authUser,
-    },
+      user: authUser
+    }
   });
 
-  const response = await requestBinary(
-    baseUrl,
-    "/artists/me/contract.pdf?download=1",
-  );
+  const response = await requestBinary(baseUrl, "/artists/me/contract.pdf?download=1");
 
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-disposition"), /^attachment;/);
@@ -455,15 +436,15 @@ test("GET /artists/me/contract.pdf regenerates legacy contracts with the stored 
       payload: {
         displayName: "Ada Art",
         firstName: "Ada",
-        lastName: "Lovelace",
+        lastName: "Lovelace"
       },
       contractVersion: "make-it-art-artist-contract-v1",
       contractPdf: Buffer.from("legacy-pdf"),
       signatureDataUrl: "data:image/png;base64,QUJD",
       contractSignedAt: new Date("2026-07-04T12:34:00.000Z"),
       contractAcceptedAt: new Date("2026-07-04T12:34:00.000Z"),
-      user: authUser,
-    },
+      user: authUser
+    }
   });
 
   const response = await requestBinary(baseUrl, "/artists/me/contract.pdf");
@@ -471,12 +452,9 @@ test("GET /artists/me/contract.pdf regenerates legacy contracts with the stored 
   assert.equal(response.status, 200);
   assert.deepEqual(response.body, Buffer.from("pdf"));
   assert.equal(calls.updateStoredContract.applicationId, 10);
-  assert.equal(
-    calls.updateStoredContract.contractVersion,
-    "make-it-art-artist-contract-v2",
-  );
+  assert.equal(calls.updateStoredContract.contractVersion, "make-it-art-artist-contract-v2");
   assert.equal(
     calls.updateStoredContract.contractSignedAt.toISOString(),
-    "2026-07-04T12:34:00.000Z",
+    "2026-07-04T12:34:00.000Z"
   );
 });

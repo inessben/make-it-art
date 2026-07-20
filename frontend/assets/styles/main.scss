@@ -1,16 +1,18 @@
+@import url("https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@200;400;500;600;700;900&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-$color-bg: #020617;
-$color-card: #0f172a;
-$color-brand: #22d3ee;
+$color-bg: theme("colors.slate.950");
+$color-card: theme("colors.slate.900");
+$color-brand: theme("colors.violet.700");
 
 .page-home {
   background:
     radial-gradient(
       circle at top right,
-      rgba(34, 211, 238, 0.16),
+      color-mix(in srgb, theme("colors.violet.700") 16%, transparent),
       transparent 42%
     ),
     $color-bg;
@@ -29,6 +31,28 @@ $color-brand: #22d3ee;
   background-color: $color-brand;
 
   &:hover {
-    background-color: #67e8f9;
+    background-color: theme("colors.violet.600");
+  }
+}
+
+@layer components {
+  .ui-card {
+    @apply rounded-lg border border-slate-800 bg-slate-950/75;
+  }
+
+  .ui-field {
+    @apply min-h-12 w-full border border-slate-800 bg-slate-900 px-4 text-body-1 text-slate-100 outline-none transition-colors placeholder:text-slate-500 focus:border-violet-600;
+  }
+
+  .ui-button {
+    @apply inline-flex min-h-12 items-center justify-center gap-3 border px-6 text-subtitle-2 font-semibold uppercase tracking-[0.12em] transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .ui-button-primary {
+    @apply ui-button border-violet-600 bg-violet-600 text-slate-100 hover:bg-violet-400;
+  }
+
+  .ui-button-secondary {
+    @apply ui-button border-slate-700 bg-transparent text-slate-100 hover:border-violet-600;
   }
 }

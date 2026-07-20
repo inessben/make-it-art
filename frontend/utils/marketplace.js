@@ -7,25 +7,25 @@ export function formatMarketplacePrice(value) {
         : Number.NaN;
 
   if (!Number.isFinite(numericValue)) {
-    return "Prix sur demande";
+    return "Price on request";
   }
 
-  return new Intl.NumberFormat("fr-FR", {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "EUR",
-    maximumFractionDigits: numericValue % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: numericValue % 1 === 0 ? 0 : 2
   }).format(numericValue);
 }
 
 export function formatMarketplaceDate(value) {
   if (!value) {
-    return "Date inconnue";
+    return "Unknown date";
   }
 
-  return new Intl.DateTimeFormat("fr-FR", {
+  return new Intl.DateTimeFormat("en-US", {
     day: "2-digit",
     month: "short",
-    year: "numeric",
+    year: "numeric"
   }).format(new Date(value));
 }
 

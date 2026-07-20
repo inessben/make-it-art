@@ -1,5 +1,5 @@
 <template>
-  <AuthPanel title="Login" max-width="360px" @submit="handleSubmit">
+  <AuthPanel title="Welcome back" max-width="440px" @submit="handleSubmit">
     <template v-if="requiresGooglePasswordLink">
       <p class="oauth-message">
         Enter your password to link Google sign-in for
@@ -13,34 +13,22 @@
         autocomplete="current-password"
       />
 
-      <SubmitButton
-        label="Link Google account"
-        loading-label="Linking..."
-        :loading="loading"
-      />
+      <SubmitButton label="Link Google account" loading-label="Linking..." :loading="loading" />
 
       <FormMessage :message="message" />
 
-      <button type="button" class="text-button" @click="resetGoogleLinkStep">
-        Back to login
-      </button>
+      <button type="button" class="text-button" @click="resetGoogleLinkStep">Back to login</button>
     </template>
 
     <template v-else-if="!requiresCode">
       <button type="button" class="google-button" @click="startGoogleLogin">
-        <span class="google-mark" aria-hidden="true">G</span>
+        <img class="google-icon" src="/google.svg" alt="" aria-hidden="true" />
         <span>{{ GOOGLE_LOGIN_LABEL }}</span>
       </button>
 
       <div class="auth-divider"><span>or</span></div>
 
-      <TextField
-        id="email"
-        v-model="email"
-        label="Email"
-        type="email"
-        autocomplete="email"
-      />
+      <TextField id="email" v-model="email" label="Email" type="email" autocomplete="email" />
 
       <PasswordField
         id="password"
@@ -49,11 +37,7 @@
         autocomplete="current-password"
       />
 
-      <SubmitButton
-        label="Login"
-        loading-label="Loading..."
-        :loading="loading"
-      />
+      <SubmitButton label="Sign in" loading-label="Signing in..." :loading="loading" />
 
       <FormMessage :message="message" />
 
@@ -91,17 +75,11 @@
         <span>Remember this computer for 30 days</span>
       </label>
 
-      <SubmitButton
-        label="Verify code"
-        loading-label="Verifying..."
-        :loading="loading"
-      />
+      <SubmitButton label="Verify code" loading-label="Verifying..." :loading="loading" />
 
       <FormMessage :message="message" />
 
-      <button type="button" class="text-button" @click="resetLoginStep">
-        Back to login
-      </button>
+      <button type="button" class="text-button" @click="resetLoginStep">Back to login</button>
     </template>
   </AuthPanel>
 </template>
@@ -114,11 +92,11 @@ import {
   getGoogleLoginMessage,
   getGoogleLoginUrl,
   GOOGLE_LOGIN_LABEL,
-  isGoogleLinkRequired,
+  isGoogleLinkRequired
 } from "~/utils/google-auth";
 
 definePageMeta({
-  middleware: "guest",
+  middleware: "guest"
 });
 
 const auth = useAuthStore();
@@ -143,8 +121,7 @@ onMounted(() => {
 
   if (isGoogleLinkRequired(route.query.googleLink)) {
     requiresGooglePasswordLink.value = true;
-    email.value =
-      typeof route.query.email === "string" ? route.query.email : "";
+    email.value = typeof route.query.email === "string" ? route.query.email : "";
     message.value = "A password is required to link this Google account.";
   }
 });
@@ -182,15 +159,14 @@ async function handleGoogleLink() {
       method: "POST",
       credentials: "include",
       body: {
-        password: password.value,
-      },
+        password: password.value
+      }
     });
 
     linkedUser = response.user;
     redirectTo = response.redirectTo || "";
   } catch (error) {
-    message.value =
-      error?.data?.message || "Unable to complete Google sign-in.";
+    message.value = error?.data?.message || "Unable to complete Google sign-in.";
   } finally {
     loading.value = false;
   }
@@ -198,7 +174,7 @@ async function handleGoogleLink() {
   if (linkedUser) {
     auth.user = linkedUser;
     await navigateTo(redirectTo || auth.defaultAuthenticatedRoute, {
-      replace: true,
+      replace: true
     });
   }
 }
@@ -219,14 +195,13 @@ async function handleLogin() {
       credentials: "include",
       body: {
         email: email.value,
-        password: password.value,
-      },
+        password: password.value
+      }
     });
 
     if (response.requiresCode) {
       requiresCode.value = true;
-      message.value =
-        response.message || "Login code sent. Please check your email.";
+      message.value = response.message || "Login code sent. Please check your email.";
       return;
     }
 
@@ -260,8 +235,8 @@ async function handleVerifyCode() {
       credentials: "include",
       body: {
         code: code.value,
-        rememberDevice: rememberDevice.value,
-      },
+        rememberDevice: rememberDevice.value
+      }
     });
 
     verifiedUser = response.user;
@@ -278,7 +253,7 @@ async function handleVerifyCode() {
   if (verifiedUser) {
     auth.user = verifiedUser;
     await navigateTo(redirectTo || auth.defaultAuthenticatedRoute, {
-      replace: true,
+      replace: true
     });
   }
 }
@@ -292,14 +267,13 @@ async function handleResendVerification() {
       method: "POST",
       credentials: "include",
       body: {
-        email: email.value,
-      },
+        email: email.value
+      }
     });
 
     message.value = response.message || "Verification email sent.";
   } catch (error) {
-    message.value =
-      error?.data?.message || "Unable to resend verification email.";
+    message.value = error?.data?.message || "Unable to resend verification email.";
   } finally {
     resending.value = false;
   }
@@ -321,15 +295,7 @@ function resetGoogleLinkStep() {
 
 <style scoped>
 .google-button {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  border: 1px solid #c8d2e2;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #172033;
+  @apply inline-flex min-h-12 items-center justify-center gap-3 border border-slate-750 bg-slate-900 text-slate-100;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -341,34 +307,20 @@ function resetGoogleLinkStep() {
 
 .google-button:hover,
 .google-button:focus-visible {
-  background: #f8fafc;
-  border-color: #aebbd0;
+  @apply border-violet-600 bg-slate-850;
 }
 
 .google-button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(50, 115, 220, 0.16);
+  box-shadow: 0 0 0 3px color-mix(in srgb, theme("colors.violet.700") 16%, transparent);
 }
 
-.google-mark {
-  display: inline-flex;
-  width: 22px;
-  height: 22px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #d8e0ec;
-  border-radius: 999px;
-  color: #3273dc;
-  font-size: 0.84rem;
-  font-weight: 800;
+.google-icon {
+  @apply h-[22px] w-[22px] shrink-0 object-contain;
 }
 
 .auth-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #7a8599;
-  font-size: 0.82rem;
+  @apply flex items-center gap-3 text-subtitle-2 font-bold text-slate-500;
   font-weight: 700;
 }
 
@@ -376,22 +328,20 @@ function resetGoogleLinkStep() {
 .auth-divider::after {
   height: 1px;
   flex: 1;
-  background: #d8e0ec;
+  @apply bg-slate-800;
   content: "";
 }
 
 .oauth-message {
   margin: 0;
-  color: #33415c;
-  font-size: 0.94rem;
-  line-height: 1.5;
+  @apply text-body-1 leading-normal text-slate-400;
 }
 
 .text-button {
   margin: 0;
   border: 0;
   background: transparent;
-  color: #3273dc;
+  @apply text-violet-400;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -407,11 +357,7 @@ function resetGoogleLinkStep() {
 }
 
 .remember-device {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #33415c;
-  font-size: 0.94rem;
+  @apply flex items-center gap-2.5 text-body-1 text-slate-400;
   font-weight: 600;
 }
 
@@ -421,13 +367,11 @@ function resetGoogleLinkStep() {
 }
 
 .auth-link {
-  margin-top: 8px;
-  text-align: center;
-  font-size: 0.94rem;
+  @apply mt-2 text-center text-body-1;
 }
 
 .auth-link a {
-  color: #3273dc;
+  @apply text-violet-400;
   font-weight: 700;
   text-decoration: none;
 }

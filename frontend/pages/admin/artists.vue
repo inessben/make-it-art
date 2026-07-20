@@ -1,12 +1,12 @@
 <template>
   <AdminShell
     title="Artist Applications"
-    description="File admin des candidatures artistes avec contrat PDF, approbation et refus."
+    description="Review artist applications, signed PDF agreements, approvals and rejections."
   >
     <template #actions>
       <button
         type="button"
-        class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-5 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+        class="inline-flex items-center justify-center border border-slate-750 bg-black px-4 py-2 text-subtitle-2 uppercase tracking-[0.12em] text-slate-100 transition hover:border-violet-600 hover:text-violet-300 disabled:opacity-50"
         :disabled="loading"
         @click="loadApplications"
       >
@@ -18,52 +18,42 @@
       <article
         v-for="summaryCard in summaries"
         :key="summaryCard.label"
-        class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6"
+        class="min-h-[128px] border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-6"
       >
-        <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+        <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">
           {{ summaryCard.label }}
         </p>
-        <p class="mt-4 text-3xl font-semibold text-white">
+        <p class="mt-5 text-title-3 text-slate-100">
           {{ summaryCard.value }}
         </p>
-        <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
+        <p class="mt-2 text-subtitle-3 text-slate-500">
           {{ summaryCard.description }}
         </p>
       </article>
     </section>
 
     <section class="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-      <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-        <div
-          class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
-        >
+      <article class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-              Artist queue
-            </p>
-            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
-              Demandes artistes
-            </h2>
+            <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">Artist queue</p>
+            <h2 class="mt-3 text-xl font-semibold text-slate-100">Artist applications</h2>
           </div>
           <div class="grid gap-3 sm:grid-cols-2">
-            <label
-              class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3"
-            >
+            <label class="border border-slate-800 bg-black px-4 py-3">
               <span class="sr-only">Search applications</span>
               <input
                 v-model="searchTerm"
                 type="text"
                 placeholder="Search by name or email"
-                class="w-full bg-transparent text-sm text-[#E6EDF7] outline-none placeholder:text-[#6D7A88]"
+                class="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
               />
             </label>
-            <label
-              class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3"
-            >
+            <label class="border border-slate-800 bg-black px-4 py-3">
               <span class="sr-only">Filter applications</span>
               <select
                 v-model="statusFilter"
-                class="w-full bg-transparent text-sm text-[#E6EDF7] outline-none"
+                class="w-full bg-transparent text-sm text-slate-100 outline-none"
               >
                 <option value="all">All statuses</option>
                 <option value="pending">Pending</option>
@@ -76,48 +66,47 @@
 
         <div
           v-if="errorMessage"
-          class="mt-6 rounded-2xl border border-[#7f1d1d] bg-[#2b1014] px-5 py-4 text-sm text-[#FECACA]"
+          class="mt-6 border border-red-900 bg-red-950 px-5 py-4 text-sm text-red-200"
         >
           {{ errorMessage }}
         </div>
-        <div
+        <AppStatePanel
           v-if="successMessage"
-          class="mt-6 rounded-2xl border border-[#1A1F2A] bg-[#11243a] px-5 py-4 text-sm text-[#B9E3FF]"
-        >
-          {{ successMessage }}
-        </div>
+          class="mt-6"
+          compact
+          type="success"
+          :message="successMessage"
+        />
 
         <div
           v-else-if="loading"
-          class="mt-6 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4 text-sm text-[#A0ADB4]"
+          class="mt-6 border border-slate-800 bg-black px-5 py-4 text-sm text-slate-400"
         >
-          Chargement des candidatures...
+          Loading applications...
         </div>
 
         <div
           v-else-if="filteredApplications.length === 0"
-          class="mt-6 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4 text-sm text-[#A0ADB4]"
+          class="mt-6 border border-slate-800 bg-black px-5 py-4 text-sm text-slate-400"
         >
-          Aucune candidature ne correspond aux filtres actuels.
+          No applications match the current filters.
         </div>
 
         <div v-else class="mt-6 grid gap-4">
           <div
             v-for="application in filteredApplications"
             :key="application.id"
-            class="rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-5"
+            class="border border-slate-800 bg-black/30 p-5"
           >
-            <div
-              class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
-            >
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p class="font-semibold text-[#E6EDF7]">
+                <p class="font-semibold text-slate-100">
                   {{ application.displayName }}
                 </p>
-                <p class="mt-1 text-sm text-[#8E9AA7]">
+                <p class="mt-1 text-sm text-slate-400">
                   {{ application.applicantName }} - {{ application.email }}
                 </p>
-                <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">
+                <p class="mt-2 text-sm leading-6 text-slate-400">
                   {{ application.bio }}
                 </p>
               </div>
@@ -129,50 +118,42 @@
               </span>
             </div>
 
-            <div
-              class="mt-5 grid gap-3 rounded-[18px] border border-[#1A1F2A] bg-[#090017] p-4 text-sm"
-            >
+            <div class="mt-5 grid gap-3 border border-slate-800 bg-black p-4 text-sm">
               <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
-                <span class="text-[#8E9AA7]">Type d'art</span>
-                <span class="font-medium text-[#E6EDF7]">{{
-                  application.artType
-                }}</span>
+                <span class="text-slate-400">Art type</span>
+                <span class="font-medium text-slate-100">{{ application.artType }}</span>
               </div>
               <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
-                <span class="text-[#8E9AA7]">Styles</span>
-                <span class="font-medium text-[#E6EDF7]">
+                <span class="text-slate-400">Styles</span>
+                <span class="font-medium text-slate-100">
                   {{ application.styles.join(", ") || "-" }}
                 </span>
               </div>
               <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
-                <span class="text-[#8E9AA7]">Adresse</span>
-                <span class="font-medium text-[#E6EDF7]">
+                <span class="text-slate-400">Address</span>
+                <span class="font-medium text-slate-100">
                   {{ formatAddress(application) }}
                 </span>
               </div>
               <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
-                <span class="text-[#8E9AA7]">Soumise le</span>
-                <span class="font-medium text-[#E6EDF7]">
+                <span class="text-slate-400">Submitted on</span>
+                <span class="font-medium text-slate-100">
                   {{ formatDate(application.submittedAt) }}
                 </span>
               </div>
               <div v-if="application.reviewNote" class="grid gap-1">
-                <span class="text-[#8E9AA7]">Note admin</span>
-                <span class="leading-6 text-[#E6EDF7]">{{
-                  application.reviewNote
-                }}</span>
+                <span class="text-slate-400">Admin note</span>
+                <span class="leading-6 text-slate-100">{{ application.reviewNote }}</span>
               </div>
             </div>
 
-            <label class="mt-5 grid gap-2 text-sm text-[#A0ADB4]">
-              <span class="font-medium text-[#E6EDF7]"
-                >Note admin (optionnelle)</span
-              >
+            <label class="mt-5 grid gap-2 text-sm text-slate-400">
+              <span class="font-medium text-slate-100">Admin note (optional)</span>
               <textarea
                 v-model="reviewNotes[application.id]"
                 rows="3"
                 class="field-control min-h-[96px] resize-y"
-                placeholder="Ajouter un commentaire visible dans le suivi."
+                placeholder="Add a note visible in the application history."
               />
             </label>
 
@@ -182,57 +163,45 @@
                 :href="`/api/admin/artist-applications/${application.id}/contract.pdf`"
                 target="_blank"
                 rel="noreferrer"
-                class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-5 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+                class="inline-flex min-h-11 items-center justify-center border border-slate-800 bg-black px-5 text-sm font-semibold text-slate-100 transition hover:border-slate-600"
               >
-                Ouvrir le contrat PDF
+                Open PDF agreement
               </a>
               <button
                 v-if="application.status !== 'approved'"
                 type="button"
-                class="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#4A6CF7] px-5 text-sm font-semibold text-black transition hover:bg-[#6d8bff] disabled:cursor-not-allowed disabled:opacity-50"
+                class="inline-flex min-h-11 items-center justify-center bg-violet-700 px-5 text-sm font-semibold text-black transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
                 :disabled="reviewLoadingId === application.id"
                 @click="reviewApplication(application, 'approved')"
               >
-                {{
-                  reviewLoadingId === application.id
-                    ? "Mise a jour..."
-                    : "Approuver"
-                }}
+                {{ reviewLoadingId === application.id ? "Updating..." : "Approve" }}
               </button>
               <button
                 v-if="application.status !== 'rejected'"
                 type="button"
-                class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-5 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A] disabled:cursor-not-allowed disabled:opacity-50"
+                class="inline-flex min-h-11 items-center justify-center border border-slate-800 bg-black px-5 text-sm font-semibold text-slate-100 transition hover:border-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
                 :disabled="reviewLoadingId === application.id"
                 @click="reviewApplication(application, 'rejected')"
               >
-                {{
-                  reviewLoadingId === application.id
-                    ? "Mise a jour..."
-                    : "Refuser"
-                }}
+                {{ reviewLoadingId === application.id ? "Updating..." : "Reject" }}
               </button>
             </div>
           </div>
         </div>
       </article>
 
-      <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-        <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-          Review flow
-        </p>
-        <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
-          Gestion des contrats
-        </h2>
+      <article class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6">
+        <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">Review flow</p>
+        <h2 class="mt-3 text-xl font-semibold text-slate-100">Agreement management</h2>
 
         <div class="mt-6 grid gap-4">
           <div
             v-for="action in actions"
             :key="action.title"
-            class="rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-5"
+            class="border border-slate-800 bg-black/30 p-5"
           >
-            <p class="font-semibold text-[#E6EDF7]">{{ action.title }}</p>
-            <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">
+            <p class="font-semibold text-slate-100">{{ action.title }}</p>
+            <p class="mt-2 text-sm leading-6 text-slate-400">
               {{ action.description }}
             </p>
           </div>
@@ -247,7 +216,7 @@ import { computed, onMounted, ref } from "vue";
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "admin",
+  middleware: "admin"
 });
 
 const loading = ref(true);
@@ -262,30 +231,30 @@ const summary = ref({
   totalApplications: 0,
   pendingApplications: 0,
   approvedApplications: 0,
-  rejectedApplications: 0,
+  rejectedApplications: 0
 });
 
 const summaries = computed(() => [
   {
     label: "Total applications",
     value: summary.value.totalApplications,
-    description: "Nombre total de candidatures signees.",
+    description: "Total number of signed applications."
   },
   {
     label: "Pending",
     value: summary.value.pendingApplications,
-    description: "Demandes encore en attente de decision.",
+    description: "Applications still awaiting a decision."
   },
   {
     label: "Approved",
     value: summary.value.approvedApplications,
-    description: "Demandes acceptees et profils artistes actives.",
+    description: "Approved applications and activated artist profiles."
   },
   {
     label: "Rejected",
     value: summary.value.rejectedApplications,
-    description: "Demandes refusees par l'administration.",
-  },
+    description: "Applications rejected by the administration."
+  }
 ]);
 
 const filteredApplications = computed(() => {
@@ -298,8 +267,7 @@ const filteredApplications = computed(() => {
       application.applicantName.toLowerCase().includes(normalizedSearch) ||
       application.email.toLowerCase().includes(normalizedSearch);
 
-    const matchesStatus =
-      statusFilter.value === "all" || application.status === statusFilter.value;
+    const matchesStatus = statusFilter.value === "all" || application.status === statusFilter.value;
 
     return matchesSearch && matchesStatus;
   });
@@ -316,7 +284,7 @@ async function loadApplications() {
 
   try {
     const response = await $fetch("/api/admin/artist-applications", {
-      credentials: "include",
+      credentials: "include"
     });
 
     applications.value = response.applications || [];
@@ -332,8 +300,7 @@ async function loadApplications() {
       return;
     }
 
-    errorMessage.value =
-      error?.data?.message || "Unable to load artist applications.";
+    errorMessage.value = error?.data?.message || "Unable to load artist applications.";
   } finally {
     loading.value = false;
   }
@@ -341,36 +308,28 @@ async function loadApplications() {
 
 const actions = [
   {
-    title: "Contrat signe",
-    description: "Chaque demande contient un contrat PDF signe par l'artiste.",
+    title: "Signed agreement",
+    description: "Each application contains a PDF agreement signed by the artist."
   },
   {
-    title: "Approbation",
-    description:
-      "Approuver active le profil artiste et donne acces a l'espace artiste.",
+    title: "Approval",
+    description: "Approval activates the artist profile and grants access to the artist workspace."
   },
   {
-    title: "Refus",
-    description:
-      "Refuser bloque l'activation et laisse le dossier visible pour correction.",
-  },
+    title: "Rejection",
+    description: "Rejection blocks activation and keeps the application available for correction."
+  }
 ];
 
 function replaceApplication(updatedApplication) {
   applications.value = applications.value.map((application) =>
-    application.id === updatedApplication.id ? updatedApplication : application,
+    application.id === updatedApplication.id ? updatedApplication : application
   );
   summary.value = {
     totalApplications: applications.value.length,
-    pendingApplications: applications.value.filter(
-      (item) => item.status === "pending",
-    ).length,
-    approvedApplications: applications.value.filter(
-      (item) => item.status === "approved",
-    ).length,
-    rejectedApplications: applications.value.filter(
-      (item) => item.status === "rejected",
-    ).length,
+    pendingApplications: applications.value.filter((item) => item.status === "pending").length,
+    approvedApplications: applications.value.filter((item) => item.status === "approved").length,
+    rejectedApplications: applications.value.filter((item) => item.status === "rejected").length
   };
 }
 
@@ -380,23 +339,20 @@ async function reviewApplication(application, status) {
   reviewLoadingId.value = application.id;
 
   try {
-    const response = await $fetch(
-      `/api/admin/artist-applications/${application.id}`,
-      {
-        method: "PATCH",
-        credentials: "include",
-        body: {
-          status,
-          reviewNote: reviewNotes.value[application.id] || "",
-        },
-      },
-    );
+    const response = await $fetch(`/api/admin/artist-applications/${application.id}`, {
+      method: "PATCH",
+      credentials: "include",
+      body: {
+        status,
+        reviewNote: reviewNotes.value[application.id] || ""
+      }
+    });
 
     replaceApplication(response.application);
     successMessage.value =
       status === "approved"
-        ? `${response.application.displayName} est maintenant approuve.`
-        : `${response.application.displayName} a ete refuse.`;
+        ? `${response.application.displayName} is now approved.`
+        : `${response.application.displayName} was rejected.`;
   } catch (error) {
     if (error?.statusCode === 401) {
       await navigateTo("/login");
@@ -408,8 +364,7 @@ async function reviewApplication(application, status) {
       return;
     }
 
-    errorMessage.value =
-      error?.data?.message || "Unable to review artist application.";
+    errorMessage.value = error?.data?.message || "Unable to review artist application.";
   } finally {
     reviewLoadingId.value = null;
   }
@@ -417,11 +372,11 @@ async function reviewApplication(application, status) {
 
 function formatDate(value) {
   if (!value) {
-    return "Date inconnue";
+    return "Unknown date";
   }
 
-  return new Intl.DateTimeFormat("fr-FR", {
-    dateStyle: "medium",
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium"
   }).format(new Date(value));
 }
 
@@ -431,7 +386,7 @@ function formatAddress(application) {
     application.addressLine2,
     [application.postalCode, application.city].filter(Boolean).join(" "),
     application.region,
-    application.country,
+    application.country
   ]
     .filter(Boolean)
     .join(", ");
@@ -439,30 +394,24 @@ function formatAddress(application) {
 
 function statusBadgeClass(status) {
   if (status === "approved") {
-    return "bg-[#4A6CF7]/10 text-[#4A6CF7]";
+    return "bg-violet-700/10 text-violet-700";
   }
 
   if (status === "rejected") {
-    return "bg-[#3A1017] text-[#FCA5A5]";
+    return "bg-red-950 text-red-300";
   }
 
-  return "bg-[#3F2A11] text-[#F2C97D]";
+  return "bg-amber-950 text-amber-300";
 }
 </script>
 
 <style scoped>
 .field-control {
-  width: 100%;
-  border-radius: 14px;
-  border: 1px solid #1a1f2a;
-  background: #050916;
-  padding: 12px 14px;
-  color: #e6edf7;
-  outline: none;
+  @apply w-full border border-slate-800 bg-black px-3.5 py-3 text-slate-100 outline-none;
 }
 
 .field-control:focus {
-  border-color: #4a6cf7;
-  box-shadow: 0 0 0 3px rgb(74 108 247 / 18%);
+  @apply border-violet-700;
+  box-shadow: 0 0 0 3px color-mix(in srgb, theme("colors.violet.700") 18%, transparent);
 }
 </style>

@@ -5,53 +5,41 @@ import {
   getGoogleLoginUrl,
   GOOGLE_LOGIN_LABEL,
   GOOGLE_LOGIN_URL,
-  isGoogleLinkRequired,
+  isGoogleLinkRequired
 } from "../utils/google-auth.js";
 
 describe("google auth helpers", () => {
   test("exposes the Google sign-in option label and redirect URL", () => {
-    assert.equal(GOOGLE_LOGIN_LABEL, "Se connecter avec Google");
+    assert.equal(GOOGLE_LOGIN_LABEL, "Sign in with Google");
     assert.equal(GOOGLE_LOGIN_URL, "/api/auth/google");
   });
 
   test("uses the nginx OAuth endpoint when the frontend is opened directly in dev", () => {
-    assert.equal(
-      getGoogleLoginUrl("http://localhost:3000"),
-      "http://localhost/api/auth/google",
-    );
-    assert.equal(
-      getGoogleLoginUrl("http://127.0.0.1:3000"),
-      "http://localhost/api/auth/google",
-    );
+    assert.equal(getGoogleLoginUrl("http://localhost:3000"), "http://localhost/api/auth/google");
+    assert.equal(getGoogleLoginUrl("http://127.0.0.1:3000"), "http://localhost/api/auth/google");
   });
 
   test("keeps same-origin OAuth navigation outside the direct frontend dev port", () => {
     assert.equal(getGoogleLoginUrl("http://localhost"), "/api/auth/google");
-    assert.equal(
-      getGoogleLoginUrl("https://www.makeitart.io"),
-      "/api/auth/google",
-    );
+    assert.equal(getGoogleLoginUrl("https://www.makeitart.io"), "/api/auth/google");
     assert.equal(getGoogleLoginUrl(), "/api/auth/google");
   });
 
   test("returns a clear message when Google sign-in is cancelled", () => {
-    assert.equal(
-      getGoogleLoginMessage("cancelled"),
-      "La connexion Google a ete annulee.",
-    );
+    assert.equal(getGoogleLoginMessage("cancelled"), "Google sign-in was cancelled.");
   });
 
   test("returns a safe message when Google sign-in fails", () => {
     assert.equal(
       getGoogleLoginMessage("error"),
-      "La connexion Google n'a pas abouti. Veuillez reessayer.",
+      "Google sign-in was unsuccessful. Please try again."
     );
   });
 
   test("returns a clear message when Google sign-in is unavailable", () => {
     assert.equal(
       getGoogleLoginMessage("unavailable"),
-      "La connexion Google est temporairement indisponible.",
+      "Google sign-in is temporarily unavailable."
     );
   });
 

@@ -1,79 +1,68 @@
 <template>
-  <main class="min-h-screen bg-[#02040A] px-6 py-10 text-[#E6EDF7]">
-    <section class="mx-auto grid w-full max-w-[1240px] gap-8">
-      <header
-        class="rounded-[32px] border border-[#151E30] bg-[radial-gradient(circle_at_top_left,_rgba(74,108,247,0.16),_transparent_30%),linear-gradient(180deg,_#070B14,_#04070D)] p-8"
-      >
-        <div
-          class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
-        >
+  <main class="min-h-screen bg-black text-slate-100">
+    <div
+      class="mx-auto grid w-full max-w-[1440px] gap-8 px-5 py-8 lg:grid-cols-[258px_minmax(0,1fr)] lg:py-0"
+    >
+      <AccountSettingsSidebar compact />
+
+      <section class="min-w-0 px-0 pb-20 pt-7 lg:px-0 lg:pt-8">
+        <header class="flex flex-col gap-8 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
-              Liste de souhaits
-            </p>
-            <h1
-              class="mt-4 text-[clamp(2.2rem,5vw,3.8rem)] font-semibold leading-[0.98] text-white"
-            >
-              {{
-                activeTab === "favorites"
-                  ? "Vos oeuvres favorites"
-                  : "Vos collections"
-              }}
+            <p class="text-xs uppercase tracking-[0.18em] text-violet-400">Wishlist</p>
+            <h1 class="mt-4 text-title-2 text-slate-100">
+              {{ activeTab === "favorites" ? "Your favorite artworks" : "Your collections" }}
             </h1>
-            <p class="mt-4 max-w-3xl text-sm leading-7 text-[#96A4B8]">
+            <p class="mt-3 max-w-[510px] text-body-1 leading-6 text-slate-400">
               {{
                 activeTab === "favorites"
-                  ? "Retrouve ici les oeuvres ajoutees en favori. Elles sont aussi rangees dans ta collection Favoris."
-                  : "Cree des collections personnelles et ajoute des oeuvres pour organiser ta veille collectionneur."
+                  ? "Review saved artworks and manage your default Favorites collection."
+                  : "Create personal collections and organize artworks for future acquisitions."
               }}
             </p>
             <p
               v-if="activeTab === 'favorites' && !pending && artworks.length"
-              class="mt-3 text-sm font-medium text-[#C9D6FF]"
+              class="mt-3 text-sm font-medium text-violet-200"
             >
-              {{ artworks.length }} oeuvre{{ artworks.length > 1 ? "s" : "" }}
-              sauvegardee{{ artworks.length > 1 ? "s" : "" }}
+              {{ artworks.length }} saved artwork{{ artworks.length === 1 ? "" : "s" }}
             </p>
           </div>
 
           <div class="flex flex-wrap gap-3">
             <NuxtLink
               to="/artworks"
-              class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
+              class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-violet-700 px-6 text-sm font-semibold text-black transition hover:bg-violet-600"
             >
-              Explorer le catalogue
+              Browse catalogue
             </NuxtLink>
             <NuxtLink
-              to="/profile"
-              class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#24314F] bg-transparent px-6 text-sm font-semibold text-[#C9D6FF] transition hover:border-[#4A6CF7]"
+              to="/account-settings"
+              class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-750 bg-transparent px-6 text-sm font-semibold text-violet-200 transition hover:border-violet-700"
             >
-              Retour au profil
+              Back to profile
             </NuxtLink>
           </div>
-        </div>
+        </header>
 
-        <div
-          class="mt-8 inline-flex rounded-2xl border border-[#1A2336] bg-[#03060D] p-1"
-        >
+        <div class="mt-8 inline-flex rounded-2xl border border-slate-800 bg-slate-950 p-1">
           <button
             type="button"
             class="rounded-[14px] px-5 py-2.5 text-sm font-semibold transition"
             :class="
               activeTab === 'favorites'
-                ? 'bg-[#4A6CF7] text-black'
-                : 'text-[#C9D6FF] hover:bg-[#101827]'
+                ? 'bg-violet-700 text-black'
+                : 'text-violet-200 hover:bg-slate-900'
             "
             @click="setActiveTab('favorites')"
           >
-            Favoris
+            Favorites
           </button>
           <button
             type="button"
             class="rounded-[14px] px-5 py-2.5 text-sm font-semibold transition"
             :class="
               activeTab === 'collections'
-                ? 'bg-[#4A6CF7] text-black'
-                : 'text-[#C9D6FF] hover:bg-[#101827]'
+                ? 'bg-violet-700 text-black'
+                : 'text-violet-200 hover:bg-slate-900'
             "
             @click="setActiveTab('collections')"
           >
@@ -83,87 +72,71 @@
 
         <div
           v-if="pageMessage"
-          class="mt-8 inline-flex rounded-2xl border border-[#203357] bg-[#091121] px-5 py-3 text-sm text-[#BFD0FF]"
+          class="mt-6 border border-slate-800 bg-slate-950 px-5 py-3 text-footer text-violet-200"
         >
           {{ pageMessage }}
         </div>
         <div
           v-else-if="actionMessage"
-          class="mt-8 inline-flex rounded-2xl border border-[#203357] bg-[#091121] px-5 py-3 text-sm text-[#BFD0FF]"
+          class="mt-6 border border-slate-800 bg-slate-950 px-5 py-3 text-footer text-violet-200"
         >
           {{ actionMessage }}
         </div>
-      </header>
 
-      <section v-if="activeTab === 'favorites'">
-        <section
-          v-if="pending"
-          class="rounded-[28px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]"
-        >
-          Chargement de vos favoris...
-        </section>
-        <section
-          v-else-if="errorMessage"
-          class="rounded-[28px] border border-[#6C1F2D] bg-[#261018] p-8 text-[#FBC8D0]"
-        >
-          {{ errorMessage }}
-        </section>
-        <section
-          v-else-if="!artworks.length"
-          class="grid gap-6 rounded-[28px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]"
-        >
-          <p>
-            Aucun favori pour le moment. Explore le catalogue et clique sur
-            « Favori » sur une oeuvre pour l'ajouter a ta liste de souhaits.
-          </p>
-          <div>
-            <NuxtLink
-              to="/artworks"
-              class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
-            >
-              Decouvrir les oeuvres
-            </NuxtLink>
-          </div>
-        </section>
-        <section v-else class="grid gap-6 lg:grid-cols-3">
-          <ArtworkCard
-            v-for="artwork in artworks"
-            :key="artwork.id"
-            :artwork="artwork"
-            :favorite-loading="Boolean(favoriteLoading[artwork.id])"
-            :show-favorite-action="true"
-            @toggle-favorite="handleFavoriteToggle"
+        <section v-if="activeTab === 'favorites'" class="mt-8">
+          <AppStatePanel
+            v-if="pending"
+            type="loading"
+            message="Loading your favorites..."
           />
+          <AppStatePanel
+            v-else-if="errorMessage"
+            type="error"
+            title="Unable to load your wishlist"
+            :message="errorMessage"
+            action-label="Try again"
+            @action="refresh"
+          />
+          <AppStatePanel
+            v-else-if="!artworks.length"
+            title="Your wishlist is empty"
+            message="Explore the marketplace to start saving digital artworks."
+          />
+          <section v-else class="grid gap-6 lg:grid-cols-3">
+            <ArtworkCard
+              v-for="artwork in artworks"
+              :key="artwork.id"
+              :artwork="artwork"
+              :favorite-loading="Boolean(favoriteLoading[artwork.id])"
+              :show-favorite-action="true"
+              @toggle-favorite="handleFavoriteToggle"
+            />
+          </section>
         </section>
-      </section>
 
-      <CollectionsPanelContent
-        v-else
-        v-model:page-message="pageMessage"
-      />
-    </section>
+        <CollectionsPanelContent v-else v-model:page-message="pageMessage" class="mt-8" />
+      </section>
+    </div>
   </main>
 </template>
 
 <script setup>
 import { computed, onMounted, ref, watch } from "vue";
 import { useRequestHeaders, useRoute, useRouter } from "#app";
-import { useAuthStore } from "~/stores/auth";
+import AccountSettingsSidebar from "~/components/account/AccountSettingsSidebar.vue";
 import ArtworkCard from "~/components/marketplace/ArtworkCard.vue";
 import CollectionsPanelContent from "~/components/collector/CollectionsPanelContent.vue";
+import { useAuthStore } from "~/stores/auth";
 import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
 
 const auth = useAuthStore();
 const route = useRoute();
 const router = useRouter();
-const requestHeaders = import.meta.server
-  ? useRequestHeaders(["cookie"])
-  : undefined;
-
+const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
 const pageMessage = ref("");
 
 const activeTab = computed(() =>
-  route.query.tab === "collections" ? "collections" : "favorites",
+  route.query.tab === "collections" ? "collections" : "favorites"
 );
 
 function setActiveTab(tab) {
@@ -179,29 +152,26 @@ watch(
   () => route.query.tab,
   () => {
     pageMessage.value = "";
-  },
+  }
 );
 
 const { data, pending, error, refresh } = await useFetch("/api/favorites/me", {
   headers: requestHeaders,
   credentials: "include",
-  default: () => ({
-    artworks: [],
-  }),
+  default: () => ({ artworks: [] })
 });
 
 const artworks = computed(() => data.value?.artworks || []);
 const errorMessage = computed(() => error.value?.data?.message || "");
 
-const { actionMessage, favoriteLoading, toggleFavorite } =
-  useMarketplaceActions(auth);
+const { actionMessage, favoriteLoading, toggleFavorite } = useMarketplaceActions(auth);
 
 async function handleFavoriteToggle(artwork) {
   const success = await toggleFavorite(artwork);
 
   if (success && !artwork.isFavorite) {
     data.value = {
-      artworks: artworks.value.filter((item) => item.id !== artwork.id),
+      artworks: artworks.value.filter((item) => item.id !== artwork.id)
     };
     return;
   }
@@ -217,7 +187,7 @@ onMounted(async () => {
       await auth.fetchCurrentUser();
       await refresh();
     } catch {
-      // Le middleware auth redirige vers /login si la session est invalide.
+      // Auth middleware redirects invalid sessions to /login.
     }
   }
 });
