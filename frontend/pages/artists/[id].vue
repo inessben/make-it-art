@@ -96,7 +96,7 @@
                     ? "Updating..."
                     : artist.isFollowed
                       ? "Unfollow"
-                      : "Follow this artist"
+                      : "Follow"
                 }}
               </button>
 

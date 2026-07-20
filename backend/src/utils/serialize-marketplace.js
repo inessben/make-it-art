@@ -87,6 +87,7 @@ function serializeCollection(collection) {
     title: normalizeText(collection.title) || "Untitled collection",
     description: normalizeText(collection.description),
     isPrivate: Boolean(collection.isPrivate),
+    isDefaultFavorites: Boolean(collection.isDefaultFavorites),
     createdAt: collection.createdAt || null,
     itemsCount: items.length,
     ownerType: collection.artistId ? "artist" : "collector",

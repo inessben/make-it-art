@@ -168,6 +168,22 @@
               <p class="mt-4 text-sm text-slate-500">{{ artist.email }}</p>
             </div>
           </div>
+
+          <div v-if="artist.verified" class="flex flex-wrap gap-3">
+            <NuxtLink
+              to="/artworks/new"
+              class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6d8bff]"
+            >
+              Publier une oeuvre
+            </NuxtLink>
+            <NuxtLink
+              v-if="artist.id"
+              :to="`/artists/${artist.id}`"
+              class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-6 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+            >
+              Voir mon profil public
+            </NuxtLink>
+          </div>
         </header>
 
         <section class="grid gap-4 sm:grid-cols-3">
@@ -192,22 +208,80 @@
         </section>
 
         <section class="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-          <div class="rounded-[24px] border border-slate-800 bg-violet-950 p-7">
-            <p class="text-xs uppercase tracking-widest text-violet-700">About</p>
-            <h2 class="mt-4 text-2xl font-semibold text-white">Artist introduction</h2>
-            <p class="mt-4 text-slate-400 leading-7">
-              {{ artist.bio || "Add a bio from the artist application form." }}
-            </p>
+          <div class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-7">
+            <div class="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+                  Portfolio
+                </p>
+                <h2 class="mt-4 text-2xl font-semibold text-white">
+                  Published artworks
+                </h2>
+              </div>
+              <NuxtLink
+                v-if="artist.verified"
+                to="/artworks/new"
+                class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#4A6CF7] bg-[#4A6CF7]/10 px-5 text-sm font-semibold text-[#D5E0FF] transition hover:bg-[#4A6CF7]/20"
+              >
+                New artwork
+              </NuxtLink>
+            </div>
+
+            <div
+              v-if="artworksLoading"
+              class="mt-6 text-sm text-[#A0ADB4]"
+            >
+              Loading your artworks...
+            </div>
+            <div
+              v-else-if="!publishedArtworks.length"
+              class="mt-6 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 text-sm leading-6 text-[#A0ADB4]"
+            >
+              <span v-if="artist.verified">
+                You have not published any artwork yet. Publish your first piece to appear in the
+                catalogue.
+              </span>
+              <span v-else>
+                Your artist profile must be approved before you can publish artworks.
+              </span>
+            </div>
+            <div v-else class="mt-6 grid gap-4">
+              <article
+                v-for="artwork in publishedArtworks"
+                :key="artwork.id"
+                class="flex flex-col gap-4 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <p class="text-lg font-semibold text-white">
+                    {{ artwork.title }}
+                  </p>
+                  <p class="mt-2 text-sm text-[#A0ADB4]">
+                    {{ artwork.category?.name || "Uncategorized" }} ·
+                    {{ formatArtworkPrice(artwork) }}
+                  </p>
+                </div>
+                <NuxtLink
+                  :to="`/artworks/${artwork.id}`"
+                  class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#24314F] bg-[#10151E] px-5 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+                >
+                  View details
+                </NuxtLink>
+              </article>
+            </div>
           </div>
 
-          <div class="rounded-[24px] border border-slate-800 bg-violet-950 p-7">
-            <p class="text-xs uppercase tracking-widest text-violet-700">MVP</p>
-            <h2 class="mt-4 text-2xl font-semibold text-white">Next steps</h2>
-            <ul class="mt-4 grid gap-3 text-sm leading-6 text-slate-400">
-              <li>Add your first artworks.</li>
-              <li>Connect styles and social links to your public profile content.</li>
-              <li>Keep your signed agreement available in the admin workspace.</li>
-            </ul>
+          <div class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-7">
+            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+              About
+            </p>
+            <h2 class="mt-4 text-2xl font-semibold text-white">
+              Artist introduction
+            </h2>
+            <p class="mt-4 text-[#A0ADB4] leading-7">
+              {{
+                artist.bio || "Add a bio from the artist application form."
+              }}
+            </p>
           </div>
         </section>
       </template>
@@ -217,6 +291,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from "vue";
+import { formatMarketplacePrice } from "~/utils/marketplace";
 
 definePageMeta({
   middleware: "auth"
@@ -224,7 +299,9 @@ definePageMeta({
 
 const artist = ref(null);
 const application = ref(null);
+const publishedArtworks = ref([]);
 const loading = ref(true);
+const artworksLoading = ref(false);
 const missingArtist = ref(false);
 const errorMessage = ref("");
 
@@ -261,12 +338,36 @@ onMounted(async () => {
     if (!response.artist && !response.application) {
       missingArtist.value = true;
     }
+
+    if (response.artist?.verified) {
+      await loadPublishedArtworks();
+    }
   } catch (error) {
     errorMessage.value = error?.data?.message || "Unable to load the artist profile.";
   } finally {
     loading.value = false;
   }
 });
+
+async function loadPublishedArtworks() {
+  artworksLoading.value = true;
+
+  try {
+    const response = await $fetch("/api/artists/me/artworks", {
+      credentials: "include",
+    });
+
+    publishedArtworks.value = response.artworks || [];
+  } catch {
+    publishedArtworks.value = [];
+  } finally {
+    artworksLoading.value = false;
+  }
+}
+
+function formatArtworkPrice(artwork) {
+  return formatMarketplacePrice(artwork.priceValue ?? artwork.price);
+}
 
 function formatDate(value) {
   if (!value) {
