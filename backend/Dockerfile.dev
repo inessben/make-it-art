@@ -34,6 +34,7 @@ RUN npm config set registry ${NPM_REGISTRY} \
 RUN printf '%s\n' \
     '#!/bin/sh' \
     'set -e' \
+    'npm install --no-audit --no-fund' \
     'npx prisma generate --config prisma.config.ts' \
     'if ! npx prisma migrate deploy --config prisma.config.ts 2>/tmp/migrate.err; then' \
     '  if grep -q P3005 /tmp/migrate.err; then' \

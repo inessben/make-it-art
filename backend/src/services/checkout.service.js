@@ -1,8 +1,13 @@
 const prisma = require("../lib/prisma");
 const orderRepository = require("../repositories/order.repository");
 const notificationRepository = require("../repositories/notification.repository");
+const { sendArtistSaleEmail } = require("./mail.service");
 const { parsePriceValue } = require("../utils/serialize-marketplace");
-const { formatOrderReference } = require("../utils/commerce");
+const {
+  computeNetRevenue,
+  formatOrderReference,
+} = require("../utils/commerce");
+const env = require("../config/env");
 
 function normalizeCheckoutItems(items) {
   if (!Array.isArray(items) || items.length === 0) {
@@ -112,6 +117,11 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
 
     const existing = notificationsByArtistUser.get(artistUserId) || {
       artistUserId,
+      artistEmail: lineItem.artwork.artist?.user?.email || null,
+      artistDisplayName:
+        lineItem.artwork.artist?.displayName ||
+        lineItem.artwork.artist?.user?.username ||
+        "Artiste",
       artworks: [],
       grossAmount: 0,
     };
@@ -126,6 +136,7 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
       notificationData.artworks.length === 1
         ? `"${notificationData.artworks[0]}"`
         : `${notificationData.artworks.length} oeuvres`;
+    const orderReference = formatOrderReference(checkoutResult.order.id);
 
     await notificationRepository.createNotification({
       userId: notificationData.artistUserId,
@@ -134,7 +145,7 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
       message: `${buyerLabel} a achete ${artworkLabel} pour EUR ${notificationData.grossAmount.toFixed(2)}.`,
       payload: {
         orderId: checkoutResult.order.id,
-        orderReference: formatOrderReference(checkoutResult.order.id),
+        orderReference,
         grossAmount: notificationData.grossAmount,
         buyer: {
           id: buyer?.id || userId,
@@ -144,6 +155,23 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
         artworkTitles: notificationData.artworks,
       },
     });
+
+    if (notificationData.artistEmail) {
+      try {
+        await sendArtistSaleEmail({
+          to: notificationData.artistEmail,
+          artistName: notificationData.artistDisplayName,
+          orderReference,
+          artworkTitles: notificationData.artworks,
+          grossAmount: notificationData.grossAmount,
+          netAmount: computeNetRevenue(notificationData.grossAmount),
+          buyerLabel,
+          salesUrl: `${env.appBaseUrl}/artist/sales`,
+        });
+      } catch (error) {
+        console.error("Artist sale email error:", error);
+      }
+    }
   }
 
   return {

@@ -122,8 +122,80 @@ async function sendLoginCodeEmail({ to, username, code }) {
   });
 }
 
+function formatArtworkList(artworkTitles = []) {
+  if (!artworkTitles.length) {
+    return "une de vos oeuvres";
+  }
+
+  if (artworkTitles.length === 1) {
+    return `"${artworkTitles[0]}"`;
+  }
+
+  return artworkTitles.map((title) => `"${title}"`).join(", ");
+}
+
+async function sendArtistSaleEmail({
+  to,
+  artistName,
+  orderReference,
+  artworkTitles,
+  grossAmount,
+  netAmount,
+  buyerLabel,
+  salesUrl,
+}) {
+  const transporter = createTransporter();
+  const displayName = artistName || "Artiste";
+  const artworkLabel = formatArtworkList(artworkTitles);
+  const grossLabel = `EUR ${Number(grossAmount || 0).toFixed(2)}`;
+  const netLabel = `EUR ${Number(netAmount || 0).toFixed(2)}`;
+  const dashboardUrl = salesUrl || `${env.appBaseUrl}/artist/sales`;
+
+  await transporter.sendMail({
+    from: env.smtp.from,
+    to,
+    subject: `Nouvelle vente sur Make It Art - ${orderReference}`,
+    text: [
+      `Bonjour ${displayName},`,
+      "",
+      `Bonne nouvelle : ${buyerLabel} vient d'acheter ${artworkLabel}.`,
+      "",
+      `Reference commande : ${orderReference}`,
+      `Montant brut : ${grossLabel}`,
+      `Revenu artiste estime : ${netLabel}`,
+      "",
+      "Consultez le detail de vos ventes :",
+      dashboardUrl,
+      "",
+      "Merci de faire vivre Make It Art.",
+    ].join("\n"),
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #172033;">
+        <h1 style="font-size: 22px;">Nouvelle vente</h1>
+        <p>Bonjour ${displayName},</p>
+        <p>
+          Bonne nouvelle : <strong>${buyerLabel}</strong> vient d'acheter
+          ${artworkLabel}.
+        </p>
+        <div style="margin: 24px 0; padding: 16px 18px; border-radius: 10px; background: #f4f7ff;">
+          <p style="margin: 0 0 8px;"><strong>Reference :</strong> ${orderReference}</p>
+          <p style="margin: 0 0 8px;"><strong>Montant brut :</strong> ${grossLabel}</p>
+          <p style="margin: 0;"><strong>Revenu artiste estime :</strong> ${netLabel}</p>
+        </div>
+        <p>
+          <a href="${dashboardUrl}" style="display: inline-block; padding: 10px 14px; background: #4A6CF7; color: #ffffff; text-decoration: none; border-radius: 6px;">
+            Voir mes ventes
+          </a>
+        </p>
+        <p>Merci de faire vivre Make It Art.</p>
+      </div>
+    `,
+  });
+}
+
 module.exports = {
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendLoginCodeEmail,
+  sendArtistSaleEmail,
 };
