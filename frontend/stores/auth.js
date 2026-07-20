@@ -16,6 +16,13 @@ export const useAuthStore = defineStore("auth", {
 
       return state.user?.isArtist === true || Boolean(state.user?.artist);
     },
+    isVerifiedArtist(state) {
+      if (this.isAdmin) {
+        return false;
+      }
+
+      return Boolean(state.user?.artist?.verified);
+    },
     hasArtistApplication(state) {
       if (this.isAdmin) {
         return false;
