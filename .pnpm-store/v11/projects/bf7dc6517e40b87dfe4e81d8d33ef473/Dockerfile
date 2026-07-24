@@ -1,0 +1,44 @@
+FROM node:22-alpine
+
+WORKDIR /app
+
+ARG NPM_REGISTRY=https://registry.npmjs.org
+
+RUN apk add --no-cache \
+    python3 \
+    py3-pip \
+    build-base \
+    musl-dev \
+    libffi-dev \
+    jpeg-dev \
+    freetype-dev \
+    zlib-dev \
+    ttf-dejavu \
+ && python3 -m pip install --no-cache-dir --break-system-packages pillow reportlab
+
+COPY package*.json ./
+
+RUN npm config set registry ${NPM_REGISTRY} \
+ && npm config set fetch-retries 6 \
+ && npm config set fetch-retry-factor 2 \
+ && npm config set fetch-retry-mintimeout 20000 \
+ && npm config set fetch-retry-maxtimeout 120000 \
+ && npm config set fetch-timeout 300000 \
+ && i=1; until npm install --no-audit --no-fund; do \
+      if [ "$i" -ge 5 ]; then echo "npm install failed after retries"; exit 1; fi; \
+      echo "npm install failed, retry $i/5 in 10s"; \
+      i=$((i+1)); \
+      sleep 10; \
+    done
+
+COPY . .
+
+# Génère le client Prisma
+RUN npx prisma generate --config prisma.config.ts
+
+
+EXPOSE 4000
+
+ENV PDF_PYTHON_PATH=/usr/bin/python3
+
+CMD ["sh", "-c", "npx prisma migrate deploy --config prisma.config.ts && npm run dev"]

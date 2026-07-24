@@ -1,0 +1,55 @@
+FROM node:22-alpine
+
+WORKDIR /app
+
+ARG NPM_REGISTRY=https://registry.npmjs.org
+
+RUN apk add --no-cache \
+    python3 \
+    py3-pip \
+    build-base \
+    musl-dev \
+    libffi-dev \
+    jpeg-dev \
+    freetype-dev \
+    zlib-dev \
+    ttf-dejavu \
+ && python3 -m pip install --no-cache-dir --break-system-packages pillow reportlab
+
+COPY package*.json ./
+
+RUN npm config set registry ${NPM_REGISTRY} \
+ && npm config set fetch-retries 6 \
+ && npm config set fetch-retry-factor 2 \
+ && npm config set fetch-retry-mintimeout 20000 \
+ && npm config set fetch-retry-maxtimeout 120000 \
+ && npm config set fetch-timeout 300000 \
+ && i=1; until npm install --no-audit --no-fund; do \
+      if [ "$i" -ge 5 ]; then echo "npm install failed after retries"; exit 1; fi; \
+      echo "npm install failed, retry $i/5 in 10s"; \
+      i=$((i+1)); \
+      sleep 10; \
+    done
+
+RUN printf '%s\n' \
+    '#!/bin/sh' \
+    'set -e' \
+    'npx prisma generate --config prisma.config.ts' \
+    'if ! npx prisma migrate deploy --config prisma.config.ts 2>/tmp/migrate.err; then' \
+    '  if grep -q P3005 /tmp/migrate.err; then' \
+    '    echo "Base existante sans historique Prisma — reinitialisation (dev uniquement)..."' \
+    '    npx prisma migrate reset --force --config prisma.config.ts' \
+    '  else' \
+    '    cat /tmp/migrate.err >&2' \
+    '    exit 1' \
+    '  fi' \
+    'fi' \
+    'exec npm run dev' \
+    > /usr/local/bin/docker-entrypoint.dev.sh \
+ && chmod +x /usr/local/bin/docker-entrypoint.dev.sh
+
+EXPOSE 4000
+
+ENV PDF_PYTHON_PATH=/usr/bin/python3
+
+CMD ["/usr/local/bin/docker-entrypoint.dev.sh"]
