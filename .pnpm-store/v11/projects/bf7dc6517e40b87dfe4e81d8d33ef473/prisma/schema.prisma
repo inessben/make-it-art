@@ -24,6 +24,7 @@ model User {
   admin                   Admin?
   artistApplicationDraft  ArtistApplicationDraft?
   artist                  Artist?
+  moderatedArtworks       Artwork[]                @relation("artwork_moderated_by")
   reviewedArtistApplications ArtistApplicationDraft[] @relation("artist_application_reviewed_by")
   auditLogs               AuditLog[]
   consents                ConsentRGPD[]
@@ -102,10 +103,15 @@ model Artwork {
   protection      Boolean?
   protectionId    Int?             @map("protection_id")
   price           String?
+  moderationStatus String          @default("pending") @map("moderation_status")
+  moderationNote   String?         @map("moderation_note")
+  moderatedAt      DateTime?       @map("moderated_at")
+  moderatedByAdminId Int?          @map("moderated_by_admin_id")
   artist          Artist           @relation(fields: [artistId], references: [id])
   category        Category?        @relation(fields: [categoryId], references: [id])
   collections     CollectionItem[]
   favorites       Favorite[]
+  moderatedByAdmin User?           @relation("artwork_moderated_by", fields: [moderatedByAdminId], references: [id])
   orderItems      OrderItem[]
   ownershipTokens OwnershipToken[]
   galleries       UserGallery[]

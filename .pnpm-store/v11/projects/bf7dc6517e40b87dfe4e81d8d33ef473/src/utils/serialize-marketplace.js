@@ -37,7 +37,9 @@ function serializeArtistSummary(artist) {
     portfolioUrl: normalizeText(payload.portfolioUrl),
     socialHandle: normalizeText(payload.socialHandle),
     stats: {
-      artworks: artist._count?.artworks || 0,
+      artworks: Array.isArray(artist.artworks)
+        ? artist.artworks.length
+        : artist._count?.artworks || 0,
       followers: artist._count?.followers || 0,
       collections: artist._count?.collections || 0
     },
@@ -63,6 +65,13 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     createdAt: artwork.createdAt || null,
     favoriteCount: artwork.favoriteCount ?? artwork._count?.favorites ?? 0,
     isFavorite: Array.isArray(artwork.favorites) ? artwork.favorites.length > 0 : false,
+    moderationStatus: normalizeText(artwork.moderationStatus) || "pending",
+    moderationNote: normalizeText(artwork.moderationNote),
+    moderatedAt: artwork.moderatedAt || null,
+    moderationReviewer: artwork.moderatedByAdmin
+      ? normalizeText(artwork.moderatedByAdmin.username) ||
+        normalizeText(artwork.moderatedByAdmin.email)
+      : "",
     category: artwork.category
       ? {
           id: artwork.category.id,

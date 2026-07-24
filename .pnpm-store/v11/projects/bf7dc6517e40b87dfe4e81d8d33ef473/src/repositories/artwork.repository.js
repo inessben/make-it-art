@@ -1,10 +1,18 @@
 const prisma = require("../lib/prisma");
+const { ARTWORK_MODERATION_STATUS } = require("../constants/artwork-moderation-status");
 
 const artworkInclude = {
   category: true,
   artist: {
     include: {
       user: true
+    }
+  },
+  moderatedByAdmin: {
+    select: {
+      id: true,
+      username: true,
+      email: true
     }
   }
 };
@@ -24,6 +32,13 @@ async function listArtworksForAdmin() {
       artist: {
         include: {
           user: true
+        }
+      },
+      moderatedByAdmin: {
+        select: {
+          id: true,
+          username: true,
+          email: true
         }
       },
       _count: {
@@ -74,6 +89,10 @@ async function createArtwork({ artistId, title, description, categoryId, price, 
       priceTokens: price,
       favoriteCount: 0,
       protection: Boolean(protection),
+      moderationStatus: ARTWORK_MODERATION_STATUS.PENDING,
+      moderationNote: null,
+      moderatedAt: null,
+      moderatedByAdminId: null,
       createdAt: new Date()
     },
     include: artworkInclude
@@ -105,7 +124,11 @@ async function updateArtwork({
       categoryId: categoryId || null,
       price,
       priceTokens: price,
-      protection: Boolean(protection)
+      protection: Boolean(protection),
+      moderationStatus: ARTWORK_MODERATION_STATUS.PENDING,
+      moderationNote: null,
+      moderatedAt: null,
+      moderatedByAdminId: null
     },
     include: artworkInclude
   });
@@ -127,11 +150,47 @@ async function deleteArtwork({ artworkId, artistId }) {
   return existing;
 }
 
+async function updateArtworkModeration({ artworkId, status, moderationNote, moderatedByAdminId }) {
+  return prisma.artwork.update({
+    where: {
+      id: artworkId
+    },
+    data: {
+      moderationStatus: status,
+      moderationNote: moderationNote || null,
+      moderatedAt: new Date(),
+      moderatedByAdminId
+    },
+    include: {
+      category: true,
+      artist: {
+        include: {
+          user: true
+        }
+      },
+      moderatedByAdmin: {
+        select: {
+          id: true,
+          username: true,
+          email: true
+        }
+      },
+      _count: {
+        select: {
+          favorites: true,
+          orderItems: true
+        }
+      }
+    }
+  });
+}
+
 module.exports = {
   listArtworksForAdmin,
   listArtworksByArtistId,
   findOwnedArtwork,
   createArtwork,
   updateArtwork,
-  deleteArtwork
+  deleteArtwork,
+  updateArtworkModeration
 };

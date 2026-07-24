@@ -283,6 +283,14 @@ test("GET /artists/:id returns the public artist profile payload", async (t) => 
   assert.equal(response.body.collections[0].title, "Featured collection");
 });
 
+test("GET /artists/:id returns a JSON not-found payload for an invalid artist id", async (t) => {
+  const { baseUrl } = await startMarketplaceApp(t);
+  const response = await requestJson(baseUrl, "/artists/undefined");
+
+  assert.equal(response.status, 404);
+  assert.equal(response.body.message, "Artiste introuvable.");
+});
+
 test("POST /collections/me validates the title before creating a collection", async (t) => {
   const { baseUrl } = await startMarketplaceApp(t);
   const response = await requestJson(baseUrl, "/collections/me", {

@@ -15,6 +15,12 @@
         message="The artist portfolio is being retrieved."
       />
       <AppStatePanel
+        v-else-if="notFound"
+        type="empty"
+        title="Artist not found"
+        message="This profile is unavailable or no longer visible in the public directory."
+      />
+      <AppStatePanel
         v-else-if="errorMessage"
         type="error"
         title="Unable to load this artist"
@@ -22,12 +28,6 @@
         action-label="Try again"
         :action-disabled="pending"
         @action="refresh"
-      />
-      <AppStatePanel
-        v-else-if="!artist"
-        type="empty"
-        title="Artist not found"
-        message="This profile is no longer available in the public directory."
       />
       <template v-else-if="artist">
         <section
@@ -88,11 +88,11 @@
                     ? 'border-amber-300 bg-amber-300/10 text-amber-200'
                     : 'border-slate-750 bg-slate-850 text-slate-100 hover:border-violet-700'
                 "
-                :disabled="Boolean(followLoading[artist.id])"
+                :disabled="!hasArtistId || Boolean(followLoading[artist.id])"
                 @click="toggleFollow(artist)"
               >
                 {{
-                  followLoading[artist.id]
+                  hasArtistId && followLoading[artist.id]
                     ? "Updating..."
                     : artist.isFollowed
                       ? "Unfollow"
@@ -256,9 +256,21 @@ const artist = computed(() => data.value?.artist || null);
 const artworks = computed(() => data.value?.artworks || []);
 const collections = computed(() => data.value?.collections || []);
 const initials = computed(() => getArtistInitials(artist.value?.displayName));
-const errorMessage = computed(
-  () => error.value?.data?.message || "The artist profile is temporarily unavailable."
-);
+const hasArtistId = computed(() => Number.isInteger(Number(artist.value?.id)));
+const notFound = computed(() => {
+  const status = error.value?.statusCode || error.value?.status || 0;
+  return status === 404;
+});
+const errorMessage = computed(() => {
+  if (notFound.value) {
+    return "";
+  }
+
+  return (
+    error.value?.data?.message ||
+    (error.value ? "The artist profile is temporarily unavailable." : "")
+  );
+});
 
 const {
   actionMessage,

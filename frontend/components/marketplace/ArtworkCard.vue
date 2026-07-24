@@ -52,7 +52,7 @@
       <div class="grid gap-1">
         <p class="text-xs uppercase tracking-widest text-slate-500">Artist</p>
         <NuxtLink
-          v-if="artwork.artist"
+          v-if="hasArtistProfile"
           :to="`/artists/${artwork.artist.id}`"
           class="text-sm font-semibold text-slate-100 transition hover:text-violet-200"
         >
@@ -105,4 +105,5 @@ const formattedDate = computed(() => formatMarketplaceDate(props.artwork.created
 const initials = computed(() =>
   getArtistInitials(props.artwork.artist?.displayName || props.artwork.title)
 );
+const hasArtistProfile = computed(() => Number.isInteger(Number(props.artwork.artist?.id)));
 </script>

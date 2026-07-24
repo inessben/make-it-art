@@ -131,11 +131,11 @@
                     ? 'border-[#F2C97D] bg-[#F2C97D]/10 text-[#F7D990]'
                     : 'border-[#24314F] bg-[#0C111D] text-[#E6EDF7] hover:border-[#4A6CF7]'
                 "
-                :disabled="!artwork.artist || Boolean(followLoading[artwork.artist?.id])"
+                :disabled="!hasArtistPublicProfile || Boolean(followLoading[artwork.artist?.id])"
                 @click="artwork.artist && toggleFollow(artwork.artist)"
               >
                 {{
-                  artwork.artist && followLoading[artwork.artist.id]
+                  hasArtistPublicProfile && followLoading[artwork.artist.id]
                     ? "Mise a jour..."
                     : artwork.artist?.isFollowed
                       ? "Unfollow"
@@ -144,7 +144,7 @@
               </button>
 
               <NuxtLink
-                v-if="artwork.artist"
+                v-if="hasArtistPublicProfile"
                 :to="`/artists/${artwork.artist.id}`"
                 class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#24314F] bg-transparent px-6 text-sm font-semibold text-[#C9D6FF] transition hover:border-[#4A6CF7]"
               >
@@ -326,6 +326,7 @@ const showCollectorTools = computed(() => auth.user && !auth.isAdmin);
 const isInCart = computed(() =>
   Boolean(artwork.value?.id && cart.items.some((item) => item.artwork?.id === artwork.value.id))
 );
+const hasArtistPublicProfile = computed(() => Number.isInteger(Number(artwork.value?.artist?.id)));
 
 const { actionMessage, favoriteLoading, followLoading, toggleFavorite, toggleFollow } =
   useMarketplaceActions(auth);
