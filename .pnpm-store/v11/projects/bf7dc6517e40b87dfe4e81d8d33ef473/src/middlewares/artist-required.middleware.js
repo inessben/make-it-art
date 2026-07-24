@@ -4,7 +4,7 @@ const artistRepository = require("../repositories/artist.repository");
 async function ensureVerifiedArtist(req, res, next) {
   if (isAdminUser(req.user)) {
     return res.status(403).json({
-      message: "Les comptes admin ne peuvent pas publier des oeuvres.",
+      message: "Les comptes admin ne peuvent pas publier des oeuvres."
     });
   }
 
@@ -12,14 +12,13 @@ async function ensureVerifiedArtist(req, res, next) {
 
   if (!artist) {
     return res.status(403).json({
-      message: "Seuls les artistes peuvent publier des oeuvres.",
+      message: "Seuls les artistes peuvent publier des oeuvres."
     });
   }
 
   if (!artist.verified) {
     return res.status(403).json({
-      message:
-        "Votre profil artiste doit etre valide avant de publier des oeuvres.",
+      message: "Votre profil artiste doit etre valide avant de publier des oeuvres."
     });
   }
 
@@ -28,5 +27,5 @@ async function ensureVerifiedArtist(req, res, next) {
 }
 
 module.exports = {
-  ensureVerifiedArtist,
+  ensureVerifiedArtist
 };

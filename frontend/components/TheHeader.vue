@@ -38,9 +38,7 @@
         <NuxtLink class="transition-colors hover:text-violet-400" to="/artists"
           >Collections</NuxtLink
         >
-        <NuxtLink class="transition-colors hover:text-violet-400" to="/about-us"
-          >About Us</NuxtLink
-        >
+        <NuxtLink class="transition-colors hover:text-violet-400" to="/about-us">About Us</NuxtLink>
       </nav>
 
       <NuxtLink
@@ -49,14 +47,8 @@
         aria-label="Make It Art - Home"
         @click="closeMenu"
       >
-        <img
-          class="h-11 w-9 object-contain sm:h-12 sm:w-10"
-          src="/logo.png"
-          alt=""
-        />
-        <span class="hidden whitespace-nowrap text-title-4 sm:inline"
-          >MAKE IT ART</span
-        >
+        <img class="h-11 w-9 object-contain sm:h-12 sm:w-10" src="/logo.png" alt="" />
+        <span class="hidden whitespace-nowrap text-title-4 sm:inline">MAKE IT ART</span>
       </NuxtLink>
 
       <div class="hidden items-center justify-self-end lg:flex">
@@ -67,23 +59,14 @@
           aria-label="Account navigation"
         >
           <template v-if="!auth.isAdmin">
-            <NuxtLink
-              to="/wallet"
-              class="transition-opacity hover:opacity-70"
-              aria-label="Wallet"
-              ><img
-                class="h-5 w-5 sm:h-6 sm:w-6"
-                src="/icons/wallet.svg"
-                alt=""
+            <NuxtLink to="/wallet" class="transition-opacity hover:opacity-70" aria-label="Wallet"
+              ><img class="h-5 w-5 sm:h-6 sm:w-6" src="/icons/wallet.svg" alt=""
             /></NuxtLink>
             <NuxtLink
               to="/shopping-basket"
               class="transition-opacity hover:opacity-70"
               aria-label="Shopping basket"
-              ><img
-                class="h-6 w-6 sm:h-7 sm:w-7"
-                src="/icons/shopping-basket.svg"
-                alt=""
+              ><img class="h-6 w-6 sm:h-7 sm:w-7" src="/icons/shopping-basket.svg" alt=""
             /></NuxtLink>
           </template>
           <NuxtLink
@@ -181,9 +164,7 @@ import { useAuthStore } from "~/stores/auth";
 const auth = useAuthStore();
 const route = useRoute();
 const mobileMenuOpen = ref(false);
-const profileRoute = computed(() =>
-  auth.isAdmin ? "/admin" : "/account-settings",
-);
+const profileRoute = computed(() => (auth.isAdmin ? "/admin" : "/account-settings"));
 
 function closeMenu() {
   mobileMenuOpen.value = false;

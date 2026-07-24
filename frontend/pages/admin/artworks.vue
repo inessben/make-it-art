@@ -32,28 +32,15 @@
       </article>
     </section>
 
-    <AppStatePanel
-      v-if="successMessage"
-      compact
-      type="success"
-      :message="successMessage"
-    />
+    <AppStatePanel v-if="successMessage" compact type="success" :message="successMessage" />
     <section class="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-      <article
-        class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6"
-      >
-        <div
-          class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
-        >
+      <article class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p
-              class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500"
-            >
+            <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">
               Artwork catalog
             </p>
-            <h2 class="mt-3 text-xl font-semibold text-slate-100">
-              Artworks in database
-            </h2>
+            <h2 class="mt-3 text-xl font-semibold text-slate-100">Artworks in database</h2>
           </div>
           <div class="grid gap-3 sm:grid-cols-2">
             <label class="border border-slate-800 bg-black px-4 py-3">
@@ -107,14 +94,10 @@
             :key="artwork.id"
             class="border border-slate-800 bg-black/30 p-5"
           >
-            <div
-              class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
-            >
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <p class="font-semibold text-slate-100">{{ artwork.title }}</p>
-                <p class="mt-2 text-sm leading-6 text-slate-400">
-                  By {{ artwork.artistName }}
-                </p>
+                <p class="mt-2 text-sm leading-6 text-slate-400">By {{ artwork.artistName }}</p>
                 <div class="mt-4 flex flex-wrap gap-3 text-sm text-slate-400">
                   <span>{{ artwork.category }}</span>
                   <span>{{ artwork.price }}</span>
@@ -134,36 +117,27 @@
         </div>
       </article>
 
-      <article
-        class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6"
-      >
-        <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">
-          Action blocks
-        </p>
-        <h2 class="mt-3 text-xl font-semibold text-slate-100">
-          Moderation overview
-        </h2>
+      <article class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6">
+        <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">Action blocks</p>
+        <h2 class="mt-3 text-xl font-semibold text-slate-100">Moderation overview</h2>
 
         <div class="mt-6 grid gap-4">
           <div class="border border-slate-800 bg-black/30 p-5">
             <p class="font-semibold text-slate-100">Approve</p>
             <p class="mt-2 text-sm leading-6 text-slate-400">
-              Ready for moderation actions when the backend schema supports
-              them.
+              Ready for moderation actions when the backend schema supports them.
             </p>
           </div>
           <div class="border border-slate-800 bg-black/30 p-5">
             <p class="font-semibold text-slate-100">Reject</p>
             <p class="mt-2 text-sm leading-6 text-slate-400">
-              This page currently relies on the fields available in the
-              database.
+              This page currently relies on the fields available in the database.
             </p>
           </div>
           <div class="border border-slate-800 bg-black/30 p-5">
             <p class="font-semibold text-slate-100">Delete</p>
             <p class="mt-2 text-sm leading-6 text-slate-400">
-              Destructive actions will be connected when the administration
-              endpoints are available.
+              Destructive actions will be connected when the administration endpoints are available.
             </p>
           </div>
         </div>
@@ -177,7 +151,7 @@ import { computed, onMounted, ref } from "vue";
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "admin",
+  middleware: "admin"
 });
 
 const loading = ref(true);
@@ -190,30 +164,30 @@ const summary = ref({
   totalArtworks: 0,
   protectedArtworks: 0,
   needsCategoryArtworks: 0,
-  totalFavorites: 0,
+  totalFavorites: 0
 });
 
 const summaries = computed(() => [
   {
     label: "Total artworks",
     value: summary.value.totalArtworks,
-    description: "Total number of artworks in the database.",
+    description: "Total number of artworks in the database."
   },
   {
     label: "Protected artworks",
     value: summary.value.protectedArtworks,
-    description: "Artworks marked as protected.",
+    description: "Artworks marked as protected."
   },
   {
     label: "Needs category",
     value: summary.value.needsCategoryArtworks,
-    description: "Artworks without a category.",
+    description: "Artworks without a category."
   },
   {
     label: "Total favorites",
     value: summary.value.totalFavorites,
-    description: "Total favorites across all artworks.",
-  },
+    description: "Total favorites across all artworks."
+  }
 ]);
 
 const filteredArtworks = computed(() => {
@@ -225,8 +199,7 @@ const filteredArtworks = computed(() => {
       artwork.title.toLowerCase().includes(normalizedSearch) ||
       artwork.artistName.toLowerCase().includes(normalizedSearch);
 
-    const matchesStatus =
-      statusFilter.value === "all" || artwork.status === statusFilter.value;
+    const matchesStatus = statusFilter.value === "all" || artwork.status === statusFilter.value;
 
     return matchesSearch && matchesStatus;
   });
@@ -243,7 +216,7 @@ async function loadArtworks(showSuccess = false) {
 
   try {
     const response = await $fetch("/api/admin/artworks", {
-      credentials: "include",
+      credentials: "include"
     });
 
     artworks.value = response.artworks || [];
@@ -262,8 +235,7 @@ async function loadArtworks(showSuccess = false) {
       return;
     }
 
-    errorMessage.value =
-      error?.data?.message || "Unable to load admin artworks.";
+    errorMessage.value = error?.data?.message || "Unable to load admin artworks.";
   } finally {
     loading.value = false;
   }
@@ -287,7 +259,7 @@ function formatDate(value) {
   }
 
   return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
+    dateStyle: "medium"
   }).format(new Date(value));
 }
 </script>

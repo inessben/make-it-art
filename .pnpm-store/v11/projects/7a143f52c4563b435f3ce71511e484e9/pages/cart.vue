@@ -3,21 +3,15 @@
     <section
       class="mx-auto grid w-full max-w-[1160px] gap-8 rounded-[32px] border border-[#1A1F2A] bg-[#01050E] p-7 shadow-[0_32px_90px_rgba(0,0,0,0.22)]"
     >
-      <header
-        class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
-      >
+      <header class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-            Panier
-          </p>
-          <h1
-            class="mt-4 text-[clamp(2rem,2.6vw,3rem)] font-semibold leading-[1.05] text-white"
-          >
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Panier</p>
+          <h1 class="mt-4 text-[clamp(2rem,2.6vw,3rem)] font-semibold leading-[1.05] text-white">
             Récapitulatif
           </h1>
           <p class="mt-4 max-w-3xl text-sm leading-6 text-[#A0ADB4]">
-            Ajoutez / retirez des oeuvres, puis passez au checkout. (Le paiement
-            réel n'est pas encore branché.)
+            Ajoutez / retirez des oeuvres, puis passez au checkout. (Le paiement réel n'est pas
+            encore branché.)
           </p>
         </div>
 
@@ -55,11 +49,7 @@
               </p>
               <p class="mt-2 text-sm text-[#A4B0C0]">
                 Prix unitaire :
-                {{
-                  formatMarketplacePrice(
-                    item.artwork.priceValue ?? item.artwork.price,
-                  )
-                }}
+                {{ formatMarketplacePrice(item.artwork.priceValue ?? item.artwork.price) }}
               </p>
             </div>
 
@@ -71,9 +61,7 @@
                   type="number"
                   min="1"
                   class="w-28 rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7]"
-                  @input="
-                    cart.setQuantity(item.artwork.id, $event.target.value)
-                  "
+                  @input="cart.setQuantity(item.artwork.id, $event.target.value)"
                 />
               </label>
 

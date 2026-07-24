@@ -1,10 +1,5 @@
 <template>
-  <NuxtLink
-    v-if="!isHomePage"
-    to="/"
-    class="app-home-button"
-    aria-label="Retour a l'accueil"
-  >
+  <NuxtLink v-if="!isHomePage" to="/" class="app-home-button" aria-label="Retour a l'accueil">
     <span class="app-home-button__icon" aria-hidden="true">←</span>
     <span>Accueil</span>
   </NuxtLink>

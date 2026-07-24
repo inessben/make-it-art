@@ -3,7 +3,7 @@ module.exports = {
   env: {
     browser: true,
     node: true,
-    es2022: true,
+    es2022: true
   },
   globals: {
     $fetch: "readonly",
@@ -20,21 +20,21 @@ module.exports = {
     useRuntimeConfig: "readonly",
     watch: "readonly",
     definePageMeta: "readonly",
-    navigateTo: "readonly",
+    navigateTo: "readonly"
   },
   extends: [
     "eslint:recommended",
     "plugin:vue/vue3-recommended",
     "plugin:@typescript-eslint/recommended",
-    "prettier",
+    "prettier"
   ],
   parser: "vue-eslint-parser",
   parserOptions: {
     parser: "@typescript-eslint/parser",
     ecmaVersion: "latest",
-    sourceType: "module",
+    sourceType: "module"
   },
   rules: {
-    "vue/multi-word-component-names": "off",
-  },
+    "vue/multi-word-component-names": "off"
+  }
 };

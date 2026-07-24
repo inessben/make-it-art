@@ -9,6 +9,6 @@
 
 <script setup>
 definePageMeta({
-  middleware: "admin",
+  middleware: "admin"
 });
 </script>

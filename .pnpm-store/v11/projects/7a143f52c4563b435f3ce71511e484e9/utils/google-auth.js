@@ -9,10 +9,7 @@ export function getGoogleLoginUrl(origin = "") {
   try {
     const url = new URL(origin);
 
-    if (
-      (url.hostname === "localhost" || url.hostname === "127.0.0.1") &&
-      url.port === "3000"
-    ) {
+    if ((url.hostname === "localhost" || url.hostname === "127.0.0.1") && url.port === "3000") {
       return `http://localhost${GOOGLE_LOGIN_URL}`;
     }
   } catch {

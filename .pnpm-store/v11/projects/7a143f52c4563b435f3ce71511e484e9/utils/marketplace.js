@@ -13,7 +13,7 @@ export function formatMarketplacePrice(value) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "EUR",
-    maximumFractionDigits: numericValue % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: numericValue % 1 === 0 ? 0 : 2
   }).format(numericValue);
 }
 
@@ -25,7 +25,7 @@ export function formatMarketplaceDate(value) {
   return new Intl.DateTimeFormat("en-US", {
     day: "2-digit",
     month: "short",
-    year: "numeric",
+    year: "numeric"
   }).format(new Date(value));
 }
 

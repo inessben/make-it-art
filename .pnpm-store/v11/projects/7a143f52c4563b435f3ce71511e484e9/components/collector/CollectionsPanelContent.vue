@@ -56,9 +56,8 @@
       v-else-if="!customCollections.length"
       class="rounded-[28px] border border-[#151E30] bg-[#070B14] p-8 text-[#96A4B8]"
     >
-      Aucune collection personnelle pour le moment. Cree ta premiere liste pour
-      structurer tes coups de coeur. Les favoris restent disponibles dans
-      l'onglet Favoris.
+      Aucune collection personnelle pour le moment. Cree ta premiere liste pour structurer tes coups
+      de coeur. Les favoris restent disponibles dans l'onglet Favoris.
     </section>
     <section v-else class="grid gap-6">
       <article
@@ -107,9 +106,7 @@
               :disabled="Boolean(deleteLoading[collection.id])"
               @click="deleteCollection(collection.id)"
             >
-              {{
-                deleteLoading[collection.id] ? "Suppression..." : "Supprimer"
-              }}
+              {{ deleteLoading[collection.id] ? "Suppression..." : "Supprimer" }}
             </button>
           </div>
         </div>
@@ -141,9 +138,7 @@
             :disabled="Boolean(addArtworkLoading[collection.id])"
             @click="addArtwork(collection.id)"
           >
-            {{
-              addArtworkLoading[collection.id] ? "Ajout..." : "Ajouter l'oeuvre"
-            }}
+            {{ addArtworkLoading[collection.id] ? "Ajout..." : "Ajouter l'oeuvre" }}
           </button>
         </div>
 
@@ -171,9 +166,7 @@
             <button
               type="button"
               class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#24314F] bg-[#0C111D] px-4 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#141C2E]"
-              :disabled="
-                Boolean(removeArtworkLoading[`${collection.id}-${item.id}`])
-              "
+              :disabled="Boolean(removeArtworkLoading[`${collection.id}-${item.id}`])"
               @click="removeArtwork(collection.id, item.id)"
             >
               {{
@@ -188,8 +181,7 @@
           v-else
           class="rounded-[24px] border border-dashed border-[#1F2A44] bg-[#040811] p-5 text-sm text-[#96A4B8]"
         >
-          Cette collection est encore vide. Utilise le select ci-dessus pour y
-          ajouter une oeuvre.
+          Cette collection est encore vide. Utilise le select ci-dessus pour y ajouter une oeuvre.
         </div>
       </article>
     </section>
@@ -201,7 +193,7 @@ import { computed, ref, watchEffect } from "vue";
 
 const pageMessage = defineModel("pageMessage", {
   type: String,
-  default: "",
+  default: ""
 });
 
 const createLoading = ref(false);
@@ -213,20 +205,20 @@ const drafts = ref({});
 const newCollection = ref({
   title: "",
   description: "",
-  isPrivate: false,
+  isPrivate: false
 });
 
 const { data, pending, error } = await useFetch("/api/collections/me", {
   credentials: "include",
   default: () => ({
     collections: [],
-    artworkOptions: [],
-  }),
+    artworkOptions: []
+  })
 });
 
 const collections = computed(() => data.value?.collections || []);
 const customCollections = computed(() =>
-  collections.value.filter((collection) => !collection.isDefaultFavorites),
+  collections.value.filter((collection) => !collection.isDefaultFavorites)
 );
 const artworkOptions = computed(() => data.value?.artworkOptions || []);
 const errorMessage = computed(() => error.value?.data?.message || "");
@@ -234,7 +226,7 @@ const errorMessage = computed(() => error.value?.data?.message || "");
 function setLoading(target, key, value) {
   target.value = {
     ...target.value,
-    [key]: value,
+    [key]: value
   };
 }
 
@@ -246,8 +238,8 @@ function ensureDraft(collection) {
         title: collection.title,
         description: collection.description,
         isPrivate: collection.isPrivate,
-        selectedArtworkId: "",
-      },
+        selectedArtworkId: ""
+      }
     };
   }
 }
@@ -256,8 +248,8 @@ function replaceCollection(updatedCollection) {
   data.value = {
     ...(data.value || {}),
     collections: collections.value.map((collection) =>
-      collection.id === updatedCollection.id ? updatedCollection : collection,
-    ),
+      collection.id === updatedCollection.id ? updatedCollection : collection
+    )
   };
   ensureDraft(updatedCollection);
 }
@@ -285,13 +277,13 @@ async function createCollection() {
       body: {
         title: newCollection.value.title,
         description: newCollection.value.description,
-        isPrivate: newCollection.value.isPrivate,
-      },
+        isPrivate: newCollection.value.isPrivate
+      }
     });
 
     data.value = {
       ...(data.value || {}),
-      collections: [response.collection, ...collections.value],
+      collections: [response.collection, ...collections.value]
     };
     drafts.value = {
       ...drafts.value,
@@ -299,18 +291,17 @@ async function createCollection() {
         title: response.collection.title,
         description: response.collection.description,
         isPrivate: response.collection.isPrivate,
-        selectedArtworkId: "",
-      },
+        selectedArtworkId: ""
+      }
     };
     newCollection.value = {
       title: "",
       description: "",
-      isPrivate: false,
+      isPrivate: false
     };
     pageMessage.value = "Collection creee.";
   } catch (fetchError) {
-    pageMessage.value =
-      fetchError?.data?.message || "Impossible de creer cette collection.";
+    pageMessage.value = fetchError?.data?.message || "Impossible de creer cette collection.";
   } finally {
     createLoading.value = false;
   }
@@ -334,16 +325,15 @@ async function saveCollection(collectionId) {
       body: {
         title: draft.title,
         description: draft.description,
-        isPrivate: draft.isPrivate,
-      },
+        isPrivate: draft.isPrivate
+      }
     });
 
     replaceCollection(response.collection);
     pageMessage.value = "Collection mise a jour.";
   } catch (fetchError) {
     pageMessage.value =
-      fetchError?.data?.message ||
-      "Impossible de mettre a jour cette collection.";
+      fetchError?.data?.message || "Impossible de mettre a jour cette collection.";
   } finally {
     setLoading(saveLoading, collectionId, false);
   }
@@ -356,24 +346,21 @@ async function deleteCollection(collectionId) {
   try {
     await $fetch(`/api/collections/me/${collectionId}`, {
       method: "DELETE",
-      credentials: "include",
+      credentials: "include"
     });
 
     data.value = {
       ...(data.value || {}),
-      collections: collections.value.filter(
-        (collection) => collection.id !== collectionId,
-      ),
+      collections: collections.value.filter((collection) => collection.id !== collectionId)
     };
     const nextDrafts = {
-      ...drafts.value,
+      ...drafts.value
     };
     delete nextDrafts[collectionId];
     drafts.value = nextDrafts;
     pageMessage.value = "Collection supprimee.";
   } catch (fetchError) {
-    pageMessage.value =
-      fetchError?.data?.message || "Impossible de supprimer cette collection.";
+    pageMessage.value = fetchError?.data?.message || "Impossible de supprimer cette collection.";
   } finally {
     setLoading(deleteLoading, collectionId, false);
   }
@@ -391,24 +378,20 @@ async function addArtwork(collectionId) {
   setLoading(addArtworkLoading, collectionId, true);
 
   try {
-    const response = await $fetch(
-      `/api/collections/me/${collectionId}/artworks`,
-      {
-        method: "POST",
-        credentials: "include",
-        body: {
-          artworkId: Number(draft.selectedArtworkId),
-        },
-      },
-    );
+    const response = await $fetch(`/api/collections/me/${collectionId}/artworks`, {
+      method: "POST",
+      credentials: "include",
+      body: {
+        artworkId: Number(draft.selectedArtworkId)
+      }
+    });
 
     replaceCollection(response.collection);
     drafts.value[collectionId].selectedArtworkId = "";
     pageMessage.value = "Oeuvre ajoutee a la collection.";
   } catch (fetchError) {
     pageMessage.value =
-      fetchError?.data?.message ||
-      "Impossible d'ajouter cette oeuvre a la collection.";
+      fetchError?.data?.message || "Impossible d'ajouter cette oeuvre a la collection.";
   } finally {
     setLoading(addArtworkLoading, collectionId, false);
   }
@@ -420,20 +403,16 @@ async function removeArtwork(collectionId, artworkId) {
   setLoading(removeArtworkLoading, loadingKey, true);
 
   try {
-    const response = await $fetch(
-      `/api/collections/me/${collectionId}/artworks/${artworkId}`,
-      {
-        method: "DELETE",
-        credentials: "include",
-      },
-    );
+    const response = await $fetch(`/api/collections/me/${collectionId}/artworks/${artworkId}`, {
+      method: "DELETE",
+      credentials: "include"
+    });
 
     replaceCollection(response.collection);
     pageMessage.value = "Oeuvre retiree de la collection.";
   } catch (fetchError) {
     pageMessage.value =
-      fetchError?.data?.message ||
-      "Impossible de retirer cette oeuvre de la collection.";
+      fetchError?.data?.message || "Impossible de retirer cette oeuvre de la collection.";
   } finally {
     setLoading(removeArtworkLoading, loadingKey, false);
   }

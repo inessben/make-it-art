@@ -14,8 +14,8 @@
     "test:coverage": "node --test --experimental-test-coverage \"test/**/*.test.js\"",
     "lint": "eslint . --ext .js,.vue,.ts --max-warnings=0",
     "lint:fix": "eslint . --ext .js,.vue,.ts --fix",
-    "format": "prettier . --write",
-    "format:check": "prettier . --check",
+    "format": "prettier --config .prettierrc.json . --write",
+    "format:check": "prettier --config .prettierrc.json . --check",
     "typecheck": "nuxt typecheck",
     "postinstall": "nuxt prepare"
   },

@@ -18,9 +18,7 @@ async function ensureDefaultAdminAccount() {
   }
 
   if (!env.defaultAdmin.email || !env.defaultAdmin.password) {
-    console.warn(
-      "[bootstrap] default admin seeding skipped: missing credentials",
-    );
+    console.warn("[bootstrap] default admin seeding skipped: missing credentials");
     return null;
   }
 
@@ -30,14 +28,14 @@ async function ensureDefaultAdminAccount() {
   try {
     const user = await prisma.user.upsert({
       where: {
-        email: normalizedEmail,
+        email: normalizedEmail
       },
       update: {
         username: DEFAULT_ADMIN_USERNAME,
         passwordHash,
         role: "admin",
         verified: true,
-        isActive: true,
+        isActive: true
       },
       create: {
         username: DEFAULT_ADMIN_USERNAME,
@@ -46,34 +44,32 @@ async function ensureDefaultAdminAccount() {
         role: "admin",
         createdAt: new Date(),
         verified: true,
-        isActive: true,
-      },
+        isActive: true
+      }
     });
 
     await prisma.admin.upsert({
       where: {
-        userId: user.id,
+        userId: user.id
       },
       update: {},
       create: {
-        userId: user.id,
-      },
+        userId: user.id
+      }
     });
 
     console.log(`[bootstrap] default admin ready: ${normalizedEmail}`);
 
     if (env.defaultAdmin.bypassLoginCode) {
       console.log(
-        `[bootstrap] dev admin login enabled: ${normalizedEmail} / ${env.defaultAdmin.password}`,
+        `[bootstrap] dev admin login enabled: ${normalizedEmail} / ${env.defaultAdmin.password}`
       );
     }
 
     return user;
   } catch (error) {
     if (isMissingTableError(error)) {
-      console.warn(
-        "[bootstrap] default admin seeding skipped: database tables not ready yet",
-      );
+      console.warn("[bootstrap] default admin seeding skipped: database tables not ready yet");
       return null;
     }
 
@@ -82,5 +78,5 @@ async function ensureDefaultAdminAccount() {
 }
 
 module.exports = {
-  ensureDefaultAdminAccount,
+  ensureDefaultAdminAccount
 };

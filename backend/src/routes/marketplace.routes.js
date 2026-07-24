@@ -8,7 +8,7 @@ const categoryRepository = require("../repositories/category.repository");
 const {
   serializeArtwork,
   serializeArtistSummary,
-  serializeCollection,
+  serializeCollection
 } = require("../utils/serialize-marketplace");
 
 const router = express.Router();
@@ -21,8 +21,7 @@ async function attachViewer(req, _res, next) {
 function ensureCollectorAccount(req, res, next) {
   if (isAdminUser(req.user)) {
     return res.status(403).json({
-      message:
-        "Les comptes admin ne peuvent pas utiliser les fonctionnalites collectionneur.",
+      message: "Les comptes admin ne peuvent pas utiliser les fonctionnalites collectionneur."
     });
   }
 
@@ -44,37 +43,35 @@ function normalizeLimit(value, fallback, max) {
 }
 
 function serializeCollections(collections) {
-  return collections
-    .map((collection) => serializeCollection(collection))
-    .filter(Boolean);
+  return collections.map((collection) => serializeCollection(collection)).filter(Boolean);
 }
 
 function mapRepositoryError(error) {
   if (error?.message === "ARTWORK_NOT_FOUND") {
     return {
       status: 404,
-      message: "Oeuvre introuvable.",
+      message: "Oeuvre introuvable."
     };
   }
 
   if (error?.message === "ARTIST_NOT_FOUND") {
     return {
       status: 404,
-      message: "Artiste introuvable.",
+      message: "Artiste introuvable."
     };
   }
 
   if (error?.message === "COLLECTION_NOT_FOUND") {
     return {
       status: 404,
-      message: "Collection introuvable.",
+      message: "Collection introuvable."
     };
   }
 
   if (error?.message === "DEFAULT_FAVORITES_COLLECTION_PROTECTED") {
     return {
       status: 409,
-      message: "La collection Favoris ne peut pas etre supprimee.",
+      message: "La collection Favoris ne peut pas etre supprimee."
     };
   }
 
@@ -84,18 +81,18 @@ function mapRepositoryError(error) {
 router.get("/marketplace/overview", attachViewer, async (req, res) => {
   try {
     const overview = await marketplaceRepository.getMarketplaceOverview({
-      viewerId: req.viewer?.id || null,
+      viewerId: req.viewer?.id || null
     });
 
     return res.status(200).json({
       stats: overview.stats,
       artworks: overview.artworks.map((artwork) => serializeArtwork(artwork)),
-      artists: overview.artists.map((artist) => serializeArtistSummary(artist)),
+      artists: overview.artists.map((artist) => serializeArtistSummary(artist))
     });
   } catch (error) {
     console.error("Marketplace overview error:", error);
     return res.status(500).json({
-      message: "Impossible de charger la page de decouverte.",
+      message: "Impossible de charger la page de decouverte."
     });
   }
 });
@@ -107,13 +104,13 @@ router.get("/categories", async (_req, res) => {
     return res.status(200).json({
       categories: categories.map((category) => ({
         id: category.id,
-        name: normalizeText(category.name) || "Sans categorie",
-      })),
+        name: normalizeText(category.name) || "Sans categorie"
+      }))
     });
   } catch (error) {
     console.error("Categories fetch error:", error);
     return res.status(500).json({
-      message: "Impossible de charger les categories.",
+      message: "Impossible de charger les categories."
     });
   }
 });
@@ -133,16 +130,16 @@ router.get("/artworks", attachViewer, async (req, res) => {
       artType: normalizeText(req.query.artType).toLowerCase(),
       categoryId: normalizeCategoryId(req.query.category),
       sort: normalizeText(req.query.sort) || "latest",
-      limit: normalizeLimit(req.query.limit, 24, 80),
+      limit: normalizeLimit(req.query.limit, 24, 80)
     });
 
     return res.status(200).json({
-      artworks: artworks.map((artwork) => serializeArtwork(artwork)),
+      artworks: artworks.map((artwork) => serializeArtwork(artwork))
     });
   } catch (error) {
     console.error("Public artworks fetch error:", error);
     return res.status(500).json({
-      message: "Impossible de charger le catalogue des oeuvres.",
+      message: "Impossible de charger le catalogue des oeuvres."
     });
   }
 });
@@ -152,12 +149,12 @@ router.get("/artworks/:id(\\d+)", attachViewer, async (req, res) => {
     const artworkId = Number.parseInt(req.params.id, 10);
     const artwork = await marketplaceRepository.findPublicArtworkById({
       artworkId,
-      viewerId: req.viewer?.id || null,
+      viewerId: req.viewer?.id || null
     });
 
     if (!artwork) {
       return res.status(404).json({
-        message: "Oeuvre introuvable.",
+        message: "Oeuvre introuvable."
       });
     }
 
@@ -166,17 +163,17 @@ router.get("/artworks/:id(\\d+)", attachViewer, async (req, res) => {
       artworkId,
       artistId: artwork.artistId,
       categoryId: artwork.categoryId,
-      limit: 4,
+      limit: 4
     });
 
     return res.status(200).json({
       artwork: serializeArtwork(artwork),
-      relatedArtworks: relatedArtworks.map((item) => serializeArtwork(item)),
+      relatedArtworks: relatedArtworks.map((item) => serializeArtwork(item))
     });
   } catch (error) {
     console.error("Public artwork detail error:", error);
     return res.status(500).json({
-      message: "Impossible de charger cette oeuvre.",
+      message: "Impossible de charger cette oeuvre."
     });
   }
 });
@@ -189,27 +186,27 @@ router.post(
     try {
       await collectorRepository.addFavorite({
         userId: req.user.id,
-        artworkId: Number.parseInt(req.params.id, 10),
+        artworkId: Number.parseInt(req.params.id, 10)
       });
 
       return res.status(200).json({
-        message: "Oeuvre ajoutee aux favoris.",
+        message: "Oeuvre ajoutee aux favoris."
       });
     } catch (error) {
       const mappedError = mapRepositoryError(error);
 
       if (mappedError) {
         return res.status(mappedError.status).json({
-          message: mappedError.message,
+          message: mappedError.message
         });
       }
 
       console.error("Favorite create error:", error);
       return res.status(500).json({
-        message: "Impossible d'ajouter cette oeuvre aux favoris.",
+        message: "Impossible d'ajouter cette oeuvre aux favoris."
       });
     }
-  },
+  }
 );
 
 router.delete(
@@ -220,19 +217,19 @@ router.delete(
     try {
       await collectorRepository.removeFavorite({
         userId: req.user.id,
-        artworkId: Number.parseInt(req.params.id, 10),
+        artworkId: Number.parseInt(req.params.id, 10)
       });
 
       return res.status(200).json({
-        message: "Oeuvre retiree des favoris.",
+        message: "Oeuvre retiree des favoris."
       });
     } catch (error) {
       console.error("Favorite delete error:", error);
       return res.status(500).json({
-        message: "Impossible de retirer cette oeuvre des favoris.",
+        message: "Impossible de retirer cette oeuvre des favoris."
       });
     }
-  },
+  }
 );
 
 router.get("/artists", attachViewer, async (req, res) => {
@@ -243,16 +240,16 @@ router.get("/artists", attachViewer, async (req, res) => {
       style: normalizeText(req.query.style).toLowerCase(),
       artType: normalizeText(req.query.artType).toLowerCase(),
       sort: normalizeText(req.query.sort) || "featured",
-      limit: normalizeLimit(req.query.limit, 18, 60),
+      limit: normalizeLimit(req.query.limit, 18, 60)
     });
 
     return res.status(200).json({
-      artists: artists.map((artist) => serializeArtistSummary(artist)),
+      artists: artists.map((artist) => serializeArtistSummary(artist))
     });
   } catch (error) {
     console.error("Public artists fetch error:", error);
     return res.status(500).json({
-      message: "Impossible de charger les artistes.",
+      message: "Impossible de charger les artistes."
     });
   }
 });
@@ -261,58 +258,53 @@ router.get("/artists/:id(\\d+)", attachViewer, async (req, res) => {
   try {
     const artist = await marketplaceRepository.findPublicArtistById({
       artistId: Number.parseInt(req.params.id, 10),
-      viewerId: req.viewer?.id || null,
+      viewerId: req.viewer?.id || null
     });
 
     if (!artist) {
       return res.status(404).json({
-        message: "Artiste introuvable.",
+        message: "Artiste introuvable."
       });
     }
 
     return res.status(200).json({
       artist: serializeArtistSummary(artist),
       artworks: artist.artworks.map((artwork) => serializeArtwork(artwork)),
-      collections: serializeCollections(artist.collections),
+      collections: serializeCollections(artist.collections)
     });
   } catch (error) {
     console.error("Public artist detail error:", error);
     return res.status(500).json({
-      message: "Impossible de charger ce profil artiste.",
+      message: "Impossible de charger ce profil artiste."
     });
   }
 });
 
-router.post(
-  "/artists/:id(\\d+)/follow",
-  authRequired,
-  ensureCollectorAccount,
-  async (req, res) => {
-    try {
-      await collectorRepository.followArtist({
-        userId: req.user.id,
-        artistId: Number.parseInt(req.params.id, 10),
-      });
+router.post("/artists/:id(\\d+)/follow", authRequired, ensureCollectorAccount, async (req, res) => {
+  try {
+    await collectorRepository.followArtist({
+      userId: req.user.id,
+      artistId: Number.parseInt(req.params.id, 10)
+    });
 
-      return res.status(200).json({
-        message: "Vous suivez maintenant cet artiste.",
-      });
-    } catch (error) {
-      const mappedError = mapRepositoryError(error);
+    return res.status(200).json({
+      message: "Vous suivez maintenant cet artiste."
+    });
+  } catch (error) {
+    const mappedError = mapRepositoryError(error);
 
-      if (mappedError) {
-        return res.status(mappedError.status).json({
-          message: mappedError.message,
-        });
-      }
-
-      console.error("Follow create error:", error);
-      return res.status(500).json({
-        message: "Impossible de suivre cet artiste.",
+    if (mappedError) {
+      return res.status(mappedError.status).json({
+        message: mappedError.message
       });
     }
-  },
-);
+
+    console.error("Follow create error:", error);
+    return res.status(500).json({
+      message: "Impossible de suivre cet artiste."
+    });
+  }
+});
 
 router.delete(
   "/artists/:id(\\d+)/follow",
@@ -322,130 +314,104 @@ router.delete(
     try {
       await collectorRepository.unfollowArtist({
         userId: req.user.id,
-        artistId: Number.parseInt(req.params.id, 10),
+        artistId: Number.parseInt(req.params.id, 10)
       });
 
       return res.status(200).json({
-        message: "Vous ne suivez plus cet artiste.",
+        message: "Vous ne suivez plus cet artiste."
       });
     } catch (error) {
       console.error("Follow delete error:", error);
       return res.status(500).json({
-        message: "Impossible de ne plus suivre cet artiste.",
+        message: "Impossible de ne plus suivre cet artiste."
       });
     }
-  },
+  }
 );
 
-router.get(
-  "/follows/me",
-  authRequired,
-  ensureCollectorAccount,
-  async (req, res) => {
-    try {
-      const artists = await collectorRepository.listFollowedArtists(
-        req.user.id,
-      );
+router.get("/follows/me", authRequired, ensureCollectorAccount, async (req, res) => {
+  try {
+    const artists = await collectorRepository.listFollowedArtists(req.user.id);
 
-      return res.status(200).json({
-        artists: artists.map((artist) => serializeArtistSummary(artist)),
-      });
-    } catch (error) {
-      console.error("Followed artists fetch error:", error);
-      return res.status(500).json({
-        message: "Impossible de charger vos abonnements.",
+    return res.status(200).json({
+      artists: artists.map((artist) => serializeArtistSummary(artist))
+    });
+  } catch (error) {
+    console.error("Followed artists fetch error:", error);
+    return res.status(500).json({
+      message: "Impossible de charger vos abonnements."
+    });
+  }
+});
+
+router.get("/favorites/me", authRequired, ensureCollectorAccount, async (req, res) => {
+  try {
+    const artworks = await collectorRepository.listFavoriteArtworks(req.user.id);
+
+    return res.status(200).json({
+      artworks: artworks.map((artwork) => ({
+        ...serializeArtwork(artwork),
+        isFavorite: true
+      }))
+    });
+  } catch (error) {
+    console.error("Favorites fetch error:", error);
+    return res.status(500).json({
+      message: "Impossible de charger vos favoris."
+    });
+  }
+});
+
+router.get("/collections/me", authRequired, ensureCollectorAccount, async (req, res) => {
+  try {
+    const [collections, artworkOptions] = await Promise.all([
+      collectorRepository.listPersonalCollections(req.user.id),
+      marketplaceRepository.listCollectionArtworkOptions({
+        viewerId: req.user.id,
+        limit: 60
+      })
+    ]);
+
+    return res.status(200).json({
+      collections: serializeCollections(collections),
+      artworkOptions: artworkOptions.map((artwork) => serializeArtwork(artwork))
+    });
+  } catch (error) {
+    console.error("Personal collections fetch error:", error);
+    return res.status(500).json({
+      message: "Impossible de charger vos collections."
+    });
+  }
+});
+
+router.post("/collections/me", authRequired, ensureCollectorAccount, async (req, res) => {
+  try {
+    const title = normalizeText(req.body.title);
+
+    if (!title) {
+      return res.status(400).json({
+        message: "Le titre de la collection est requis."
       });
     }
-  },
-);
 
-router.get(
-  "/favorites/me",
-  authRequired,
-  ensureCollectorAccount,
-  async (req, res) => {
-    try {
-      const artworks = await collectorRepository.listFavoriteArtworks(
-        req.user.id,
-      );
+    const collection = await collectorRepository.createPersonalCollection({
+      userId: req.user.id,
+      title,
+      description: normalizeText(req.body.description),
+      isPrivate: Boolean(req.body.isPrivate)
+    });
 
-      return res.status(200).json({
-        artworks: artworks.map((artwork) => ({
-          ...serializeArtwork(artwork),
-          isFavorite: true,
-        })),
-      });
-    } catch (error) {
-      console.error("Favorites fetch error:", error);
-      return res.status(500).json({
-        message: "Impossible de charger vos favoris.",
-      });
-    }
-  },
-);
-
-router.get(
-  "/collections/me",
-  authRequired,
-  ensureCollectorAccount,
-  async (req, res) => {
-    try {
-      const [collections, artworkOptions] = await Promise.all([
-        collectorRepository.listPersonalCollections(req.user.id),
-        marketplaceRepository.listCollectionArtworkOptions({
-          viewerId: req.user.id,
-          limit: 60,
-        }),
-      ]);
-
-      return res.status(200).json({
-        collections: serializeCollections(collections),
-        artworkOptions: artworkOptions.map((artwork) =>
-          serializeArtwork(artwork),
-        ),
-      });
-    } catch (error) {
-      console.error("Personal collections fetch error:", error);
-      return res.status(500).json({
-        message: "Impossible de charger vos collections.",
-      });
-    }
-  },
-);
-
-router.post(
-  "/collections/me",
-  authRequired,
-  ensureCollectorAccount,
-  async (req, res) => {
-    try {
-      const title = normalizeText(req.body.title);
-
-      if (!title) {
-        return res.status(400).json({
-          message: "Le titre de la collection est requis.",
-        });
-      }
-
-      const collection = await collectorRepository.createPersonalCollection({
-        userId: req.user.id,
-        title,
-        description: normalizeText(req.body.description),
-        isPrivate: Boolean(req.body.isPrivate),
-      });
-
-      return res.status(201).json({
-        message: "Collection creee.",
-        collection: serializeCollection(collection),
-      });
-    } catch (error) {
-      console.error("Personal collection create error:", error);
-      return res.status(500).json({
-        message: "Impossible de creer cette collection.",
-      });
-    }
-  },
-);
+    return res.status(201).json({
+      message: "Collection creee.",
+      collection: serializeCollection(collection)
+    });
+  } catch (error) {
+    console.error("Personal collection create error:", error);
+    return res.status(500).json({
+      message: "Impossible de creer cette collection."
+    });
+  }
+});
 
 router.patch(
   "/collections/me/:id(\\d+)",
@@ -457,7 +423,7 @@ router.patch(
 
       if (!title) {
         return res.status(400).json({
-          message: "Le titre de la collection est requis.",
+          message: "Le titre de la collection est requis."
         });
       }
 
@@ -466,28 +432,28 @@ router.patch(
         collectionId: Number.parseInt(req.params.id, 10),
         title,
         description: normalizeText(req.body.description),
-        isPrivate: Boolean(req.body.isPrivate),
+        isPrivate: Boolean(req.body.isPrivate)
       });
 
       return res.status(200).json({
         message: "Collection mise a jour.",
-        collection: serializeCollection(collection),
+        collection: serializeCollection(collection)
       });
     } catch (error) {
       const mappedError = mapRepositoryError(error);
 
       if (mappedError) {
         return res.status(mappedError.status).json({
-          message: mappedError.message,
+          message: mappedError.message
         });
       }
 
       console.error("Personal collection update error:", error);
       return res.status(500).json({
-        message: "Impossible de mettre a jour cette collection.",
+        message: "Impossible de mettre a jour cette collection."
       });
     }
-  },
+  }
 );
 
 router.delete(
@@ -498,27 +464,27 @@ router.delete(
     try {
       await collectorRepository.deletePersonalCollection({
         userId: req.user.id,
-        collectionId: Number.parseInt(req.params.id, 10),
+        collectionId: Number.parseInt(req.params.id, 10)
       });
 
       return res.status(200).json({
-        message: "Collection supprimee.",
+        message: "Collection supprimee."
       });
     } catch (error) {
       const mappedError = mapRepositoryError(error);
 
       if (mappedError) {
         return res.status(mappedError.status).json({
-          message: mappedError.message,
+          message: mappedError.message
         });
       }
 
       console.error("Personal collection delete error:", error);
       return res.status(500).json({
-        message: "Impossible de supprimer cette collection.",
+        message: "Impossible de supprimer cette collection."
       });
     }
-  },
+  }
 );
 
 router.post(
@@ -531,36 +497,35 @@ router.post(
 
       if (!Number.isInteger(artworkId)) {
         return res.status(400).json({
-          message: "L'oeuvre a ajouter est invalide.",
+          message: "L'oeuvre a ajouter est invalide."
         });
       }
 
-      const collection =
-        await collectorRepository.addArtworkToPersonalCollection({
-          userId: req.user.id,
-          collectionId: Number.parseInt(req.params.id, 10),
-          artworkId,
-        });
+      const collection = await collectorRepository.addArtworkToPersonalCollection({
+        userId: req.user.id,
+        collectionId: Number.parseInt(req.params.id, 10),
+        artworkId
+      });
 
       return res.status(200).json({
         message: "Oeuvre ajoutee a la collection.",
-        collection: serializeCollection(collection),
+        collection: serializeCollection(collection)
       });
     } catch (error) {
       const mappedError = mapRepositoryError(error);
 
       if (mappedError) {
         return res.status(mappedError.status).json({
-          message: mappedError.message,
+          message: mappedError.message
         });
       }
 
       console.error("Add artwork to personal collection error:", error);
       return res.status(500).json({
-        message: "Impossible d'ajouter cette oeuvre a la collection.",
+        message: "Impossible d'ajouter cette oeuvre a la collection."
       });
     }
-  },
+  }
 );
 
 router.delete(
@@ -569,32 +534,31 @@ router.delete(
   ensureCollectorAccount,
   async (req, res) => {
     try {
-      const collection =
-        await collectorRepository.removeArtworkFromPersonalCollection({
-          userId: req.user.id,
-          collectionId: Number.parseInt(req.params.id, 10),
-          artworkId: Number.parseInt(req.params.artworkId, 10),
-        });
+      const collection = await collectorRepository.removeArtworkFromPersonalCollection({
+        userId: req.user.id,
+        collectionId: Number.parseInt(req.params.id, 10),
+        artworkId: Number.parseInt(req.params.artworkId, 10)
+      });
 
       return res.status(200).json({
         message: "Oeuvre retiree de la collection.",
-        collection: serializeCollection(collection),
+        collection: serializeCollection(collection)
       });
     } catch (error) {
       const mappedError = mapRepositoryError(error);
 
       if (mappedError) {
         return res.status(mappedError.status).json({
-          message: mappedError.message,
+          message: mappedError.message
         });
       }
 
       console.error("Remove artwork from personal collection error:", error);
       return res.status(500).json({
-        message: "Impossible de retirer cette oeuvre de la collection.",
+        message: "Impossible de retirer cette oeuvre de la collection."
       });
     }
-  },
+  }
 );
 
 module.exports = router;

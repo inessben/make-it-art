@@ -15,10 +15,7 @@ function normalizeEmail(email) {
 }
 
 function isDefaultAdminBypassUser(email) {
-  return (
-    env.defaultAdmin.bypassLoginCode &&
-    normalizeEmail(env.defaultAdmin.email) === email
-  );
+  return env.defaultAdmin.bypassLoginCode && normalizeEmail(env.defaultAdmin.email) === email;
 }
 
 function hashValue(value) {
@@ -43,7 +40,7 @@ function getLoginChallengeCookieOptions() {
     sameSite: "lax",
     secure: env.nodeEnv === "production",
     maxAge: LOGIN_CODE_EXPIRES_MS,
-    path: "/",
+    path: "/"
   };
 }
 
@@ -52,7 +49,7 @@ function getClearLoginChallengeCookieOptions() {
     httpOnly: true,
     sameSite: "lax",
     secure: env.nodeEnv === "production",
-    path: "/",
+    path: "/"
   };
 }
 
@@ -62,7 +59,7 @@ function getRememberDeviceCookieOptions() {
     sameSite: "lax",
     secure: env.nodeEnv === "production",
     maxAge: REMEMBER_DEVICE_EXPIRES_MS,
-    path: "/",
+    path: "/"
   };
 }
 
@@ -71,7 +68,7 @@ function getClearRememberDeviceCookieOptions() {
     httpOnly: true,
     sameSite: "lax",
     secure: env.nodeEnv === "production",
-    path: "/",
+    path: "/"
   };
 }
 
@@ -101,15 +98,14 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
     return {
       bypassCode: true,
       user,
-      ...(await createSession(user)),
+      ...(await createSession(user))
     };
   }
 
   if (rememberDeviceToken) {
-    const rememberedDevice =
-      await rememberedDeviceRepository.findValidDeviceByHash(
-        hashValue(rememberDeviceToken),
-      );
+    const rememberedDevice = await rememberedDeviceRepository.findValidDeviceByHash(
+      hashValue(rememberDeviceToken)
+    );
 
     if (
       rememberedDevice &&
@@ -120,7 +116,7 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
       return {
         bypassCode: true,
         user,
-        ...(await createSession(user)),
+        ...(await createSession(user))
       };
     }
   }
@@ -133,32 +129,27 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
   await loginCodeRepository.createCode({
     userId: user.id,
     codeHash: hashValue(`${challengeToken}:${code}`),
-    expiresAt: new Date(Date.now() + LOGIN_CODE_EXPIRES_MS),
+    expiresAt: new Date(Date.now() + LOGIN_CODE_EXPIRES_MS)
   });
 
   await sendLoginCodeEmail({
     to: user.email,
     username: user.username,
-    code,
+    code
   });
 
   return {
     bypassCode: false,
-    challengeToken,
+    challengeToken
   };
 }
 
-async function verifyLoginCode({
-  challengeToken,
-  code,
-  rememberDevice,
-  _userAgent,
-}) {
+async function verifyLoginCode({ challengeToken, code, rememberDevice, _userAgent }) {
   const codeHash = hashValue(`${challengeToken}:${code}`);
 
   const loginCode = await loginCodeRepository.findValidCodeByHash({
     userId: undefined,
-    codeHash,
+    codeHash
   });
 
   if (!loginCode) {
@@ -176,7 +167,7 @@ async function verifyLoginCode({
     await rememberedDeviceRepository.createDevice({
       userId: loginCode.user.id,
       tokenHash: hashValue(rememberDeviceToken),
-      expiresAt: new Date(Date.now() + REMEMBER_DEVICE_EXPIRES_MS),
+      expiresAt: new Date(Date.now() + REMEMBER_DEVICE_EXPIRES_MS)
     });
   }
 
@@ -184,7 +175,7 @@ async function verifyLoginCode({
     user: loginCode.user,
     accessToken: session.accessToken,
     refreshToken: session.refreshToken,
-    rememberDeviceToken,
+    rememberDeviceToken
   };
 }
 
@@ -194,5 +185,5 @@ module.exports = {
   getLoginChallengeCookieOptions,
   getClearLoginChallengeCookieOptions,
   getRememberDeviceCookieOptions,
-  getClearRememberDeviceCookieOptions,
+  getClearRememberDeviceCookieOptions
 };

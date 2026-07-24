@@ -10,18 +10,15 @@
         class="relative z-10 mx-auto grid w-full max-w-[1240px] gap-10 px-6 pb-16 pt-16 lg:grid-cols-[1.2fr_0.9fr]"
       >
         <div>
-          <p class="text-xs uppercase tracking-[0.22em] text-[#8AA2FF]">
-            Make It Art
-          </p>
+          <p class="text-xs uppercase tracking-[0.22em] text-[#8AA2FF]">Make It Art</p>
           <h1
             class="mt-6 max-w-3xl text-[clamp(2.7rem,7vw,5.8rem)] font-semibold leading-[0.94] text-white"
           >
             Discover digital artists with a futuristic gallery vibe.
           </h1>
           <p class="mt-6 max-w-2xl text-base leading-8 text-[#A7B4C9]">
-            Explore artworks, follow the artists that inspire you, and organize
-            your favorites in personal collections ready for the next e-commerce
-            phase.
+            Explore artworks, follow the artists that inspire you, and organize your favorites in
+            personal collections ready for the next e-commerce phase.
           </p>
 
           <div class="mt-10 flex flex-wrap gap-4">
@@ -62,47 +59,31 @@
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2">
-          <article
-            class="rounded-[28px] border border-[#151E30] bg-[#070B14]/92 p-6 backdrop-blur"
-          >
-            <p class="text-xs uppercase tracking-[0.18em] text-[#6F84AA]">
-              Featured artworks
-            </p>
+          <article class="rounded-[28px] border border-[#151E30] bg-[#070B14]/92 p-6 backdrop-blur">
+            <p class="text-xs uppercase tracking-[0.18em] text-[#6F84AA]">Featured artworks</p>
             <p class="mt-4 text-4xl font-semibold text-white">
               {{ overview.stats.artworks }}
             </p>
             <p class="mt-3 text-sm leading-7 text-[#96A4B8]">
-              A public catalogue designed for discovery, favorites, and
-              navigation to each artist.
+              A public catalogue designed for discovery, favorites, and navigation to each artist.
             </p>
           </article>
-          <article
-            class="rounded-[28px] border border-[#151E30] bg-[#070B14]/92 p-6 backdrop-blur"
-          >
-            <p class="text-xs uppercase tracking-[0.18em] text-[#6F84AA]">
-              Verified artists
-            </p>
+          <article class="rounded-[28px] border border-[#151E30] bg-[#070B14]/92 p-6 backdrop-blur">
+            <p class="text-xs uppercase tracking-[0.18em] text-[#6F84AA]">Verified artists</p>
             <p class="mt-4 text-4xl font-semibold text-white">
               {{ overview.stats.artists }}
             </p>
             <p class="mt-3 text-sm leading-7 text-[#96A4B8]">
-              Richer public profiles with styles, portfolios, and follow
-              actions.
+              Richer public profiles with styles, portfolios, and follow actions.
             </p>
           </article>
           <article
             class="rounded-[28px] border border-[#1B2640] bg-[linear-gradient(135deg,_rgba(74,108,247,0.22),_rgba(6,8,14,0.95)_56%)] p-6 sm:col-span-2"
           >
-            <p class="text-xs uppercase tracking-[0.18em] text-[#D7E2FF]">
-              Collector journey
-            </p>
+            <p class="text-xs uppercase tracking-[0.18em] text-[#D7E2FF]">Collector journey</p>
             <div class="mt-5 grid gap-3 text-sm text-[#DCE7FF] sm:grid-cols-3">
-              <div class="rounded-2xl bg-[#050812]/55 px-4 py-4">
-                1. Discover artworks
-              </div>
-              <div class="rounded-2xl bg-[#050812]/55 px-4 py-4">
-                2. Explore artist profiles
-              </div>
+              <div class="rounded-2xl bg-[#050812]/55 px-4 py-4">1. Discover artworks</div>
+              <div class="rounded-2xl bg-[#050812]/55 px-4 py-4">2. Explore artist profiles</div>
               <div class="rounded-2xl bg-[#050812]/55 px-4 py-4">
                 3. Save favorites and collections
               </div>
@@ -118,15 +99,10 @@
         class="grid gap-5 rounded-[28px] border border-[#151E30] bg-[#070B14] p-6"
       >
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
-            Categories
-          </p>
-          <h2 class="mt-3 text-2xl font-semibold text-white">
-            Explore by creative universe
-          </h2>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">Categories</p>
+          <h2 class="mt-3 text-2xl font-semibold text-white">Explore by creative universe</h2>
           <p class="mt-3 max-w-2xl text-sm leading-7 text-[#96A4B8]">
-            Filter the catalogue by category to find the kind of artwork that
-            inspires you.
+            Filter the catalogue by category to find the kind of artwork that inspires you.
           </p>
         </div>
         <div class="flex flex-wrap gap-3">
@@ -141,19 +117,14 @@
         </div>
       </section>
 
-      <div
-        class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
-      >
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
-            Current selection
-          </p>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">Current selection</p>
           <h2 class="mt-3 text-[clamp(2rem,4vw,3rem)] font-semibold text-white">
             Artworks worth saving
           </h2>
           <p class="mt-4 max-w-2xl text-sm leading-7 text-[#96A4B8]">
-            Detailed artwork pages linked to public artist profiles for smoother
-            discovery.
+            Detailed artwork pages linked to public artist profiles for smoother discovery.
           </p>
         </div>
         <NuxtLink
@@ -187,19 +158,14 @@
         />
       </section>
 
-      <div
-        class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
-      >
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
-            Featured artists
-          </p>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">Featured artists</p>
           <h2 class="mt-3 text-[clamp(2rem,4vw,3rem)] font-semibold text-white">
             Explore the worlds behind the artworks
           </h2>
           <p class="mt-4 max-w-2xl text-sm leading-7 text-[#96A4B8]">
-            A real entry point for artist discovery, with follow actions and
-            public portfolios.
+            A real entry point for artist discovery, with follow actions and public portfolios.
           </p>
         </div>
         <NuxtLink
@@ -210,10 +176,7 @@
         </NuxtLink>
       </div>
 
-      <section
-        v-if="!pending && !errorMessage"
-        class="grid gap-6 lg:grid-cols-2"
-      >
+      <section v-if="!pending && !errorMessage" class="grid gap-6 lg:grid-cols-2">
         <ArtistCard
           v-for="artist in overview.artists"
           :key="artist.id"
@@ -239,26 +202,24 @@ import ArtistCard from "~/components/marketplace/ArtistCard.vue";
 const auth = useAuthStore();
 const { user } = storeToRefs(auth);
 const categories = ref([]);
-const requestHeaders = import.meta.server
-  ? useRequestHeaders(["cookie"])
-  : undefined;
+const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
 
 const {
   data,
   pending,
   error,
-  refresh: refreshOverview,
+  refresh: refreshOverview
 } = await useFetch("/api/marketplace/overview", {
   headers: requestHeaders,
   credentials: "include",
   default: () => ({
     stats: {
       artworks: 0,
-      artists: 0,
+      artists: 0
     },
     artworks: [],
-    artists: [],
-  }),
+    artists: []
+  })
 });
 
 const overview = computed(() => {
@@ -266,10 +227,10 @@ const overview = computed(() => {
     data.value || {
       stats: {
         artworks: 0,
-        artists: 0,
+        artists: 0
       },
       artworks: [],
-      artists: [],
+      artists: []
     }
   );
 });
@@ -277,18 +238,13 @@ const overview = computed(() => {
 const errorMessage = computed(() => error.value?.data?.message || "");
 const showCollectorShortcut = computed(() => user.value && !auth.isAdmin);
 
-const {
-  actionMessage,
-  favoriteLoading,
-  followLoading,
-  toggleFavorite,
-  toggleFollow,
-} = useMarketplaceActions(auth);
+const { actionMessage, favoriteLoading, followLoading, toggleFavorite, toggleFollow } =
+  useMarketplaceActions(auth);
 
 onMounted(async () => {
   try {
     const response = await $fetch("/api/categories", {
-      credentials: "include",
+      credentials: "include"
     });
 
     categories.value = response.categories || [];

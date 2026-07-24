@@ -3,21 +3,15 @@
     <section
       class="mx-auto grid w-full max-w-[1160px] gap-8 rounded-[32px] border border-[#1A1F2A] bg-[#01050E] p-7 shadow-[0_32px_90px_rgba(0,0,0,0.22)]"
     >
-      <header
-        class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
-      >
+      <header class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-            Checkout
-          </p>
-          <h1
-            class="mt-4 text-[clamp(2rem,2.6vw,3rem)] font-semibold leading-[1.05] text-white"
-          >
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Checkout</p>
+          <h1 class="mt-4 text-[clamp(2rem,2.6vw,3rem)] font-semibold leading-[1.05] text-white">
             Paiement réel (non branché)
           </h1>
           <p class="mt-4 max-w-3xl text-sm leading-6 text-[#A0ADB4]">
-            Cette page simule un checkout, mais le parcours d'achat complet
-            n'est pas connecté côté utilisateur.
+            Cette page simule un checkout, mais le parcours d'achat complet n'est pas connecté côté
+            utilisateur.
           </p>
         </div>
 
@@ -37,9 +31,7 @@
       </section>
 
       <section v-else class="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-        <article
-          class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6"
-        >
+        <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
           <h2 class="text-xl font-semibold text-white">Récap</h2>
           <div class="mt-5 grid gap-3">
             <div
@@ -57,11 +49,7 @@
                 </p>
               </div>
               <p class="shrink-0 text-sm font-semibold text-[#DCE7FF]">
-                {{
-                  formatMarketplacePrice(
-                    (item.artwork.priceValue ?? 0) * item.quantity,
-                  )
-                }}
+                {{ formatMarketplacePrice((item.artwork.priceValue ?? 0) * item.quantity) }}
               </p>
             </div>
           </div>
@@ -83,9 +71,7 @@
           </div>
         </article>
 
-        <article
-          class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6"
-        >
+        <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
           <h2 class="text-xl font-semibold text-white">Paiement</h2>
           <p class="mt-4 text-sm leading-6 text-[#A0ADB4]">
             Placeholder : à brancher plus tard (Stripe / crypto / autre).
@@ -93,9 +79,7 @@
 
           <div class="mt-6 grid gap-4">
             <label class="grid gap-2 text-sm text-[#9EABBE]">
-              <span class="font-medium text-[#E6EDF7]"
-                >Email de facturation</span
-              >
+              <span class="font-medium text-[#E6EDF7]">Email de facturation</span>
               <input
                 v-model.trim="billingEmail"
                 type="email"
@@ -127,8 +111,7 @@
           <div
             class="mt-6 rounded-2xl border border-[#203357] bg-[#091121] px-5 py-4 text-sm text-[#BFD0FF]"
           >
-            Aucun achat n'est créé en base pour l'instant : c'est volontaire
-            (MVP).
+            Aucun achat n'est créé en base pour l'instant : c'est volontaire (MVP).
           </div>
         </article>
       </section>

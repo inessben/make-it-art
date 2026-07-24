@@ -12,9 +12,7 @@
 
       <p v-if="section.contactEmail">
         To exercise these rights, contact:
-        <a :href="`mailto:${section.contactEmail}`">{{
-          section.contactEmail
-        }}</a
+        <a :href="`mailto:${section.contactEmail}`">{{ section.contactEmail }}</a
         ><br />
         Response time: 30 days
       </p>
@@ -25,11 +23,9 @@
       </p>
 
       <p v-if="section.cnil" class="legal-note">
-        If you believe your rights are not being respected, you have the right
-        to file a complaint with the
-        <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer"
-          >CNIL</a
-        >.
+        If you believe your rights are not being respected, you have the right to file a complaint
+        with the
+        <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">CNIL</a>.
       </p>
 
       <p v-if="section.important" class="legal-note">{{ section.important }}</p>
@@ -38,10 +34,7 @@
         <li v-for="item in section.items" :key="item">{{ item }}</li>
       </ul>
 
-      <div
-        v-for="subsection in section.subsections || []"
-        :key="subsection.title"
-      >
+      <div v-for="subsection in section.subsections || []" :key="subsection.title">
         <h3>{{ subsection.title }}</h3>
         <p v-for="paragraph in subsection.paragraphs || []" :key="paragraph">
           {{ paragraph }}
@@ -62,13 +55,13 @@ const sections = [
       "Name: Make it Art SARL",
       "Co-founders: Iness Benaissa and Vivien Bellaire",
       "Contact email: support@makeitart.io",
-      "Address: Paris, France",
-    ],
+      "Address: Paris, France"
+    ]
   },
   {
     title: "2. Data Collected",
     paragraphs: [
-      "Make it Art collects the following data to ensure the Platform operates properly:",
+      "Make it Art collects the following data to ensure the Platform operates properly:"
     ],
     subsections: [
       {
@@ -77,8 +70,8 @@ const sections = [
           "Last name, first name, email address.",
           "Username and biography (optional).",
           "Profile picture (optional).",
-          "Location information (optional).",
-        ],
+          "Location information (optional)."
+        ]
       },
       {
         title: "2.2 Payment and Financial Data",
@@ -87,8 +80,8 @@ const sections = [
           "Credit card number (NOT STORED: processed directly by Stripe).",
           "Bank details for transfers.",
           "Crypto wallet address, including MetaMask, WalletConnect, and similar services.",
-          "Transaction and purchase history.",
-        ],
+          "Transaction and purchase history."
+        ]
       },
       {
         title: "2.3 Artist Data",
@@ -96,8 +89,8 @@ const sections = [
           "Business registration (KBIS or equivalent) or self-employed status.",
           "VAT number, if applicable.",
           "Portfolio and catalog of works.",
-          "Sales and engagement statistics.",
-        ],
+          "Sales and engagement statistics."
+        ]
       },
       {
         title: "2.4 Technical Data",
@@ -105,30 +98,28 @@ const sections = [
           "IP address.",
           "Browser type and operating system.",
           "Pages visited, time spent, and actions taken.",
-          "Cookies and tracking technologies (see Cookie Policy).",
-        ],
+          "Cookies and tracking technologies (see Cookie Policy)."
+        ]
       },
       {
         title: "2.5 Communication Data",
         items: [
           "Messages between Users.",
           "Support communications, including emails and chats.",
-          "Feedback and reviews.",
-        ],
-      },
-    ],
+          "Feedback and reviews."
+        ]
+      }
+    ]
   },
   {
     title: "3. Legal Basis for Processing",
-    paragraphs: [
-      "Make it Art processes your data on the following legal bases:",
-    ],
+    paragraphs: ["Make it Art processes your data on the following legal bases:"],
     items: [
       "Performance of a contract (Article 6.1.b GDPR): transactions, delivery of artworks, royalty management.",
       "Consent (Article 6.1.a GDPR): newsletters and marketing communications (opt-in).",
       "Legitimate interest (Article 6.1.f GDPR): fraud prevention, service improvement, security.",
-      "Legal compliance (Article 6.1.c GDPR): tax, accounting, and legal obligations.",
-    ],
+      "Legal compliance (Article 6.1.c GDPR): tax, accounting, and legal obligations."
+    ]
   },
   {
     title: "4. Purposes of Processing",
@@ -140,8 +131,8 @@ const sections = [
       "Customer support communications.",
       "Continuous improvement of the Platform.",
       "Combating fraud, abuse, and violations of the Terms & Conditions.",
-      "Legal and tax compliance.",
-    ],
+      "Legal and tax compliance."
+    ]
   },
   {
     title: "5. Data Recipients",
@@ -151,20 +142,20 @@ const sections = [
       "Blockchain networks: Ethereum and Polygon (public, irreversible transactions).",
       "Storage providers: IPFS for artworks.",
       "Legal and tax authorities, where legally required.",
-      "Make it Art support team with limited, secure access.",
+      "Make it Art support team with limited, secure access."
     ],
     important:
-      "IMPORTANT: Data published on the blockchain, including NFTs and transactions, is public and permanent. Make it Art cannot delete or modify it.",
+      "IMPORTANT: Data published on the blockchain, including NFTs and transactions, is public and permanent. Make it Art cannot delete or modify it."
   },
   {
     title: "6. International Transfers",
     paragraphs: [
-      "If your data is transferred outside the EU, Make it Art ensures an equivalent level of protection through:",
+      "If your data is transferred outside the EU, Make it Art ensures an equivalent level of protection through:"
     ],
     items: [
       "Standard Contractual Clauses approved by the European Commission.",
-      "Oversight of third-party partners, including Stripe and cloud services.",
-    ],
+      "Oversight of third-party partners, including Stripe and cloud services."
+    ]
   },
   {
     title: "7. Data Retention Period",
@@ -172,22 +163,18 @@ const sections = [
       {
         title: "7.1 Account Data",
         paragraphs: [
-          "Retained for the active duration of the account plus 3 years after deletion for legal obligations.",
-        ],
+          "Retained for the active duration of the account plus 3 years after deletion for legal obligations."
+        ]
       },
       {
         title: "7.2 Transaction Data",
-        paragraphs: [
-          "Retained for 10 years for accounting and tax compliance.",
-        ],
+        paragraphs: ["Retained for 10 years for accounting and tax compliance."]
       },
       {
         title: "7.3 Blockchain Data",
-        paragraphs: [
-          "Retained indefinitely because it is decentralized and immutable by nature.",
-        ],
-      },
-    ],
+        paragraphs: ["Retained indefinitely because it is decentralized and immutable by nature."]
+      }
+    ]
   },
   {
     title: "8. Your Rights",
@@ -196,46 +183,38 @@ const sections = [
     subsections: [
       {
         title: "8.1 Right of Access",
-        paragraphs: [
-          "You can access your personal data by contacting support@makeitart.io.",
-        ],
+        paragraphs: ["You can access your personal data by contacting support@makeitart.io."]
       },
       {
         title: "8.2 Right to Rectification",
         paragraphs: [
-          "You can correct inaccurate data through your account or by requesting our assistance.",
-        ],
+          "You can correct inaccurate data through your account or by requesting our assistance."
+        ]
       },
       {
         title: '8.3 Right to Erasure ("Right to be Forgotten")',
-        paragraphs: [
-          "You can request the deletion of your data, except where:",
-        ],
+        paragraphs: ["You can request the deletion of your data, except where:"],
         items: [
           "A legal obligation requires us to retain it.",
           "Unresolved disputes require its retention.",
-          "The data has been made public on the blockchain.",
-        ],
+          "The data has been made public on the blockchain."
+        ]
       },
       {
         title: "8.4 Right to Restriction of Processing",
-        paragraphs: [
-          "You can request the restriction of processing of certain data.",
-        ],
+        paragraphs: ["You can request the restriction of processing of certain data."]
       },
       {
         title: "8.5 Right to Data Portability",
-        paragraphs: [
-          "You can receive your data in a structured, portable format.",
-        ],
+        paragraphs: ["You can receive your data in a structured, portable format."]
       },
       {
         title: "8.6 Right to Object",
         paragraphs: [
-          "You can object to the processing of your data for marketing or profiling purposes.",
-        ],
-      },
-    ],
+          "You can object to the processing of your data for marketing or profiling purposes."
+        ]
+      }
+    ]
   },
   {
     title: "9. Data Security",
@@ -245,24 +224,24 @@ const sections = [
       "Secure databases with multi-factor authentication.",
       "Regular security audits.",
       "Strict access control policy.",
-      "Regular data backups.",
+      "Regular data backups."
     ],
     important:
-      "While we strive to secure your data, no transmission over the Internet is 100% secure.",
+      "While we strive to secure your data, no transmission over the Internet is 100% secure."
   },
   {
     title: "10. Breach Notification",
     paragraphs: [
-      "In the event of a personal data breach, Make it Art will notify affected users and the data protection authority (CNIL) within 72 hours, in accordance with the GDPR.",
-    ],
+      "In the event of a personal data breach, Make it Art will notify affected users and the data protection authority (CNIL) within 72 hours, in accordance with the GDPR."
+    ]
   },
   {
     title: "11. Data Protection Officer (DPO)",
-    dpoEmail: "support@makeitart.io",
+    dpoEmail: "support@makeitart.io"
   },
   {
     title: "12. Complaints to the CNIL",
-    cnil: true,
-  },
+    cnil: true
+  }
 ];
 </script>

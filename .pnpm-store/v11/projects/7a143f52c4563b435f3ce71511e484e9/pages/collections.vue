@@ -2,13 +2,13 @@
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "auth",
+  middleware: "auth"
 });
 
 await navigateTo({
   path: "/wishlist",
   query: {
-    tab: "collections",
-  },
+    tab: "collections"
+  }
 });
 </script>

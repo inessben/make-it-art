@@ -8,18 +8,12 @@ const { loadModuleWithMocks } = require("./helpers/mock-require");
 const routesPath = require.resolve("../src/routes/auth.routes");
 const authServicePath = require.resolve("../src/services/auth.service");
 const sessionServicePath = require.resolve("../src/services/session.service");
-const rateLimitPath =
-  require.resolve("../src/middlewares/rate-limit.middleware");
-const authRequiredPath =
-  require.resolve("../src/middlewares/auth-required.middleware");
-const userRepositoryPath =
-  require.resolve("../src/repositories/user.repository");
-const twoFactorLoginServicePath =
-  require.resolve("../src/services/two-factor-login.service");
-const googleOAuthServicePath =
-  require.resolve("../src/services/google-oauth.service");
-const serializeAuthUserPath =
-  require.resolve("../src/utils/serialize-auth-user");
+const rateLimitPath = require.resolve("../src/middlewares/rate-limit.middleware");
+const authRequiredPath = require.resolve("../src/middlewares/auth-required.middleware");
+const userRepositoryPath = require.resolve("../src/repositories/user.repository");
+const twoFactorLoginServicePath = require.resolve("../src/services/two-factor-login.service");
+const googleOAuthServicePath = require.resolve("../src/services/google-oauth.service");
+const serializeAuthUserPath = require.resolve("../src/utils/serialize-auth-user");
 const envPath = require.resolve("../src/config/env");
 const argon2Path = require.resolve("argon2");
 
@@ -39,14 +33,14 @@ const env = {
   rememberDeviceCookieName: "mia_remember_device",
   googleOAuth: {
     stateCookieName: "mia_google_oauth_state",
-    linkCookieName: "mia_google_oauth_link",
-  },
+    linkCookieName: "mia_google_oauth_link"
+  }
 };
 
 const authUser = {
   id: 42,
   email: "artist@example.com",
-  username: "Ada",
+  username: "Ada"
 };
 
 function middleware(_req, _res, next) {
@@ -57,14 +51,14 @@ function cookieOptions() {
   return {
     httpOnly: true,
     sameSite: "lax",
-    path: "/",
+    path: "/"
   };
 }
 
 async function startAuthRoutesApp(t, overrides = {}) {
   const calls = {
     authenticateGoogleCode: [],
-    linkGoogleAccountWithPassword: [],
+    linkGoogleAccountWithPassword: []
   };
 
   const googleOAuthService = {
@@ -75,9 +69,8 @@ async function startAuthRoutesApp(t, overrides = {}) {
       }
 
       return {
-        authorizationUrl:
-          "https://accounts.google.test/oauth?client_id=test-client",
-        state: "state-token",
+        authorizationUrl: "https://accounts.google.test/oauth?client_id=test-client",
+        state: "state-token"
       };
     },
     async authenticateGoogleCode(code) {
@@ -92,7 +85,7 @@ async function startAuthRoutesApp(t, overrides = {}) {
           accessToken: "access-token",
           refreshToken: "refresh-token",
           status: "authenticated",
-          user: authUser,
+          user: authUser
         }
       );
     },
@@ -102,7 +95,7 @@ async function startAuthRoutesApp(t, overrides = {}) {
       if (overrides.linkGoogleAccountError) {
         throw new GoogleOAuthError(
           overrides.linkGoogleAccountError.message,
-          overrides.linkGoogleAccountError.code,
+          overrides.linkGoogleAccountError.code
         );
       }
 
@@ -110,13 +103,13 @@ async function startAuthRoutesApp(t, overrides = {}) {
         accessToken: "access-token",
         refreshToken: "refresh-token",
         status: "authenticated",
-        user: authUser,
+        user: authUser
       };
     },
     getGoogleOAuthStateCookieOptions: cookieOptions,
     getClearGoogleOAuthStateCookieOptions: cookieOptions,
     getGoogleOAuthLinkCookieOptions: cookieOptions,
-    getClearGoogleOAuthLinkCookieOptions: cookieOptions,
+    getClearGoogleOAuthLinkCookieOptions: cookieOptions
   };
 
   const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
@@ -125,7 +118,7 @@ async function startAuthRoutesApp(t, overrides = {}) {
       resendVerificationEmail: async () => undefined,
       requestPasswordReset: async () => undefined,
       resetPassword: async () => undefined,
-      verifyEmail: async () => undefined,
+      verifyEmail: async () => undefined
     },
     [sessionServicePath]: {
       getSessionCookieOptions: cookieOptions,
@@ -133,14 +126,14 @@ async function startAuthRoutesApp(t, overrides = {}) {
       getClearSessionCookieOptions: cookieOptions,
       getClearRefreshCookieOptions: cookieOptions,
       rotateRefreshToken: async () => null,
-      revokeRefreshToken: async () => undefined,
+      revokeRefreshToken: async () => undefined
     },
     [rateLimitPath]: {
       authRateLimit: middleware,
-      strictAuthRateLimit: middleware,
+      strictAuthRateLimit: middleware
     },
     [authRequiredPath]: {
-      authRequired: middleware,
+      authRequired: middleware
     },
     [userRepositoryPath]: {},
     [twoFactorLoginServicePath]: {
@@ -149,19 +142,19 @@ async function startAuthRoutesApp(t, overrides = {}) {
       getLoginChallengeCookieOptions: cookieOptions,
       getClearLoginChallengeCookieOptions: cookieOptions,
       getRememberDeviceCookieOptions: cookieOptions,
-      getClearRememberDeviceCookieOptions: cookieOptions,
+      getClearRememberDeviceCookieOptions: cookieOptions
     },
     [googleOAuthServicePath]: googleOAuthService,
     [serializeAuthUserPath]: {
       serializeAuthUser(user) {
         return {
           id: user.id,
-          email: user.email,
+          email: user.email
         };
-      },
+      }
     },
     [envPath]: env,
-    [argon2Path]: {},
+    [argon2Path]: {}
   });
 
   const app = express();
@@ -184,7 +177,7 @@ async function startAuthRoutesApp(t, overrides = {}) {
 
   return {
     calls,
-    baseUrl: `http://127.0.0.1:${server.address().port}`,
+    baseUrl: `http://127.0.0.1:${server.address().port}`
   };
 }
 
@@ -194,8 +187,8 @@ async function request(baseUrl, path, options = {}) {
     ...options,
     headers: {
       ...(options.body ? { "content-type": "application/json" } : {}),
-      ...(options.headers || {}),
-    },
+      ...(options.headers || {})
+    }
   });
 }
 
@@ -218,89 +211,61 @@ test("GET /auth/google redirects to Google and stores the OAuth state", async (t
   assert.equal(response.status, 302);
   assert.equal(
     response.headers.get("location"),
-    "https://accounts.google.test/oauth?client_id=test-client",
+    "https://accounts.google.test/oauth?client_id=test-client"
   );
-  assert.ok(
-    cookies.some((cookie) =>
-      cookie.startsWith("mia_google_oauth_state=state-token"),
-    ),
-  );
+  assert.ok(cookies.some((cookie) => cookie.startsWith("mia_google_oauth_state=state-token")));
 });
 
 test("GET /auth/google redirects back with an unavailable message when not configured", async (t) => {
   const { baseUrl } = await startAuthRoutesApp(t, {
-    googleAuthorizationError: "missing config",
+    googleAuthorizationError: "missing config"
   });
 
   const response = await request(baseUrl, "/auth/google");
 
   assert.equal(response.status, 302);
-  assert.equal(
-    response.headers.get("location"),
-    "http://localhost/login?google=unavailable",
-  );
+  assert.equal(response.headers.get("location"), "http://localhost/login?google=unavailable");
 });
 
 test("GET /auth/google/callback handles user cancellation", async (t) => {
   const { baseUrl, calls } = await startAuthRoutesApp(t);
 
-  const response = await request(
-    baseUrl,
-    "/auth/google/callback?error=access_denied",
-  );
+  const response = await request(baseUrl, "/auth/google/callback?error=access_denied");
 
   assert.equal(response.status, 302);
-  assert.equal(
-    response.headers.get("location"),
-    "http://localhost/login?google=cancelled",
-  );
+  assert.equal(response.headers.get("location"), "http://localhost/login?google=cancelled");
   assert.deepEqual(calls.authenticateGoogleCode, []);
 });
 
 test("GET /auth/google/callback rejects state mismatches", async (t) => {
   const { baseUrl, calls } = await startAuthRoutesApp(t);
 
-  const response = await request(
-    baseUrl,
-    "/auth/google/callback?code=code&state=state-token",
-    {
-      headers: {
-        cookie: "mia_google_oauth_state=other-state",
-      },
-    },
-  );
+  const response = await request(baseUrl, "/auth/google/callback?code=code&state=state-token", {
+    headers: {
+      cookie: "mia_google_oauth_state=other-state"
+    }
+  });
 
   assert.equal(response.status, 302);
-  assert.equal(
-    response.headers.get("location"),
-    "http://localhost/login?google=error",
-  );
+  assert.equal(response.headers.get("location"), "http://localhost/login?google=error");
   assert.deepEqual(calls.authenticateGoogleCode, []);
 });
 
 test("GET /auth/google/callback logs in successful OAuth users", async (t) => {
   const { baseUrl, calls } = await startAuthRoutesApp(t);
 
-  const response = await request(
-    baseUrl,
-    "/auth/google/callback?code=code&state=state-token",
-    {
-      headers: {
-        cookie: "mia_google_oauth_state=state-token",
-      },
-    },
-  );
+  const response = await request(baseUrl, "/auth/google/callback?code=code&state=state-token", {
+    headers: {
+      cookie: "mia_google_oauth_state=state-token"
+    }
+  });
   const cookies = getSetCookieHeaders(response.headers);
 
   assert.equal(response.status, 302);
   assert.equal(response.headers.get("location"), "http://localhost/");
   assert.deepEqual(calls.authenticateGoogleCode, ["code"]);
-  assert.ok(
-    cookies.some((cookie) => cookie.startsWith("mia_session=access-token")),
-  );
-  assert.ok(
-    cookies.some((cookie) => cookie.startsWith("mia_refresh=refresh-token")),
-  );
+  assert.ok(cookies.some((cookie) => cookie.startsWith("mia_session=access-token")));
+  assert.ok(cookies.some((cookie) => cookie.startsWith("mia_refresh=refresh-token")));
 });
 
 test("GET /auth/google/callback redirects admins to the admin dashboard", async (t) => {
@@ -311,20 +276,16 @@ test("GET /auth/google/callback redirects admins to the admin dashboard", async 
       status: "authenticated",
       user: {
         ...authUser,
-        role: "admin",
-      },
-    },
+        role: "admin"
+      }
+    }
   });
 
-  const response = await request(
-    baseUrl,
-    "/auth/google/callback?code=code&state=state-token",
-    {
-      headers: {
-        cookie: "mia_google_oauth_state=state-token",
-      },
-    },
-  );
+  const response = await request(baseUrl, "/auth/google/callback?code=code&state=state-token", {
+    headers: {
+      cookie: "mia_google_oauth_state=state-token"
+    }
+  });
 
   assert.equal(response.status, 302);
   assert.equal(response.headers.get("location"), "http://localhost/admin");
@@ -335,31 +296,23 @@ test("GET /auth/google/callback redirects to password linking when required", as
     authenticateGoogleCodeResult: {
       email: "artist@example.com",
       linkToken: "link-token",
-      status: "requires_password",
-    },
+      status: "requires_password"
+    }
   });
 
-  const response = await request(
-    baseUrl,
-    "/auth/google/callback?code=code&state=state-token",
-    {
-      headers: {
-        cookie: "mia_google_oauth_state=state-token",
-      },
-    },
-  );
+  const response = await request(baseUrl, "/auth/google/callback?code=code&state=state-token", {
+    headers: {
+      cookie: "mia_google_oauth_state=state-token"
+    }
+  });
   const cookies = getSetCookieHeaders(response.headers);
 
   assert.equal(response.status, 302);
   assert.equal(
     response.headers.get("location"),
-    "http://localhost/login?googleLink=required&email=artist%40example.com",
+    "http://localhost/login?googleLink=required&email=artist%40example.com"
   );
-  assert.ok(
-    cookies.some((cookie) =>
-      cookie.startsWith("mia_google_oauth_link=link-token"),
-    ),
-  );
+  assert.ok(cookies.some((cookie) => cookie.startsWith("mia_google_oauth_link=link-token")));
 });
 
 test("POST /auth/google/link requires the pending link cookie and password", async (t) => {
@@ -367,15 +320,12 @@ test("POST /auth/google/link requires the pending link cookie and password", asy
 
   const response = await request(baseUrl, "/auth/google/link", {
     method: "POST",
-    body: JSON.stringify({}),
+    body: JSON.stringify({})
   });
   const body = await response.json();
 
   assert.equal(response.status, 400);
-  assert.equal(
-    body.message,
-    "Google sign-in session and password are required",
-  );
+  assert.equal(body.message, "Google sign-in session and password are required");
   assert.deepEqual(calls.linkGoogleAccountWithPassword, []);
 });
 
@@ -383,18 +333,18 @@ test("POST /auth/google/link refuses incorrect passwords", async (t) => {
   const { baseUrl, calls } = await startAuthRoutesApp(t, {
     linkGoogleAccountError: {
       code: "GOOGLE_LINK_INVALID_PASSWORD",
-      message: "Password is incorrect",
-    },
+      message: "Password is incorrect"
+    }
   });
 
   const response = await request(baseUrl, "/auth/google/link", {
     method: "POST",
     headers: {
-      cookie: "mia_google_oauth_link=link-token",
+      cookie: "mia_google_oauth_link=link-token"
     },
     body: JSON.stringify({
-      password: "Wrong1!",
-    }),
+      password: "Wrong1!"
+    })
   });
   const body = await response.json();
 
@@ -403,8 +353,8 @@ test("POST /auth/google/link refuses incorrect passwords", async (t) => {
   assert.deepEqual(calls.linkGoogleAccountWithPassword, [
     {
       linkToken: "link-token",
-      password: "Wrong1!",
-    },
+      password: "Wrong1!"
+    }
   ]);
 });
 
@@ -414,11 +364,11 @@ test("POST /auth/google/link links the account and creates session cookies", asy
   const response = await request(baseUrl, "/auth/google/link", {
     method: "POST",
     headers: {
-      cookie: "mia_google_oauth_link=link-token",
+      cookie: "mia_google_oauth_link=link-token"
     },
     body: JSON.stringify({
-      password: "Password1!",
-    }),
+      password: "Password1!"
+    })
   });
   const body = await response.json();
   const cookies = getSetCookieHeaders(response.headers);
@@ -428,15 +378,9 @@ test("POST /auth/google/link links the account and creates session cookies", asy
   assert.equal(body.redirectTo, "/");
   assert.deepEqual(body.user, {
     id: authUser.id,
-    email: authUser.email,
+    email: authUser.email
   });
-  assert.ok(
-    cookies.some((cookie) => cookie.startsWith("mia_session=access-token")),
-  );
-  assert.ok(
-    cookies.some((cookie) => cookie.startsWith("mia_refresh=refresh-token")),
-  );
-  assert.ok(
-    cookies.some((cookie) => cookie.startsWith("mia_google_oauth_link=")),
-  );
+  assert.ok(cookies.some((cookie) => cookie.startsWith("mia_session=access-token")));
+  assert.ok(cookies.some((cookie) => cookie.startsWith("mia_refresh=refresh-token")));
+  assert.ok(cookies.some((cookie) => cookie.startsWith("mia_google_oauth_link=")));
 });

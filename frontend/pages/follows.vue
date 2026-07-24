@@ -3,21 +3,15 @@
     <section
       class="mx-auto grid w-full max-w-[1160px] gap-8 rounded-[32px] border border-[#1A1F2A] bg-[#01050E] p-7 shadow-[0_32px_90px_rgba(0,0,0,0.22)]"
     >
-      <header
-        class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
-      >
+      <header class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-            Mon compte
-          </p>
-          <h1
-            class="mt-4 text-[clamp(2rem,2.6vw,3rem)] font-semibold leading-[1.05] text-white"
-          >
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Mon compte</p>
+          <h1 class="mt-4 text-[clamp(2rem,2.6vw,3rem)] font-semibold leading-[1.05] text-white">
             Follows & Followers
           </h1>
           <p class="mt-4 max-w-3xl text-sm leading-6 text-[#A0ADB4]">
-            Consultez les artistes que vous suivez et, si vous avez un profil
-            artiste, les membres qui vous suivent.
+            Consultez les artistes que vous suivez et, si vous avez un profil artiste, les membres
+            qui vous suivent.
           </p>
         </div>
 
@@ -29,9 +23,7 @@
         </NuxtLink>
       </header>
 
-      <section
-        class="flex flex-wrap gap-2 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-2"
-      >
+      <section class="flex flex-wrap gap-2 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-2">
         <button
           type="button"
           class="rounded-[16px] px-5 py-2.5 text-sm font-semibold transition"
@@ -100,8 +92,7 @@
           v-else-if="followersUnavailable"
           class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6 text-[#A0ADB4]"
         >
-          Les followers sont disponibles uniquement si vous avez un profil
-          artiste.
+          Les followers sont disponibles uniquement si vous avez un profil artiste.
         </div>
         <div
           v-else-if="!followers.length"
@@ -109,10 +100,7 @@
         >
           Aucun follower pour le moment.
         </div>
-        <div
-          v-else
-          class="grid gap-3 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6"
-        >
+        <div v-else class="grid gap-3 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
           <div
             v-for="follower in followers"
             :key="follower.id"
@@ -147,7 +135,7 @@ import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
 import { useAuthStore } from "~/stores/auth";
 
 definePageMeta({
-  middleware: "auth",
+  middleware: "auth"
 });
 
 const auth = useAuthStore();
@@ -158,24 +146,21 @@ if (auth.isAdmin) {
 }
 
 const activeTab = ref("following");
-const { actionMessage, followLoading, toggleFollow } =
-  useMarketplaceActions(auth);
+const { actionMessage, followLoading, toggleFollow } = useMarketplaceActions(auth);
 
 const {
   data: followingData,
   pending: followingPending,
-  error: followingError,
+  error: followingError
 } = await useFetch("/api/follows/me", {
   credentials: "include",
   default: () => ({
-    artists: [],
-  }),
+    artists: []
+  })
 });
 
 const followedArtists = computed(() => followingData.value?.artists || []);
-const followingErrorMessage = computed(
-  () => followingError.value?.data?.message || "",
-);
+const followingErrorMessage = computed(() => followingError.value?.data?.message || "");
 
 const followersUnavailable = computed(() => !user.value?.artist);
 
@@ -187,8 +172,8 @@ if (!followersUnavailable.value) {
   const { data, pending, error } = await useFetch("/api/artists/me/followers", {
     credentials: "include",
     default: () => ({
-      followers: [],
-    }),
+      followers: []
+    })
   });
 
   followersData.value = data.value;

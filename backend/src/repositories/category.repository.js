@@ -1,7 +1,5 @@
 const prisma = require("../lib/prisma");
-const {
-  PREDEFINED_ARTWORK_CATEGORIES,
-} = require("../constants/artwork-categories");
+const { PREDEFINED_ARTWORK_CATEGORIES } = require("../constants/artwork-categories");
 
 async function ensurePredefinedCategories() {
   const categories = [];
@@ -9,8 +7,8 @@ async function ensurePredefinedCategories() {
   for (const name of PREDEFINED_ARTWORK_CATEGORIES) {
     const existing = await prisma.category.findFirst({
       where: {
-        name,
-      },
+        name
+      }
     });
 
     if (existing) {
@@ -21,9 +19,9 @@ async function ensurePredefinedCategories() {
     categories.push(
       await prisma.category.create({
         data: {
-          name,
-        },
-      }),
+          name
+        }
+      })
     );
   }
 
@@ -41,8 +39,8 @@ async function findById(categoryId) {
 
   return prisma.category.findUnique({
     where: {
-      id: categoryId,
-    },
+      id: categoryId
+    }
   });
 }
 
@@ -56,5 +54,5 @@ module.exports = {
   ensurePredefinedCategories,
   listCategories,
   findById,
-  isPredefinedCategory,
+  isPredefinedCategory
 };

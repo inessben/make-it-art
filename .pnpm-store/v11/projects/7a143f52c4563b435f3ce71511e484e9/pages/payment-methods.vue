@@ -3,13 +3,9 @@
     <section
       class="mx-auto w-full max-w-[1120px] rounded-2xl border border-slate-800 bg-slate-950 p-4 shadow-[0_32px_90px_rgba(0,0,0,0.22)] sm:rounded-[32px] sm:p-8"
     >
-      <div
-        class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"
-      >
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p class="text-xs uppercase tracking-widest text-violet-700">
-            Payment methods
-          </p>
+          <p class="text-xs uppercase tracking-widest text-violet-700">Payment methods</p>
           <h1 class="mt-4 text-title-2">Manage your payments</h1>
           <p class="mt-4 max-w-2xl text-slate-400 leading-7">
             Add or remove cards and manage your payment methods.
@@ -38,7 +34,7 @@
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "auth",
+  middleware: "auth"
 });
 
 function navigateBack() {

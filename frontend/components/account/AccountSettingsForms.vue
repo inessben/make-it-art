@@ -1,9 +1,5 @@
 <template>
-  <main
-    :class="
-      props.embedded ? 'text-slate-100' : 'min-h-screen bg-black text-slate-100'
-    "
-  >
+  <main :class="props.embedded ? 'text-slate-100' : 'min-h-screen bg-black text-slate-100'">
     <div
       :class="
         props.embedded
@@ -13,9 +9,7 @@
     >
       <AccountSettingsSidebar v-if="!props.embedded" />
 
-      <section
-        :class="props.embedded ? 'min-w-0' : 'min-w-0 pb-16 pt-1 lg:px-4'"
-      >
+      <section :class="props.embedded ? 'min-w-0' : 'min-w-0 pb-16 pt-1 lg:px-4'">
         <header v-if="!props.embedded">
           <h1 class="text-title-2">General Settings</h1>
           <p class="mt-2 text-body-1 text-slate-400">
@@ -44,9 +38,7 @@
           "
           @submit.prevent="saveProfile"
         >
-          <div
-            class="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between"
-          >
+          <div class="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h2 class="text-title-3">Profile Information</h2>
               <p class="mt-2 text-footer text-slate-500">
@@ -60,8 +52,7 @@
           </div>
 
           <div class="mt-10 grid gap-6 md:grid-cols-2">
-            <label
-              class="grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
+            <label class="grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
               >Display name
               <input
                 v-model.trim="profile.username"
@@ -71,8 +62,7 @@
                 class="h-14 border-b border-slate-750 bg-slate-900 px-5 text-body-1 normal-case tracking-normal text-slate-100 outline-none focus:border-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </label>
-            <label
-              class="grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
+            <label class="grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
               >Email address
               <input
                 v-model.trim="profile.email"
@@ -84,8 +74,7 @@
             </label>
           </div>
 
-          <label
-            class="mt-8 grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
+          <label class="mt-8 grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
             >Collector bio
             <textarea
               v-model.trim="profile.bio"
@@ -127,8 +116,7 @@
           </p>
 
           <div class="mt-8 grid gap-5">
-            <label
-              class="grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
+            <label class="grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
               >Current password
               <input
                 v-model="password.current"
@@ -139,8 +127,7 @@
               />
             </label>
             <div class="grid gap-5 md:grid-cols-2">
-              <label
-                class="grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
+              <label class="grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
                 >New password
                 <input
                   v-model="password.next"
@@ -150,8 +137,7 @@
                   class="h-12 border-b border-slate-750 bg-slate-900 px-5 text-body-1 text-slate-100 outline-none focus:border-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </label>
-              <label
-                class="grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
+              <label class="grid gap-2 text-subtitle-2 uppercase tracking-[0.1em] text-slate-300"
                 >Confirm password
                 <input
                   v-model="password.confirmation"
@@ -182,10 +168,7 @@
           "
         >
           <h2 class="text-title-3">Artist Contract</h2>
-          <p
-            v-if="artistContractSignedAtLabel"
-            class="mt-3 text-footer text-slate-400"
-          >
+          <p v-if="artistContractSignedAtLabel" class="mt-3 text-footer text-slate-400">
             Signed on {{ artistContractSignedAtLabel }}
           </p>
           <div class="mt-6 flex flex-wrap gap-4">
@@ -224,14 +207,14 @@ import AccountSettingsSidebar from "~/components/account/AccountSettingsSidebar.
 import { useAuthStore } from "~/stores/auth";
 import {
   getPasswordConfirmationError,
-  getPasswordValidationError,
+  getPasswordValidationError
 } from "~/utils/password-validation";
 
 const props = defineProps({
   embedded: {
     type: Boolean,
-    default: false,
-  },
+    default: false
+  }
 });
 
 const auth = useAuthStore();
@@ -248,15 +231,12 @@ const artistContractSignedAtLabel = computed(() => {
     ? new Intl.DateTimeFormat("en-US", {
         day: "2-digit",
         month: "long",
-        year: "numeric",
+        year: "numeric"
       }).format(new Date(value))
     : "";
 });
 const showArtistContractSection = computed(
-  () =>
-    !auth.isAdmin &&
-    auth.isArtist &&
-    Boolean(user.value?.artistApplication?.hasContractPdf),
+  () => !auth.isAdmin && auth.isArtist && Boolean(user.value?.artistApplication?.hasContractPdf)
 );
 
 watchEffect(() => resetProfile());
@@ -278,8 +258,8 @@ async function saveProfile() {
       body: {
         username: profile.username,
         email: profile.email,
-        bio: profile.bio,
-      },
+        bio: profile.bio
+      }
     });
     auth.user = response.user;
     successMessage.value = "Profile updated successfully.";
@@ -312,8 +292,8 @@ async function updatePassword() {
       body: {
         currentPassword: password.current,
         newPassword: password.next,
-        confirmPassword: password.confirmation,
-      },
+        confirmPassword: password.confirmation
+      }
     });
     password.current = "";
     password.next = "";

@@ -4,22 +4,15 @@
       <header
         class="rounded-[32px] border border-[#151E30] bg-[radial-gradient(circle_at_top_left,_rgba(74,108,247,0.16),_transparent_30%),linear-gradient(180deg,_#070B14,_#04070D)] p-8"
       >
-        <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
-          Catalogue public
-        </p>
-        <div
-          class="mt-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
-        >
+        <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">Catalogue public</p>
+        <div class="mt-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1
-              class="text-[clamp(2.4rem,5vw,4rem)] font-semibold leading-[0.98] text-white"
-            >
+            <h1 class="text-[clamp(2.4rem,5vw,4rem)] font-semibold leading-[0.98] text-white">
               Catalogue des oeuvres
             </h1>
             <p class="mt-4 max-w-3xl text-sm leading-7 text-[#96A4B8]">
-              Cherche par univers, style ou type d’art, puis plonge dans chaque
-              fiche pour suivre l’artiste, sauvegarder tes favoris et organiser
-              ta veille.
+              Cherche par univers, style ou type d’art, puis plonge dans chaque fiche pour suivre
+              l’artiste, sauvegarder tes favoris et organiser ta veille.
             </p>
           </div>
 
@@ -52,11 +45,7 @@
             class="rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7]"
           >
             <option value="">Toutes les categories</option>
-            <option
-              v-for="category in categories"
-              :key="category.id"
-              :value="String(category.id)"
-            >
+            <option v-for="category in categories" :key="category.id" :value="String(category.id)">
               {{ category.name }}
             </option>
           </select>
@@ -169,9 +158,7 @@ import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
 
 const route = useRoute();
 const auth = useAuthStore();
-const requestHeaders = import.meta.server
-  ? useRequestHeaders(["cookie"])
-  : undefined;
+const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
 
 const categories = ref([]);
 
@@ -180,7 +167,7 @@ const filters = reactive({
   categoryId: String(route.query.category || ""),
   style: "",
   artType: "",
-  sort: "latest",
+  sort: "latest"
 });
 
 const query = computed(() => ({
@@ -188,7 +175,7 @@ const query = computed(() => ({
   category: filters.categoryId || undefined,
   style: filters.style || undefined,
   artType: filters.artType || undefined,
-  sort: filters.sort,
+  sort: filters.sort
 }));
 
 const { data, pending, error, refresh } = await useFetch("/api/artworks", {
@@ -196,20 +183,19 @@ const { data, pending, error, refresh } = await useFetch("/api/artworks", {
   headers: requestHeaders,
   credentials: "include",
   default: () => ({
-    artworks: [],
-  }),
+    artworks: []
+  })
 });
 
 const artworks = computed(() => data.value?.artworks || []);
 const errorMessage = computed(() => error.value?.data?.message || "");
 
-const { actionMessage, favoriteLoading, toggleFavorite } =
-  useMarketplaceActions(auth);
+const { actionMessage, favoriteLoading, toggleFavorite } = useMarketplaceActions(auth);
 
 onMounted(async () => {
   try {
     const response = await $fetch("/api/categories", {
-      credentials: "include",
+      credentials: "include"
     });
 
     categories.value = response.categories || [];

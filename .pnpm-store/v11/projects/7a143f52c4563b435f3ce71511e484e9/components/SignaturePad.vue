@@ -14,8 +14,7 @@
 
     <div class="flex flex-wrap items-center justify-between gap-3 text-sm">
       <p class="text-slate-400">
-        Sign with your mouse or finger. Your signature will be embedded in the
-        final PDF.
+        Sign with your mouse or finger. Your signature will be embedded in the final PDF.
       </p>
 
       <button
@@ -35,8 +34,8 @@ import { onBeforeUnmount, onMounted, ref } from "vue";
 const props = defineProps({
   modelValue: {
     type: String,
-    default: "",
-  },
+    default: ""
+  }
 });
 
 const emit = defineEmits(["update:modelValue"]);
@@ -84,7 +83,7 @@ function getPointerPosition(event) {
 
   return {
     x: event.clientX - bounds.left,
-    y: event.clientY - bounds.top,
+    y: event.clientY - bounds.top
   };
 }
 
@@ -162,13 +161,7 @@ function restoreSignature(dataUrl) {
       return;
     }
 
-    context.drawImage(
-      image,
-      0,
-      0,
-      canvasRef.value.clientWidth,
-      canvasRef.value.clientHeight,
-    );
+    context.drawImage(image, 0, 0, canvasRef.value.clientWidth, canvasRef.value.clientHeight);
   };
   image.src = dataUrl;
 }

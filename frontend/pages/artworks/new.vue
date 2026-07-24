@@ -4,17 +4,13 @@
       <header
         class="rounded-[32px] border border-[#151E30] bg-[radial-gradient(circle_at_top_left,_rgba(74,108,247,0.16),_transparent_30%),linear-gradient(180deg,_#070B14,_#04070D)] p-8"
       >
-        <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
-          Espace artiste
-        </p>
-        <h1
-          class="mt-4 text-[clamp(2.2rem,5vw,3.4rem)] font-semibold leading-[0.98] text-white"
-        >
+        <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">Espace artiste</p>
+        <h1 class="mt-4 text-[clamp(2.2rem,5vw,3.4rem)] font-semibold leading-[0.98] text-white">
           Publier une oeuvre
         </h1>
         <p class="mt-4 max-w-2xl text-sm leading-7 text-[#96A4B8]">
-          Renseigne les informations de ton oeuvre pour la rendre visible dans
-          le catalogue public. Seuls les artistes verifies peuvent publier.
+          Renseigne les informations de ton oeuvre pour la rendre visible dans le catalogue public.
+          Seuls les artistes verifies peuvent publier.
         </p>
       </header>
 
@@ -42,11 +38,7 @@
             required
           >
             <option value="" disabled>Choisir une categorie</option>
-            <option
-              v-for="category in categories"
-              :key="category.id"
-              :value="String(category.id)"
-            >
+            <option v-for="category in categories" :key="category.id" :value="String(category.id)">
               {{ category.name }}
             </option>
           </select>
@@ -118,7 +110,7 @@ import { onMounted, reactive, ref } from "vue";
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: ["auth", "artist"],
+  middleware: ["auth", "artist"]
 });
 
 const categories = ref([]);
@@ -132,13 +124,13 @@ const form = reactive({
   description: "",
   categoryId: "",
   price: "",
-  protection: false,
+  protection: false
 });
 
 onMounted(async () => {
   try {
     const response = await $fetch("/api/categories", {
-      credentials: "include",
+      credentials: "include"
     });
 
     categories.value = response.categories || [];
@@ -165,8 +157,8 @@ async function submitArtwork() {
         description: form.description || undefined,
         categoryId: form.categoryId,
         price: form.price,
-        protection: form.protection,
-      },
+        protection: form.protection
+      }
     });
 
     formMessage.value = response.message || "Oeuvre publiee avec succes.";
@@ -176,8 +168,7 @@ async function submitArtwork() {
     }
   } catch (error) {
     formError.value = true;
-    formMessage.value =
-      error?.data?.message || "Impossible de publier cette oeuvre.";
+    formMessage.value = error?.data?.message || "Impossible de publier cette oeuvre.";
   } finally {
     submitting.value = false;
   }

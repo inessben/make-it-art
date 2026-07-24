@@ -4,9 +4,7 @@
       <header
         class="border-b border-slate-800 bg-gradient-to-br from-violet-950/70 to-slate-950 px-6 py-10 sm:px-10 sm:py-14"
       >
-        <p
-          class="text-subtitle-2 font-semibold uppercase tracking-[0.22em] text-violet-400"
-        >
+        <p class="text-subtitle-2 font-semibold uppercase tracking-[0.22em] text-violet-400">
           {{ label }}
         </p>
         <h1 class="mt-4 text-title-2 sm:text-title-1">{{ title }}</h1>
@@ -30,7 +28,7 @@ defineProps({
   label: { type: String, required: true },
   title: { type: String, required: true },
   lastUpdated: { type: String, default: "July 2026" },
-  compliance: { type: String, required: true },
+  compliance: { type: String, required: true }
 });
 </script>
 

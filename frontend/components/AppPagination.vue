@@ -14,12 +14,7 @@
     </button>
 
     <template v-for="item in displayedPages" :key="item.key">
-      <span
-        v-if="item.type === 'ellipsis'"
-        class="px-1 text-slate-500"
-        aria-hidden="true"
-        >…</span
-      >
+      <span v-if="item.type === 'ellipsis'" class="px-1 text-slate-500" aria-hidden="true">…</span>
       <button
         v-else
         type="button"
@@ -54,14 +49,12 @@ import { computed } from "vue";
 import { useRoute, useRouter } from "#app";
 
 const props = defineProps({
-  totalPages: { type: Number, default: 24 },
+  totalPages: { type: Number, default: 24 }
 });
 
 const route = useRoute();
 const router = useRouter();
-const normalizedTotalPages = computed(() =>
-  Math.max(1, Math.trunc(Number(props.totalPages) || 1)),
-);
+const normalizedTotalPages = computed(() => Math.max(1, Math.trunc(Number(props.totalPages) || 1)));
 const currentPage = computed(() => {
   const parsedPage = Number.parseInt(String(route.query.page || "1"), 10);
   const validPage = Number.isInteger(parsedPage) ? parsedPage : 1;
@@ -74,7 +67,7 @@ const displayedPages = computed(() => {
     return Array.from({ length: total }, (_, index) => ({
       type: "page",
       page: index + 1,
-      key: `page-${index + 1}`,
+      key: `page-${index + 1}`
     }));
 
   const pages = new Set([1, total]);
@@ -102,10 +95,7 @@ const displayedPages = computed(() => {
 });
 
 async function goToPage(page) {
-  const nextPage = Math.min(
-    Math.max(Math.trunc(page), 1),
-    normalizedTotalPages.value,
-  );
+  const nextPage = Math.min(Math.max(Math.trunc(page), 1), normalizedTotalPages.value);
   if (nextPage === currentPage.value) return;
 
   const query = { ...route.query };

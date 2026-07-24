@@ -2,9 +2,7 @@
   <article
     class="grid min-w-0 gap-5 rounded-[24px] border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.24)] transition duration-200 hover:-translate-y-1 hover:border-slate-750 sm:rounded-[28px] sm:p-6"
   >
-    <div
-      class="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between"
-    >
+    <div class="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div class="flex min-w-0 items-center gap-4">
         <div
           class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-slate-800 text-lg font-semibold text-violet-200 ring-1 ring-violet-700/30"
@@ -23,9 +21,7 @@
             <span
               class="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-widest"
               :class="
-                artist.verified
-                  ? 'bg-violet-700/10 text-violet-200'
-                  : 'bg-amber-950 text-amber-300'
+                artist.verified ? 'bg-violet-700/10 text-violet-200' : 'bg-amber-950 text-amber-300'
               "
             >
               {{ artist.verified ? "Verified" : "Under review" }}
@@ -81,17 +77,13 @@
         </p>
       </div>
       <div class="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3">
-        <p class="text-xs uppercase tracking-widest text-slate-500">
-          Followers
-        </p>
+        <p class="text-xs uppercase tracking-widest text-slate-500">Followers</p>
         <p class="mt-2 text-xl font-semibold text-slate-100">
           {{ artist.stats?.followers || 0 }}
         </p>
       </div>
       <div class="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3">
-        <p class="text-xs uppercase tracking-widest text-slate-500">
-          Collections
-        </p>
+        <p class="text-xs uppercase tracking-widest text-slate-500">Collections</p>
         <p class="mt-2 text-xl font-semibold text-slate-100">
           {{ artist.stats?.collections || 0 }}
         </p>
@@ -107,24 +99,22 @@ import { getArtistInitials } from "~/utils/marketplace";
 const props = defineProps({
   artist: {
     type: Object,
-    required: true,
+    required: true
   },
   followLoading: {
     type: Boolean,
-    default: false,
+    default: false
   },
   showFollowAction: {
     type: Boolean,
-    default: false,
-  },
+    default: false
+  }
 });
 
 defineEmits(["toggle-follow"]);
 
 const limitedStyles = computed(() => {
-  return Array.isArray(props.artist.styles)
-    ? props.artist.styles.slice(0, 4)
-    : [];
+  return Array.isArray(props.artist.styles) ? props.artist.styles.slice(0, 4) : [];
 });
 
 const initials = computed(() => getArtistInitials(props.artist.displayName));

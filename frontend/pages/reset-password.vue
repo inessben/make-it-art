@@ -21,11 +21,7 @@
       autocomplete="new-password"
     />
 
-    <SubmitButton
-      label="Reset password"
-      loading-label="Resetting..."
-      :loading="loading"
-    />
+    <SubmitButton label="Reset password" loading-label="Resetting..." :loading="loading" />
 
     <FormMessage :message="message" />
 
@@ -38,7 +34,7 @@
 <script setup>
 import {
   getPasswordConfirmationError,
-  getPasswordValidationError,
+  getPasswordValidationError
 } from "~/utils/password-validation";
 
 const route = useRoute();
@@ -70,12 +66,11 @@ async function handleSubmit() {
       body: {
         token: route.query.token,
         password: password.value,
-        confirmPassword: confirmPassword.value,
-      },
+        confirmPassword: confirmPassword.value
+      }
     });
 
-    message.value =
-      response.message || "Password reset successfully. You can now log in.";
+    message.value = response.message || "Password reset successfully. You can now log in.";
     success.value = true;
     password.value = "";
     confirmPassword.value = "";

@@ -3,9 +3,7 @@
     <section
       class="mx-auto grid w-full max-w-[1120px] gap-8 rounded-2xl border border-slate-800 bg-slate-950 p-4 shadow-[0_32px_90px_rgba(0,0,0,0.22)] sm:rounded-[32px] sm:p-8"
     >
-      <div
-        class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-      >
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <NuxtLink
           to="/account-settings"
           class="inline-flex items-center justify-center rounded-2xl border border-slate-800 bg-slate-850 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
@@ -33,12 +31,8 @@
         class="grid gap-5 rounded-[24px] border border-slate-800 bg-violet-950 p-7"
       >
         <div>
-          <p class="text-xs uppercase tracking-widest text-violet-700">
-            Artist profile
-          </p>
-          <h1 class="mt-4 text-3xl font-semibold text-white">
-            No artist profile yet
-          </h1>
+          <p class="text-xs uppercase tracking-widest text-violet-700">Artist profile</p>
+          <h1 class="mt-4 text-3xl font-semibold text-white">No artist profile yet</h1>
           <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
             Create your artist profile to start publishing your portfolio.
           </p>
@@ -56,22 +50,15 @@
         class="grid gap-6 rounded-[24px] border border-slate-800 bg-violet-950 p-7"
       >
         <div>
-          <p class="text-xs uppercase tracking-widest text-violet-700">
-            Artist application
-          </p>
-          <h1 class="mt-4 text-3xl font-semibold text-white">
-            Your application is under review
-          </h1>
+          <p class="text-xs uppercase tracking-widest text-violet-700">Artist application</p>
+          <h1 class="mt-4 text-3xl font-semibold text-white">Your application is under review</h1>
           <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
-            Your agreement has been signed and submitted to the administration.
-            Your artist profile will become active once the application is
-            approved.
+            Your agreement has been signed and submitted to the administration. Your artist profile
+            will become active once the application is approved.
           </p>
         </div>
 
-        <dl
-          class="grid gap-3 rounded-[24px] border border-slate-800 bg-slate-950 p-5 text-sm"
-        >
+        <dl class="grid gap-3 rounded-[24px] border border-slate-800 bg-slate-950 p-5 text-sm">
           <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
             <dt class="text-slate-400">Artist name</dt>
             <dd class="font-semibold text-white">
@@ -80,9 +67,7 @@
           </div>
           <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
             <dt class="text-slate-400">Status</dt>
-            <dd class="font-semibold text-amber-300">
-              Awaiting admin approval
-            </dd>
+            <dd class="font-semibold text-amber-300">Awaiting admin approval</dd>
           </div>
           <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
             <dt class="text-slate-400">Submission date</dt>
@@ -115,20 +100,13 @@
         class="grid gap-6 rounded-[24px] border border-amber-900 bg-amber-950 p-7"
       >
         <div>
-          <p class="text-xs uppercase tracking-widest text-amber-300">
-            Application rejected
-          </p>
-          <h1 class="mt-4 text-3xl font-semibold text-white">
-            Your application needs changes
-          </h1>
+          <p class="text-xs uppercase tracking-widest text-amber-300">Application rejected</p>
+          <h1 class="mt-4 text-3xl font-semibold text-white">Your application needs changes</h1>
           <p class="mt-3 max-w-2xl text-sm leading-6 text-amber-200">
-            The administration did not activate your artist profile. Update your
-            information, review the agreement and submit a new application.
+            The administration did not activate your artist profile. Update your information, review
+            the agreement and submit a new application.
           </p>
-          <p
-            v-if="rejectedApplication.reviewNote"
-            class="mt-4 text-sm leading-6 text-amber-100"
-          >
+          <p v-if="rejectedApplication.reviewNote" class="mt-4 text-sm leading-6 text-amber-100">
             Admin note: {{ rejectedApplication.reviewNote }}
           </p>
         </div>
@@ -160,21 +138,15 @@
       </section>
 
       <template v-else>
-        <header
-          class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between"
-        >
+        <header class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div class="flex flex-col gap-6 sm:flex-row sm:items-start">
             <div
               class="flex h-28 w-28 shrink-0 items-center justify-center rounded-full bg-slate-750 ring-1 ring-violet-700/30"
             >
-              <span class="text-4xl font-bold text-slate-100">{{
-                initials
-              }}</span>
+              <span class="text-4xl font-bold text-slate-100">{{ initials }}</span>
             </div>
             <div class="max-w-2xl">
-              <p class="text-xs uppercase tracking-widest text-violet-700">
-                Artist profile
-              </p>
+              <p class="text-xs uppercase tracking-widest text-violet-700">Artist profile</p>
               <div class="mt-4 flex flex-wrap items-center gap-3">
                 <h1 class="text-title-1 text-white">
                   {{ artist.displayName }}
@@ -215,32 +187,20 @@
         </header>
 
         <section class="grid gap-4 sm:grid-cols-3">
-          <article
-            class="rounded-[24px] border border-slate-800 bg-slate-800 p-6 text-center"
-          >
-            <p class="text-sm uppercase tracking-widest text-violet-700">
-              Artworks
-            </p>
+          <article class="rounded-[24px] border border-slate-800 bg-slate-800 p-6 text-center">
+            <p class="text-sm uppercase tracking-widest text-violet-700">Artworks</p>
             <p class="mt-4 text-3xl font-semibold text-white">
               {{ artist.stats.artworks }}
             </p>
           </article>
-          <article
-            class="rounded-[24px] border border-slate-800 bg-slate-800 p-6 text-center"
-          >
-            <p class="text-sm uppercase tracking-widest text-violet-700">
-              Followers
-            </p>
+          <article class="rounded-[24px] border border-slate-800 bg-slate-800 p-6 text-center">
+            <p class="text-sm uppercase tracking-widest text-violet-700">Followers</p>
             <p class="mt-4 text-3xl font-semibold text-white">
               {{ artist.stats.followers }}
             </p>
           </article>
-          <article
-            class="rounded-[24px] border border-slate-800 bg-slate-800 p-6 text-center"
-          >
-            <p class="text-sm uppercase tracking-widest text-violet-700">
-              Collections
-            </p>
+          <article class="rounded-[24px] border border-slate-800 bg-slate-800 p-6 text-center">
+            <p class="text-sm uppercase tracking-widest text-violet-700">Collections</p>
             <p class="mt-4 text-3xl font-semibold text-white">
               {{ artist.stats.collections }}
             </p>
@@ -251,12 +211,8 @@
           <div class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-7">
             <div class="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-                  Portfolio
-                </p>
-                <h2 class="mt-4 text-2xl font-semibold text-white">
-                  Published artworks
-                </h2>
+                <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Portfolio</p>
+                <h2 class="mt-4 text-2xl font-semibold text-white">Published artworks</h2>
               </div>
               <NuxtLink
                 v-if="artist.verified"
@@ -275,12 +231,11 @@
               class="mt-6 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 text-sm leading-6 text-[#A0ADB4]"
             >
               <span v-if="artist.verified">
-                You have not published any artwork yet. Publish your first piece
-                to appear in the catalogue.
+                You have not published any artwork yet. Publish your first piece to appear in the
+                catalogue.
               </span>
               <span v-else>
-                Your artist profile must be approved before you can publish
-                artworks.
+                Your artist profile must be approved before you can publish artworks.
               </span>
             </div>
             <div v-else class="mt-6 grid gap-4">
@@ -309,12 +264,8 @@
           </div>
 
           <div class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-7">
-            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-              About
-            </p>
-            <h2 class="mt-4 text-2xl font-semibold text-white">
-              Artist introduction
-            </h2>
+            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">About</p>
+            <h2 class="mt-4 text-2xl font-semibold text-white">Artist introduction</h2>
             <p class="mt-4 text-[#A0ADB4] leading-7">
               {{ artist.bio || "Add a bio from the artist application form." }}
             </p>
@@ -330,7 +281,7 @@ import { computed, onMounted, ref } from "vue";
 import { formatMarketplacePrice } from "~/utils/marketplace";
 
 definePageMeta({
-  middleware: "auth",
+  middleware: "auth"
 });
 
 const artist = ref(null);
@@ -342,16 +293,13 @@ const missingArtist = ref(false);
 const errorMessage = ref("");
 
 const pendingApplication = computed(() =>
-  application.value?.status === "pending" ? application.value : null,
+  application.value?.status === "pending" ? application.value : null
 );
 const rejectedApplication = computed(() =>
-  application.value?.status === "rejected" ? application.value : null,
+  application.value?.status === "rejected" ? application.value : null
 );
 const userNameFallback = computed(
-  () =>
-    artist.value?.username ||
-    application.value?.payload?.displayName ||
-    "Artist",
+  () => artist.value?.username || application.value?.payload?.displayName || "Artist"
 );
 
 const initials = computed(() => {
@@ -368,7 +316,7 @@ const initials = computed(() => {
 onMounted(async () => {
   try {
     const response = await $fetch("/api/artists/me", {
-      credentials: "include",
+      credentials: "include"
     });
 
     artist.value = response.artist;
@@ -382,8 +330,7 @@ onMounted(async () => {
       await loadPublishedArtworks();
     }
   } catch (error) {
-    errorMessage.value =
-      error?.data?.message || "Unable to load the artist profile.";
+    errorMessage.value = error?.data?.message || "Unable to load the artist profile.";
   } finally {
     loading.value = false;
   }
@@ -394,7 +341,7 @@ async function loadPublishedArtworks() {
 
   try {
     const response = await $fetch("/api/artists/me/artworks", {
-      credentials: "include",
+      credentials: "include"
     });
 
     publishedArtworks.value = response.artworks || [];
@@ -415,7 +362,7 @@ function formatDate(value) {
   }
 
   return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
+    dateStyle: "medium"
   }).format(new Date(value));
 }
 </script>

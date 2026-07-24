@@ -13,7 +13,7 @@ function safeParse(json, fallback) {
 export const useCartStore = defineStore("cart", {
   state: () => ({
     items: [],
-    hydrated: false,
+    hydrated: false
   }),
 
   getters: {
@@ -23,7 +23,7 @@ export const useCartStore = defineStore("cart", {
         const price = Number(item.artwork?.priceValue ?? 0);
         return sum + price * item.quantity;
       }, 0),
-    isEmpty: (state) => state.items.length === 0,
+    isEmpty: (state) => state.items.length === 0
   },
 
   actions: {
@@ -52,8 +52,8 @@ export const useCartStore = defineStore("cart", {
       localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify({
-          items: this.items,
-        }),
+          items: this.items
+        })
       );
     },
 
@@ -67,16 +67,14 @@ export const useCartStore = defineStore("cart", {
       const qty = Number.isFinite(Number(quantity)) ? Number(quantity) : 1;
       const safeQty = Math.max(1, Math.floor(qty));
 
-      const existing = this.items.find(
-        (item) => item.artwork?.id === artwork.id,
-      );
+      const existing = this.items.find((item) => item.artwork?.id === artwork.id);
 
       if (existing) {
         existing.quantity += safeQty;
       } else {
         this.items.unshift({
           artwork,
-          quantity: safeQty,
+          quantity: safeQty
         });
       }
 
@@ -91,9 +89,7 @@ export const useCartStore = defineStore("cart", {
 
     setQuantity(artworkId, quantity) {
       this.hydrate();
-      const existing = this.items.find(
-        (item) => item.artwork?.id === artworkId,
-      );
+      const existing = this.items.find((item) => item.artwork?.id === artworkId);
       if (!existing) {
         return;
       }
@@ -107,6 +103,6 @@ export const useCartStore = defineStore("cart", {
       this.hydrate();
       this.items = [];
       this.persist();
-    },
-  },
+    }
+  }
 });

@@ -32,19 +32,11 @@
       </article>
     </section>
 
-    <section
-      class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6"
-    >
-      <div
-        class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
-      >
+    <section class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">
-            Listing
-          </p>
-          <h2 class="mt-3 text-xl font-semibold text-slate-100">
-            User directory
-          </h2>
+          <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">Listing</p>
+          <h2 class="mt-3 text-xl font-semibold text-slate-100">User directory</h2>
         </div>
         <div class="grid gap-3 sm:grid-cols-2">
           <label class="border border-slate-800 bg-black px-4 py-3">
@@ -100,17 +92,13 @@
       </div>
 
       <div v-else class="mt-6 overflow-hidden border border-slate-800">
-        <p
-          class="border-b border-slate-800 px-4 py-3 text-subtitle-3 text-slate-500 sm:hidden"
-        >
+        <p class="border-b border-slate-800 px-4 py-3 text-subtitle-3 text-slate-500 sm:hidden">
           Swipe horizontally to view every column.
         </p>
         <div class="overflow-x-auto">
           <table class="min-w-[720px] divide-y divide-slate-800 sm:min-w-full">
             <thead class="bg-slate-950">
-              <tr
-                class="text-left text-xs uppercase tracking-widest text-slate-500"
-              >
+              <tr class="text-left text-xs uppercase tracking-widest text-slate-500">
                 <th class="px-5 py-4 font-medium">User</th>
                 <th class="px-5 py-4 font-medium">Role</th>
                 <th class="px-5 py-4 font-medium">Status</th>
@@ -157,7 +145,7 @@ import { computed, onMounted, ref } from "vue";
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "admin",
+  middleware: "admin"
 });
 
 const loading = ref(true);
@@ -170,30 +158,30 @@ const summary = ref({
   totalUsers: 0,
   activeUsers: 0,
   pendingVerificationUsers: 0,
-  adminUsers: 0,
+  adminUsers: 0
 });
 
 const summaries = computed(() => [
   {
     label: "Total users",
     value: summary.value.totalUsers,
-    description: "Total number of accounts in the database.",
+    description: "Total number of accounts in the database."
   },
   {
     label: "Active users",
     value: summary.value.activeUsers,
-    description: "Accounts currently active on the platform.",
+    description: "Accounts currently active on the platform."
   },
   {
     label: "Pending verification",
     value: summary.value.pendingVerificationUsers,
-    description: "Users who still need verification.",
+    description: "Users who still need verification."
   },
   {
     label: "Admins",
     value: summary.value.adminUsers,
-    description: "Accounts with back-office access.",
-  },
+    description: "Accounts with back-office access."
+  }
 ]);
 
 const filteredUsers = computed(() => {
@@ -205,8 +193,7 @@ const filteredUsers = computed(() => {
       user.username.toLowerCase().includes(normalizedSearch) ||
       user.email.toLowerCase().includes(normalizedSearch);
 
-    const matchesStatus =
-      statusFilter.value === "all" || user.status === statusFilter.value;
+    const matchesStatus = statusFilter.value === "all" || user.status === statusFilter.value;
 
     return matchesSearch && matchesStatus;
   });
@@ -223,7 +210,7 @@ async function loadUsers(showSuccess = false) {
 
   try {
     const response = await $fetch("/api/admin/users", {
-      credentials: "include",
+      credentials: "include"
     });
 
     users.value = response.users || [];
@@ -270,7 +257,7 @@ function formatDate(value) {
   }
 
   return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
+    dateStyle: "medium"
   }).format(new Date(value));
 }
 </script>

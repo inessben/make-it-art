@@ -5,21 +5,17 @@ const express = require("express");
 const { loadModuleWithMocks } = require("./helpers/mock-require");
 
 const routesPath = require.resolve("../src/routes/marketplace.routes");
-const authRequiredPath =
-  require.resolve("../src/middlewares/auth-required.middleware");
-const adminRequiredPath =
-  require.resolve("../src/middlewares/admin-required.middleware");
+const authRequiredPath = require.resolve("../src/middlewares/auth-required.middleware");
+const adminRequiredPath = require.resolve("../src/middlewares/admin-required.middleware");
 const sessionServicePath = require.resolve("../src/services/session.service");
-const marketplaceRepositoryPath =
-  require.resolve("../src/repositories/marketplace.repository");
-const collectorRepositoryPath =
-  require.resolve("../src/repositories/collector.repository");
+const marketplaceRepositoryPath = require.resolve("../src/repositories/marketplace.repository");
+const collectorRepositoryPath = require.resolve("../src/repositories/collector.repository");
 
 const collectorUser = {
   id: 7,
   email: "collector@example.com",
   username: "Collector",
-  role: "user",
+  role: "user"
 };
 
 function buildAuthMiddleware(currentUser) {
@@ -27,7 +23,7 @@ function buildAuthMiddleware(currentUser) {
     authRequired(req, _res, next) {
       req.user = currentUser;
       next();
-    },
+    }
   };
 }
 
@@ -45,16 +41,16 @@ function buildArtist(id) {
           artType: "Digital Art",
           styles: ["Cyberpunk"],
           portfolioUrl: "https://portfolio.example",
-          socialHandle: "@artist",
-        },
-      },
+          socialHandle: "@artist"
+        }
+      }
     },
     _count: {
       artworks: 3,
       followers: 12,
-      collections: 1,
+      collections: 1
     },
-    followers: [],
+    followers: []
   };
 }
 
@@ -70,14 +66,14 @@ function buildArtwork(id, overrides = {}) {
     protection: true,
     category: {
       id: 1,
-      name: "Illustration",
+      name: "Illustration"
     },
     artist: buildArtist(3),
     _count: {
-      favorites: 4,
+      favorites: 4
     },
     favorites: [],
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -85,7 +81,7 @@ async function startMarketplaceApp(t, overrides = {}) {
   const currentUser = overrides.authUser || collectorUser;
   const calls = {
     addFavorite: [],
-    createPersonalCollection: [],
+    createPersonalCollection: []
   };
 
   const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
@@ -93,22 +89,22 @@ async function startMarketplaceApp(t, overrides = {}) {
     [adminRequiredPath]: {
       isAdminUser(user) {
         return user?.role === "admin";
-      },
+      }
     },
     [sessionServicePath]: {
       async getUserFromRequest() {
         return overrides.viewerUser ?? null;
-      },
+      }
     },
     [marketplaceRepositoryPath]: {
       async getMarketplaceOverview() {
         return {
           stats: {
             artworks: 1,
-            artists: 1,
+            artists: 1
           },
           artworks: [buildArtwork(12)],
-          artists: [buildArtist(3)],
+          artists: [buildArtist(3)]
         };
       },
       async listPublicArtworks() {
@@ -139,17 +135,17 @@ async function startMarketplaceApp(t, overrides = {}) {
                 createdAt: new Date("2026-07-04T09:00:00.000Z"),
                 items: [
                   {
-                    artwork: buildArtwork(12),
-                  },
-                ],
-              },
-            ],
+                    artwork: buildArtwork(12)
+                  }
+                ]
+              }
+            ]
           }
         );
       },
       async listCollectionArtworkOptions() {
         return [buildArtwork(12)];
-      },
+      }
     },
     [collectorRepositoryPath]: {
       async addFavorite(payload) {
@@ -175,7 +171,7 @@ async function startMarketplaceApp(t, overrides = {}) {
           description: payload.description,
           isPrivate: payload.isPrivate,
           createdAt: new Date("2026-07-04T12:00:00.000Z"),
-          items: [],
+          items: []
         };
       },
       async updatePersonalCollection() {
@@ -187,8 +183,8 @@ async function startMarketplaceApp(t, overrides = {}) {
       },
       async removeArtworkFromPersonalCollection() {
         return null;
-      },
-    },
+      }
+    }
   });
 
   const app = express();
@@ -210,7 +206,7 @@ async function startMarketplaceApp(t, overrides = {}) {
 
   return {
     calls,
-    baseUrl: `http://127.0.0.1:${server.address().port}`,
+    baseUrl: `http://127.0.0.1:${server.address().port}`
   };
 }
 
@@ -218,21 +214,21 @@ async function requestJson(baseUrl, path, { method = "GET", body } = {}) {
   const response = await fetch(`${baseUrl}${path}`, {
     method,
     headers: body ? { "content-type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? JSON.stringify(body) : undefined
   });
 
   const payload = await response.json();
 
   return {
     status: response.status,
-    body: payload,
+    body: payload
   };
 }
 
 test("GET /artworks returns the public catalog payload", async (t) => {
   const { baseUrl } = await startMarketplaceApp(t, {
     viewerUser: collectorUser,
-    listPublicArtworksResult: [buildArtwork(12, { favorites: [{ id: 1 }] })],
+    listPublicArtworksResult: [buildArtwork(12, { favorites: [{ id: 1 }] })]
   });
 
   const response = await requestJson(baseUrl, "/artworks");
@@ -247,14 +243,14 @@ test("GET /artworks returns the public catalog payload", async (t) => {
 test("POST /artworks/:id/favorite stores a favorite for a collector account", async (t) => {
   const { baseUrl, calls } = await startMarketplaceApp(t);
   const response = await requestJson(baseUrl, "/artworks/12/favorite", {
-    method: "POST",
+    method: "POST"
   });
 
   assert.equal(response.status, 200);
   assert.equal(response.body.message, "Oeuvre ajoutee aux favoris.");
   assert.deepEqual(calls.addFavorite[0], {
     userId: collectorUser.id,
-    artworkId: 12,
+    artworkId: 12
   });
 });
 
@@ -262,17 +258,17 @@ test("POST /artworks/:id/favorite blocks admin accounts from collector actions",
   const { baseUrl } = await startMarketplaceApp(t, {
     authUser: {
       id: 1,
-      role: "admin",
-    },
+      role: "admin"
+    }
   });
   const response = await requestJson(baseUrl, "/artworks/12/favorite", {
-    method: "POST",
+    method: "POST"
   });
 
   assert.equal(response.status, 403);
   assert.equal(
     response.body.message,
-    "Les comptes admin ne peuvent pas utiliser les fonctionnalites collectionneur.",
+    "Les comptes admin ne peuvent pas utiliser les fonctionnalites collectionneur."
   );
 });
 
@@ -292,8 +288,8 @@ test("POST /collections/me validates the title before creating a collection", as
   const response = await requestJson(baseUrl, "/collections/me", {
     method: "POST",
     body: {
-      title: "   ",
-    },
+      title: "   "
+    }
   });
 
   assert.equal(response.status, 400);
@@ -307,8 +303,8 @@ test("POST /collections/me creates a personal collection for the collector", asy
     body: {
       title: "My neon picks",
       description: "Best cyber artworks",
-      isPrivate: true,
-    },
+      isPrivate: true
+    }
   });
 
   assert.equal(response.status, 201);
@@ -318,6 +314,6 @@ test("POST /collections/me creates a personal collection for the collector", asy
     userId: collectorUser.id,
     title: "My neon picks",
     description: "Best cyber artworks",
-    isPrivate: true,
+    isPrivate: true
   });
 });

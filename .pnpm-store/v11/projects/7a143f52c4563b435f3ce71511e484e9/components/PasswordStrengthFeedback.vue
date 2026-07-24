@@ -2,9 +2,7 @@
   <section class="password-strength" aria-live="polite">
     <div class="strength-heading">
       <span>Password strength</span>
-      <strong
-        :class="`strength-level strength-level-${strength.level.toLowerCase()}`"
-      >
+      <strong :class="`strength-level strength-level-${strength.level.toLowerCase()}`">
         {{ strength.level }}
       </strong>
     </div>
@@ -43,21 +41,16 @@
 
 <script setup>
 import { computed } from "vue";
-import {
-  getPasswordRequirementStates,
-  getPasswordStrength,
-} from "~/utils/password-validation";
+import { getPasswordRequirementStates, getPasswordStrength } from "~/utils/password-validation";
 
 const props = defineProps({
   password: {
     type: String,
-    default: "",
-  },
+    default: ""
+  }
 });
 
-const requirements = computed(() =>
-  getPasswordRequirementStates(props.password),
-);
+const requirements = computed(() => getPasswordRequirementStates(props.password));
 const strength = computed(() => getPasswordStrength(props.password));
 </script>
 

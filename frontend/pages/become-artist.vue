@@ -3,19 +3,13 @@
     <section
       class="mx-auto grid w-full max-w-[1160px] gap-8 rounded-2xl border border-slate-800 bg-slate-950 p-4 shadow-[0_32px_90px_rgba(0,0,0,0.22)] sm:rounded-[32px] sm:p-7"
     >
-      <header
-        class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
-      >
+      <header class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p class="text-xs uppercase tracking-widest text-violet-700">
-            Artist onboarding
-          </p>
-          <h1 class="mt-4 text-title-2 text-white">
-            Submit your artist application
-          </h1>
+          <p class="text-xs uppercase tracking-widest text-violet-700">Artist onboarding</p>
+          <h1 class="mt-4 text-title-2 text-white">Submit your artist application</h1>
           <p class="mt-4 max-w-3xl text-sm leading-6 text-slate-400">
-            Complete your application, review and sign the agreement, then
-            submit it to the administration for approval.
+            Complete your application, review and sign the agreement, then submit it to the
+            administration for approval.
           </p>
         </div>
 
@@ -39,21 +33,17 @@
         class="grid gap-5 rounded-[28px] border border-slate-800 bg-violet-950 p-7"
       >
         <div>
-          <p class="text-xs uppercase tracking-widest text-violet-700">
-            Application under review
-          </p>
+          <p class="text-xs uppercase tracking-widest text-violet-700">Application under review</p>
           <h2 class="mt-4 text-3xl font-semibold text-white">
             Your signed agreement is being reviewed
           </h2>
           <p class="mt-4 max-w-3xl text-sm leading-6 text-slate-400">
-            The administration will approve or reject your application. Your
-            artist profile remains inactive until the review is complete.
+            The administration will approve or reject your application. Your artist profile remains
+            inactive until the review is complete.
           </p>
         </div>
 
-        <dl
-          class="grid gap-3 rounded-[24px] border border-slate-800 bg-slate-950 p-5 text-sm"
-        >
+        <dl class="grid gap-3 rounded-[24px] border border-slate-800 bg-slate-950 p-5 text-sm">
           <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
             <dt class="text-slate-400">Artist name</dt>
             <dd class="font-semibold text-white">
@@ -95,25 +85,16 @@
           v-if="rejectedApplication"
           class="rounded-[24px] border border-amber-900 bg-amber-950 px-6 py-5 text-sm text-amber-200"
         >
-          <p class="font-semibold text-white">
-            Your previous application was rejected.
-          </p>
+          <p class="font-semibold text-white">Your previous application was rejected.</p>
           <p class="mt-2 leading-6">
-            Update your application, review the agreement and submit a new
-            version.
+            Update your application, review the agreement and submit a new version.
           </p>
-          <p
-            v-if="rejectedApplication.reviewNote"
-            class="mt-3 leading-6 text-amber-100"
-          >
+          <p v-if="rejectedApplication.reviewNote" class="mt-3 leading-6 text-amber-100">
             Admin reason: {{ rejectedApplication.reviewNote }}
           </p>
         </section>
 
-        <nav
-          class="grid gap-3 sm:grid-cols-4"
-          aria-label="Artist application progress"
-        >
+        <nav class="grid gap-3 sm:grid-cols-4" aria-label="Artist application progress">
           <button
             v-for="item in steps"
             :key="item.id"
@@ -128,9 +109,7 @@
             "
             @click="goToStep(item.id)"
           >
-            <span class="block text-xs uppercase tracking-widest"
-              >Step {{ item.id }}</span
-            >
+            <span class="block text-xs uppercase tracking-widest">Step {{ item.id }}</span>
             <span class="mt-1 block font-semibold">{{ item.label }}</span>
           </button>
         </nav>
@@ -140,8 +119,7 @@
             <div>
               <h2 class="text-xl font-semibold text-white">Legal identity</h2>
               <p class="mt-2 text-sm text-slate-400">
-                This information will be included automatically in the artist
-                agreement.
+                This information will be included automatically in the artist agreement.
               </p>
             </div>
 
@@ -168,9 +146,7 @@
               </label>
 
               <label class="grid gap-2 text-sm text-slate-400">
-                <span class="font-medium text-slate-100"
-                  >Legal first name *</span
-                >
+                <span class="font-medium text-slate-100">Legal first name *</span>
                 <input
                   v-model.trim="form.firstName"
                   type="text"
@@ -181,9 +157,7 @@
               </label>
 
               <label class="grid gap-2 text-sm text-slate-400">
-                <span class="font-medium text-slate-100"
-                  >Legal last name *</span
-                >
+                <span class="font-medium text-slate-100">Legal last name *</span>
                 <input
                   v-model.trim="form.lastName"
                   type="text"
@@ -260,9 +234,7 @@
               </label>
 
               <label class="grid gap-2 text-sm text-slate-400 lg:col-span-2">
-                <span class="font-medium text-slate-100">
-                  Tax identification number *
-                </span>
+                <span class="font-medium text-slate-100"> Tax identification number * </span>
                 <input
                   v-model.trim="form.taxId"
                   type="text"
@@ -277,8 +249,7 @@
             <div>
               <h2 class="text-xl font-semibold text-white">Public profile</h2>
               <p class="mt-2 text-sm text-slate-400">
-                These details will introduce your creative universe on the
-                platform.
+                These details will introduce your creative universe on the platform.
               </p>
             </div>
 
@@ -294,16 +265,10 @@
 
             <div class="grid gap-5 lg:grid-cols-2">
               <label class="grid gap-2 text-sm text-slate-400">
-                <span class="font-medium text-slate-100"
-                  >Primary art type *</span
-                >
+                <span class="font-medium text-slate-100">Primary art type *</span>
                 <select v-model="form.artType" class="field-control">
                   <option value="">Select a type</option>
-                  <option
-                    v-for="option in artTypeOptions"
-                    :key="option"
-                    :value="option"
-                  >
+                  <option v-for="option in artTypeOptions" :key="option" :value="option">
                     {{ option }}
                   </option>
                 </select>
@@ -322,9 +287,7 @@
 
             <div class="grid gap-3">
               <label class="grid gap-2 text-sm text-slate-400">
-                <span class="font-medium text-slate-100"
-                  >Styles / specialties *</span
-                >
+                <span class="font-medium text-slate-100">Styles / specialties *</span>
                 <span class="flex flex-col gap-3 sm:flex-row">
                   <input
                     v-model.trim="styleInput"
@@ -357,9 +320,7 @@
             </div>
 
             <label class="grid gap-2 text-sm text-slate-400">
-              <span class="font-medium text-slate-100"
-                >Primary social network</span
-              >
+              <span class="font-medium text-slate-100">Primary social network</span>
               <input
                 v-model.trim="form.socialHandle"
                 type="text"
@@ -371,17 +332,13 @@
 
           <section v-else-if="step === 3" class="grid gap-6">
             <div>
-              <h2 class="text-xl font-semibold text-white">
-                Application review
-              </h2>
+              <h2 class="text-xl font-semibold text-white">Application review</h2>
               <p class="mt-2 text-sm text-slate-400">
                 Review your information before opening the agreement.
               </p>
             </div>
 
-            <dl
-              class="grid gap-3 rounded-[24px] border border-slate-800 bg-violet-950 p-5 text-sm"
-            >
+            <dl class="grid gap-3 rounded-[24px] border border-slate-800 bg-violet-950 p-5 text-sm">
               <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
                 <dt class="text-slate-400">Legal name</dt>
                 <dd class="font-semibold text-white">
@@ -438,25 +395,17 @@
                   type="checkbox"
                   class="mt-1 h-4 w-4 accent-violet-700"
                 />
-                <span
-                  >I understand that Make It Art charges a commission on sales
-                  *</span
-                >
+                <span>I understand that Make It Art charges a commission on sales *</span>
               </label>
             </div>
           </section>
 
           <section v-else class="grid gap-6">
-            <div
-              class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between"
-            >
+            <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div>
-                <h2 class="text-xl font-semibold text-white">
-                  Artist agreement
-                </h2>
+                <h2 class="text-xl font-semibold text-white">Artist agreement</h2>
                 <p class="mt-2 text-sm text-slate-400">
-                  Review the generated agreement, accept it and sign before
-                  submitting.
+                  Review the generated agreement, accept it and sign before submitting.
                 </p>
               </div>
 
@@ -466,9 +415,7 @@
                 :disabled="contractPreviewLoading"
                 @click="ensureContractPreview(true)"
               >
-                {{
-                  contractPreviewLoading ? "Generating..." : "Refresh agreement"
-                }}
+                {{ contractPreviewLoading ? "Generating..." : "Refresh agreement" }}
               </button>
             </div>
 
@@ -490,15 +437,12 @@
               v-else
               class="max-h-[520px] overflow-y-auto rounded-[24px] border border-slate-800 bg-slate-950 p-5"
             >
-              <pre
-                class="whitespace-pre-wrap font-mono text-subtitle-2 leading-6 text-slate-100"
-                >{{ contractPreview }}</pre
-              >
+              <pre class="whitespace-pre-wrap font-mono text-subtitle-2 leading-6 text-slate-100">{{
+                contractPreview
+              }}</pre>
             </div>
 
-            <div
-              class="grid gap-4 rounded-[24px] border border-slate-800 bg-violet-950 p-5"
-            >
+            <div class="grid gap-4 rounded-[24px] border border-slate-800 bg-violet-950 p-5">
               <label
                 class="flex gap-3 rounded-2xl border border-slate-800 bg-slate-950 p-4 text-sm text-slate-400"
               >
@@ -508,19 +452,16 @@
                   class="mt-1 h-4 w-4 accent-violet-700"
                 />
                 <span>
-                  I have read and accepted the agreement and authorize Make It
-                  Art to submit it to the administration for review.
+                  I have read and accepted the agreement and authorize Make It Art to submit it to
+                  the administration for review.
                 </span>
               </label>
 
               <div class="grid gap-3">
                 <div>
-                  <p class="text-sm font-medium text-slate-100">
-                    Artist signature *
-                  </p>
+                  <p class="text-sm font-medium text-slate-100">Artist signature *</p>
                   <p class="mt-1 text-sm text-slate-400">
-                    This signature will be added to the PDF submitted to the
-                    administration.
+                    This signature will be added to the PDF submitted to the administration.
                   </p>
                 </div>
 
@@ -579,18 +520,11 @@
 <script setup>
 import { navigateTo } from "#app";
 import { storeToRefs } from "pinia";
-import {
-  computed,
-  onBeforeUnmount,
-  onMounted,
-  reactive,
-  ref,
-  watch,
-} from "vue";
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useAuthStore } from "~/stores/auth";
 
 definePageMeta({
-  middleware: "auth",
+  middleware: "auth"
 });
 
 const auth = useAuthStore();
@@ -600,7 +534,7 @@ const steps = [
   { id: 1, label: "Legal identity" },
   { id: 2, label: "Public profile" },
   { id: 3, label: "Validations" },
-  { id: 4, label: "Agreement & signature" },
+  { id: 4, label: "Agreement & signature" }
 ];
 
 const artTypeOptions = [
@@ -610,7 +544,7 @@ const artTypeOptions = [
   "Vector Art",
   "Illustration",
   "Graphic Design",
-  "Mixed Media",
+  "Mixed Media"
 ];
 
 const step = ref(1);
@@ -647,14 +581,14 @@ const form = reactive({
   country: "France",
   taxId: "",
   termsAccepted: false,
-  commissionAccepted: false,
+  commissionAccepted: false
 });
 
 const pendingApplication = computed(() =>
-  applicationState.value?.status === "pending" ? applicationState.value : null,
+  applicationState.value?.status === "pending" ? applicationState.value : null
 );
 const rejectedApplication = computed(() =>
-  applicationState.value?.status === "rejected" ? applicationState.value : null,
+  applicationState.value?.status === "rejected" ? applicationState.value : null
 );
 const legalAddressSummary = computed(
   () =>
@@ -663,10 +597,10 @@ const legalAddressSummary = computed(
       form.addressLine2,
       [form.postalCode, form.city].filter(Boolean).join(" "),
       form.region,
-      form.country,
+      form.country
     ]
       .filter(Boolean)
-      .join(", ") || "-",
+      .join(", ") || "-"
 );
 
 onMounted(async () => {
@@ -698,7 +632,7 @@ watch(
     contractPreviewDirty.value = true;
     queueDraftSave();
   },
-  { deep: true },
+  { deep: true }
 );
 
 watch(step, () => {
@@ -711,8 +645,7 @@ function prefillFromUser() {
 
   form.firstName = firstName;
   form.lastName = lastNameParts.join(" ");
-  form.displayName =
-    user.value?.artist?.displayName || user.value?.username || "";
+  form.displayName = user.value?.artist?.displayName || user.value?.username || "";
   form.bio = user.value?.bio || "";
 }
 
@@ -734,7 +667,7 @@ function buildDraftPayload() {
     country: form.country,
     taxId: form.taxId,
     termsAccepted: form.termsAccepted,
-    commissionAccepted: form.commissionAccepted,
+    commissionAccepted: form.commissionAccepted
   };
 }
 
@@ -744,42 +677,24 @@ function applyDraftPayload(payload) {
   }
 
   form.displayName =
-    typeof payload.displayName === "string"
-      ? payload.displayName
-      : form.displayName;
-  form.firstName =
-    typeof payload.firstName === "string" ? payload.firstName : form.firstName;
-  form.lastName =
-    typeof payload.lastName === "string" ? payload.lastName : form.lastName;
+    typeof payload.displayName === "string" ? payload.displayName : form.displayName;
+  form.firstName = typeof payload.firstName === "string" ? payload.firstName : form.firstName;
+  form.lastName = typeof payload.lastName === "string" ? payload.lastName : form.lastName;
   form.bio = typeof payload.bio === "string" ? payload.bio : form.bio;
-  form.artType =
-    typeof payload.artType === "string" ? payload.artType : form.artType;
+  form.artType = typeof payload.artType === "string" ? payload.artType : form.artType;
   form.styles = Array.isArray(payload.styles) ? payload.styles : form.styles;
   form.portfolioUrl =
-    typeof payload.portfolioUrl === "string"
-      ? payload.portfolioUrl
-      : form.portfolioUrl;
+    typeof payload.portfolioUrl === "string" ? payload.portfolioUrl : form.portfolioUrl;
   form.socialHandle =
-    typeof payload.socialHandle === "string"
-      ? payload.socialHandle
-      : form.socialHandle;
+    typeof payload.socialHandle === "string" ? payload.socialHandle : form.socialHandle;
   form.addressLine1 =
-    typeof payload.addressLine1 === "string"
-      ? payload.addressLine1
-      : form.addressLine1;
+    typeof payload.addressLine1 === "string" ? payload.addressLine1 : form.addressLine1;
   form.addressLine2 =
-    typeof payload.addressLine2 === "string"
-      ? payload.addressLine2
-      : form.addressLine2;
+    typeof payload.addressLine2 === "string" ? payload.addressLine2 : form.addressLine2;
   form.city = typeof payload.city === "string" ? payload.city : form.city;
-  form.region =
-    typeof payload.region === "string" ? payload.region : form.region;
-  form.postalCode =
-    typeof payload.postalCode === "string"
-      ? payload.postalCode
-      : form.postalCode;
-  form.country =
-    typeof payload.country === "string" ? payload.country : form.country;
+  form.region = typeof payload.region === "string" ? payload.region : form.region;
+  form.postalCode = typeof payload.postalCode === "string" ? payload.postalCode : form.postalCode;
+  form.country = typeof payload.country === "string" ? payload.country : form.country;
   form.taxId = typeof payload.taxId === "string" ? payload.taxId : form.taxId;
   form.termsAccepted = Boolean(payload.termsAccepted);
   form.commissionAccepted = Boolean(payload.commissionAccepted);
@@ -788,7 +703,7 @@ function applyDraftPayload(payload) {
 async function loadArtistState() {
   try {
     const response = await $fetch("/api/artists/me", {
-      credentials: "include",
+      credentials: "include"
     });
 
     applicationState.value = response.application;
@@ -800,7 +715,7 @@ async function loadArtistState() {
 async function loadApplicationDraft() {
   try {
     const response = await $fetch("/api/artists/me/application-draft", {
-      credentials: "include",
+      credentials: "include"
     });
     const draft = response.draft;
 
@@ -817,10 +732,7 @@ async function loadApplicationDraft() {
     }
 
     if (draft.status !== "pending" && draft.status !== "approved") {
-      step.value = Math.min(
-        Math.max(Number(draft.currentStep || 1), 1),
-        steps.length,
-      );
+      step.value = Math.min(Math.max(Number(draft.currentStep || 1), 1), steps.length);
     }
 
     draftStatusMessage.value = "Draft restored.";
@@ -854,8 +766,8 @@ async function saveApplicationDraft() {
       credentials: "include",
       body: {
         currentStep: step.value,
-        payload: buildDraftPayload(),
-      },
+        payload: buildDraftPayload()
+      }
     });
 
     draftStatusMessage.value = "Draft saved.";
@@ -968,7 +880,7 @@ async function ensureContractPreview(force = false) {
     const response = await $fetch("/api/artists/me/contract-preview", {
       method: "POST",
       credentials: "include",
-      body: buildDraftPayload(),
+      body: buildDraftPayload()
     });
 
     contractPreview.value = response.contractText || "";
@@ -1051,8 +963,8 @@ async function submitApplication() {
       body: {
         ...buildDraftPayload(),
         contractAccepted: contractAccepted.value,
-        signatureDataUrl: signatureDataUrl.value,
-      },
+        signatureDataUrl: signatureDataUrl.value
+      }
     });
 
     draftCompleted.value = true;
@@ -1065,9 +977,7 @@ async function submitApplication() {
     await navigateTo("/artist-profile");
   } catch (error) {
     message.value =
-      error?.data?.details ||
-      error?.data?.message ||
-      "Unable to submit the artist application.";
+      error?.data?.details || error?.data?.message || "Unable to submit the artist application.";
   } finally {
     loading.value = false;
   }
@@ -1079,7 +989,7 @@ function formatDate(value) {
   }
 
   return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
+    dateStyle: "medium"
   }).format(new Date(value));
 }
 </script>
@@ -1095,7 +1005,6 @@ function formatDate(value) {
 
 .field-control:focus {
   @apply border-violet-700;
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, theme("colors.violet.700") 30%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, theme("colors.violet.700") 30%, transparent);
 }
 </style>

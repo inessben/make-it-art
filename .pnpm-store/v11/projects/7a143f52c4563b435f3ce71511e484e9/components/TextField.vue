@@ -17,28 +17,28 @@
 defineProps({
   id: {
     type: String,
-    required: true,
+    required: true
   },
   label: {
     type: String,
-    required: true,
+    required: true
   },
   modelValue: {
     type: String,
-    required: true,
+    required: true
   },
   type: {
     type: String,
-    default: "text",
+    default: "text"
   },
   autocomplete: {
     type: String,
-    default: undefined,
+    default: undefined
   },
   required: {
     type: Boolean,
-    default: true,
-  },
+    default: true
+  }
 });
 
 defineEmits(["update:modelValue"]);

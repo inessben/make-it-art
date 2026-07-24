@@ -9,11 +9,10 @@
             to="/"
             class="ml-5 flex w-fit items-center gap-5"
             aria-label="Make It Art - Home"
-            ><img
-              class="h-12 w-10 object-contain"
-              src="/logo.png"
-              alt=""
-            /><span class="text-title-4">MAKE IT ART</span></NuxtLink
+            ><img class="h-12 w-10 object-contain" src="/logo.png" alt="" /><span
+              class="text-title-4"
+              >MAKE IT ART</span
+            ></NuxtLink
           >
           <p class="mt-7 text-footer leading-[1.7] text-slate-100">
             Art is the destination...<br />Your imagination, the process !
@@ -51,17 +50,11 @@
         <section class="md:pt-[38px]">
           <h2 class="text-title-3">Catalogue</h2>
           <nav class="mt-7 flex flex-col gap-[18px] text-footer">
-            <NuxtLink
-              class="hover:text-violet-400"
-              to="/artworks?artType=illustration"
+            <NuxtLink class="hover:text-violet-400" to="/artworks?artType=illustration"
               >Digital Art</NuxtLink
-            ><NuxtLink
-              class="hover:text-violet-400"
-              to="/artworks?artType=photography"
+            ><NuxtLink class="hover:text-violet-400" to="/artworks?artType=photography"
               >Photography</NuxtLink
-            ><NuxtLink
-              class="hover:text-violet-400"
-              to="/artworks?artType=graphic"
+            ><NuxtLink class="hover:text-violet-400" to="/artworks?artType=graphic"
               >Graphical Assets</NuxtLink
             >
           </nav>
@@ -69,25 +62,16 @@
         <section class="md:pt-[20px]">
           <h2 class="text-title-3">Support</h2>
           <nav class="mt-7 flex flex-col gap-[18px] text-footer">
-            <NuxtLink class="hover:text-violet-400" to="/terms"
-              >Terms &amp; Conditions</NuxtLink
-            ><NuxtLink class="hover:text-violet-400" to="/privacy"
-              >Privacy Policy</NuxtLink
-            ><NuxtLink class="hover:text-violet-400" to="/about-us"
-              >About Us</NuxtLink
-            ><a class="hover:text-violet-400" href="mailto:contact@makeitart.io"
-              >Contact</a
-            >
+            <NuxtLink class="hover:text-violet-400" to="/terms">Terms &amp; Conditions</NuxtLink
+            ><NuxtLink class="hover:text-violet-400" to="/privacy">Privacy Policy</NuxtLink
+            ><NuxtLink class="hover:text-violet-400" to="/about-us">About Us</NuxtLink
+            ><a class="hover:text-violet-400" href="mailto:contact@makeitart.io">Contact</a>
           </nav>
         </section>
       </div>
-      <div
-        class="mt-auto flex items-center gap-5 text-center text-footer text-slate-100"
-      >
+      <div class="mt-auto flex items-center gap-5 text-center text-footer text-slate-100">
         <span class="h-px flex-1 bg-slate-800" />
-        <p class="whitespace-nowrap">
-          © 2026 MAKE IT ART. All rights reserved.
-        </p>
+        <p class="whitespace-nowrap">© 2026 MAKE IT ART. All rights reserved.</p>
         <span class="h-px flex-1 bg-slate-800" />
       </div>
     </div>

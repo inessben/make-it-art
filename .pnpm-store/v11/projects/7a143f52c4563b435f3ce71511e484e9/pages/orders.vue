@@ -6,14 +6,12 @@
       <AccountSettingsSidebar compact />
 
       <section class="min-w-0 pb-20 pt-7 lg:pt-12">
-        <header
-          class="flex flex-col gap-7 xl:flex-row xl:items-end xl:justify-between"
-        >
+        <header class="flex flex-col gap-7 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <h1 class="text-title-2 uppercase">Order History</h1>
             <p class="mt-3 max-w-[620px] text-body-1 leading-6 text-slate-100">
-              A cryptographic record of your acquisitions. All assets are
-              verified through their marketplace provenance.
+              A cryptographic record of your acquisitions. All assets are verified through their
+              marketplace provenance.
             </p>
           </div>
 
@@ -25,11 +23,7 @@
                 class="h-9 appearance-none border border-slate-800 bg-slate-950 px-7 text-subtitle-2 uppercase text-slate-100 outline-none focus:border-violet-600"
               >
                 <option value="all">Filter</option>
-                <option
-                  v-for="status in availableStatuses"
-                  :key="status"
-                  :value="status"
-                >
+                <option v-for="status in availableStatuses" :key="status" :value="status">
                   {{ status }}
                 </option>
               </select>
@@ -45,41 +39,24 @@
           </div>
         </header>
 
-        <section
-          class="mt-12 grid gap-6 md:grid-cols-2"
-          aria-label="Order summary"
-        >
-          <article
-            class="min-h-[106px] rounded border border-slate-800 bg-slate-950/70 px-6 py-6"
-          >
-            <p class="text-subtitle-2 uppercase text-slate-100">
-              Total collected
-            </p>
+        <section class="mt-12 grid gap-6 md:grid-cols-2" aria-label="Order summary">
+          <article class="min-h-[106px] rounded border border-slate-800 bg-slate-950/70 px-6 py-6">
+            <p class="text-subtitle-2 uppercase text-slate-100">Total collected</p>
             <p class="mt-3 text-title-3 text-slate-400">
               {{ transactions.length }}
               {{ transactions.length === 1 ? "Artwork" : "Artworks" }}
             </p>
           </article>
-          <article
-            class="min-h-[106px] rounded border border-slate-800 bg-slate-950/70 px-6 py-6"
-          >
-            <p class="text-subtitle-2 uppercase text-slate-100">
-              Portfolio value
-            </p>
+          <article class="min-h-[106px] rounded border border-slate-800 bg-slate-950/70 px-6 py-6">
+            <p class="text-subtitle-2 uppercase text-slate-100">Portfolio value</p>
             <p class="mt-3 text-title-3 text-slate-400">
               {{ formattedPortfolioValue }}
             </p>
           </article>
         </section>
 
-        <section
-          class="mt-12 overflow-hidden rounded border border-slate-800 bg-slate-950/70"
-        >
-          <AppStatePanel
-            v-if="loading"
-            type="loading"
-            message="Loading your order history..."
-          />
+        <section class="mt-12 overflow-hidden rounded border border-slate-800 bg-slate-950/70">
+          <AppStatePanel v-if="loading" type="loading" message="Loading your order history..." />
           <AppStatePanel
             v-else-if="error"
             type="error"
@@ -94,9 +71,7 @@
 
           <template v-else>
             <div class="overflow-x-auto">
-              <table
-                class="w-full min-w-[920px] table-fixed border-collapse text-left"
-              >
+              <table class="w-full min-w-[920px] table-fixed border-collapse text-left">
                 <thead>
                   <tr
                     class="h-16 border-b border-slate-800 text-subtitle-2 uppercase text-slate-100"
@@ -105,9 +80,7 @@
                     <th class="w-[15%] px-4 font-normal">Status</th>
                     <th class="w-[24%] px-4 font-normal">Purchase date</th>
                     <th class="w-[12%] px-4 text-right font-normal">Value</th>
-                    <th class="w-[14%] px-6 text-right font-normal">
-                      Blockchain
-                    </th>
+                    <th class="w-[14%] px-6 text-right font-normal">Blockchain</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -172,10 +145,7 @@
                 {{ filteredTransactions.length }}
                 transactions
               </p>
-              <nav
-                class="flex items-center gap-1"
-                aria-label="Order history pagination"
-              >
+              <nav class="flex items-center gap-1" aria-label="Order history pagination">
                 <button
                   type="button"
                   class="flex h-8 w-8 items-center justify-center border border-slate-800 text-body-1 disabled:opacity-30"
@@ -243,54 +213,40 @@ const transactions = computed(() =>
       title: artwork.title || "Untitled artwork",
       status: order.status || "Processing",
       date: order.createdAt,
-      value: Number(artwork.priceTokens) || 0,
-    })),
-  ),
+      value: Number(artwork.priceTokens) || 0
+    }))
+  )
 );
 
 const availableStatuses = computed(() => [
-  ...new Set(
-    transactions.value.map((transaction) => transaction.status).filter(Boolean),
-  ),
+  ...new Set(transactions.value.map((transaction) => transaction.status).filter(Boolean))
 ]);
 const filteredTransactions = computed(() =>
   selectedStatus.value === "all"
     ? transactions.value
-    : transactions.value.filter(
-        (transaction) => transaction.status === selectedStatus.value,
-      ),
+    : transactions.value.filter((transaction) => transaction.status === selectedStatus.value)
 );
 const totalPages = computed(() =>
-  Math.max(1, Math.ceil(filteredTransactions.value.length / pageSize)),
+  Math.max(1, Math.ceil(filteredTransactions.value.length / pageSize))
 );
 const currentPage = computed(() => {
   const parsedPage = Number.parseInt(String(route.query.page || "1"), 10);
-  return Math.min(
-    Math.max(Number.isInteger(parsedPage) ? parsedPage : 1, 1),
-    totalPages.value,
-  );
+  return Math.min(Math.max(Number.isInteger(parsedPage) ? parsedPage : 1, 1), totalPages.value);
 });
 const visibleTransactions = computed(() => {
   const start = (currentPage.value - 1) * pageSize;
   return filteredTransactions.value.slice(start, start + pageSize);
 });
 const rangeStart = computed(() =>
-  filteredTransactions.value.length
-    ? (currentPage.value - 1) * pageSize + 1
-    : 0,
+  filteredTransactions.value.length ? (currentPage.value - 1) * pageSize + 1 : 0
 );
 const rangeEnd = computed(() =>
-  Math.min(currentPage.value * pageSize, filteredTransactions.value.length),
+  Math.min(currentPage.value * pageSize, filteredTransactions.value.length)
 );
 const portfolioValue = computed(() =>
-  orders.value.reduce(
-    (total, order) => total + (Number(order.totalToken) || 0),
-    0,
-  ),
+  orders.value.reduce((total, order) => total + (Number(order.totalToken) || 0), 0)
 );
-const formattedPortfolioValue = computed(() =>
-  formatTokenValue(portfolioValue.value),
-);
+const formattedPortfolioValue = computed(() => formatTokenValue(portfolioValue.value));
 
 watch(selectedStatus, () => goToPage(1));
 
@@ -298,12 +254,11 @@ onMounted(async () => {
   try {
     const response = await $fetch("/api/orders", {
       method: "GET",
-      credentials: "include",
+      credentials: "include"
     });
     orders.value = Array.isArray(response?.orders) ? response.orders : [];
   } catch (fetchError) {
-    error.value =
-      fetchError?.data?.message || "Unable to load your order history.";
+    error.value = fetchError?.data?.message || "Unable to load your order history.";
   } finally {
     loading.value = false;
   }
@@ -324,7 +279,7 @@ function formatOrderDate(value) {
     minute: "2-digit",
     hour12: false,
     timeZone: "UTC",
-    timeZoneName: "short",
+    timeZoneName: "short"
   }).format(new Date(value));
 }
 
@@ -345,17 +300,13 @@ function exportCsv() {
       transaction.orderNumber,
       transaction.status,
       formatOrderDate(transaction.date),
-      formatTokenValue(transaction.value),
-    ]),
+      formatTokenValue(transaction.value)
+    ])
   ];
   const csv = rows
-    .map((row) =>
-      row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","),
-    )
+    .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
     .join("\n");
-  const url = URL.createObjectURL(
-    new Blob([csv], { type: "text/csv;charset=utf-8" }),
-  );
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
   const link = document.createElement("a");
   link.href = url;
   link.download = "make-it-art-order-history.csv";

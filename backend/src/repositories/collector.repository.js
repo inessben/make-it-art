@@ -1,8 +1,7 @@
 const prisma = require("../lib/prisma");
 
 const DEFAULT_FAVORITES_TITLE = "Favoris";
-const DEFAULT_FAVORITES_DESCRIPTION =
-  "Vos oeuvres favorites et votre liste de souhaits.";
+const DEFAULT_FAVORITES_DESCRIPTION = "Vos oeuvres favorites et votre liste de souhaits.";
 
 function getDbClient(tx) {
   return tx || prisma;
@@ -14,8 +13,8 @@ async function findDefaultFavoritesCollection(userId, tx) {
   return db.collection.findFirst({
     where: {
       userId,
-      isDefaultFavorites: true,
-    },
+      isDefaultFavorites: true
+    }
   });
 }
 
@@ -23,27 +22,27 @@ async function syncFavoritesIntoDefaultCollection(userId, collectionId, tx) {
   const db = getDbClient(tx);
   const favorites = await db.favorite.findMany({
     where: {
-      userId,
+      userId
     },
     select: {
-      artworkId: true,
-    },
+      artworkId: true
+    }
   });
 
   for (const favorite of favorites) {
     const existingItem = await db.collectionItem.findFirst({
       where: {
         collectionId,
-        artworkId: favorite.artworkId,
-      },
+        artworkId: favorite.artworkId
+      }
     });
 
     if (!existingItem) {
       await db.collectionItem.create({
         data: {
           collectionId,
-          artworkId: favorite.artworkId,
-        },
+          artworkId: favorite.artworkId
+        }
       });
     }
   }
@@ -61,8 +60,8 @@ async function ensureDefaultFavoritesCollection(userId, tx) {
         description: DEFAULT_FAVORITES_DESCRIPTION,
         isPrivate: true,
         isDefaultFavorites: true,
-        createdAt: new Date(),
-      },
+        createdAt: new Date()
+      }
     });
   }
 
@@ -77,25 +76,21 @@ async function addArtworkToDefaultFavoritesCollection(userId, artworkId, tx) {
   const existingItem = await db.collectionItem.findFirst({
     where: {
       collectionId: collection.id,
-      artworkId,
-    },
+      artworkId
+    }
   });
 
   if (!existingItem) {
     await db.collectionItem.create({
       data: {
         collectionId: collection.id,
-        artworkId,
-      },
+        artworkId
+      }
     });
   }
 }
 
-async function removeArtworkFromDefaultFavoritesCollection(
-  userId,
-  artworkId,
-  tx,
-) {
+async function removeArtworkFromDefaultFavoritesCollection(userId, artworkId, tx) {
   const db = getDbClient(tx);
   const collection = await findDefaultFavoritesCollection(userId, db);
 
@@ -106,8 +101,8 @@ async function removeArtworkFromDefaultFavoritesCollection(
   await db.collectionItem.deleteMany({
     where: {
       collectionId: collection.id,
-      artworkId,
-    },
+      artworkId
+    }
   });
 }
 
@@ -116,15 +111,15 @@ async function upsertFavoriteRecord(tx, userId, artworkId) {
     where: {
       userId_artworkId: {
         userId,
-        artworkId,
-      },
+        artworkId
+      }
     },
     create: {
       userId,
       artworkId,
-      createdAt: new Date(),
+      createdAt: new Date()
     },
-    update: {},
+    update: {}
   });
 
   await syncArtworkFavoriteCount(tx, artworkId);
@@ -134,14 +129,14 @@ async function deleteFavoriteRecord(tx, userId, artworkId) {
   await tx.favorite.deleteMany({
     where: {
       userId,
-      artworkId,
-    },
+      artworkId
+    }
   });
 
   const artwork = await tx.artwork.findUnique({
     where: {
-      id: artworkId,
-    },
+      id: artworkId
+    }
   });
 
   if (artwork) {
@@ -156,39 +151,39 @@ function buildArtworkInclude(viewerId) {
       include: {
         user: {
           include: {
-            artistApplicationDraft: true,
-          },
+            artistApplicationDraft: true
+          }
         },
         _count: {
           select: {
             artworks: true,
             followers: true,
-            collections: true,
-          },
+            collections: true
+          }
         },
         followers: {
           where: {
-            userId: viewerId,
+            userId: viewerId
           },
           select: {
-            id: true,
-          },
-        },
-      },
+            id: true
+          }
+        }
+      }
     },
     _count: {
       select: {
-        favorites: true,
-      },
+        favorites: true
+      }
     },
     favorites: {
       where: {
-        userId: viewerId,
+        userId: viewerId
       },
       select: {
-        id: true,
-      },
-    },
+        id: true
+      }
+    }
   };
 }
 
@@ -197,15 +192,15 @@ function buildCollectionInclude(userId) {
     items: {
       orderBy: [
         {
-          id: "desc",
-        },
+          id: "desc"
+        }
       ],
       include: {
         artwork: {
-          include: buildArtworkInclude(userId),
-        },
-      },
-    },
+          include: buildArtworkInclude(userId)
+        }
+      }
+    }
   };
 }
 
@@ -214,9 +209,9 @@ async function ensurePublicArtwork(artworkId) {
     where: {
       id: artworkId,
       artist: {
-        verified: true,
-      },
-    },
+        verified: true
+      }
+    }
   });
 
   if (!artwork) {
@@ -230,8 +225,8 @@ async function ensurePublicArtist(artistId) {
   const artist = await prisma.artist.findFirst({
     where: {
       id: artistId,
-      verified: true,
-    },
+      verified: true
+    }
   });
 
   if (!artist) {
@@ -244,17 +239,17 @@ async function ensurePublicArtist(artistId) {
 async function syncArtworkFavoriteCount(tx, artworkId) {
   const count = await tx.favorite.count({
     where: {
-      artworkId,
-    },
+      artworkId
+    }
   });
 
   await tx.artwork.update({
     where: {
-      id: artworkId,
+      id: artworkId
     },
     data: {
-      favoriteCount: count,
-    },
+      favoriteCount: count
+    }
   });
 }
 
@@ -263,21 +258,21 @@ async function listFavoriteArtworks(userId) {
 
   const favorites = await prisma.favorite.findMany({
     where: {
-      userId,
+      userId
     },
     orderBy: [
       {
-        createdAt: "desc",
+        createdAt: "desc"
       },
       {
-        id: "desc",
-      },
+        id: "desc"
+      }
     ],
     include: {
       artwork: {
-        include: buildArtworkInclude(userId),
-      },
-    },
+        include: buildArtworkInclude(userId)
+      }
+    }
   });
 
   return favorites.map((favorite) => favorite.artwork).filter(Boolean);
@@ -306,15 +301,15 @@ async function followArtist({ userId, artistId }) {
     where: {
       userId_artistId: {
         userId,
-        artistId,
-      },
+        artistId
+      }
     },
     create: {
       userId,
       artistId,
-      createdAt: new Date(),
+      createdAt: new Date()
     },
-    update: {},
+    update: {}
   });
 }
 
@@ -322,50 +317,50 @@ async function unfollowArtist({ userId, artistId }) {
   await prisma.follow.deleteMany({
     where: {
       userId,
-      artistId,
-    },
+      artistId
+    }
   });
 }
 
 async function listFollowedArtists(userId) {
   const follows = await prisma.follow.findMany({
     where: {
-      userId,
+      userId
     },
     orderBy: [
       {
-        createdAt: "desc",
+        createdAt: "desc"
       },
       {
-        id: "desc",
-      },
+        id: "desc"
+      }
     ],
     include: {
       artist: {
         include: {
           user: {
             include: {
-              artistApplicationDraft: true,
-            },
+              artistApplicationDraft: true
+            }
           },
           _count: {
             select: {
               artworks: true,
               followers: true,
-              collections: true,
-            },
+              collections: true
+            }
           },
           followers: {
             where: {
-              userId,
+              userId
             },
             select: {
-              id: true,
-            },
-          },
-        },
-      },
-    },
+              id: true
+            }
+          }
+        }
+      }
+    }
   });
 
   return follows.map((follow) => follow.artist).filter(Boolean);
@@ -376,38 +371,33 @@ async function listPersonalCollections(userId) {
 
   return prisma.collection.findMany({
     where: {
-      userId,
+      userId
     },
     orderBy: [
       {
-        isDefaultFavorites: "desc",
+        isDefaultFavorites: "desc"
       },
       {
-        createdAt: "desc",
+        createdAt: "desc"
       },
       {
-        id: "desc",
-      },
+        id: "desc"
+      }
     ],
-    include: buildCollectionInclude(userId),
+    include: buildCollectionInclude(userId)
   });
 }
 
-async function createPersonalCollection({
-  userId,
-  title,
-  description,
-  isPrivate,
-}) {
+async function createPersonalCollection({ userId, title, description, isPrivate }) {
   return prisma.collection.create({
     data: {
       userId,
       title,
       description,
       isPrivate,
-      createdAt: new Date(),
+      createdAt: new Date()
     },
-    include: buildCollectionInclude(userId),
+    include: buildCollectionInclude(userId)
   });
 }
 
@@ -415,22 +405,16 @@ async function findPersonalCollectionById({ userId, collectionId }) {
   return prisma.collection.findFirst({
     where: {
       id: collectionId,
-      userId,
+      userId
     },
-    include: buildCollectionInclude(userId),
+    include: buildCollectionInclude(userId)
   });
 }
 
-async function updatePersonalCollection({
-  userId,
-  collectionId,
-  title,
-  description,
-  isPrivate,
-}) {
+async function updatePersonalCollection({ userId, collectionId, title, description, isPrivate }) {
   const existingCollection = await findPersonalCollectionById({
     userId,
-    collectionId,
+    collectionId
   });
 
   if (!existingCollection) {
@@ -440,32 +424,32 @@ async function updatePersonalCollection({
   if (existingCollection.isDefaultFavorites) {
     return prisma.collection.update({
       where: {
-        id: collectionId,
+        id: collectionId
       },
       data: {
-        description,
+        description
       },
-      include: buildCollectionInclude(userId),
+      include: buildCollectionInclude(userId)
     });
   }
 
   return prisma.collection.update({
     where: {
-      id: collectionId,
+      id: collectionId
     },
     data: {
       title,
       description,
-      isPrivate,
+      isPrivate
     },
-    include: buildCollectionInclude(userId),
+    include: buildCollectionInclude(userId)
   });
 }
 
 async function deletePersonalCollection({ userId, collectionId }) {
   const existingCollection = await findPersonalCollectionById({
     userId,
-    collectionId,
+    collectionId
   });
 
   if (!existingCollection) {
@@ -478,19 +462,15 @@ async function deletePersonalCollection({ userId, collectionId }) {
 
   await prisma.collection.delete({
     where: {
-      id: collectionId,
-    },
+      id: collectionId
+    }
   });
 }
 
-async function addArtworkToPersonalCollection({
-  userId,
-  collectionId,
-  artworkId,
-}) {
+async function addArtworkToPersonalCollection({ userId, collectionId, artworkId }) {
   const existingCollection = await findPersonalCollectionById({
     userId,
-    collectionId,
+    collectionId
   });
 
   if (!existingCollection) {
@@ -502,45 +482,41 @@ async function addArtworkToPersonalCollection({
   if (existingCollection.isDefaultFavorites) {
     await addFavorite({
       userId,
-      artworkId,
+      artworkId
     });
 
     return findPersonalCollectionById({
       userId,
-      collectionId,
+      collectionId
     });
   }
 
   const existingItem = await prisma.collectionItem.findFirst({
     where: {
       collectionId,
-      artworkId,
-    },
+      artworkId
+    }
   });
 
   if (!existingItem) {
     await prisma.collectionItem.create({
       data: {
         collectionId,
-        artworkId,
-      },
+        artworkId
+      }
     });
   }
 
   return findPersonalCollectionById({
     userId,
-    collectionId,
+    collectionId
   });
 }
 
-async function removeArtworkFromPersonalCollection({
-  userId,
-  collectionId,
-  artworkId,
-}) {
+async function removeArtworkFromPersonalCollection({ userId, collectionId, artworkId }) {
   const existingCollection = await findPersonalCollectionById({
     userId,
-    collectionId,
+    collectionId
   });
 
   if (!existingCollection) {
@@ -550,25 +526,25 @@ async function removeArtworkFromPersonalCollection({
   if (existingCollection.isDefaultFavorites) {
     await removeFavorite({
       userId,
-      artworkId,
+      artworkId
     });
 
     return findPersonalCollectionById({
       userId,
-      collectionId,
+      collectionId
     });
   }
 
   await prisma.collectionItem.deleteMany({
     where: {
       collectionId,
-      artworkId,
-    },
+      artworkId
+    }
   });
 
   return findPersonalCollectionById({
     userId,
-    collectionId,
+    collectionId
   });
 }
 
@@ -585,5 +561,5 @@ module.exports = {
   deletePersonalCollection,
   addArtworkToPersonalCollection,
   removeArtworkFromPersonalCollection,
-  ensureDefaultFavoritesCollection,
+  ensureDefaultFavoritesCollection
 };

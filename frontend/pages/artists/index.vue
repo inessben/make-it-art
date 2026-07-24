@@ -5,11 +5,7 @@
         class="flex flex-col gap-5 border-b border-slate-900 pb-6 sm:flex-row sm:items-end sm:justify-between"
       >
         <div>
-          <p
-            class="text-subtitle-2 uppercase tracking-[0.14em] text-violet-400"
-          >
-            Collections
-          </p>
+          <p class="text-subtitle-2 uppercase tracking-[0.14em] text-violet-400">Collections</p>
           <h1 class="mt-3 text-title-2 text-slate-100">Artists</h1>
           <p class="mt-2 text-body-1 text-slate-400">
             Discover {{ filteredArtists.length }} curated artist{{
@@ -34,9 +30,7 @@
           class="border border-slate-800 bg-slate-950/70 px-5 py-6 lg:block lg:self-start"
           :class="showFilters ? 'block' : 'hidden'"
         >
-          <h2
-            class="text-subtitle-2 font-bold uppercase tracking-[0.12em] text-slate-500"
-          >
+          <h2 class="text-subtitle-2 font-bold uppercase tracking-[0.12em] text-slate-500">
             Filters
           </h2>
 
@@ -173,34 +167,29 @@ const artTypes = [
   { label: "Digital illustrations", value: "illustration" },
   { label: "3D motion", value: "3d-motion" },
   { label: "Graphical assets", value: "graphic" },
-  { label: "Photography", value: "photography" },
+  { label: "Photography", value: "photography" }
 ];
-const initialType =
-  typeof route.query.artType === "string" ? route.query.artType : "";
+const initialType = typeof route.query.artType === "string" ? route.query.artType : "";
 const selectedTypes = ref(initialType ? [initialType] : []);
-const requestHeaders = import.meta.server
-  ? useRequestHeaders(["cookie"])
-  : undefined;
+const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
 
 const { data, pending, error, refresh } = await useFetch("/api/artists", {
   headers: requestHeaders,
   credentials: "include",
   query: { limit: 60 },
-  default: () => ({ artists: [] }),
+  default: () => ({ artists: [] })
 });
 
 const artists = computed(() => data.value?.artists || []);
 const errorMessage = computed(
-  () =>
-    error.value?.data?.message ||
-    "The artist directory is temporarily unavailable.",
+  () => error.value?.data?.message || "The artist directory is temporarily unavailable."
 );
 const hasActiveFilters = computed(
   () =>
     Boolean(searchTerm.value) ||
     Boolean(style.value) ||
     selectedTypes.value.length > 0 ||
-    sortBy.value !== "featured",
+    sortBy.value !== "featured"
 );
 
 const filteredArtists = computed(() => {
@@ -214,54 +203,35 @@ const filteredArtists = computed(() => {
       .toLowerCase();
     const artType = String(artist.artType || "").toLowerCase();
     const matchesType =
-      types.length === 0 ||
-      types.some((type) => artType.includes(type.replace("-", " ")));
+      types.length === 0 || types.some((type) => artType.includes(type.replace("-", " ")));
     const matchesStyle =
-      !requestedStyle ||
-      styles.some((item) =>
-        String(item).toLowerCase().includes(requestedStyle),
-      );
+      !requestedStyle || styles.some((item) => String(item).toLowerCase().includes(requestedStyle));
 
-    return (
-      (!search || haystack.includes(search)) && matchesType && matchesStyle
-    );
+    return (!search || haystack.includes(search)) && matchesType && matchesStyle;
   });
 
   return [...result].sort((left, right) => {
     if (sortBy.value === "latest") {
-      return (
-        new Date(right.createdAt || 0).getTime() -
-        new Date(left.createdAt || 0).getTime()
-      );
+      return new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime();
     }
     if (sortBy.value === "artworks") {
-      return (
-        Number(right.stats?.artworks || 0) - Number(left.stats?.artworks || 0)
-      );
+      return Number(right.stats?.artworks || 0) - Number(left.stats?.artworks || 0);
     }
-    return (
-      Number(right.stats?.followers || 0) - Number(left.stats?.followers || 0)
-    );
+    return Number(right.stats?.followers || 0) - Number(left.stats?.followers || 0);
   });
 });
 
-const totalPages = computed(() =>
-  Math.max(1, Math.ceil(filteredArtists.value.length / pageSize)),
-);
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredArtists.value.length / pageSize)));
 const currentPage = computed(() => {
   const parsed = Number.parseInt(String(route.query.page || "1"), 10);
-  return Math.min(
-    Math.max(Number.isInteger(parsed) ? parsed : 1, 1),
-    totalPages.value,
-  );
+  return Math.min(Math.max(Number.isInteger(parsed) ? parsed : 1, 1), totalPages.value);
 });
 const paginatedArtists = computed(() => {
   const start = (currentPage.value - 1) * pageSize;
   return filteredArtists.value.slice(start, start + pageSize);
 });
 
-const { actionMessage, actionStatus, followLoading, toggleFollow } =
-  useMarketplaceActions(auth);
+const { actionMessage, actionStatus, followLoading, toggleFollow } = useMarketplaceActions(auth);
 
 watch(
   [searchTerm, style, sortBy, selectedTypes],
@@ -271,14 +241,14 @@ watch(
     delete query.page;
     await router.replace({ path: route.path, query });
   },
-  { deep: true },
+  { deep: true }
 );
 
 watch(
   () => route.query.artType,
   (artType) => {
     selectedTypes.value = typeof artType === "string" ? [artType] : [];
-  },
+  }
 );
 
 onMounted(async () => {

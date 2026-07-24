@@ -6,19 +6,11 @@
       <AccountSettingsSidebar compact />
 
       <section class="min-w-0 px-0 pb-20 pt-7 lg:px-0 lg:pt-8">
-        <header
-          class="flex flex-col gap-8 xl:flex-row xl:items-start xl:justify-between"
-        >
+        <header class="flex flex-col gap-8 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <p class="text-xs uppercase tracking-[0.18em] text-violet-400">
-              Wishlist
-            </p>
+            <p class="text-xs uppercase tracking-[0.18em] text-violet-400">Wishlist</p>
             <h1 class="mt-4 text-title-2 text-slate-100">
-              {{
-                activeTab === "favorites"
-                  ? "Your favorite artworks"
-                  : "Your collections"
-              }}
+              {{ activeTab === "favorites" ? "Your favorite artworks" : "Your collections" }}
             </h1>
             <p class="mt-3 max-w-[510px] text-body-1 leading-6 text-slate-400">
               {{
@@ -31,9 +23,7 @@
               v-if="activeTab === 'favorites' && !pending && artworks.length"
               class="mt-3 text-sm font-medium text-violet-200"
             >
-              {{ artworks.length }} saved artwork{{
-                artworks.length === 1 ? "" : "s"
-              }}
+              {{ artworks.length }} saved artwork{{ artworks.length === 1 ? "" : "s" }}
             </p>
           </div>
 
@@ -53,9 +43,7 @@
           </div>
         </header>
 
-        <div
-          class="mt-8 inline-flex rounded-2xl border border-slate-800 bg-slate-950 p-1"
-        >
+        <div class="mt-8 inline-flex rounded-2xl border border-slate-800 bg-slate-950 p-1">
           <button
             type="button"
             class="rounded-[14px] px-5 py-2.5 text-sm font-semibold transition"
@@ -96,11 +84,7 @@
         </div>
 
         <section v-if="activeTab === 'favorites'" class="mt-8">
-          <AppStatePanel
-            v-if="pending"
-            type="loading"
-            message="Loading your favorites..."
-          />
+          <AppStatePanel v-if="pending" type="loading" message="Loading your favorites..." />
           <AppStatePanel
             v-else-if="errorMessage"
             type="error"
@@ -126,11 +110,7 @@
           </section>
         </section>
 
-        <CollectionsPanelContent
-          v-else
-          v-model:page-message="pageMessage"
-          class="mt-8"
-        />
+        <CollectionsPanelContent v-else v-model:page-message="pageMessage" class="mt-8" />
       </section>
     </div>
   </main>
@@ -148,14 +128,10 @@ import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
 const auth = useAuthStore();
 const route = useRoute();
 const router = useRouter();
-const requestHeaders = import.meta.server
-  ? useRequestHeaders(["cookie"])
-  : undefined;
+const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
 const pageMessage = ref("");
 
-const activeTab = computed(() =>
-  route.query.tab === "collections" ? "collections" : "favorites",
-);
+const activeTab = computed(() => (route.query.tab === "collections" ? "collections" : "favorites"));
 
 function setActiveTab(tab) {
   if (tab === "collections") {
@@ -170,27 +146,26 @@ watch(
   () => route.query.tab,
   () => {
     pageMessage.value = "";
-  },
+  }
 );
 
 const { data, pending, error, refresh } = await useFetch("/api/favorites/me", {
   headers: requestHeaders,
   credentials: "include",
-  default: () => ({ artworks: [] }),
+  default: () => ({ artworks: [] })
 });
 
 const artworks = computed(() => data.value?.artworks || []);
 const errorMessage = computed(() => error.value?.data?.message || "");
 
-const { actionMessage, favoriteLoading, toggleFavorite } =
-  useMarketplaceActions(auth);
+const { actionMessage, favoriteLoading, toggleFavorite } = useMarketplaceActions(auth);
 
 async function handleFavoriteToggle(artwork) {
   const success = await toggleFavorite(artwork);
 
   if (success && !artwork.isFavorite) {
     data.value = {
-      artworks: artworks.value.filter((item) => item.id !== artwork.id),
+      artworks: artworks.value.filter((item) => item.id !== artwork.id)
     };
     return;
   }

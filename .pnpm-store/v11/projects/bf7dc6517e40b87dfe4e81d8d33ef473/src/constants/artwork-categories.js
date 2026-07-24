@@ -6,9 +6,9 @@ const PREDEFINED_ARTWORK_CATEGORIES = [
   "Photographie",
   "Art generatif",
   "Collage numerique",
-  "Mix media",
+  "Mix media"
 ];
 
 module.exports = {
-  PREDEFINED_ARTWORK_CATEGORIES,
+  PREDEFINED_ARTWORK_CATEGORIES
 };

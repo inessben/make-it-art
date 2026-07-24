@@ -4,52 +4,52 @@ const artworkInclude = {
   category: true,
   artist: {
     include: {
-      user: true,
-    },
-  },
+      user: true
+    }
+  }
 };
 
 async function listArtworksForAdmin() {
   return prisma.artwork.findMany({
     orderBy: [
       {
-        createdAt: "desc",
+        createdAt: "desc"
       },
       {
-        id: "desc",
-      },
+        id: "desc"
+      }
     ],
     include: {
       category: true,
       artist: {
         include: {
-          user: true,
-        },
+          user: true
+        }
       },
       _count: {
         select: {
           favorites: true,
-          orderItems: true,
-        },
-      },
-    },
+          orderItems: true
+        }
+      }
+    }
   });
 }
 
 async function listArtworksByArtistId(artistId) {
   return prisma.artwork.findMany({
     where: {
-      artistId,
+      artistId
     },
     orderBy: [
       {
-        createdAt: "desc",
+        createdAt: "desc"
       },
       {
-        id: "desc",
-      },
+        id: "desc"
+      }
     ],
-    include: artworkInclude,
+    include: artworkInclude
   });
 }
 
@@ -57,20 +57,13 @@ async function findOwnedArtwork({ artworkId, artistId }) {
   return prisma.artwork.findFirst({
     where: {
       id: artworkId,
-      artistId,
+      artistId
     },
-    include: artworkInclude,
+    include: artworkInclude
   });
 }
 
-async function createArtwork({
-  artistId,
-  title,
-  description,
-  categoryId,
-  price,
-  protection,
-}) {
+async function createArtwork({ artistId, title, description, categoryId, price, protection }) {
   return prisma.artwork.create({
     data: {
       artistId,
@@ -81,9 +74,9 @@ async function createArtwork({
       priceTokens: price,
       favoriteCount: 0,
       protection: Boolean(protection),
-      createdAt: new Date(),
+      createdAt: new Date()
     },
-    include: artworkInclude,
+    include: artworkInclude
   });
 }
 
@@ -94,7 +87,7 @@ async function updateArtwork({
   description,
   categoryId,
   price,
-  protection,
+  protection
 }) {
   const existing = await findOwnedArtwork({ artworkId, artistId });
 
@@ -104,7 +97,7 @@ async function updateArtwork({
 
   return prisma.artwork.update({
     where: {
-      id: artworkId,
+      id: artworkId
     },
     data: {
       title,
@@ -112,9 +105,9 @@ async function updateArtwork({
       categoryId: categoryId || null,
       price,
       priceTokens: price,
-      protection: Boolean(protection),
+      protection: Boolean(protection)
     },
-    include: artworkInclude,
+    include: artworkInclude
   });
 }
 
@@ -127,8 +120,8 @@ async function deleteArtwork({ artworkId, artistId }) {
 
   await prisma.artwork.delete({
     where: {
-      id: artworkId,
-    },
+      id: artworkId
+    }
   });
 
   return existing;
@@ -140,5 +133,5 @@ module.exports = {
   findOwnedArtwork,
   createArtwork,
   updateArtwork,
-  deleteArtwork,
+  deleteArtwork
 };

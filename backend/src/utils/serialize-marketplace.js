@@ -1,6 +1,4 @@
-const {
-  extractArtistApplicationPayload,
-} = require("../services/artist-contract.service");
+const { extractArtistApplicationPayload } = require("../services/artist-contract.service");
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -26,16 +24,12 @@ function serializeArtistSummary(artist) {
     return null;
   }
 
-  const payload = extractArtistApplicationPayload(
-    artist.user?.artistApplicationDraft,
-  );
+  const payload = extractArtistApplicationPayload(artist.user?.artistApplicationDraft);
 
   return {
     id: artist.id,
     displayName:
-      normalizeText(artist.displayName) ||
-      normalizeText(artist.user?.username) ||
-      "Artist",
+      normalizeText(artist.displayName) || normalizeText(artist.user?.username) || "Artist",
     verified: Boolean(artist.verified),
     bio: normalizeText(artist.user?.bio),
     artType: normalizeText(payload.artType),
@@ -45,12 +39,10 @@ function serializeArtistSummary(artist) {
     stats: {
       artworks: artist._count?.artworks || 0,
       followers: artist._count?.followers || 0,
-      collections: artist._count?.collections || 0,
+      collections: artist._count?.collections || 0
     },
-    isFollowed: Array.isArray(artist.followers)
-      ? artist.followers.length > 0
-      : false,
-    createdAt: artist.createdAt || null,
+    isFollowed: Array.isArray(artist.followers) ? artist.followers.length > 0 : false,
+    createdAt: artist.createdAt || null
   };
 }
 
@@ -59,8 +51,7 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     return null;
   }
 
-  const price =
-    normalizeText(artwork.price) || normalizeText(artwork.priceTokens);
+  const price = normalizeText(artwork.price) || normalizeText(artwork.priceTokens);
 
   return {
     id: artwork.id,
@@ -71,16 +62,14 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     protection: Boolean(artwork.protection),
     createdAt: artwork.createdAt || null,
     favoriteCount: artwork.favoriteCount ?? artwork._count?.favorites ?? 0,
-    isFavorite: Array.isArray(artwork.favorites)
-      ? artwork.favorites.length > 0
-      : false,
+    isFavorite: Array.isArray(artwork.favorites) ? artwork.favorites.length > 0 : false,
     category: artwork.category
       ? {
           id: artwork.category.id,
-          name: normalizeText(artwork.category.name) || "Uncategorized",
+          name: normalizeText(artwork.category.name) || "Uncategorized"
         }
       : null,
-    artist: includeArtist ? serializeArtistSummary(artwork.artist) : null,
+    artist: includeArtist ? serializeArtistSummary(artwork.artist) : null
   };
 }
 
@@ -90,9 +79,7 @@ function serializeCollection(collection) {
   }
 
   const items = Array.isArray(collection.items)
-    ? collection.items
-        .map((item) => serializeArtwork(item.artwork))
-        .filter(Boolean)
+    ? collection.items.map((item) => serializeArtwork(item.artwork)).filter(Boolean)
     : [];
 
   return {
@@ -104,7 +91,7 @@ function serializeCollection(collection) {
     createdAt: collection.createdAt || null,
     itemsCount: items.length,
     ownerType: collection.artistId ? "artist" : "collector",
-    items,
+    items
   };
 }
 
@@ -112,5 +99,5 @@ module.exports = {
   parsePriceValue,
   serializeArtistSummary,
   serializeArtwork,
-  serializeCollection,
+  serializeCollection
 };

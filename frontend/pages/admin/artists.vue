@@ -33,21 +33,11 @@
     </section>
 
     <section class="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-      <article
-        class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6"
-      >
-        <div
-          class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
-        >
+      <article class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p
-              class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500"
-            >
-              Artist queue
-            </p>
-            <h2 class="mt-3 text-xl font-semibold text-slate-100">
-              Artist applications
-            </h2>
+            <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">Artist queue</p>
+            <h2 class="mt-3 text-xl font-semibold text-slate-100">Artist applications</h2>
           </div>
           <div class="grid gap-3 sm:grid-cols-2">
             <label class="border border-slate-800 bg-black px-4 py-3">
@@ -108,9 +98,7 @@
             :key="application.id"
             class="border border-slate-800 bg-black/30 p-5"
           >
-            <div
-              class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
-            >
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p class="font-semibold text-slate-100">
                   {{ application.displayName }}
@@ -130,14 +118,10 @@
               </span>
             </div>
 
-            <div
-              class="mt-5 grid gap-3 border border-slate-800 bg-black p-4 text-sm"
-            >
+            <div class="mt-5 grid gap-3 border border-slate-800 bg-black p-4 text-sm">
               <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
                 <span class="text-slate-400">Art type</span>
-                <span class="font-medium text-slate-100">{{
-                  application.artType
-                }}</span>
+                <span class="font-medium text-slate-100">{{ application.artType }}</span>
               </div>
               <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
                 <span class="text-slate-400">Styles</span>
@@ -159,16 +143,12 @@
               </div>
               <div v-if="application.reviewNote" class="grid gap-1">
                 <span class="text-slate-400">Admin note</span>
-                <span class="leading-6 text-slate-100">{{
-                  application.reviewNote
-                }}</span>
+                <span class="leading-6 text-slate-100">{{ application.reviewNote }}</span>
               </div>
             </div>
 
             <label class="mt-5 grid gap-2 text-sm text-slate-400">
-              <span class="font-medium text-slate-100"
-                >Admin note (optional)</span
-              >
+              <span class="font-medium text-slate-100">Admin note (optional)</span>
               <textarea
                 v-model="reviewNotes[application.id]"
                 rows="3"
@@ -194,9 +174,7 @@
                 :disabled="reviewLoadingId === application.id"
                 @click="reviewApplication(application, 'approved')"
               >
-                {{
-                  reviewLoadingId === application.id ? "Updating..." : "Approve"
-                }}
+                {{ reviewLoadingId === application.id ? "Updating..." : "Approve" }}
               </button>
               <button
                 v-if="application.status !== 'rejected'"
@@ -205,24 +183,16 @@
                 :disabled="reviewLoadingId === application.id"
                 @click="reviewApplication(application, 'rejected')"
               >
-                {{
-                  reviewLoadingId === application.id ? "Updating..." : "Reject"
-                }}
+                {{ reviewLoadingId === application.id ? "Updating..." : "Reject" }}
               </button>
             </div>
           </div>
         </div>
       </article>
 
-      <article
-        class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6"
-      >
-        <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">
-          Review flow
-        </p>
-        <h2 class="mt-3 text-xl font-semibold text-slate-100">
-          Agreement management
-        </h2>
+      <article class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6">
+        <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">Review flow</p>
+        <h2 class="mt-3 text-xl font-semibold text-slate-100">Agreement management</h2>
 
         <div class="mt-6 grid gap-4">
           <div
@@ -246,7 +216,7 @@ import { computed, onMounted, ref } from "vue";
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "admin",
+  middleware: "admin"
 });
 
 const loading = ref(true);
@@ -261,30 +231,30 @@ const summary = ref({
   totalApplications: 0,
   pendingApplications: 0,
   approvedApplications: 0,
-  rejectedApplications: 0,
+  rejectedApplications: 0
 });
 
 const summaries = computed(() => [
   {
     label: "Total applications",
     value: summary.value.totalApplications,
-    description: "Total number of signed applications.",
+    description: "Total number of signed applications."
   },
   {
     label: "Pending",
     value: summary.value.pendingApplications,
-    description: "Applications still awaiting a decision.",
+    description: "Applications still awaiting a decision."
   },
   {
     label: "Approved",
     value: summary.value.approvedApplications,
-    description: "Approved applications and activated artist profiles.",
+    description: "Approved applications and activated artist profiles."
   },
   {
     label: "Rejected",
     value: summary.value.rejectedApplications,
-    description: "Applications rejected by the administration.",
-  },
+    description: "Applications rejected by the administration."
+  }
 ]);
 
 const filteredApplications = computed(() => {
@@ -297,8 +267,7 @@ const filteredApplications = computed(() => {
       application.applicantName.toLowerCase().includes(normalizedSearch) ||
       application.email.toLowerCase().includes(normalizedSearch);
 
-    const matchesStatus =
-      statusFilter.value === "all" || application.status === statusFilter.value;
+    const matchesStatus = statusFilter.value === "all" || application.status === statusFilter.value;
 
     return matchesSearch && matchesStatus;
   });
@@ -315,7 +284,7 @@ async function loadApplications() {
 
   try {
     const response = await $fetch("/api/admin/artist-applications", {
-      credentials: "include",
+      credentials: "include"
     });
 
     applications.value = response.applications || [];
@@ -331,8 +300,7 @@ async function loadApplications() {
       return;
     }
 
-    errorMessage.value =
-      error?.data?.message || "Unable to load artist applications.";
+    errorMessage.value = error?.data?.message || "Unable to load artist applications.";
   } finally {
     loading.value = false;
   }
@@ -341,36 +309,27 @@ async function loadApplications() {
 const actions = [
   {
     title: "Signed agreement",
-    description:
-      "Each application contains a PDF agreement signed by the artist.",
+    description: "Each application contains a PDF agreement signed by the artist."
   },
   {
     title: "Approval",
-    description:
-      "Approval activates the artist profile and grants access to the artist workspace.",
+    description: "Approval activates the artist profile and grants access to the artist workspace."
   },
   {
     title: "Rejection",
-    description:
-      "Rejection blocks activation and keeps the application available for correction.",
-  },
+    description: "Rejection blocks activation and keeps the application available for correction."
+  }
 ];
 
 function replaceApplication(updatedApplication) {
   applications.value = applications.value.map((application) =>
-    application.id === updatedApplication.id ? updatedApplication : application,
+    application.id === updatedApplication.id ? updatedApplication : application
   );
   summary.value = {
     totalApplications: applications.value.length,
-    pendingApplications: applications.value.filter(
-      (item) => item.status === "pending",
-    ).length,
-    approvedApplications: applications.value.filter(
-      (item) => item.status === "approved",
-    ).length,
-    rejectedApplications: applications.value.filter(
-      (item) => item.status === "rejected",
-    ).length,
+    pendingApplications: applications.value.filter((item) => item.status === "pending").length,
+    approvedApplications: applications.value.filter((item) => item.status === "approved").length,
+    rejectedApplications: applications.value.filter((item) => item.status === "rejected").length
   };
 }
 
@@ -380,17 +339,14 @@ async function reviewApplication(application, status) {
   reviewLoadingId.value = application.id;
 
   try {
-    const response = await $fetch(
-      `/api/admin/artist-applications/${application.id}`,
-      {
-        method: "PATCH",
-        credentials: "include",
-        body: {
-          status,
-          reviewNote: reviewNotes.value[application.id] || "",
-        },
-      },
-    );
+    const response = await $fetch(`/api/admin/artist-applications/${application.id}`, {
+      method: "PATCH",
+      credentials: "include",
+      body: {
+        status,
+        reviewNote: reviewNotes.value[application.id] || ""
+      }
+    });
 
     replaceApplication(response.application);
     successMessage.value =
@@ -408,8 +364,7 @@ async function reviewApplication(application, status) {
       return;
     }
 
-    errorMessage.value =
-      error?.data?.message || "Unable to review artist application.";
+    errorMessage.value = error?.data?.message || "Unable to review artist application.";
   } finally {
     reviewLoadingId.value = null;
   }
@@ -421,7 +376,7 @@ function formatDate(value) {
   }
 
   return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
+    dateStyle: "medium"
   }).format(new Date(value));
 }
 
@@ -431,7 +386,7 @@ function formatAddress(application) {
     application.addressLine2,
     [application.postalCode, application.city].filter(Boolean).join(" "),
     application.region,
-    application.country,
+    application.country
   ]
     .filter(Boolean)
     .join(", ");
@@ -457,7 +412,6 @@ function statusBadgeClass(status) {
 
 .field-control:focus {
   @apply border-violet-700;
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, theme("colors.violet.700") 18%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, theme("colors.violet.700") 18%, transparent);
 }
 </style>

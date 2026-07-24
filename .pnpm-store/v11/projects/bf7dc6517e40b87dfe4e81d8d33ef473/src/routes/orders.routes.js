@@ -12,10 +12,10 @@ router.get("/orders", authRequired, async (req, res) => {
       include: {
         items: {
           include: {
-            artwork: true,
-          },
-        },
-      },
+            artwork: true
+          }
+        }
+      }
     });
 
     return res.status(200).json({
@@ -29,9 +29,9 @@ router.get("/orders", authRequired, async (req, res) => {
         artworks: order.items.map((item) => ({
           id: item.artwork.id,
           title: item.artwork.title,
-          priceTokens: item.priceTokens,
-        })),
-      })),
+          priceTokens: item.priceTokens
+        }))
+      }))
     });
   } catch (error) {
     console.error("Orders fetch error:", error);
@@ -50,16 +50,16 @@ router.get("/orders/:id", authRequired, async (req, res) => {
     const order = await prisma.order.findFirst({
       where: {
         id: orderId,
-        userId: req.user.id,
+        userId: req.user.id
       },
       include: {
         items: {
           include: {
-            artwork: true,
-          },
+            artwork: true
+          }
         },
-        payments: true,
-      },
+        payments: true
+      }
     });
 
     if (!order) {
@@ -77,7 +77,7 @@ router.get("/orders/:id", authRequired, async (req, res) => {
           id: item.id,
           artworkId: item.artworkId,
           artworkTitle: item.artwork.title,
-          priceTokens: item.priceTokens,
+          priceTokens: item.priceTokens
         })),
         payments: order.payments.map((payment) => ({
           id: payment.id,
@@ -85,9 +85,9 @@ router.get("/orders/:id", authRequired, async (req, res) => {
           transactionId: payment.transactionId,
           price: payment.price,
           status: payment.status,
-          createdAt: payment.createdAt,
-        })),
-      },
+          createdAt: payment.createdAt
+        }))
+      }
     });
   } catch (error) {
     console.error("Order detail fetch error:", error);

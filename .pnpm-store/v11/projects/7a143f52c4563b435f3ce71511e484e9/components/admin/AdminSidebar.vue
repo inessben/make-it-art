@@ -38,11 +38,7 @@
       :class="adminMenuOpen ? 'block' : 'hidden'"
       aria-label="Admin navigation"
     >
-      <p
-        class="px-4 text-subtitle-3 uppercase tracking-[0.25em] text-slate-500"
-      >
-        Main menu
-      </p>
+      <p class="px-4 text-subtitle-3 uppercase tracking-[0.25em] text-slate-500">Main menu</p>
       <div class="mt-5 grid sm:grid-cols-2 lg:grid-cols-1">
         <NuxtLink
           v-for="item in mainNavigation"
@@ -60,11 +56,7 @@
         </NuxtLink>
       </div>
 
-      <p
-        class="mt-8 px-4 text-subtitle-3 uppercase tracking-[0.25em] text-slate-500"
-      >
-        System
-      </p>
+      <p class="mt-8 px-4 text-subtitle-3 uppercase tracking-[0.25em] text-slate-500">System</p>
       <div class="mt-5 grid sm:grid-cols-2 lg:grid-cols-1">
         <NuxtLink
           v-for="item in systemNavigation"
@@ -115,27 +107,19 @@ const route = useRoute();
 const auth = useAuthStore();
 const { user } = storeToRefs(auth);
 const adminMenuOpen = ref(false);
-const adminInitials = computed(() =>
-  getArtistInitials(user.value?.username || "Admin"),
-);
-const mainNavigation = adminNavigation.filter(
-  (item) => item.route !== "/admin/settings",
-);
-const systemNavigation = adminNavigation.filter(
-  (item) => item.route === "/admin/settings",
-);
+const adminInitials = computed(() => getArtistInitials(user.value?.username || "Admin"));
+const mainNavigation = adminNavigation.filter((item) => item.route !== "/admin/settings");
+const systemNavigation = adminNavigation.filter((item) => item.route === "/admin/settings");
 
 watch(
   () => route.fullPath,
   () => {
     adminMenuOpen.value = false;
-  },
+  }
 );
 
 function isActive(targetRoute) {
-  return targetRoute === "/admin"
-    ? route.path === targetRoute
-    : route.path.startsWith(targetRoute);
+  return targetRoute === "/admin" ? route.path === targetRoute : route.path.startsWith(targetRoute);
 }
 
 async function handleLogout() {

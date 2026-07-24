@@ -9,8 +9,8 @@
     "test:coverage": "node --test --experimental-test-coverage \"test/**/*.test.js\"",
     "lint": "eslint \"src/**/*.js\" \"test/**/*.js\" --max-warnings=0",
     "lint:fix": "eslint \"src/**/*.js\" \"test/**/*.js\" --fix",
-    "format": "prettier \"src/**/*.js\" \"test/**/*.js\" --write",
-    "format:check": "prettier \"src/**/*.js\" \"test/**/*.js\" --check"
+    "format": "prettier --config .prettierrc.json \"src/**/*.js\" \"test/**/*.js\" --write",
+    "format:check": "prettier --config .prettierrc.json \"src/**/*.js\" \"test/**/*.js\" --check"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.7.0",

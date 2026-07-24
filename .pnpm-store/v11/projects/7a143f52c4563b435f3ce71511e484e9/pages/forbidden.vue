@@ -3,13 +3,11 @@
     <section
       class="mx-auto w-full max-w-[820px] rounded-2xl border border-slate-800 bg-slate-950 p-5 shadow-[0_32px_90px_rgba(0,0,0,0.22)] sm:rounded-[32px] sm:p-8"
     >
-      <p class="text-xs uppercase tracking-widest text-violet-700">
-        Access control
-      </p>
+      <p class="text-xs uppercase tracking-widest text-violet-700">Access control</p>
       <h1 class="mt-4 text-title-2">Access denied</h1>
       <p class="mt-4 max-w-2xl text-slate-400 leading-7">
-        This area is restricted to administrator accounts. To access it, an
-        administrator role must be assigned to your account in the database.
+        This area is restricted to administrator accounts. To access it, an administrator role must
+        be assigned to your account in the database.
       </p>
 
       <div class="mt-8 grid gap-4 sm:grid-cols-2">

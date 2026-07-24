@@ -5,29 +5,21 @@ const express = require("express");
 const { loadModuleWithMocks } = require("./helpers/mock-require");
 
 const routesPath = require.resolve("../src/routes/artist.routes");
-const authRequiredPath =
-  require.resolve("../src/middlewares/auth-required.middleware");
-const artistRequiredPath =
-  require.resolve("../src/middlewares/artist-required.middleware");
+const authRequiredPath = require.resolve("../src/middlewares/auth-required.middleware");
+const artistRequiredPath = require.resolve("../src/middlewares/artist-required.middleware");
 const applicationRepositoryPath =
   require.resolve("../src/repositories/artist-application-draft.repository");
-const artistRepositoryPath =
-  require.resolve("../src/repositories/artist.repository");
-const artworkRepositoryPath =
-  require.resolve("../src/repositories/artwork.repository");
-const categoryRepositoryPath =
-  require.resolve("../src/repositories/category.repository");
-const userRepositoryPath =
-  require.resolve("../src/repositories/user.repository");
-const contractServicePath =
-  require.resolve("../src/services/artist-contract.service");
-const serializeAuthUserPath =
-  require.resolve("../src/utils/serialize-auth-user");
+const artistRepositoryPath = require.resolve("../src/repositories/artist.repository");
+const artworkRepositoryPath = require.resolve("../src/repositories/artwork.repository");
+const categoryRepositoryPath = require.resolve("../src/repositories/category.repository");
+const userRepositoryPath = require.resolve("../src/repositories/user.repository");
+const contractServicePath = require.resolve("../src/services/artist-contract.service");
+const serializeAuthUserPath = require.resolve("../src/utils/serialize-auth-user");
 
 const authUser = {
   id: 7,
   email: "artist@example.com",
-  username: "Ada Lovelace",
+  username: "Ada Lovelace"
 };
 
 const verifiedArtist = {
@@ -39,13 +31,13 @@ const verifiedArtist = {
   user: {
     email: authUser.email,
     username: authUser.username,
-    bio: "Digital artist",
+    bio: "Digital artist"
   },
   _count: {
     artworks: 0,
     followers: 0,
-    collections: 0,
-  },
+    collections: 0
+  }
 };
 
 function hasOverride(overrides, key) {
@@ -57,7 +49,7 @@ function buildAuthMiddleware(user) {
     authRequired(req, _res, next) {
       req.user = user;
       next();
-    },
+    }
   };
 }
 
@@ -65,7 +57,7 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
   const currentAuthUser = overrides.authUser || authUser;
   const calls = {
     createArtwork: [],
-    listArtworksByArtistId: [],
+    listArtworksByArtistId: []
   };
   const originalArtistRequired = require.cache[artistRequiredPath];
 
@@ -76,14 +68,12 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
     [applicationRepositoryPath]: {
       async findByUserId() {
         return overrides.findByUserIdResult || null;
-      },
+      }
     },
     [artistRepositoryPath]: {
       async findByUserId() {
-        return hasOverride(overrides, "artistResult")
-          ? overrides.artistResult
-          : verifiedArtist;
-      },
+        return hasOverride(overrides, "artistResult") ? overrides.artistResult : verifiedArtist;
+      }
     },
     [artworkRepositoryPath]: {
       async listArtworksByArtistId(artistId) {
@@ -107,10 +97,10 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
             createdAt: new Date("2026-07-08T10:00:00.000Z"),
             category: {
               id: payload.categoryId || 1,
-              name: "Illustration",
+              name: "Illustration"
             },
             artist: verifiedArtist,
-            favorites: [],
+            favorites: []
           }
         );
       },
@@ -119,7 +109,7 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
       },
       async deleteArtwork() {
         throw new Error("ARTWORK_NOT_FOUND");
-      },
+      }
     },
     [categoryRepositoryPath]: {
       async ensurePredefinedCategories() {
@@ -131,17 +121,17 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
       async findById(categoryId) {
         return {
           id: categoryId,
-          name: "Illustration",
+          name: "Illustration"
         };
       },
       async isPredefinedCategory(categoryId) {
         return categoryId === 9;
-      },
+      }
     },
     [userRepositoryPath]: {
       async findById() {
         return currentAuthUser;
-      },
+      }
     },
     [contractServicePath]: {
       CONTRACT_VERSION: "make-it-art-artist-contract-v2",
@@ -154,7 +144,7 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
       renderArtistContract() {
         return {
           contractText: "CONTRAT TEST",
-          contractVersion: "make-it-art-artist-contract-v2",
+          contractVersion: "make-it-art-artist-contract-v2"
         };
       },
       async generateArtistContractPdf() {
@@ -162,18 +152,18 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
           contractVersion: "make-it-art-artist-contract-v2",
           contractText: "CONTRAT TEST",
           pdfBuffer: Buffer.from("pdf"),
-          signedAt: new Date("2026-07-04T12:34:00.000Z"),
+          signedAt: new Date("2026-07-04T12:34:00.000Z")
         };
-      },
+      }
     },
     [serializeAuthUserPath]: {
       serializeAuthUser(user) {
         return {
           id: user.id,
-          email: user.email,
+          email: user.email
         };
-      },
-    },
+      }
+    }
   });
 
   const app = express();
@@ -201,7 +191,7 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
 
   return {
     calls,
-    baseUrl: `http://127.0.0.1:${server.address().port}`,
+    baseUrl: `http://127.0.0.1:${server.address().port}`
   };
 }
 
@@ -209,14 +199,14 @@ async function requestJson(baseUrl, path, { method = "GET", body } = {}) {
   const response = await fetch(`${baseUrl}${path}`, {
     method,
     headers: body ? { "content-type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? JSON.stringify(body) : undefined
   });
 
   const payload = await response.json();
 
   return {
     status: response.status,
-    body: payload,
+    body: payload
   };
 }
 
@@ -229,8 +219,8 @@ test("POST /artists/me/artworks creates an artwork for a verified artist", async
       description: "A luminous digital landscape.",
       categoryId: 9,
       price: "120 tokens",
-      protection: true,
-    },
+      protection: true
+    }
   });
 
   assert.equal(response.status, 201);
@@ -242,44 +232,41 @@ test("POST /artists/me/artworks creates an artwork for a verified artist", async
     description: "A luminous digital landscape.",
     categoryId: 9,
     price: "120 tokens",
-    protection: true,
+    protection: true
   });
 });
 
 test("POST /artists/me/artworks blocks users without a verified artist profile", async (t) => {
   const { baseUrl } = await startArtistArtworkRoutesApp(t, {
-    artistResult: null,
+    artistResult: null
   });
   const response = await requestJson(baseUrl, "/artists/me/artworks", {
     method: "POST",
     body: {
       title: "Hidden Piece",
       categoryId: 9,
-      price: "80 tokens",
-    },
+      price: "80 tokens"
+    }
   });
 
   assert.equal(response.status, 403);
-  assert.equal(
-    response.body.message,
-    "Seuls les artistes peuvent publier des oeuvres.",
-  );
+  assert.equal(response.body.message, "Seuls les artistes peuvent publier des oeuvres.");
 });
 
 test("POST /artists/me/artworks blocks unverified artist accounts", async (t) => {
   const { baseUrl } = await startArtistArtworkRoutesApp(t, {
     artistResult: {
       ...verifiedArtist,
-      verified: false,
-    },
+      verified: false
+    }
   });
   const response = await requestJson(baseUrl, "/artists/me/artworks", {
     method: "POST",
     body: {
       title: "Draft Piece",
       categoryId: 9,
-      price: "80 tokens",
-    },
+      price: "80 tokens"
+    }
   });
 
   assert.equal(response.status, 403);
@@ -300,12 +287,12 @@ test("GET /artists/me/artworks lists artworks for the current artist", async (t)
         createdAt: new Date("2026-07-08T10:00:00.000Z"),
         category: {
           id: 1,
-          name: "Illustration",
+          name: "Illustration"
         },
         artist: verifiedArtist,
-        favorites: [],
-      },
-    ],
+        favorites: []
+      }
+    ]
   });
 
   const response = await requestJson(baseUrl, "/artists/me/artworks");
