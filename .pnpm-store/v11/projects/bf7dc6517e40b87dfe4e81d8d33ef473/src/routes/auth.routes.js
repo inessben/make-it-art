@@ -42,8 +42,7 @@ const {
   verifyLoginCode,
   getLoginChallengeCookieOptions,
   getClearLoginChallengeCookieOptions,
-  getRememberDeviceCookieOptions,
-  getClearRememberDeviceCookieOptions
+  getRememberDeviceCookieOptions
 } = require("../services/two-factor-login.service");
 const router = express.Router();
 
@@ -86,6 +85,14 @@ router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
 
     if (result.bypassCode) {
       setAuthCookies(res, result);
+
+      if (result.rememberDeviceToken) {
+        res.cookie(
+          env.rememberDeviceCookieName,
+          result.rememberDeviceToken,
+          getRememberDeviceCookieOptions()
+        );
+      }
 
       return res.status(200).json({
         message: "Login successful",
@@ -413,7 +420,6 @@ router.post("/auth/logout", async (req, res) => {
   res.clearCookie(env.sessionCookieName, getClearSessionCookieOptions());
   res.clearCookie(env.refreshCookieName, getClearRefreshCookieOptions());
   res.clearCookie(env.loginCodeCookieName, getClearLoginChallengeCookieOptions());
-  res.clearCookie(env.rememberDeviceCookieName, getClearRememberDeviceCookieOptions());
 
   return res.status(200).json({
     message: "Logged out"

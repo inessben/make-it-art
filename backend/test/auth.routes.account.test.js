@@ -589,7 +589,7 @@ test("PATCH /auth/password rejects invalid current password and accepts valid ch
   ]);
 });
 
-test("POST /auth/logout revokes refresh token and clears auth cookies", async (t) => {
+test("POST /auth/logout revokes refresh token and clears session cookies without removing the remembered device", async (t) => {
   const { baseUrl, calls } = await startAuthRoutesApp(t);
 
   const response = await requestJson(
@@ -610,7 +610,7 @@ test("POST /auth/logout revokes refresh token and clears auth cookies", async (t
   assert.ok(cookies.some((cookie) => cookie.startsWith("mia_session=")));
   assert.ok(cookies.some((cookie) => cookie.startsWith("mia_refresh=")));
   assert.ok(cookies.some((cookie) => cookie.startsWith("mia_login_challenge=")));
-  assert.ok(cookies.some((cookie) => cookie.startsWith("mia_remember_device=")));
+  assert.ok(!cookies.some((cookie) => cookie.startsWith("mia_remember_device=")));
 });
 
 test("POST /auth/forgot-password validates email and keeps responses generic", async (t) => {

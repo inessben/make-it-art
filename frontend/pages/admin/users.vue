@@ -36,9 +36,7 @@
       <article class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">
-              Admin access
-            </p>
+            <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">Admin access</p>
             <h2 class="mt-3 text-xl font-semibold text-slate-100">Create an admin account</h2>
           </div>
           <span
@@ -116,16 +114,13 @@
           </label>
 
           <div class="grid gap-2 text-xs leading-5 text-slate-500">
-            <p>The invited admin receives an email to activate the account and choose a password.</p>
+            <p>
+              The invited admin receives an email to activate the account and choose a password.
+            </p>
             <p>Until that step is completed, the account stays pending and cannot log in.</p>
           </div>
 
-          <AppStatePanel
-            v-if="formErrorMessage"
-            compact
-            type="error"
-            :message="formErrorMessage"
-          />
+          <AppStatePanel v-if="formErrorMessage" compact type="error" :message="formErrorMessage" />
 
           <div class="flex flex-wrap gap-3">
             <button

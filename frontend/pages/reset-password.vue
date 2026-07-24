@@ -46,15 +46,15 @@ const message = ref("");
 const loading = ref(false);
 const success = ref(false);
 
-const panelTitle = computed(() =>
-  isInvitationMode.value ? "Activate account" : "Reset password"
-);
+const panelTitle = computed(() => (isInvitationMode.value ? "Activate account" : "Reset password"));
 const panelDescription = computed(() =>
   isInvitationMode.value
     ? "Choose your password to activate your account."
     : "Choose a strong new password for your account."
 );
-const submitLabel = computed(() => (isInvitationMode.value ? "Activate account" : "Reset password"));
+const submitLabel = computed(() =>
+  isInvitationMode.value ? "Activate account" : "Reset password"
+);
 const submitLoadingLabel = computed(() =>
   isInvitationMode.value ? "Activating..." : "Resetting..."
 );

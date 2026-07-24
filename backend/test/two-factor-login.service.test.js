@@ -53,6 +53,7 @@ function loadService(overrides = {}) {
     markCodeAsUsed: [],
     markUnusedCodesAsUsed: [],
     sendLoginCodeEmail: [],
+    updateDeviceExpiry: [],
     verifyPassword: []
   };
 
@@ -99,6 +100,10 @@ function loadService(overrides = {}) {
       async findValidDeviceByHash(tokenHash) {
         calls.findValidDeviceByHash.push(tokenHash);
         return overrides.rememberedDevice || null;
+      },
+      async updateDeviceExpiry(payload) {
+        calls.updateDeviceExpiry.push(payload);
+        return { id: payload.deviceId, expiresAt: payload.expiresAt };
       }
     },
     [mailServicePath]: {
@@ -266,6 +271,7 @@ test("startLoginWithCode bypasses email code for a valid remembered device", asy
   const rememberDeviceToken = "remember-device-token";
   const { calls, restore, service } = loadService({
     rememberedDevice: {
+      id: 12,
       userId: activeUser.id,
       user: {
         verified: true,
@@ -284,8 +290,16 @@ test("startLoginWithCode bypasses email code for a valid remembered device", asy
   assert.deepEqual(calls.findValidDeviceByHash, [sha256(rememberDeviceToken)]);
   assert.equal(result.bypassCode, true);
   assert.equal(result.accessToken, "access-token");
+  assert.equal(result.rememberDeviceToken, rememberDeviceToken);
   assert.deepEqual(calls.createCode, []);
   assert.deepEqual(calls.sendLoginCodeEmail, []);
+  assert.deepEqual(calls.updateDeviceExpiry, [
+    {
+      deviceId: 12,
+      expiresAt: calls.updateDeviceExpiry[0].expiresAt
+    }
+  ]);
+  assert.ok(calls.updateDeviceExpiry[0].expiresAt instanceof Date);
 });
 
 test("startLoginWithCode falls back to email code when remembered device is not for the user", async (t) => {
