@@ -84,9 +84,10 @@ model Artist {
 }
 
 model Admin {
-  id     Int  @id @default(autoincrement())
-  userId Int  @unique @map("user_id")
-  user   User @relation(fields: [userId], references: [id])
+  id           Int     @id @default(autoincrement())
+  userId       Int     @unique @map("user_id")
+  isSuperAdmin Boolean @default(false) @map("is_super_admin")
+  user         User    @relation(fields: [userId], references: [id])
 
   @@map("admin")
 }
@@ -293,6 +294,7 @@ model PasswordResetToken {
   id        Int       @id @default(autoincrement())
   userId    Int       @map("user_id")
   tokenHash String    @map("token_hash")
+  purpose   String    @default("reset")
   expiresAt DateTime  @map("expires_at") @db.Timestamp(6)
   usedAt    DateTime? @map("used_at") @db.Timestamp(6)
   createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)

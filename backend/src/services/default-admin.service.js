@@ -52,9 +52,12 @@ async function ensureDefaultAdminAccount() {
       where: {
         userId: user.id
       },
-      update: {},
+      update: {
+        isSuperAdmin: true
+      },
       create: {
-        userId: user.id
+        userId: user.id,
+        isSuperAdmin: true
       }
     });
 

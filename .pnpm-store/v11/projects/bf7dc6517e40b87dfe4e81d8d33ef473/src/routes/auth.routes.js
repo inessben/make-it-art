@@ -462,13 +462,15 @@ router.post("/auth/reset-password", async (req, res) => {
       });
     }
 
-    await resetPassword({
+    const result = await resetPassword({
       token,
       password
     });
 
     return res.status(200).json({
-      message: "Password reset successfully. You can now log in."
+      message: result?.wasInvitation
+        ? "Account activated successfully. You can now log in."
+        : "Password reset successfully. You can now log in."
     });
   } catch (_error) {
     return res.status(400).json({

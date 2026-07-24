@@ -31,6 +31,58 @@ async function createUser(data) {
   });
 }
 
+async function createInvitedAdminUser({ username, email, phone, isSuperAdmin }) {
+  return prisma.user.create({
+    data: {
+      username,
+      email,
+      phone: phone || null,
+      role: "admin",
+      createdAt: new Date(),
+      verified: false,
+      isActive: false,
+      admin: {
+        create: {
+          isSuperAdmin: Boolean(isSuperAdmin)
+        }
+      }
+    },
+    include: {
+      admin: true,
+      artist: true,
+      artistApplicationDraft: true
+    }
+  });
+}
+
+async function updateInvitedAdminUser({ userId, username, phone, isSuperAdmin }) {
+  return prisma.user.update({
+    where: { id: userId },
+    data: {
+      username,
+      phone: phone || null,
+      role: "admin",
+      verified: false,
+      isActive: false,
+      admin: {
+        upsert: {
+          update: {
+            isSuperAdmin: Boolean(isSuperAdmin)
+          },
+          create: {
+            isSuperAdmin: Boolean(isSuperAdmin)
+          }
+        }
+      }
+    },
+    include: {
+      admin: true,
+      artist: true,
+      artistApplicationDraft: true
+    }
+  });
+}
+
 async function createOAuthUser(data) {
   return prisma.user.create({
     data,
@@ -66,6 +118,21 @@ async function updatePassword(userId, passwordHash) {
     where: { id: userId },
     data: {
       passwordHash: passwordHash
+    }
+  });
+}
+
+async function activateUser(userId) {
+  return prisma.user.update({
+    where: { id: userId },
+    data: {
+      verified: true,
+      isActive: true
+    },
+    include: {
+      admin: true,
+      artist: true,
+      artistApplicationDraft: true
     }
   });
 }
@@ -128,9 +195,12 @@ module.exports = {
   findByOAuthProvider,
   createOAuthUser,
   createUser,
+  createInvitedAdminUser,
+  updateInvitedAdminUser,
   verifyEmail,
   findById,
   updatePassword,
+  activateUser,
   updateUser,
   linkOAuthProvider,
   listUsersForAdmin

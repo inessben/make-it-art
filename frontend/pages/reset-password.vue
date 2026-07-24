@@ -1,7 +1,7 @@
 <template>
   <AuthPanel
-    title="Reset password"
-    description="Choose a strong new password for your account."
+    :title="panelTitle"
+    :description="panelDescription"
     max-width="440px"
     @submit="handleSubmit"
   >
@@ -21,7 +21,7 @@
       autocomplete="new-password"
     />
 
-    <SubmitButton label="Reset password" loading-label="Resetting..." :loading="loading" />
+    <SubmitButton :label="submitLabel" :loading-label="submitLoadingLabel" :loading="loading" />
 
     <FormMessage :message="message" />
 
@@ -38,12 +38,26 @@ import {
 } from "~/utils/password-validation";
 
 const route = useRoute();
+const isInvitationMode = computed(() => route.query.mode === "invite");
 
 const password = ref("");
 const confirmPassword = ref("");
 const message = ref("");
 const loading = ref(false);
 const success = ref(false);
+
+const panelTitle = computed(() =>
+  isInvitationMode.value ? "Activate account" : "Reset password"
+);
+const panelDescription = computed(() =>
+  isInvitationMode.value
+    ? "Choose your password to activate your account."
+    : "Choose a strong new password for your account."
+);
+const submitLabel = computed(() => (isInvitationMode.value ? "Activate account" : "Reset password"));
+const submitLoadingLabel = computed(() =>
+  isInvitationMode.value ? "Activating..." : "Resetting..."
+);
 
 async function handleSubmit() {
   message.value = "";

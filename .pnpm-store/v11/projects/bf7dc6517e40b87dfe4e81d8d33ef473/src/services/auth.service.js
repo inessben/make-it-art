@@ -1,6 +1,10 @@
 const userRepository = require("../repositories/user.repository");
 const emailVerificationTokenRepository = require("../repositories/email-verification-token.repository");
-const { sendVerificationEmail, sendPasswordResetEmail } = require("./mail.service");
+const {
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+  sendAdminInvitationEmail
+} = require("./mail.service");
 const passwordResetTokenRepository = require("../repositories/password-reset-token.repository");
 const env = require("../config/env");
 const argon2 = require("argon2");
@@ -52,6 +56,10 @@ function normalizeEmail(email) {
   return email.trim().toLowerCase();
 }
 
+function buildTokenExpiryDate() {
+  return new Date(Date.now() + 1000 * 60 * 60);
+}
+
 async function sendUserVerificationEmail(user) {
   const verificationToken = crypto.randomBytes(32).toString("hex");
   const tokenHash = hashToken(verificationToken);
@@ -61,7 +69,7 @@ async function sendUserVerificationEmail(user) {
   await emailVerificationTokenRepository.createToken({
     userId: user.id,
     tokenHash,
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60)
+    expiresAt: buildTokenExpiryDate()
   });
 
   const verificationUrl = `${env.appBaseUrl}/verify-email?token=${verificationToken}`;
@@ -144,7 +152,8 @@ async function requestPasswordReset(email) {
   await passwordResetTokenRepository.createToken({
     userId: user.id,
     tokenHash,
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60)
+    purpose: "reset",
+    expiresAt: buildTokenExpiryDate()
   });
 
   const resetUrl = `${env.appBaseUrl}/reset-password?token=${resetToken}`;
@@ -153,6 +162,63 @@ async function requestPasswordReset(email) {
     to: user.email,
     username: user.username,
     resetUrl
+  });
+
+  return user;
+}
+
+function canReusePendingAdminInvitation(user) {
+  return (
+    user &&
+    user.role === "admin" &&
+    Boolean(user.admin) &&
+    !user.passwordHash &&
+    !user.verified &&
+    !user.isActive
+  );
+}
+
+async function inviteAdminUser({ username, email, phone, isSuperAdmin }) {
+  const normalizedEmail = normalizeEmail(email);
+  const existingUser = await userRepository.findByEmail(normalizedEmail);
+
+  if (existingUser && !canReusePendingAdminInvitation(existingUser)) {
+    throw new Error("Email already in use");
+  }
+
+  const user = existingUser
+    ? await userRepository.updateInvitedAdminUser({
+        userId: existingUser.id,
+        username,
+        phone,
+        isSuperAdmin
+      })
+    : await userRepository.createInvitedAdminUser({
+        username,
+        email: normalizedEmail,
+        phone,
+        isSuperAdmin
+      });
+
+  const setupToken = crypto.randomBytes(32).toString("hex");
+  const tokenHash = hashToken(setupToken);
+
+  await passwordResetTokenRepository.markUnusedTokensAsUsed(user.id);
+
+  await passwordResetTokenRepository.createToken({
+    userId: user.id,
+    tokenHash,
+    purpose: "admin_invitation",
+    expiresAt: buildTokenExpiryDate()
+  });
+
+  const activationUrl = `${env.appBaseUrl}/reset-password?token=${setupToken}&mode=invite`;
+
+  await sendAdminInvitationEmail({
+    to: user.email,
+    username: user.username,
+    activationUrl,
+    isSuperAdmin
   });
 
   return user;
@@ -169,9 +235,17 @@ async function resetPassword({ token, password }) {
   const passwordHash = await argon2.hash(password);
 
   await userRepository.updatePassword(resetToken.userId, passwordHash);
+
+  if (resetToken.purpose === "admin_invitation") {
+    await userRepository.activateUser(resetToken.userId);
+  }
+
   await passwordResetTokenRepository.markTokenAsUsed(resetToken.id);
 
-  return resetToken.user;
+  return {
+    user: resetToken.user,
+    wasInvitation: resetToken.purpose === "admin_invitation"
+  };
 }
 
 module.exports = {
@@ -180,5 +254,6 @@ module.exports = {
   resendVerificationEmail,
   verifyEmail,
   requestPasswordReset,
+  inviteAdminUser,
   resetPassword
 };

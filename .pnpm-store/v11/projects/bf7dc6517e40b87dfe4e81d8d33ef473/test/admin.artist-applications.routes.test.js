@@ -14,6 +14,7 @@ const artistRepositoryPath = require.resolve("../src/repositories/artist.reposit
 const artworkRepositoryPath = require.resolve("../src/repositories/artwork.repository");
 const orderRepositoryPath = require.resolve("../src/repositories/order.repository");
 const paymentRepositoryPath = require.resolve("../src/repositories/payment.repository");
+const authServicePath = require.resolve("../src/services/auth.service");
 
 const adminUser = {
   id: 1,
@@ -140,8 +141,12 @@ async function startAdminRoutesApp(t, overrides = {}) {
     },
     [adminRequiredPath]: {
       adminRequired: adminMiddleware,
+      superAdminRequired: adminMiddleware,
       isAdminUser() {
         return true;
+      },
+      isSuperAdminUser() {
+        return false;
       }
     },
     [applicationRepositoryPath]: applicationRepository,
@@ -171,6 +176,11 @@ async function startAdminRoutesApp(t, overrides = {}) {
     [paymentRepositoryPath]: {
       async listPaymentsForAdmin() {
         return [];
+      }
+    },
+    [authServicePath]: {
+      async inviteAdminUser() {
+        return null;
       }
     }
   });
