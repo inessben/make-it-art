@@ -1,5 +1,6 @@
 # Make It Art
 
+
 Monorepo starter for the class project.
 
 ## Stack
