@@ -162,7 +162,7 @@
                   {{ artist.verified ? "Verified" : "Pending" }}
                 </span>
               </div>
-              <p class="mt-4 max-w-2xl text-slate-400 leading-7">
+              <p class="mt-4 max-w-2xl leading-7 text-slate-400">
                 {{ artist.bio || "Artist bio to be completed." }}
               </p>
               <p class="mt-4 text-sm text-slate-500">{{ artist.email }}</p>
@@ -212,7 +212,7 @@
             <div class="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Portfolio</p>
-                <h2 class="mt-4 text-2xl font-semibold text-white">Published artworks</h2>
+                <h2 class="mt-4 text-2xl font-semibold text-white">Your artworks</h2>
               </div>
               <NuxtLink
                 v-if="artist.verified"
@@ -227,12 +227,12 @@
               Loading your artworks...
             </div>
             <div
-              v-else-if="!publishedArtworks.length"
+              v-else-if="!artistArtworks.length"
               class="mt-6 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 text-sm leading-6 text-[#A0ADB4]"
             >
               <span v-if="artist.verified">
-                You have not published any artwork yet. Publish your first piece to appear in the
-                catalogue.
+                You have not submitted any artwork yet. Publish your first piece to send it to the
+                moderation queue.
               </span>
               <span v-else>
                 Your artist profile must be approved before you can publish artworks.
@@ -240,17 +240,41 @@
             </div>
             <div v-else class="mt-6 grid gap-4">
               <article
-                v-for="artwork in publishedArtworks"
+                v-for="artwork in artistArtworks"
                 :key="artwork.id"
                 class="flex flex-col gap-4 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div>
-                  <p class="text-lg font-semibold text-white">
-                    {{ artwork.title }}
-                  </p>
+                <div class="max-w-2xl">
+                  <div class="flex flex-wrap items-center gap-3">
+                    <p class="text-lg font-semibold text-white">
+                      {{ artwork.title }}
+                    </p>
+                    <span
+                      class="rounded-full px-3 py-1 text-xs font-semibold"
+                      :class="artworkStatusClass(artwork.moderationStatus)"
+                    >
+                      {{ artworkStatusLabel(artwork.moderationStatus) }}
+                    </span>
+                  </div>
                   <p class="mt-2 text-sm text-[#A0ADB4]">
-                    {{ artwork.category?.name || "Uncategorized" }} ·
+                    {{ artwork.category?.name || "Uncategorized" }} -
                     {{ formatArtworkPrice(artwork) }}
+                  </p>
+                  <p v-if="artwork.moderationNote" class="mt-3 text-sm leading-6 text-[#D4D9E2]">
+                    Admin note: {{ artwork.moderationNote }}
+                  </p>
+                  <p
+                    v-if="artwork.moderatedAt || artwork.moderationReviewer"
+                    class="mt-2 text-xs uppercase tracking-[0.12em] text-[#6E7891]"
+                  >
+                    {{
+                      artwork.moderationReviewer
+                        ? `Reviewed by ${artwork.moderationReviewer}`
+                        : "Reviewed"
+                    }}
+                    <span v-if="artwork.moderatedAt">
+                      on {{ formatDateTime(artwork.moderatedAt) }}
+                    </span>
                   </p>
                 </div>
                 <NuxtLink
@@ -266,7 +290,7 @@
           <div class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-7">
             <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">About</p>
             <h2 class="mt-4 text-2xl font-semibold text-white">Artist introduction</h2>
-            <p class="mt-4 text-[#A0ADB4] leading-7">
+            <p class="mt-4 leading-7 text-[#A0ADB4]">
               {{ artist.bio || "Add a bio from the artist application form." }}
             </p>
           </div>
@@ -286,7 +310,7 @@ definePageMeta({
 
 const artist = ref(null);
 const application = ref(null);
-const publishedArtworks = ref([]);
+const artistArtworks = ref([]);
 const loading = ref(true);
 const artworksLoading = ref(false);
 const missingArtist = ref(false);
@@ -327,7 +351,7 @@ onMounted(async () => {
     }
 
     if (response.artist?.verified) {
-      await loadPublishedArtworks();
+      await loadArtistArtworks();
     }
   } catch (error) {
     errorMessage.value = error?.data?.message || "Unable to load the artist profile.";
@@ -336,7 +360,7 @@ onMounted(async () => {
   }
 });
 
-async function loadPublishedArtworks() {
+async function loadArtistArtworks() {
   artworksLoading.value = true;
 
   try {
@@ -344,9 +368,9 @@ async function loadPublishedArtworks() {
       credentials: "include"
     });
 
-    publishedArtworks.value = response.artworks || [];
+    artistArtworks.value = response.artworks || [];
   } catch {
-    publishedArtworks.value = [];
+    artistArtworks.value = [];
   } finally {
     artworksLoading.value = false;
   }
@@ -364,5 +388,48 @@ function formatDate(value) {
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium"
   }).format(new Date(value));
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return "Unknown date";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(new Date(value));
+}
+
+function artworkStatusLabel(status) {
+  if (status === "approved") {
+    return "Approved";
+  }
+
+  if (status === "rejected") {
+    return "Rejected";
+  }
+
+  if (status === "hidden") {
+    return "Hidden";
+  }
+
+  return "Pending review";
+}
+
+function artworkStatusClass(status) {
+  if (status === "approved") {
+    return "bg-emerald-950 text-emerald-300";
+  }
+
+  if (status === "rejected") {
+    return "bg-amber-950 text-amber-300";
+  }
+
+  if (status === "hidden") {
+    return "bg-slate-800 text-slate-200";
+  }
+
+  return "bg-violet-700/10 text-violet-300";
 }
 </script>

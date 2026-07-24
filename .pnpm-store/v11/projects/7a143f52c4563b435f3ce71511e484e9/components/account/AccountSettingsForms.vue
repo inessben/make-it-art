@@ -30,6 +30,31 @@
           {{ errorMessage }}
         </div>
 
+        <section
+          v-if="showArtistAccessPanel"
+          :class="
+            props.embedded
+              ? 'mt-6 border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-6'
+              : 'mt-8 rounded-lg border border-slate-800 bg-slate-950/70 p-6'
+          "
+        >
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div class="max-w-2xl">
+              <h2 class="text-title-3">{{ artistPanelTitle }}</h2>
+              <p class="mt-2 text-footer leading-6 text-slate-400">
+                {{ artistPanelDescription }}
+              </p>
+            </div>
+
+            <NuxtLink
+              :to="artistPanelRoute"
+              class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-violet-700 bg-violet-700/10 px-6 text-sm font-semibold text-slate-100 transition hover:bg-violet-700/20"
+            >
+              {{ artistPanelCta }}
+            </NuxtLink>
+          </div>
+        </section>
+
         <form
           :class="
             props.embedded
@@ -238,6 +263,56 @@ const artistContractSignedAtLabel = computed(() => {
 const showArtistContractSection = computed(
   () => !auth.isAdmin && auth.isArtist && Boolean(user.value?.artistApplication?.hasContractPdf)
 );
+const artistApplicationStatus = computed(() => auth.artistApplicationStatus || null);
+const showArtistAccessPanel = computed(() => !auth.isAdmin);
+const artistPanelRoute = computed(() => {
+  return auth.isVerifiedArtist ? "/artist-profile" : "/become-artist";
+});
+const artistPanelTitle = computed(() => {
+  if (auth.isVerifiedArtist) {
+    return "Artist workspace";
+  }
+
+  if (artistApplicationStatus.value === "pending") {
+    return "Artist application in progress";
+  }
+
+  if (artistApplicationStatus.value === "rejected") {
+    return "Artist application to update";
+  }
+
+  return "Become an artist";
+});
+const artistPanelDescription = computed(() => {
+  if (auth.isVerifiedArtist) {
+    return "Access your artist space, track your moderation statuses and manage your public profile.";
+  }
+
+  if (artistApplicationStatus.value === "pending") {
+    return "Your application has been submitted. Open it to track the review and access the signed agreement.";
+  }
+
+  if (artistApplicationStatus.value === "rejected") {
+    return "Your previous request needs changes. Reopen the application, update your information and submit it again.";
+  }
+
+  return "Start the artist onboarding form, review the contract, sign it and send your request to the admin team.";
+});
+const artistPanelCta = computed(() => {
+  if (auth.isVerifiedArtist) {
+    return "Open artist space";
+  }
+
+  if (artistApplicationStatus.value === "pending") {
+    return "View application";
+  }
+
+  if (artistApplicationStatus.value === "rejected") {
+    return "Resume application";
+  }
+
+  return "Become artist";
+});
 
 watchEffect(() => resetProfile());
 

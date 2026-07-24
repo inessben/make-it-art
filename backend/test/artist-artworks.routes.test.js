@@ -94,6 +94,10 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
             priceTokens: payload.price,
             favoriteCount: 0,
             protection: payload.protection,
+            moderationStatus: "pending",
+            moderationNote: null,
+            moderatedAt: null,
+            moderatedByAdmin: null,
             createdAt: new Date("2026-07-08T10:00:00.000Z"),
             category: {
               id: payload.categoryId || 1,
@@ -224,8 +228,9 @@ test("POST /artists/me/artworks creates an artwork for a verified artist", async
   });
 
   assert.equal(response.status, 201);
-  assert.equal(response.body.message, "Oeuvre publiee avec succes.");
+  assert.equal(response.body.message, "Oeuvre envoyee en moderation.");
   assert.equal(response.body.artwork.title, "Neon Garden");
+  assert.equal(response.body.artwork.moderationStatus, "pending");
   assert.deepEqual(calls.createArtwork[0], {
     artistId: verifiedArtist.id,
     title: "Neon Garden",
@@ -284,6 +289,14 @@ test("GET /artists/me/artworks lists artworks for the current artist", async (t)
         priceTokens: "120 tokens",
         favoriteCount: 0,
         protection: true,
+        moderationStatus: "pending",
+        moderationNote: "Merci d'ajouter plus de details.",
+        moderatedAt: new Date("2026-07-09T10:00:00.000Z"),
+        moderatedByAdmin: {
+          id: 1,
+          username: "Admin",
+          email: "admin@example.com"
+        },
         createdAt: new Date("2026-07-08T10:00:00.000Z"),
         category: {
           id: 1,
@@ -300,5 +313,7 @@ test("GET /artists/me/artworks lists artworks for the current artist", async (t)
   assert.equal(response.status, 200);
   assert.equal(response.body.artworks.length, 1);
   assert.equal(response.body.artworks[0].title, "Neon Garden");
+  assert.equal(response.body.artworks[0].moderationStatus, "pending");
+  assert.equal(response.body.artworks[0].moderationReviewer, "Admin");
   assert.deepEqual(calls.listArtworksByArtistId, [verifiedArtist.id]);
 });

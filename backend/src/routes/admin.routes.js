@@ -2,6 +2,10 @@ const express = require("express");
 const { authRequired } = require("../middlewares/auth-required.middleware");
 const { adminRequired, isAdminUser } = require("../middlewares/admin-required.middleware");
 const { ARTIST_APPLICATION_STATUS } = require("../constants/artist-application-status");
+const {
+  ARTWORK_MODERATION_STATUS,
+  isArtworkModerationStatus
+} = require("../constants/artwork-moderation-status");
 const artistApplicationDraftRepository = require("../repositories/artist-application-draft.repository");
 const userRepository = require("../repositories/user.repository");
 const artistRepository = require("../repositories/artist.repository");
@@ -47,15 +51,23 @@ function buildUserStatus(user) {
 }
 
 function buildArtworkStatus(artwork) {
-  if (!artwork.category) {
-    return "Needs category";
+  const status = String(
+    artwork?.moderationStatus || ARTWORK_MODERATION_STATUS.PENDING
+  ).toLowerCase();
+
+  if (status === ARTWORK_MODERATION_STATUS.APPROVED) {
+    return "Approved";
   }
 
-  if (artwork.protection) {
-    return "Protected";
+  if (status === ARTWORK_MODERATION_STATUS.REJECTED) {
+    return "Rejected";
   }
 
-  return "Published";
+  if (status === ARTWORK_MODERATION_STATUS.HIDDEN) {
+    return "Hidden";
+  }
+
+  return "Pending review";
 }
 
 function buildOrderStatus(order) {
@@ -200,6 +212,28 @@ function serializeAdminArtistApplication(application) {
     reviewerName: application.reviewedByAdmin?.username || application.reviewedByAdmin?.email || "",
     artistActivated: Boolean(application.user?.artist),
     verified: Boolean(application.user?.artist?.verified)
+  };
+}
+
+function serializeAdminArtwork(artwork) {
+  return {
+    id: artwork.id,
+    title: artwork.title || "Untitled artwork",
+    artistId: artwork.artistId,
+    artistName: artwork.artist?.displayName || artwork.artist?.user?.username || "Unknown artist",
+    category: artwork.category?.name || "No category",
+    price: artwork.price || artwork.priceTokens || "Price not set",
+    protection: Boolean(artwork.protection),
+    favoriteCount: artwork.favoriteCount ?? artwork._count?.favorites ?? 0,
+    ordersCount: artwork._count?.orderItems ?? 0,
+    status: String(artwork.moderationStatus || ARTWORK_MODERATION_STATUS.PENDING).toLowerCase(),
+    statusLabel: buildArtworkStatus(artwork),
+    moderationNote: artwork.moderationNote || "",
+    moderatedAt: artwork.moderatedAt || null,
+    reviewerName: artwork.moderatedByAdmin?.username || artwork.moderatedByAdmin?.email || "",
+    isPubliclyVisible:
+      String(artwork.moderationStatus || "").toLowerCase() === ARTWORK_MODERATION_STATUS.APPROVED,
+    createdAt: artwork.createdAt
   };
 }
 
@@ -444,26 +478,23 @@ router.get(
 router.get("/admin/artworks", authRequired, adminRequired, async (_req, res) => {
   try {
     const artworks = await artworkRepository.listArtworksForAdmin();
-
-    const payload = artworks.map((artwork) => ({
-      id: artwork.id,
-      title: artwork.title || "Untitled artwork",
-      artistName: artwork.artist?.displayName || artwork.artist?.user?.username || "Unknown artist",
-      category: artwork.category?.name || "No category",
-      price: artwork.price || artwork.priceTokens || "Price not set",
-      protection: Boolean(artwork.protection),
-      favoriteCount: artwork.favoriteCount ?? artwork._count.favorites,
-      ordersCount: artwork._count.orderItems,
-      status: buildArtworkStatus(artwork),
-      createdAt: artwork.createdAt
-    }));
+    const payload = artworks.map(serializeAdminArtwork);
 
     return res.status(200).json({
       summary: {
         totalArtworks: payload.length,
-        protectedArtworks: payload.filter((artwork) => artwork.protection).length,
-        needsCategoryArtworks: payload.filter((artwork) => artwork.status === "Needs category")
-          .length,
+        pendingArtworks: payload.filter(
+          (artwork) => artwork.status === ARTWORK_MODERATION_STATUS.PENDING
+        ).length,
+        approvedArtworks: payload.filter(
+          (artwork) => artwork.status === ARTWORK_MODERATION_STATUS.APPROVED
+        ).length,
+        rejectedArtworks: payload.filter(
+          (artwork) => artwork.status === ARTWORK_MODERATION_STATUS.REJECTED
+        ).length,
+        hiddenArtworks: payload.filter(
+          (artwork) => artwork.status === ARTWORK_MODERATION_STATUS.HIDDEN
+        ).length,
         totalFavorites: payload.reduce((sum, artwork) => sum + (artwork.favoriteCount || 0), 0)
       },
       artworks: payload
@@ -473,6 +504,52 @@ router.get("/admin/artworks", authRequired, adminRequired, async (_req, res) => 
 
     return res.status(500).json({
       message: "Unable to load admin artworks"
+    });
+  }
+});
+
+router.patch("/admin/artworks/:id/moderation", authRequired, adminRequired, async (req, res) => {
+  try {
+    const artworkId = Number(req.params.id);
+    const status = String(req.body.status || "")
+      .trim()
+      .toLowerCase();
+    const moderationNote = String(req.body.moderationNote || req.body.reviewNote || "").trim();
+
+    if (!Number.isInteger(artworkId) || artworkId < 1) {
+      return res.status(400).json({
+        message: "Invalid artwork id"
+      });
+    }
+
+    if (!isArtworkModerationStatus(status)) {
+      return res.status(400).json({
+        message: "Status must be pending, approved, rejected or hidden"
+      });
+    }
+
+    const artwork = await artworkRepository.updateArtworkModeration({
+      artworkId,
+      status,
+      moderationNote,
+      moderatedByAdminId: req.user.id
+    });
+
+    return res.status(200).json({
+      message: `Artwork marked as ${buildArtworkStatus(artwork).toLowerCase()}.`,
+      artwork: serializeAdminArtwork(artwork)
+    });
+  } catch (error) {
+    if (error.code === "P2025") {
+      return res.status(404).json({
+        message: "Artwork not found"
+      });
+    }
+
+    console.error("Admin artwork moderation update error:", error);
+
+    return res.status(500).json({
+      message: "Unable to update artwork moderation"
     });
   }
 });

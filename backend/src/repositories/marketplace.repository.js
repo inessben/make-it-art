@@ -1,5 +1,6 @@
 const prisma = require("../lib/prisma");
 const { extractArtistApplicationPayload } = require("../services/artist-contract.service");
+const { ARTWORK_MODERATION_STATUS } = require("../constants/artwork-moderation-status");
 const { parsePriceValue } = require("../utils/serialize-marketplace");
 
 function buildArtworkInclude(viewerId) {
@@ -63,6 +64,14 @@ function buildArtistInclude(viewerId) {
         collections: true
       }
     },
+    artworks: {
+      where: {
+        moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED
+      },
+      select: {
+        id: true
+      }
+    },
     followers: viewerId
       ? {
           where: {
@@ -89,6 +98,11 @@ function buildArtistInclude(viewerId) {
       ],
       include: {
         items: {
+          where: {
+            artwork: {
+              moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED
+            }
+          },
           take: 4,
           include: {
             artwork: {
@@ -238,6 +252,7 @@ async function listPublicArtworks({
 } = {}) {
   const artworks = await prisma.artwork.findMany({
     where: {
+      moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED,
       artist: {
         verified: true
       }
@@ -267,6 +282,10 @@ async function findPublicArtworkById({ artworkId, viewerId = null }) {
     return null;
   }
 
+  if (artwork.moderationStatus !== ARTWORK_MODERATION_STATUS.APPROVED) {
+    return null;
+  }
+
   return artwork;
 }
 
@@ -283,6 +302,7 @@ async function listRelatedArtworks({
         not: artworkId
       },
       artistId,
+      moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED,
       artist: {
         verified: true
       }
@@ -309,6 +329,7 @@ async function listRelatedArtworks({
         notIn: [artworkId, ...artistMatches.map((item) => item.id)]
       },
       categoryId,
+      moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED,
       artist: {
         verified: true
       }
@@ -360,6 +381,9 @@ async function findPublicArtistById({ artistId, viewerId = null }) {
     include: {
       ...buildArtistInclude(viewerId),
       artworks: {
+        where: {
+          moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED
+        },
         include: buildArtworkInclude(viewerId),
         orderBy: [
           {
@@ -394,6 +418,7 @@ async function getMarketplaceOverview({ viewerId = null } = {}) {
     }),
     prisma.artwork.count({
       where: {
+        moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED,
         artist: {
           verified: true
         }

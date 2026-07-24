@@ -121,6 +121,12 @@ function normalizeCategoryId(value) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
+function normalizeResourceId(value) {
+  const parsed = Number.parseInt(value, 10);
+
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
 router.get("/artworks", attachViewer, async (req, res) => {
   try {
     const artworks = await marketplaceRepository.listPublicArtworks({
@@ -144,9 +150,16 @@ router.get("/artworks", attachViewer, async (req, res) => {
   }
 });
 
-router.get("/artworks/:id(\\d+)", attachViewer, async (req, res) => {
+router.get("/artworks/:id", attachViewer, async (req, res) => {
   try {
-    const artworkId = Number.parseInt(req.params.id, 10);
+    const artworkId = normalizeResourceId(req.params.id);
+
+    if (!artworkId) {
+      return res.status(404).json({
+        message: "Oeuvre introuvable."
+      });
+    }
+
     const artwork = await marketplaceRepository.findPublicArtworkById({
       artworkId,
       viewerId: req.viewer?.id || null
@@ -178,59 +191,65 @@ router.get("/artworks/:id(\\d+)", attachViewer, async (req, res) => {
   }
 });
 
-router.post(
-  "/artworks/:id(\\d+)/favorite",
-  authRequired,
-  ensureCollectorAccount,
-  async (req, res) => {
-    try {
-      await collectorRepository.addFavorite({
-        userId: req.user.id,
-        artworkId: Number.parseInt(req.params.id, 10)
-      });
+router.post("/artworks/:id/favorite", authRequired, ensureCollectorAccount, async (req, res) => {
+  try {
+    const artworkId = normalizeResourceId(req.params.id);
 
-      return res.status(200).json({
-        message: "Oeuvre ajoutee aux favoris."
-      });
-    } catch (error) {
-      const mappedError = mapRepositoryError(error);
-
-      if (mappedError) {
-        return res.status(mappedError.status).json({
-          message: mappedError.message
-        });
-      }
-
-      console.error("Favorite create error:", error);
-      return res.status(500).json({
-        message: "Impossible d'ajouter cette oeuvre aux favoris."
+    if (!artworkId) {
+      return res.status(404).json({
+        message: "Oeuvre introuvable."
       });
     }
-  }
-);
 
-router.delete(
-  "/artworks/:id(\\d+)/favorite",
-  authRequired,
-  ensureCollectorAccount,
-  async (req, res) => {
-    try {
-      await collectorRepository.removeFavorite({
-        userId: req.user.id,
-        artworkId: Number.parseInt(req.params.id, 10)
-      });
+    await collectorRepository.addFavorite({
+      userId: req.user.id,
+      artworkId
+    });
 
-      return res.status(200).json({
-        message: "Oeuvre retiree des favoris."
-      });
-    } catch (error) {
-      console.error("Favorite delete error:", error);
-      return res.status(500).json({
-        message: "Impossible de retirer cette oeuvre des favoris."
+    return res.status(200).json({
+      message: "Oeuvre ajoutee aux favoris."
+    });
+  } catch (error) {
+    const mappedError = mapRepositoryError(error);
+
+    if (mappedError) {
+      return res.status(mappedError.status).json({
+        message: mappedError.message
       });
     }
+
+    console.error("Favorite create error:", error);
+    return res.status(500).json({
+      message: "Impossible d'ajouter cette oeuvre aux favoris."
+    });
   }
-);
+});
+
+router.delete("/artworks/:id/favorite", authRequired, ensureCollectorAccount, async (req, res) => {
+  try {
+    const artworkId = normalizeResourceId(req.params.id);
+
+    if (!artworkId) {
+      return res.status(404).json({
+        message: "Oeuvre introuvable."
+      });
+    }
+
+    await collectorRepository.removeFavorite({
+      userId: req.user.id,
+      artworkId
+    });
+
+    return res.status(200).json({
+      message: "Oeuvre retiree des favoris."
+    });
+  } catch (error) {
+    console.error("Favorite delete error:", error);
+    return res.status(500).json({
+      message: "Impossible de retirer cette oeuvre des favoris."
+    });
+  }
+});
 
 router.get("/artists", attachViewer, async (req, res) => {
   try {
@@ -254,10 +273,18 @@ router.get("/artists", attachViewer, async (req, res) => {
   }
 });
 
-router.get("/artists/:id(\\d+)", attachViewer, async (req, res) => {
+router.get("/artists/:id", attachViewer, async (req, res) => {
   try {
+    const artistId = normalizeResourceId(req.params.id);
+
+    if (!artistId) {
+      return res.status(404).json({
+        message: "Artiste introuvable."
+      });
+    }
+
     const artist = await marketplaceRepository.findPublicArtistById({
-      artistId: Number.parseInt(req.params.id, 10),
+      artistId,
       viewerId: req.viewer?.id || null
     });
 
@@ -280,11 +307,19 @@ router.get("/artists/:id(\\d+)", attachViewer, async (req, res) => {
   }
 });
 
-router.post("/artists/:id(\\d+)/follow", authRequired, ensureCollectorAccount, async (req, res) => {
+router.post("/artists/:id/follow", authRequired, ensureCollectorAccount, async (req, res) => {
   try {
+    const artistId = normalizeResourceId(req.params.id);
+
+    if (!artistId) {
+      return res.status(404).json({
+        message: "Artiste introuvable."
+      });
+    }
+
     await collectorRepository.followArtist({
       userId: req.user.id,
-      artistId: Number.parseInt(req.params.id, 10)
+      artistId
     });
 
     return res.status(200).json({
@@ -306,28 +341,31 @@ router.post("/artists/:id(\\d+)/follow", authRequired, ensureCollectorAccount, a
   }
 });
 
-router.delete(
-  "/artists/:id(\\d+)/follow",
-  authRequired,
-  ensureCollectorAccount,
-  async (req, res) => {
-    try {
-      await collectorRepository.unfollowArtist({
-        userId: req.user.id,
-        artistId: Number.parseInt(req.params.id, 10)
-      });
+router.delete("/artists/:id/follow", authRequired, ensureCollectorAccount, async (req, res) => {
+  try {
+    const artistId = normalizeResourceId(req.params.id);
 
-      return res.status(200).json({
-        message: "Vous ne suivez plus cet artiste."
-      });
-    } catch (error) {
-      console.error("Follow delete error:", error);
-      return res.status(500).json({
-        message: "Impossible de ne plus suivre cet artiste."
+    if (!artistId) {
+      return res.status(404).json({
+        message: "Artiste introuvable."
       });
     }
+
+    await collectorRepository.unfollowArtist({
+      userId: req.user.id,
+      artistId
+    });
+
+    return res.status(200).json({
+      message: "Vous ne suivez plus cet artiste."
+    });
+  } catch (error) {
+    console.error("Follow delete error:", error);
+    return res.status(500).json({
+      message: "Impossible de ne plus suivre cet artiste."
+    });
   }
-);
+});
 
 router.get("/follows/me", authRequired, ensureCollectorAccount, async (req, res) => {
   try {
