@@ -11,6 +11,10 @@ jobs:
       STAGING_SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
       STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
       STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+      STAGING_SSH_PORT: ${{ secrets.STAGING_SSH_PORT }}
+      STAGING_APP_DIR: ${{ vars.STAGING_APP_DIR }}
+      STAGING_DEPLOY_BRANCH: develop
+      STAGING_REPO_URL: https://github.com/${{ github.repository }}.git
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,10 +42,40 @@ jobs:
           SSH_HOST: ${{ env.STAGING_SSH_HOST }}
           SSH_USER: ${{ env.STAGING_SSH_USER }}
           SSH_KEY: ${{ env.STAGING_SSH_KEY }}
+          SSH_PORT: ${{ env.STAGING_SSH_PORT }}
+          APP_DIR: ${{ env.STAGING_APP_DIR }}
+          DEPLOY_BRANCH: ${{ env.STAGING_DEPLOY_BRANCH }}
+          REPO_URL: ${{ env.STAGING_REPO_URL }}
         run: |
+          set -eu
+          : "${SSH_PORT:=22}"
+          : "${APP_DIR:=/opt/make-it-art}"
           mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
-          ssh "$SSH_USER@$SSH_HOST" "cd /opt/make-it-art && git pull && docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d --build"
+          printf "%s\n" "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          if ! ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null 2>&1; then
+            echo "Invalid STAGING_SSH_KEY secret. Check the private key content and line breaks."
+            exit 1
+          fi
+          if ! ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/tmp/ssh-keyscan.err; then
+            cat /tmp/ssh-keyscan.err >&2
+            echo "Unable to reach the staging VPS over SSH. Check host, port, firewall, and that the VPS is running."
+            exit 1
+          fi
+          ssh -o BatchMode=yes -o ConnectTimeout=15 -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" <<EOF
+          set -eu
+          if [ ! -d "$APP_DIR/.git" ]; then
+            mkdir -p "$(dirname "$APP_DIR")"
+            git clone --branch "$DEPLOY_BRANCH" "$REPO_URL" "$APP_DIR"
+          fi
+          cd "$APP_DIR"
+          git checkout "$DEPLOY_BRANCH"
+          git pull --ff-only origin "$DEPLOY_BRANCH"
+          if [ ! -f infrastructure/.env ]; then
+            echo "Missing infrastructure/.env on the staging server at $APP_DIR"
+            exit 1
+          fi
+          docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d --build
+          docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml ps
+          EOF
 
