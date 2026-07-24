@@ -49,6 +49,7 @@ jobs:
           SSH_PORT: ${{ secrets.PRODUCTION_SSH_PORT }}
           APP_DIR: ${{ vars.PRODUCTION_APP_DIR }}
           DEPLOY_BRANCH: main
+          REPO_URL: https://github.com/${{ github.repository }}.git
         run: |
           set -eu
           : "${SSH_PORT:=22}"
@@ -56,13 +57,28 @@ jobs:
           mkdir -p ~/.ssh
           printf "%s\n" "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
-          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
-          ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" <<EOF
+          if ! ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null 2>&1; then
+            echo "Invalid PRODUCTION_SSH_KEY secret. Check the private key content and line breaks."
+            exit 1
+          fi
+          if ! ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/tmp/ssh-keyscan.err; then
+            cat /tmp/ssh-keyscan.err >&2
+            echo "Unable to reach the production VPS over SSH. Check host, port, firewall, and that the VPS is running."
+            exit 1
+          fi
+          ssh -o BatchMode=yes -o ConnectTimeout=15 -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" <<EOF
           set -eu
+          if [ ! -d "$APP_DIR/.git" ]; then
+            mkdir -p "$(dirname "$APP_DIR")"
+            git clone --branch "$DEPLOY_BRANCH" "$REPO_URL" "$APP_DIR"
+          fi
           cd "$APP_DIR"
           git checkout "$DEPLOY_BRANCH"
           git pull --ff-only origin "$DEPLOY_BRANCH"
+          if [ ! -f infrastructure/.env.production ]; then
+            echo "Missing infrastructure/.env.production on the production server at $APP_DIR"
+            exit 1
+          fi
           docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml build --no-cache
           docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml up -d
           docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml ps
