@@ -1,0 +1,319 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                      Int                      @id @default(autoincrement())
+  username                String?
+  email                   String?                  @unique
+  passwordHash            String?                  @map("password_hash")
+  oauthProvider           String?                  @map("oauth_provider")
+  oauthSubject            String?                  @map("oauth_subject")
+  oauthLinkedAt           DateTime?                @map("oauth_linked_at")
+  role                    String?
+  createdAt               DateTime?                @map("created_at")
+  bio                     String?
+  isActive                Boolean?                 @map("is_active")
+  walletAddress           String?                  @map("wallet_addresse")
+  verified                Boolean?
+  phone                   String?
+  admin                   Admin?
+  artistApplicationDraft  ArtistApplicationDraft?
+  artist                  Artist?
+  reviewedArtistApplications ArtistApplicationDraft[] @relation("artist_application_reviewed_by")
+  auditLogs               AuditLog[]
+  consents                ConsentRGPD[]
+  emailVerificationTokens EmailVerificationToken[] @relation("emailVerificationTokens")
+  favorites               Favorite[]
+  follows                 Follow[]
+  loginVerificationCodes  LoginVerificationCode[]  @relation("loginVerificationCodes")
+  orders                  Order[]
+  ownershipTokens         OwnershipToken[]
+  passwordResetTokens     PasswordResetToken[]     @relation("passwordResetTokens")
+  personalCollections     Collection[]             @relation("user_collections")
+  refreshTokens           RefreshToken[]
+  rememberedDevices       RememberedDevice[]       @relation("rememberedDevices")
+  galleries               UserGallery[]
+
+  @@unique([oauthProvider, oauthSubject])
+  @@map("user")
+}
+
+model ArtistApplicationDraft {
+  id                 Int       @id @default(autoincrement())
+  userId             Int       @unique @map("user_id")
+  currentStep        Int       @default(1) @map("current_step")
+  status             String    @default("draft")
+  payload            Json?
+  completedAt        DateTime? @map("completed_at")
+  submittedAt        DateTime? @map("submitted_at")
+  reviewedAt         DateTime? @map("reviewed_at")
+  reviewedByAdminId  Int?      @map("reviewed_by_admin_id")
+  reviewNote         String?   @map("review_note")
+  contractAcceptedAt DateTime? @map("contract_accepted_at")
+  contractSignedAt   DateTime? @map("contract_signed_at")
+  contractVersion    String?   @map("contract_version")
+  signatureDataUrl   String?   @map("signature_data_url")
+  contractPdf        Bytes?    @map("contract_pdf")
+  lastReminderSentAt DateTime? @map("last_reminder_sent_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  user               User      @relation(fields: [userId], references: [id])
+  reviewedByAdmin    User?     @relation("artist_application_reviewed_by", fields: [reviewedByAdminId], references: [id])
+
+  @@map("artist_application_draft")
+}
+
+model Artist {
+  id          Int          @id @default(autoincrement())
+  userId      Int          @unique @map("user_id")
+  displayName String?      @map("display_name")
+  verified    Boolean?
+  createdAt   DateTime?    @map("created_at")
+  user        User         @relation(fields: [userId], references: [id])
+  artworks    Artwork[]
+  collections Collection[]
+  followers   Follow[]
+
+  @@map("artist")
+}
+
+model Admin {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+
+  @@map("admin")
+}
+
+model Artwork {
+  id              Int              @id @default(autoincrement())
+  artistId        Int              @map("artist_id")
+  title           String?
+  description     String?
+  categoryId      Int?             @map("category_id")
+  priceTokens     String?          @map("price_tokens")
+  favoriteCount   Int?             @map("favorite_count")
+  createdAt       DateTime?        @map("created_at")
+  protection      Boolean?
+  protectionId    Int?             @map("protection_id")
+  price           String?
+  artist          Artist           @relation(fields: [artistId], references: [id])
+  category        Category?        @relation(fields: [categoryId], references: [id])
+  collections     CollectionItem[]
+  favorites       Favorite[]
+  orderItems      OrderItem[]
+  ownershipTokens OwnershipToken[]
+  galleries       UserGallery[]
+
+  @@map("artwork")
+}
+
+model OwnershipToken {
+  id              Int           @id @default(autoincrement())
+  artworkId       Int           @map("artwork_id")
+  ownerId         Int           @map("owner_id")
+  tokenId         Int?          @map("token_id")
+  acquiredAt      DateTime?     @map("acquired_at")
+  transactionHash String?       @map("transaction_hash")
+  isCurrentOwner  Boolean?      @map("is_current_owner")
+  artwork         Artwork       @relation(fields: [artworkId], references: [id])
+  owner           User          @relation(fields: [ownerId], references: [id])
+  galleries       UserGallery[]
+
+  @@map("ownership_token")
+}
+
+model UserGallery {
+  id               Int             @id @default(autoincrement())
+  userId           Int             @map("user_id")
+  artworkId        Int             @map("artwork_id")
+  ownershipTokenId Int?            @map("ownership_token_id")
+  artwork          Artwork         @relation(fields: [artworkId], references: [id])
+  ownershipToken   OwnershipToken? @relation(fields: [ownershipTokenId], references: [id])
+  user             User            @relation(fields: [userId], references: [id])
+
+  @@map("user_gallery")
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String?
+  artworks Artwork[]
+
+  @@map("category")
+}
+
+model Collection {
+  id                 Int              @id @default(autoincrement())
+  artistId           Int?             @map("artist_id")
+  userId             Int?             @map("user_id")
+  title              String?
+  description        String?
+  isPrivate          Boolean          @default(false) @map("is_private")
+  isDefaultFavorites Boolean          @default(false) @map("is_default_favorites")
+  createdAt          DateTime?        @map("created_at")
+  artist      Artist?          @relation(fields: [artistId], references: [id])
+  user        User?            @relation("user_collections", fields: [userId], references: [id])
+  items       CollectionItem[]
+
+  @@map("collection")
+}
+
+model CollectionItem {
+  id           Int        @id @default(autoincrement())
+  collectionId Int        @map("collection_id")
+  artworkId    Int        @map("artwork_id")
+  artwork      Artwork    @relation(fields: [artworkId], references: [id])
+  collection   Collection @relation(fields: [collectionId], references: [id])
+
+  @@map("collection_item")
+}
+
+model Order {
+  id         Int         @id @default(autoincrement())
+  userId     Int         @map("user_id")
+  status     String?
+  totalToken Int?        @map("total_token")
+  createdAt  DateTime?   @map("created_at")
+  user       User        @relation(fields: [userId], references: [id])
+  items      OrderItem[]
+  payments   Payment[]
+
+  @@map("order")
+}
+
+model OrderItem {
+  id          Int     @id @default(autoincrement())
+  orderId     Int     @map("order_id")
+  artworkId   Int     @map("artwork_id")
+  priceTokens String? @map("price_tokens")
+  artwork     Artwork @relation(fields: [artworkId], references: [id])
+  order       Order   @relation(fields: [orderId], references: [id])
+
+  @@map("order_item")
+}
+
+model Payment {
+  id            Int       @id @default(autoincrement())
+  orderId       Int       @map("order_id")
+  method        String?
+  transactionId Int?      @map("transaction_id")
+  price         String?
+  status        String?
+  createdAt     DateTime? @map("created_at")
+  order         Order     @relation(fields: [orderId], references: [id])
+
+  @@map("payment")
+}
+
+model Favorite {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  artworkId Int       @map("artwork_id")
+  createdAt DateTime? @map("created_at")
+  artwork   Artwork   @relation(fields: [artworkId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, artworkId])
+  @@map("favorite")
+}
+
+model Follow {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  artistId  Int       @map("artist_id")
+  createdAt DateTime? @map("created_at")
+  artist    Artist    @relation(fields: [artistId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, artistId])
+  @@map("follow")
+}
+
+model RefreshToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  tokenHash String?   @map("token_hash")
+  expiresAt DateTime? @map("expires_at")
+  createdAt DateTime? @map("created_at")
+  revoked   Boolean?
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@map("refresh_token")
+}
+
+model AuditLog {
+  id         Int       @id @default(autoincrement())
+  userId     Int?      @map("user_id")
+  action     String?
+  entityType String?   @map("entity_type")
+  entityId   String?   @map("entity_id")
+  ipAddress  String?   @map("ip_address")
+  createdAt  DateTime? @map("created_at")
+  user       User?     @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+model ConsentRGPD {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  consentType String?   @map("consent_type")
+  accepted    Boolean?
+  createdAt   DateTime? @map("created_at")
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@map("consent_RGPD")
+}
+
+model EmailVerificationToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamp(6)
+  usedAt    DateTime? @map("used_at") @db.Timestamp(6)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  user      User      @relation("emailVerificationTokens", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("email_verification_token")
+}
+
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamp(6)
+  usedAt    DateTime? @map("used_at") @db.Timestamp(6)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  user      User      @relation("passwordResetTokens", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("password_reset_token")
+}
+
+model LoginVerificationCode {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamp(6)
+  usedAt    DateTime? @map("used_at") @db.Timestamp(6)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  user      User      @relation("loginVerificationCodes", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("login_verification_code")
+}
+
+model RememberedDevice {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamp(6)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  user      User      @relation("rememberedDevices", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("remembered_device")
+}
