@@ -7,20 +7,37 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: staging
+    env:
+      STAGING_SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+      STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+      STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check staging secrets
+        id: validate_secrets
+        shell: bash
+        run: |
+          missing=0
+          for name in STAGING_SSH_HOST STAGING_SSH_USER STAGING_SSH_KEY; do
+            if [ -z "$(eval "printf '%s' \"\${$name}\"")" ]; then
+              echo "Missing required secret: $name"
+              missing=1
+            fi
+          done
+          echo "missing=$missing" >> "$GITHUB_OUTPUT"
+
       - name: Skip if secrets are missing
-        if: ${{ secrets.STAGING_SSH_HOST == '' || secrets.STAGING_SSH_USER == '' || secrets.STAGING_SSH_KEY == '' }}
+        if: ${{ steps.validate_secrets.outputs.missing == '1' }}
         run: echo "Missing staging secrets. Set STAGING_SSH_HOST, STAGING_SSH_USER, STAGING_SSH_KEY."
 
       - name: Deploy to staging via SSH
-        if: ${{ secrets.STAGING_SSH_HOST != '' && secrets.STAGING_SSH_USER != '' && secrets.STAGING_SSH_KEY != '' }}
+        if: ${{ steps.validate_secrets.outputs.missing == '0' }}
         env:
-          SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
-          SSH_USER: ${{ secrets.STAGING_SSH_USER }}
-          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+          SSH_HOST: ${{ env.STAGING_SSH_HOST }}
+          SSH_USER: ${{ env.STAGING_SSH_USER }}
+          SSH_KEY: ${{ env.STAGING_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/id_rsa
