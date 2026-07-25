@@ -8,11 +8,129 @@
         type="button"
         class="inline-flex items-center justify-center border border-slate-750 bg-black px-4 py-2 text-subtitle-2 uppercase tracking-[0.12em] text-slate-100 transition hover:border-violet-600 hover:text-violet-300 disabled:opacity-50"
         :disabled="loading"
-        @click="loadUsers(true)"
+        @click="loadUsers({ showSuccess: true })"
       >
         {{ loading ? "Refreshing..." : "Refresh users" }}
       </button>
     </template>
+
+    <section
+      v-if="canManageAdmins"
+      class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6"
+    >
+      <div class="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+        <div class="max-w-2xl">
+          <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">Admin access</p>
+          <h2 class="mt-3 text-xl font-semibold text-slate-100">Invite a new admin</h2>
+          <p class="mt-3 text-sm leading-6 text-slate-400">
+            Send an activation email to a new admin account. Enable the super admin option only when
+            this person must also be able to invite other admins.
+          </p>
+        </div>
+
+        <form class="w-full max-w-3xl" @submit.prevent="submitAdminInvite">
+          <div class="grid gap-4 md:grid-cols-2">
+            <label class="border border-slate-800 bg-black px-4 py-3">
+              <span class="mb-2 block text-xs uppercase tracking-[0.12em] text-slate-500"
+                >Full name</span
+              >
+              <input
+                v-model="inviteForm.username"
+                type="text"
+                autocomplete="name"
+                placeholder="Operations Lead"
+                class="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
+              />
+            </label>
+
+            <label class="border border-slate-800 bg-black px-4 py-3">
+              <span class="mb-2 block text-xs uppercase tracking-[0.12em] text-slate-500"
+                >Email</span
+              >
+              <input
+                v-model="inviteForm.email"
+                type="email"
+                autocomplete="email"
+                placeholder="ops@example.com"
+                class="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
+              />
+            </label>
+
+            <label class="border border-slate-800 bg-black px-4 py-3 md:col-span-2">
+              <span class="mb-2 block text-xs uppercase tracking-[0.12em] text-slate-500"
+                >Phone (optional)</span
+              >
+              <input
+                v-model="inviteForm.phone"
+                type="tel"
+                autocomplete="tel"
+                placeholder="+33600000000"
+                class="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
+              />
+            </label>
+
+            <label
+              class="flex items-start gap-3 border border-slate-800 bg-black px-4 py-4 md:col-span-2"
+            >
+              <input
+                v-model="inviteForm.isSuperAdmin"
+                type="checkbox"
+                class="mt-1 h-4 w-4 border-slate-700 bg-black text-violet-600"
+              />
+              <span>
+                <span class="block text-sm font-semibold text-slate-100">Grant super admin</span>
+                <span class="mt-1 block text-sm leading-6 text-slate-400">
+                  Super admins can invite other admins and grant the same elevated access.
+                </span>
+              </span>
+            </label>
+          </div>
+
+          <AppStatePanel
+            v-if="inviteSuccessMessage"
+            class="mt-4"
+            compact
+            type="success"
+            :message="inviteSuccessMessage"
+          />
+          <div
+            v-if="inviteErrorMessage"
+            class="mt-4 border border-red-900 bg-red-950 px-5 py-4 text-sm text-red-200"
+          >
+            {{ inviteErrorMessage }}
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-3">
+            <button
+              type="submit"
+              class="inline-flex items-center justify-center border border-violet-600 bg-violet-600 px-4 py-2 text-subtitle-2 uppercase tracking-[0.12em] text-slate-100 transition hover:bg-violet-500 disabled:opacity-50"
+              :disabled="inviteLoading"
+            >
+              {{ inviteLoading ? "Sending invitation..." : "Invite admin" }}
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center justify-center border border-slate-750 bg-black px-4 py-2 text-subtitle-2 uppercase tracking-[0.12em] text-slate-100 transition hover:border-violet-600 hover:text-violet-300 disabled:opacity-50"
+              :disabled="inviteLoading"
+              @click="resetInviteForm"
+            >
+              Reset
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section
+      v-else-if="!loading"
+      class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-4 sm:p-6"
+    >
+      <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">Admin access</p>
+      <h2 class="mt-3 text-xl font-semibold text-slate-100">Invitations locked</h2>
+      <p class="mt-3 text-sm leading-6 text-slate-400">
+        Only super admins can invite another admin or grant super admin access.
+      </p>
+    </section>
 
     <section class="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
       <article
@@ -154,12 +272,23 @@ const successMessage = ref("");
 const searchTerm = ref("");
 const statusFilter = ref("all");
 const users = ref([]);
+const permissions = ref({
+  canManageAdmins: false,
+  isSuperAdmin: false
+});
+const inviteLoading = ref(false);
+const inviteErrorMessage = ref("");
+const inviteSuccessMessage = ref("");
+const inviteForm = ref(createInviteForm());
 const summary = ref({
   totalUsers: 0,
   activeUsers: 0,
   pendingVerificationUsers: 0,
-  adminUsers: 0
+  adminUsers: 0,
+  superAdminUsers: 0
 });
+
+const canManageAdmins = computed(() => permissions.value.canManageAdmins === true);
 
 const summaries = computed(() => [
   {
@@ -203,10 +332,29 @@ onMounted(async () => {
   await loadUsers();
 });
 
-async function loadUsers(showSuccess = false) {
+function createInviteForm() {
+  return {
+    username: "",
+    email: "",
+    phone: "",
+    isSuperAdmin: false
+  };
+}
+
+function resetInviteForm() {
+  inviteForm.value = createInviteForm();
+  inviteErrorMessage.value = "";
+  inviteSuccessMessage.value = "";
+}
+
+async function loadUsers(options = {}) {
+  const { showSuccess = false, preserveFeedback = false } = options;
+
   loading.value = true;
-  errorMessage.value = "";
-  successMessage.value = "";
+  if (!preserveFeedback) {
+    errorMessage.value = "";
+    successMessage.value = "";
+  }
 
   try {
     const response = await $fetch("/api/admin/users", {
@@ -215,6 +363,7 @@ async function loadUsers(showSuccess = false) {
 
     users.value = response.users || [];
     summary.value = response.summary || summary.value;
+    permissions.value = response.permissions || permissions.value;
     if (showSuccess) {
       successMessage.value = "User data refreshed successfully.";
     }
@@ -232,6 +381,48 @@ async function loadUsers(showSuccess = false) {
     errorMessage.value = error?.data?.message || "Unable to load admin users.";
   } finally {
     loading.value = false;
+  }
+}
+
+async function submitAdminInvite() {
+  if (!canManageAdmins.value || inviteLoading.value) {
+    return;
+  }
+
+  inviteLoading.value = true;
+  inviteErrorMessage.value = "";
+  inviteSuccessMessage.value = "";
+
+  try {
+    const response = await $fetch("/api/admin/users/admins", {
+      method: "POST",
+      credentials: "include",
+      body: {
+        username: inviteForm.value.username.trim(),
+        email: inviteForm.value.email.trim(),
+        phone: inviteForm.value.phone.trim(),
+        isSuperAdmin: Boolean(inviteForm.value.isSuperAdmin)
+      }
+    });
+
+    inviteSuccessMessage.value =
+      response?.message || "Admin invitation sent. The new admin can now activate their account.";
+    inviteForm.value = createInviteForm();
+    await loadUsers({ preserveFeedback: true });
+  } catch (error) {
+    if (error?.statusCode === 401) {
+      await navigateTo("/login");
+      return;
+    }
+
+    if (error?.statusCode === 403) {
+      await navigateTo("/forbidden");
+      return;
+    }
+
+    inviteErrorMessage.value = error?.data?.message || "Unable to invite this admin.";
+  } finally {
+    inviteLoading.value = false;
   }
 }
 

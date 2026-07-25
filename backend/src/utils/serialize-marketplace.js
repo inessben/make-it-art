@@ -41,7 +41,9 @@ function serializeArtistSummary(artist) {
         ? artist.artworks.length
         : artist._count?.artworks || 0,
       followers: artist._count?.followers || 0,
-      collections: artist._count?.collections || 0
+      collections: Array.isArray(artist.collections)
+        ? artist.collections.length
+        : artist._count?.collections || 0
     },
     isFollowed: Array.isArray(artist.followers) ? artist.followers.length > 0 : false,
     createdAt: artist.createdAt || null

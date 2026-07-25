@@ -35,99 +35,251 @@
     </section>
 
     <section class="mx-auto w-full max-w-[1392px] px-6 pb-28">
-      <div>
-        <h2 class="text-title-2 uppercase text-slate-100">Browse by categories</h2>
-        <p class="mt-2 text-body-1 text-slate-400">
-          Discover art across diverse digital disciplines.
-        </p>
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 class="text-title-2 uppercase text-slate-100">Browse by categories</h2>
+          <p class="mt-2 max-w-2xl text-body-1 text-slate-400">
+            Discover art across diverse digital disciplines.
+          </p>
+        </div>
+        <NuxtLink
+          to="/artworks"
+          class="inline-flex items-center gap-3 text-footer text-slate-400 underline underline-offset-4 transition-colors hover:text-violet-400"
+        >
+          all categories <span aria-hidden="true">-></span>
+        </NuxtLink>
       </div>
 
-      <div class="mt-14 grid grid-cols-1 gap-5 lg:grid-cols-5" aria-label="Category placeholders">
+      <div
+        v-if="categoriesPending"
+        class="mt-14 grid grid-cols-1 gap-5 lg:grid-cols-5"
+        aria-label="Category placeholders"
+      >
         <div class="min-h-[322px] border border-slate-900 bg-slate-950 lg:col-span-2" />
         <div class="min-h-[322px] border border-slate-900 bg-slate-950 lg:col-span-3" />
         <div class="min-h-[322px] border border-slate-900 bg-slate-950 lg:col-span-5" />
       </div>
 
-      <div class="mt-6 flex justify-end">
+      <div
+        v-else-if="featuredCategories.length"
+        class="mt-14 grid grid-cols-1 gap-5 lg:grid-cols-5"
+        aria-label="Featured categories"
+      >
         <NuxtLink
-          to="/artworks"
-          class="inline-flex items-center gap-3 text-footer text-slate-400 underline underline-offset-4 transition-colors hover:text-violet-400"
+          v-for="(category, index) in featuredCategories"
+          :key="category.id"
+          :to="buildCategoryRoute(category)"
+          class="group flex min-h-[322px] flex-col justify-between overflow-hidden border border-slate-800 bg-slate-950 p-6 transition duration-200 hover:-translate-y-1 hover:border-slate-700"
+          :class="categoryCardClass(index, featuredCategories.length)"
         >
-          all categories → <span aria-hidden="true"></span>
+          <div class="flex items-start justify-between gap-4">
+            <span
+              class="inline-flex h-11 min-w-11 items-center justify-center rounded-full border border-violet-700/40 bg-violet-700/10 px-3 text-sm font-semibold text-violet-200"
+            >
+              {{ String(index + 1).padStart(2, "0") }}
+            </span>
+            <span
+              class="text-xs uppercase tracking-[0.18em] text-slate-500 transition group-hover:text-violet-300"
+            >
+              Explore
+            </span>
+          </div>
+
+          <div class="mt-10">
+            <p class="text-title-3 uppercase text-slate-100 sm:text-title-2">
+              {{ category.name }}
+            </p>
+            <p class="mt-4 max-w-2xl text-body-1 leading-7 text-slate-400">
+              {{ categoryDescription(category.name) }}
+            </p>
+          </div>
+
+          <div class="mt-10 flex items-center justify-between text-sm text-slate-400">
+            <span>Open category</span>
+            <span class="transition group-hover:translate-x-1">-></span>
+          </div>
         </NuxtLink>
+      </div>
+
+      <div
+        v-else
+        class="mt-14 grid min-h-[322px] place-items-center border border-slate-800 bg-slate-950 px-6 text-center"
+      >
+        <div>
+          <p class="text-title-4 uppercase tracking-[0.12em] text-slate-500">
+            Categories coming soon
+          </p>
+          <p class="mt-3 max-w-xl text-body-1 leading-7 text-slate-400">
+            Public categories will appear here once the artwork catalog is ready to browse.
+          </p>
+        </div>
       </div>
     </section>
 
     <section class="mx-auto w-full max-w-[1440px] pb-28">
-      <div class="px-6">
-        <h2 class="text-title-2 uppercase text-slate-100">Featured artworks</h2>
-        <p class="mt-2 text-body-1 text-slate-400">
-          Hand-picked digital masterpieces from our global roster.
-        </p>
-      </div>
-
-      <div
-        class="mt-14 grid grid-cols-1 gap-12 px-6 sm:grid-cols-2 lg:grid-cols-4"
-        aria-label="Featured artwork placeholders"
-      >
-        <div class="min-h-[462px] border border-slate-900 bg-slate-950" />
-        <div class="min-h-[462px] border border-slate-900 bg-slate-950" />
-        <div class="min-h-[462px] border border-slate-900 bg-slate-950" />
-        <div class="min-h-[462px] border border-slate-900 bg-slate-950" />
-      </div>
-
-      <div class="mt-16 flex justify-end px-6">
+      <div class="flex flex-col gap-4 px-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 class="text-title-2 uppercase text-slate-100">Featured artworks</h2>
+          <p class="mt-2 max-w-2xl text-body-1 text-slate-400">
+            Hand-picked digital masterpieces from our global roster.
+          </p>
+        </div>
         <NuxtLink
           to="/artworks"
           class="inline-flex items-center gap-3 text-footer text-slate-400 underline underline-offset-4 transition-colors hover:text-violet-400"
         >
-          more artworks → <span aria-hidden="true"></span>
+          more artworks <span aria-hidden="true">-></span>
         </NuxtLink>
+      </div>
+
+      <div
+        v-if="artworksPending"
+        class="mt-14 grid grid-cols-1 gap-6 px-6 sm:grid-cols-2 xl:grid-cols-4"
+        aria-label="Featured artwork placeholders"
+      >
+        <div
+          v-for="placeholder in artworksPerRail"
+          :key="placeholder"
+          class="min-h-[462px] border border-slate-900 bg-slate-950"
+        />
+      </div>
+
+      <div v-else-if="featuredArtworks.length" class="relative mt-14 px-6">
+        <button
+          v-if="hasArtworkCarousel"
+          type="button"
+          class="absolute -left-2 top-1/2 z-10 hidden h-14 w-10 -translate-y-1/2 items-center justify-center text-title-3 text-slate-100 transition hover:text-violet-300 xl:flex"
+          aria-label="Previous artworks"
+          @click="scrollFeaturedArtworks(-1)"
+        >
+          <
+        </button>
+
+        <div
+          ref="featuredArtworkCarousel"
+          class="hide-scrollbar scroll-smooth"
+          :class="hasArtworkCarousel ? 'overflow-x-auto' : 'overflow-x-hidden'"
+          aria-label="Featured artworks"
+        >
+          <div class="flex items-stretch gap-6">
+            <div
+              v-for="artwork in featuredArtworks"
+              :key="artwork.id"
+              data-carousel-card
+              class="w-full shrink-0 sm:w-[calc((100%_-_1.5rem)/2)] xl:w-[calc((100%_-_4.5rem)/4)]"
+            >
+              <ArtworkCard class="h-full" :artwork="artwork" :show-favorite-action="false" />
+            </div>
+          </div>
+        </div>
+
+        <button
+          v-if="hasArtworkCarousel"
+          type="button"
+          class="absolute -right-2 top-1/2 z-10 hidden h-14 w-10 -translate-y-1/2 items-center justify-center text-title-3 text-slate-100 transition hover:text-violet-300 xl:flex"
+          aria-label="Next artworks"
+          @click="scrollFeaturedArtworks(1)"
+        >
+          >
+        </button>
+      </div>
+
+      <div
+        v-else
+        class="mt-14 grid min-h-[320px] place-items-center border border-slate-800 bg-slate-950 px-6 text-center"
+      >
+        <div>
+          <p class="text-title-4 uppercase tracking-[0.12em] text-slate-500">
+            Artworks coming soon
+          </p>
+          <p class="mt-3 max-w-xl text-body-1 leading-7 text-slate-400">
+            Featured artworks will appear here as soon as verified artists publish their work.
+          </p>
+        </div>
       </div>
     </section>
 
-    <section class="mx-auto w-full max-w-[1392px] px-6 pb-36">
-      <div>
-        <h2 class="text-title-2 uppercase text-slate-100">Some artists</h2>
-        <p class="mt-2 text-body-1 text-slate-400">
-          Discover art across diverse digital disciplines.
-        </p>
-      </div>
-
-      <div class="relative mt-14 px-16">
-        <button
-          type="button"
-          class="absolute left-0 top-1/2 flex h-14 w-10 -translate-y-1/2 items-center justify-center text-title-3 text-slate-100"
-          aria-label="Previous artists"
-        >
-          ‹
-        </button>
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-3" aria-label="Artist profile placeholders">
-          <div class="min-h-[370px] border border-slate-800 bg-slate-950" />
-          <div class="min-h-[370px] border border-slate-800 bg-slate-950" />
-          <div class="min-h-[370px] border border-slate-800 bg-slate-950" />
+    <section class="mx-auto w-full max-w-[1440px] px-6 pb-36">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 class="text-title-2 uppercase text-slate-100">Some artists</h2>
+          <p class="mt-2 max-w-2xl text-body-1 text-slate-400">
+            Discover art across diverse digital disciplines.
+          </p>
         </div>
-        <button
-          type="button"
-          class="absolute right-0 top-1/2 flex h-14 w-10 -translate-y-1/2 items-center justify-center text-title-3 text-slate-100"
-          aria-label="Next artists"
-        >
-          ›
-        </button>
-      </div>
-
-      <div class="mx-16 mt-5 grid grid-cols-3 gap-4" aria-hidden="true">
-        <span class="h-1 bg-slate-500" /><span class="h-1 bg-slate-500" /><span
-          class="h-1 bg-slate-500"
-        />
-      </div>
-      <div class="mt-16 flex justify-end">
         <NuxtLink
           to="/artists"
           class="inline-flex items-center gap-3 text-footer text-slate-400 underline underline-offset-4 transition-colors hover:text-violet-400"
         >
-          all artists → <span aria-hidden="true"></span>
+          all artists <span aria-hidden="true">-></span>
         </NuxtLink>
+      </div>
+
+      <div class="relative mt-14">
+        <button
+          v-if="hasArtistCarousel"
+          type="button"
+          class="absolute -left-2 top-1/2 z-10 hidden h-14 w-10 -translate-y-1/2 items-center justify-center text-title-3 text-slate-100 transition hover:text-violet-300 xl:flex"
+          aria-label="Previous artists"
+          @click="scrollHomeArtists(-1)"
+        >
+          <
+        </button>
+
+        <div
+          v-if="artistsPending"
+          class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4"
+          aria-label="Artist profile placeholders"
+        >
+          <div
+            v-for="placeholder in artistsPerRail"
+            :key="placeholder"
+            class="min-h-[370px] border border-slate-800 bg-slate-950"
+          />
+        </div>
+
+        <div
+          v-else-if="homeArtists.length"
+          ref="homeArtistCarousel"
+          class="hide-scrollbar scroll-smooth"
+          :class="hasArtistCarousel ? 'overflow-x-auto' : 'overflow-x-hidden'"
+          aria-label="Featured artists"
+        >
+          <div class="flex items-stretch gap-6">
+            <div
+              v-for="artist in homeArtists"
+              :key="artist.id"
+              data-carousel-card
+              class="w-full shrink-0 sm:w-[calc((100%_-_1.5rem)/2)] xl:w-[calc((100%_-_4.5rem)/4)]"
+            >
+              <ArtistCard class="h-full" :artist="artist" :show-follow-action="false" />
+            </div>
+          </div>
+        </div>
+
+        <div
+          v-else
+          class="grid min-h-[370px] place-items-center border border-slate-800 bg-slate-950 px-6 text-center"
+        >
+          <div>
+            <p class="text-title-4 uppercase tracking-[0.12em] text-slate-500">
+              Artists coming soon
+            </p>
+            <p class="mt-3 max-w-xl text-body-1 leading-7 text-slate-400">
+              Verified artist profiles will appear here as soon as the public catalog is available.
+            </p>
+          </div>
+        </div>
+
+        <button
+          v-if="hasArtistCarousel"
+          type="button"
+          class="absolute -right-2 top-1/2 z-10 hidden h-14 w-10 -translate-y-1/2 items-center justify-center text-title-3 text-slate-100 transition hover:text-violet-300 xl:flex"
+          aria-label="Next artists"
+          @click="scrollHomeArtists(1)"
+        >
+          >
+        </button>
       </div>
     </section>
 
@@ -169,3 +321,142 @@
     </section>
   </main>
 </template>
+
+<script setup>
+import { computed, ref } from "vue";
+import { useRequestHeaders } from "#app";
+import ArtistCard from "~/components/marketplace/ArtistCard.vue";
+import ArtworkCard from "~/components/marketplace/ArtworkCard.vue";
+
+const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
+const artworksPerRail = 4;
+const artistsPerRail = 4;
+const featuredArtworkCarousel = ref(null);
+const homeArtistCarousel = ref(null);
+
+const { data: categoriesData, pending: categoriesPending } = await useFetch("/api/categories", {
+  headers: requestHeaders,
+  credentials: "include",
+  default: () => ({
+    categories: []
+  })
+});
+
+const { data: artworksData, pending: artworksPending } = await useFetch("/api/artworks", {
+  headers: requestHeaders,
+  credentials: "include",
+  query: {
+    limit: 12,
+    sort: "popular"
+  },
+  default: () => ({
+    artworks: []
+  })
+});
+
+const { data: artistsData, pending: artistsPending } = await useFetch("/api/artists", {
+  headers: requestHeaders,
+  credentials: "include",
+  query: {
+    limit: 12
+  },
+  default: () => ({
+    artists: []
+  })
+});
+
+const featuredCategories = computed(() => (categoriesData.value?.categories || []).slice(0, 3));
+const featuredArtworks = computed(() => artworksData.value?.artworks || []);
+const homeArtists = computed(() => artistsData.value?.artists || []);
+const hasArtworkCarousel = computed(() => featuredArtworks.value.length > artworksPerRail);
+const hasArtistCarousel = computed(() => homeArtists.value.length > artistsPerRail);
+
+function categoryDescription(categoryName) {
+  const descriptions = {
+    illustration: "Browse narrative compositions, experimental drawings and vivid digital scenes.",
+    photography:
+      "Explore curated photographic artworks shaped for digital collectors and galleries.",
+    graphic: "Discover graphic assets, visual systems and bold compositions ready for curation."
+  };
+
+  const key = String(categoryName || "")
+    .trim()
+    .toLowerCase();
+
+  return (
+    descriptions[key] ||
+    "Discover curated works from this creative discipline in the public catalog."
+  );
+}
+
+function categoryCardClass(index, total) {
+  if (total === 1) {
+    return "lg:col-span-5";
+  }
+
+  if (total === 2) {
+    return index === 0 ? "lg:col-span-2" : "lg:col-span-3";
+  }
+
+  if (index === 0) {
+    return "lg:col-span-2";
+  }
+
+  if (index === 1) {
+    return "lg:col-span-3";
+  }
+
+  return "lg:col-span-5";
+}
+
+function buildCategoryRoute(category) {
+  return {
+    path: "/artworks",
+    query: {
+      search: category.name
+    }
+  };
+}
+
+function scrollCarousel(carouselRef, direction) {
+  const carousel = carouselRef.value;
+
+  if (!carousel) {
+    return;
+  }
+
+  const cards = carousel.querySelectorAll("[data-carousel-card]");
+
+  if (!cards.length) {
+    return;
+  }
+
+  const firstCard = cards[0];
+  const secondCard = cards[1];
+  const step = secondCard ? secondCard.offsetLeft - firstCard.offsetLeft : firstCard.clientWidth;
+
+  carousel.scrollBy({
+    left: direction * step,
+    behavior: "smooth"
+  });
+}
+
+function scrollFeaturedArtworks(direction) {
+  scrollCarousel(featuredArtworkCarousel, direction);
+}
+
+function scrollHomeArtists(direction) {
+  scrollCarousel(homeArtistCarousel, direction);
+}
+</script>
+
+<style scoped>
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+</style>

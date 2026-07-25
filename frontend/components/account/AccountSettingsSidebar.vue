@@ -47,7 +47,56 @@ defineProps({ compact: { type: Boolean, default: false } });
 const auth = useAuthStore();
 const route = useRoute();
 const userInitials = computed(() => getArtistInitials(auth.user?.username || "User"));
-const accountNavigation = [
+const artistNavigationItem = computed(() => {
+  if (auth.isAdmin) {
+    return null;
+  }
+
+  if (auth.isArtist) {
+    return {
+      label: "Artist profile",
+      to: "/artist-profile",
+      matches: ["/artist-profile", "/become-artist"],
+      icon: "M12 3l7 4v10l-7 4-7-4V7l7-4zM9 11.5l2 2 4-4"
+    };
+  }
+
+  if (auth.artistApplicationStatus === "pending") {
+    return {
+      label: "Artist application",
+      to: "/artist-profile",
+      matches: ["/artist-profile", "/become-artist"],
+      icon: "M12 3l7 4v10l-7 4-7-4V7l7-4zM12 8v4m0 3h.01"
+    };
+  }
+
+  if (auth.artistApplicationStatus === "rejected") {
+    return {
+      label: "Update artist application",
+      to: "/artist-profile",
+      matches: ["/artist-profile", "/become-artist"],
+      icon: "M12 3l7 4v10l-7 4-7-4V7l7-4zM8 12h8M12 8v8"
+    };
+  }
+
+  if (auth.hasArtistApplication) {
+    return {
+      label: "Artist application",
+      to: "/artist-profile",
+      matches: ["/artist-profile", "/become-artist"],
+      icon: "M12 3l7 4v10l-7 4-7-4V7l7-4zM8 12h8"
+    };
+  }
+
+  return {
+    label: "Become an artist",
+    to: "/become-artist",
+    matches: ["/become-artist", "/artist-profile"],
+    icon: "M12 3l7 4v10l-7 4-7-4V7l7-4zM12 8v8M8 12h8"
+  };
+});
+
+const baseNavigation = [
   {
     label: "Profile",
     to: "/account-settings",
@@ -79,6 +128,12 @@ const accountNavigation = [
     icon: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1z"
   }
 ];
+
+const accountNavigation = computed(() => {
+  return artistNavigationItem.value
+    ? [...baseNavigation.slice(0, 1), artistNavigationItem.value, ...baseNavigation.slice(1)]
+    : baseNavigation;
+});
 function isActive(item) {
   return item.matches.some(
     (path) => route.path === path || (path === "/orders" && route.path.startsWith("/orders/"))

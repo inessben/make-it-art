@@ -303,6 +303,48 @@ test("GET /artists/:id returns the public artist profile payload", async (t) => 
   assert.equal(response.body.collections[0].title, "Featured collection");
 });
 
+test("GET /artists/:id uses visible public collections for the artist collections stat", async (t) => {
+  const { baseUrl } = await startMarketplaceApp(t, {
+    findPublicArtistByIdResult: {
+      ...buildArtist(3),
+      _count: {
+        artworks: 3,
+        followers: 12,
+        collections: 0
+      },
+      artworks: [buildArtwork(12)],
+      collections: [
+        {
+          id: 21,
+          artistId: 3,
+          userId: 7,
+          title: "Series one",
+          description: "Curated set",
+          isPrivate: false,
+          createdAt: new Date("2026-07-04T09:00:00.000Z"),
+          items: []
+        },
+        {
+          id: 22,
+          artistId: 3,
+          userId: 7,
+          title: "Series two",
+          description: "Second curated set",
+          isPrivate: false,
+          createdAt: new Date("2026-07-05T09:00:00.000Z"),
+          items: []
+        }
+      ]
+    }
+  });
+
+  const response = await requestJson(baseUrl, "/artists/3");
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.artist.stats.collections, 2);
+  assert.equal(response.body.collections.length, 2);
+});
+
 test("GET /artists/:id returns a JSON not-found payload for an invalid numeric artist id", async (t) => {
   const { baseUrl } = await startMarketplaceApp(t);
   const response = await requestJson(baseUrl, "/artists/0");

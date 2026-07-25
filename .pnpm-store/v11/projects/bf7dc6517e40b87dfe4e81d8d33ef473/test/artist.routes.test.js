@@ -376,6 +376,80 @@ test("artist router does not intercept unrelated admin routes", async (t) => {
   assert.equal(response.body.ok, true);
 });
 
+test("artist router does not intercept public marketplace artist routes", async (t) => {
+  const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
+    [authRequiredPath]: buildAuthMiddleware({
+      id: 1,
+      email: "admin@example.com",
+      username: "Admin",
+      role: "admin"
+    }),
+    [applicationRepositoryPath]: {
+      async findByUserId() {
+        return null;
+      }
+    },
+    [artistRepositoryPath]: {
+      async findByUserId() {
+        return null;
+      }
+    },
+    [userRepositoryPath]: {
+      async findById() {
+        return null;
+      }
+    },
+    [contractServicePath]: {
+      renderArtistContract() {
+        return {
+          contractText: "CONTRAT TEST",
+          contractVersion: "make-it-art-artist-contract-v1"
+        };
+      },
+      async generateArtistContractPdf() {
+        return {
+          contractVersion: "make-it-art-artist-contract-v1",
+          contractText: "CONTRAT TEST",
+          pdfBuffer: Buffer.from("pdf"),
+          signedAt: new Date("2026-07-04T12:34:00.000Z")
+        };
+      }
+    },
+    [serializeAuthUserPath]: {
+      serializeAuthUser(user) {
+        return user;
+      }
+    }
+  });
+
+  const app = express();
+  app.use(express.json({ limit: "2mb" }));
+  app.use(router);
+  app.get("/artists", (_req, res) => {
+    res.status(200).json({
+      artists: [{ id: 1, displayName: "Ada Art" }]
+    });
+  });
+
+  const server = http.createServer(app);
+
+  await new Promise((resolve) => {
+    server.listen(0, "127.0.0.1", resolve);
+  });
+
+  t.after(async () => {
+    await new Promise((resolve) => {
+      server.close(resolve);
+    });
+    restore();
+  });
+
+  const response = await requestJson(`http://127.0.0.1:${server.address().port}`, "/artists");
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.artists.length, 1);
+});
+
 test("GET /artists/me/contract.pdf returns a valid PDF response for Uint8Array data", async (t) => {
   const pdfBytes = new Uint8Array(Buffer.from("%PDF-1.4\nartist-contract"));
   const { baseUrl } = await startArtistRoutesApp(t, {

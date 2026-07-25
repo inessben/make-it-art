@@ -9,6 +9,24 @@ export function useMarketplaceActions(auth) {
   const actionMessage = ref("");
   const actionStatus = ref("");
 
+  function canFollowArtist(artist) {
+    if (!artist?.id) {
+      return false;
+    }
+
+    if (auth.isAdmin) {
+      return false;
+    }
+
+    const ownArtistId = auth.user?.artist?.id;
+
+    if (ownArtistId && Number(ownArtistId) === Number(artist.id)) {
+      return false;
+    }
+
+    return true;
+  }
+
   function setLoading(target, id, value) {
     target.value = {
       ...target.value,
@@ -97,6 +115,12 @@ export function useMarketplaceActions(auth) {
       return false;
     }
 
+    if (!canFollowArtist(artist)) {
+      actionMessage.value = "You cannot follow your own artist profile.";
+      actionStatus.value = "error";
+      return false;
+    }
+
     setLoading(followLoading, artist.id, true);
 
     try {
@@ -130,6 +154,7 @@ export function useMarketplaceActions(auth) {
   return {
     actionMessage,
     actionStatus,
+    canFollowArtist,
     favoriteLoading,
     followLoading,
     toggleFavorite,

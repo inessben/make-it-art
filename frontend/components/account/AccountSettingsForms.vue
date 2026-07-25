@@ -160,6 +160,30 @@
         </form>
 
         <section
+          v-if="showArtistWorkspaceSection"
+          :class="
+            props.embedded
+              ? 'mt-6 border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-6'
+              : 'mt-8 rounded-lg border border-slate-800 bg-slate-950/70 p-6'
+          "
+        >
+          <div class="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+            <div class="max-w-2xl">
+              <h2 class="text-title-3">{{ artistWorkspaceTitle }}</h2>
+              <p class="mt-3 text-footer leading-6 text-slate-400">
+                {{ artistWorkspaceDescription }}
+              </p>
+            </div>
+            <NuxtLink
+              :to="artistWorkspaceRoute"
+              class="inline-flex min-h-12 items-center justify-center border border-violet-700 bg-violet-700/10 px-6 text-subtitle-2 uppercase tracking-[0.12em] text-slate-100 transition hover:bg-violet-700/20"
+            >
+              {{ artistWorkspaceActionLabel }}
+            </NuxtLink>
+          </div>
+        </section>
+
+        <section
           v-if="showArtistContractSection"
           :class="
             props.embedded
@@ -225,6 +249,67 @@ const savingProfile = ref(false);
 const savingPassword = ref(false);
 const successMessage = ref("");
 const errorMessage = ref("");
+const showArtistWorkspaceSection = computed(() => !auth.isAdmin);
+const artistWorkspaceRoute = computed(() =>
+  auth.isArtist || auth.hasArtistApplication ? "/artist-profile" : "/become-artist"
+);
+const artistWorkspaceTitle = computed(() => {
+  if (auth.isArtist) {
+    return "Artist workspace";
+  }
+
+  if (auth.artistApplicationStatus === "pending") {
+    return "Artist application";
+  }
+
+  if (auth.artistApplicationStatus === "rejected") {
+    return "Artist application update";
+  }
+
+  if (auth.hasArtistApplication) {
+    return "Artist application";
+  }
+
+  return "Become an artist";
+});
+const artistWorkspaceDescription = computed(() => {
+  if (auth.isArtist) {
+    return "Manage your artist profile, review your public information and keep access to your signed agreement.";
+  }
+
+  if (auth.artistApplicationStatus === "pending") {
+    return "Your artist request is currently under review. Track its progress and open your signed agreement from the artist area.";
+  }
+
+  if (auth.artistApplicationStatus === "rejected") {
+    return "Your previous request needs updates before approval. Review the feedback and resubmit your artist application.";
+  }
+
+  if (auth.hasArtistApplication) {
+    return "Continue your artist process, review your submitted information and complete any missing steps.";
+  }
+
+  return "Apply to sell your artworks on Make It Art and unlock your artist profile once the administration approves your request.";
+});
+const artistWorkspaceActionLabel = computed(() => {
+  if (auth.isArtist) {
+    return "Open artist profile";
+  }
+
+  if (auth.artistApplicationStatus === "pending") {
+    return "View application";
+  }
+
+  if (auth.artistApplicationStatus === "rejected") {
+    return "Update application";
+  }
+
+  if (auth.hasArtistApplication) {
+    return "Continue application";
+  }
+
+  return "Become an artist";
+});
 const artistContractSignedAtLabel = computed(() => {
   const value = user.value?.artistApplication?.contractSignedAt;
   return value

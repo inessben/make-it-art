@@ -7,6 +7,42 @@ function getDbClient(tx) {
   return tx || prisma;
 }
 
+async function findVerifiedArtistProfile(userId, tx) {
+  const db = getDbClient(tx);
+
+  return db.artist.findFirst({
+    where: {
+      userId,
+      verified: true
+    },
+    select: {
+      id: true
+    }
+  });
+}
+
+async function syncArtistCollectionsOwnership(userId, tx) {
+  const db = getDbClient(tx);
+  const artist = await findVerifiedArtistProfile(userId, db);
+
+  if (!artist) {
+    return null;
+  }
+
+  await db.collection.updateMany({
+    where: {
+      userId,
+      artistId: null,
+      isDefaultFavorites: false
+    },
+    data: {
+      artistId: artist.id
+    }
+  });
+
+  return artist.id;
+}
+
 async function findDefaultFavoritesCollection(userId, tx) {
   const db = getDbClient(tx);
 
@@ -398,6 +434,7 @@ async function listFollowedArtists(userId) {
 }
 
 async function listPersonalCollections(userId) {
+  await syncArtistCollectionsOwnership(userId);
   await ensureDefaultFavoritesCollection(userId);
 
   return prisma.collection.findMany({
@@ -420,9 +457,12 @@ async function listPersonalCollections(userId) {
 }
 
 async function createPersonalCollection({ userId, title, description, isPrivate }) {
+  const artistId = await syncArtistCollectionsOwnership(userId);
+
   return prisma.collection.create({
     data: {
       userId,
+      artistId,
       title,
       description,
       isPrivate,
@@ -433,6 +473,8 @@ async function createPersonalCollection({ userId, title, description, isPrivate 
 }
 
 async function findPersonalCollectionById({ userId, collectionId }) {
+  await syncArtistCollectionsOwnership(userId);
+
   return prisma.collection.findFirst({
     where: {
       id: collectionId,
@@ -593,5 +635,6 @@ module.exports = {
   addArtworkToPersonalCollection,
   removeArtworkFromPersonalCollection,
   ensureDefaultFavoritesCollection,
-  cleanupSelfFollowForUser
+  cleanupSelfFollowForUser,
+  syncArtistCollectionsOwnership
 };
