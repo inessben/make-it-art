@@ -81,7 +81,8 @@ async function startMarketplaceApp(t, overrides = {}) {
   const currentUser = overrides.authUser || collectorUser;
   const calls = {
     addFavorite: [],
-    createPersonalCollection: []
+    createPersonalCollection: [],
+    cleanupSelfFollowForUser: []
   };
 
   const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
@@ -148,11 +149,18 @@ async function startMarketplaceApp(t, overrides = {}) {
       }
     },
     [collectorRepositoryPath]: {
+      async cleanupSelfFollowForUser(userId) {
+        calls.cleanupSelfFollowForUser.push(userId);
+      },
       async addFavorite(payload) {
         calls.addFavorite.push(payload);
       },
       async removeFavorite() {},
-      async followArtist() {},
+      async followArtist() {
+        if (overrides.followArtistError) {
+          throw overrides.followArtistError;
+        }
+      },
       async unfollowArtist() {},
       async listFavoriteArtworks() {
         return [buildArtwork(12)];
@@ -272,6 +280,18 @@ test("POST /artworks/:id/favorite blocks admin accounts from collector actions",
   );
 });
 
+test("POST /artists/:id/follow blocks self follow attempts", async (t) => {
+  const { baseUrl } = await startMarketplaceApp(t, {
+    followArtistError: new Error("SELF_FOLLOW_NOT_ALLOWED")
+  });
+  const response = await requestJson(baseUrl, "/artists/3/follow", {
+    method: "POST"
+  });
+
+  assert.equal(response.status, 409);
+  assert.equal(response.body.message, "Vous ne pouvez pas suivre votre propre profil artiste.");
+});
+
 test("GET /artists/:id returns the public artist profile payload", async (t) => {
   const { baseUrl } = await startMarketplaceApp(t);
   const response = await requestJson(baseUrl, "/artists/3");
@@ -283,9 +303,9 @@ test("GET /artists/:id returns the public artist profile payload", async (t) => 
   assert.equal(response.body.collections[0].title, "Featured collection");
 });
 
-test("GET /artists/:id returns a JSON not-found payload for an invalid artist id", async (t) => {
+test("GET /artists/:id returns a JSON not-found payload for an invalid numeric artist id", async (t) => {
   const { baseUrl } = await startMarketplaceApp(t);
-  const response = await requestJson(baseUrl, "/artists/undefined");
+  const response = await requestJson(baseUrl, "/artists/0");
 
   assert.equal(response.status, 404);
   assert.equal(response.body.message, "Artiste introuvable.");

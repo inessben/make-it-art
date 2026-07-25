@@ -136,7 +136,7 @@
                 :key="artist.id"
                 :artist="artist"
                 :follow-loading="Boolean(followLoading[artist.id])"
-                :show-follow-action="true"
+                :show-follow-action="canFollowArtist(artist)"
                 @toggle-follow="toggleFollow"
               />
             </div>
@@ -231,7 +231,8 @@ const paginatedArtists = computed(() => {
   return filteredArtists.value.slice(start, start + pageSize);
 });
 
-const { actionMessage, actionStatus, followLoading, toggleFollow } = useMarketplaceActions(auth);
+const { actionMessage, actionStatus, followLoading, canFollowArtist, toggleFollow } =
+  useMarketplaceActions(auth);
 
 watch(
   [searchTerm, style, sortBy, selectedTypes],

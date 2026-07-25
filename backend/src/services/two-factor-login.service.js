@@ -113,8 +113,14 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
       rememberedDevice.user.verified &&
       rememberedDevice.user.isActive
     ) {
+      await rememberedDeviceRepository.updateDeviceExpiry({
+        deviceId: rememberedDevice.id,
+        expiresAt: new Date(Date.now() + REMEMBER_DEVICE_EXPIRES_MS)
+      });
+
       return {
         bypassCode: true,
+        rememberDeviceToken,
         user,
         ...(await createSession(user))
       };

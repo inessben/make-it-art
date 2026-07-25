@@ -285,7 +285,7 @@ const artistPanelTitle = computed(() => {
 });
 const artistPanelDescription = computed(() => {
   if (auth.isVerifiedArtist) {
-    return "Access your artist space, track your moderation statuses and manage your public profile.";
+    return "Access your artist space, publish artworks directly and manage your public profile.";
   }
 
   if (artistApplicationStatus.value === "pending") {

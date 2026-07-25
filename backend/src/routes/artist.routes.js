@@ -620,7 +620,7 @@ router.post("/artists/me/artworks", ensureVerifiedArtist, async (req, res) => {
     });
 
     return res.status(201).json({
-      message: "Oeuvre envoyee en moderation.",
+      message: "Oeuvre publiee et visible dans le catalogue.",
       artwork: serializeArtwork(artwork)
     });
   } catch (error) {
@@ -663,7 +663,7 @@ router.patch("/artists/me/artworks/:id(\\d+)", ensureVerifiedArtist, async (req,
     });
 
     return res.status(200).json({
-      message: "Oeuvre mise a jour et renvoyee en moderation.",
+      message: "Oeuvre mise a jour et republiee.",
       artwork: serializeArtwork(artwork)
     });
   } catch (error) {

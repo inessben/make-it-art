@@ -91,6 +91,7 @@
 
             <div class="flex flex-wrap gap-3">
               <button
+                v-if="artwork.artist && canFollowArtist(artwork.artist)"
                 type="button"
                 class="inline-flex min-h-12 items-center justify-center rounded-2xl border px-6 text-sm font-semibold transition"
                 :class="
@@ -328,8 +329,14 @@ const isInCart = computed(() =>
 );
 const hasArtistPublicProfile = computed(() => Number.isInteger(Number(artwork.value?.artist?.id)));
 
-const { actionMessage, favoriteLoading, followLoading, toggleFavorite, toggleFollow } =
-  useMarketplaceActions(auth);
+const {
+  actionMessage,
+  favoriteLoading,
+  followLoading,
+  canFollowArtist,
+  toggleFavorite,
+  toggleFollow
+} = useMarketplaceActions(auth);
 
 function toggleCart() {
   cart.hydrate();

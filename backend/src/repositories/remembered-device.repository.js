@@ -18,7 +18,19 @@ async function findValidDeviceByHash(tokenHash) {
   });
 }
 
+async function updateDeviceExpiry({ deviceId, expiresAt }) {
+  return prisma.rememberedDevice.update({
+    where: {
+      id: deviceId
+    },
+    data: {
+      expiresAt
+    }
+  });
+}
+
 module.exports = {
   createDevice,
-  findValidDeviceByHash
+  findValidDeviceByHash,
+  updateDeviceExpiry
 };

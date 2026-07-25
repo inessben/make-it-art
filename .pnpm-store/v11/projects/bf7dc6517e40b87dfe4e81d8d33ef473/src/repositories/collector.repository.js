@@ -236,6 +236,30 @@ async function ensurePublicArtist(artistId) {
   return artist;
 }
 
+async function cleanupSelfFollowForUser(userId) {
+  const ownArtist = await prisma.artist.findUnique({
+    where: {
+      userId
+    },
+    select: {
+      id: true
+    }
+  });
+
+  if (!ownArtist) {
+    return 0;
+  }
+
+  const result = await prisma.follow.deleteMany({
+    where: {
+      userId,
+      artistId: ownArtist.id
+    }
+  });
+
+  return result.count;
+}
+
 async function syncArtworkFavoriteCount(tx, artworkId) {
   const count = await tx.favorite.count({
     where: {
@@ -295,7 +319,12 @@ async function removeFavorite({ userId, artworkId }) {
 }
 
 async function followArtist({ userId, artistId }) {
-  await ensurePublicArtist(artistId);
+  const artist = await ensurePublicArtist(artistId);
+
+  if (artist.userId === userId) {
+    await cleanupSelfFollowForUser(userId);
+    throw new Error("SELF_FOLLOW_NOT_ALLOWED");
+  }
 
   await prisma.follow.upsert({
     where: {
@@ -323,6 +352,8 @@ async function unfollowArtist({ userId, artistId }) {
 }
 
 async function listFollowedArtists(userId) {
+  await cleanupSelfFollowForUser(userId);
+
   const follows = await prisma.follow.findMany({
     where: {
       userId
@@ -561,5 +592,6 @@ module.exports = {
   deletePersonalCollection,
   addArtworkToPersonalCollection,
   removeArtworkFromPersonalCollection,
-  ensureDefaultFavoritesCollection
+  ensureDefaultFavoritesCollection,
+  cleanupSelfFollowForUser
 };

@@ -231,8 +231,8 @@
               class="mt-6 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 text-sm leading-6 text-[#A0ADB4]"
             >
               <span v-if="artist.verified">
-                You have not submitted any artwork yet. Publish your first piece to send it to the
-                moderation queue.
+                You have not submitted any artwork yet. Publish your first piece to make it visible
+                directly in the public catalog.
               </span>
               <span v-else>
                 Your artist profile must be approved before you can publish artworks.
@@ -403,7 +403,7 @@ function formatDateTime(value) {
 
 function artworkStatusLabel(status) {
   if (status === "approved") {
-    return "Approved";
+    return "Published";
   }
 
   if (status === "rejected") {

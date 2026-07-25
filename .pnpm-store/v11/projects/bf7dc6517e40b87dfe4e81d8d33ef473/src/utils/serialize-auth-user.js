@@ -42,6 +42,7 @@ function serializeAuthUser(user) {
     phone: user.phone,
     role: user.role || null,
     isAdmin: admin,
+    isSuperAdmin: admin ? Boolean(user.admin?.isSuperAdmin) : false,
     isArtist: admin ? false : Boolean(user.artist),
     artist: admin ? null : serializeArtist(user.artist),
     artistApplication: admin ? null : serializeArtistApplication(user.artistApplicationDraft)

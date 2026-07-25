@@ -84,9 +84,10 @@ model Artist {
 }
 
 model Admin {
-  id     Int  @id @default(autoincrement())
-  userId Int  @unique @map("user_id")
-  user   User @relation(fields: [userId], references: [id])
+  id           Int     @id @default(autoincrement())
+  userId       Int     @unique @map("user_id")
+  isSuperAdmin Boolean @default(false) @map("is_super_admin")
+  user         User    @relation(fields: [userId], references: [id])
 
   @@map("admin")
 }
@@ -103,7 +104,7 @@ model Artwork {
   protection      Boolean?
   protectionId    Int?             @map("protection_id")
   price           String?
-  moderationStatus String          @default("pending") @map("moderation_status")
+  moderationStatus String          @default("approved") @map("moderation_status")
   moderationNote   String?         @map("moderation_note")
   moderatedAt      DateTime?       @map("moderated_at")
   moderatedByAdminId Int?          @map("moderated_by_admin_id")
@@ -293,6 +294,7 @@ model PasswordResetToken {
   id        Int       @id @default(autoincrement())
   userId    Int       @map("user_id")
   tokenHash String    @map("token_hash")
+  purpose   String    @default("reset")
   expiresAt DateTime  @map("expires_at") @db.Timestamp(6)
   usedAt    DateTime? @map("used_at") @db.Timestamp(6)
   createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)

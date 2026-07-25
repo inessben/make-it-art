@@ -14,6 +14,7 @@ const artistRepositoryPath = require.resolve("../src/repositories/artist.reposit
 const artworkRepositoryPath = require.resolve("../src/repositories/artwork.repository");
 const orderRepositoryPath = require.resolve("../src/repositories/order.repository");
 const paymentRepositoryPath = require.resolve("../src/repositories/payment.repository");
+const authServicePath = require.resolve("../src/services/auth.service");
 
 const adminUser = {
   id: 1,
@@ -75,8 +76,12 @@ async function startAdminArtworksApp(t, overrides = {}) {
     },
     [adminRequiredPath]: {
       adminRequired: adminMiddleware,
+      superAdminRequired: adminMiddleware,
       isAdminUser() {
         return true;
+      },
+      isSuperAdminUser() {
+        return false;
       }
     },
     [applicationRepositoryPath]: {
@@ -150,6 +155,11 @@ async function startAdminArtworksApp(t, overrides = {}) {
       async listPaymentsForAdmin() {
         return [];
       }
+    },
+    [authServicePath]: {
+      async inviteAdminUser() {
+        return null;
+      }
     }
   });
 
@@ -201,7 +211,7 @@ test("GET /admin/artworks returns real moderation statuses and summary counts", 
   assert.equal(response.body.summary.approvedArtworks, 1);
   assert.equal(response.body.summary.hiddenArtworks, 1);
   assert.equal(response.body.artworks[1].status, "approved");
-  assert.equal(response.body.artworks[1].statusLabel, "Approved");
+  assert.equal(response.body.artworks[1].statusLabel, "Published");
   assert.equal(response.body.artworks[1].reviewerName, "Admin");
 });
 

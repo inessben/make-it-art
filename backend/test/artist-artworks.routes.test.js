@@ -94,7 +94,7 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
             priceTokens: payload.price,
             favoriteCount: 0,
             protection: payload.protection,
-            moderationStatus: "pending",
+            moderationStatus: "approved",
             moderationNote: null,
             moderatedAt: null,
             moderatedByAdmin: null,
@@ -228,9 +228,9 @@ test("POST /artists/me/artworks creates an artwork for a verified artist", async
   });
 
   assert.equal(response.status, 201);
-  assert.equal(response.body.message, "Oeuvre envoyee en moderation.");
+  assert.equal(response.body.message, "Oeuvre publiee et visible dans le catalogue.");
   assert.equal(response.body.artwork.title, "Neon Garden");
-  assert.equal(response.body.artwork.moderationStatus, "pending");
+  assert.equal(response.body.artwork.moderationStatus, "approved");
   assert.deepEqual(calls.createArtwork[0], {
     artistId: verifiedArtist.id,
     title: "Neon Garden",

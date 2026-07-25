@@ -92,6 +92,43 @@ async function sendPasswordResetEmail({ to, username, resetUrl }) {
     `
   });
 }
+
+async function sendAdminInvitationEmail({ to, username, activationUrl, isSuperAdmin }) {
+  const transporter = createTransporter();
+  const displayName = username || "there";
+  const accessLevel = isSuperAdmin ? "super admin" : "admin";
+
+  await transporter.sendMail({
+    from: env.smtp.from,
+    to,
+    subject: "Your Make It Art admin invitation",
+    text: [
+      `Hi ${displayName},`,
+      "",
+      `You have been invited to join Make It Art as a ${accessLevel}.`,
+      "Open this link to activate your account and choose your password:",
+      activationUrl,
+      "",
+      "This invitation link expires in 1 hour."
+    ].join("\n"),
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #172033;">
+        <h1 style="font-size: 22px;">Activate your admin account</h1>
+        <p>Hi ${displayName},</p>
+        <p>You have been invited to join Make It Art as a ${accessLevel}.</p>
+        <p>
+          <a href="${activationUrl}" style="display: inline-block; padding: 10px 14px; background: #172033; color: #ffffff; text-decoration: none; border-radius: 6px;">
+            Activate my account
+          </a>
+        </p>
+        <p>Or copy and paste this link into your browser:</p>
+        <p><a href="${activationUrl}">${activationUrl}</a></p>
+        <p>This invitation link expires in 1 hour.</p>
+      </div>
+    `
+  });
+}
+
 async function sendLoginCodeEmail({ to, username, code }) {
   const transporter = createTransporter();
   const displayName = username || "there";
@@ -125,5 +162,6 @@ async function sendLoginCodeEmail({ to, username, code }) {
 module.exports = {
   sendVerificationEmail,
   sendPasswordResetEmail,
+  sendAdminInvitationEmail,
   sendLoginCodeEmail
 };

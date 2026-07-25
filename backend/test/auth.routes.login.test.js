@@ -238,6 +238,39 @@ test("POST /auth/login creates session cookies when code is bypassed", async (t)
   assert.ok(cookies.some((cookie) => cookie.startsWith("mia_refresh=refresh-token")));
 });
 
+test("POST /auth/login refreshes the remembered-device cookie when the device bypasses email code", async (t) => {
+  const user = {
+    id: 42,
+    email: "artist@example.com"
+  };
+  const { baseUrl } = await startAuthRoutesApp(t, {
+    startLoginResult: {
+      accessToken: "access-token",
+      bypassCode: true,
+      refreshToken: "refresh-token",
+      rememberDeviceToken: "remember-token",
+      user
+    }
+  });
+
+  const response = await postJson(
+    baseUrl,
+    "/auth/login",
+    {
+      email: user.email,
+      password: "Password1!"
+    },
+    {
+      cookie: "mia_remember_device=remember-token"
+    }
+  );
+
+  const cookies = getSetCookieHeaders(response.headers);
+
+  assert.equal(response.status, 200);
+  assert.ok(cookies.some((cookie) => cookie.startsWith("mia_remember_device=remember-token")));
+});
+
 test("POST /auth/login maps unverified users to 403", async (t) => {
   const { baseUrl } = await startAuthRoutesApp(t, {
     startLoginError: "Email not verified"

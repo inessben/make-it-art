@@ -1,6 +1,11 @@
 const express = require("express");
 const { authRequired } = require("../middlewares/auth-required.middleware");
-const { adminRequired, isAdminUser } = require("../middlewares/admin-required.middleware");
+const {
+  adminRequired,
+  superAdminRequired,
+  isAdminUser,
+  isSuperAdminUser
+} = require("../middlewares/admin-required.middleware");
 const { ARTIST_APPLICATION_STATUS } = require("../constants/artist-application-status");
 const {
   ARTWORK_MODERATION_STATUS,
@@ -13,6 +18,7 @@ const artworkRepository = require("../repositories/artwork.repository");
 const orderRepository = require("../repositories/order.repository");
 const paymentRepository = require("../repositories/payment.repository");
 const { ensureBuffer } = require("../utils/ensure-buffer");
+const { inviteAdminUser } = require("../services/auth.service");
 const {
   CONTRACT_VERSION,
   extractArtistApplicationPayload,
@@ -23,6 +29,10 @@ const {
 const router = express.Router();
 
 function buildUserRole(user) {
+  if (isSuperAdminUser(user)) {
+    return "Super admin";
+  }
+
   if (isAdminUser(user)) {
     return "Admin";
   }
@@ -50,13 +60,21 @@ function buildUserStatus(user) {
   return "Active";
 }
 
+function normalizeText(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeEmail(value) {
+  return normalizeText(value).toLowerCase();
+}
+
 function buildArtworkStatus(artwork) {
   const status = String(
     artwork?.moderationStatus || ARTWORK_MODERATION_STATUS.PENDING
   ).toLowerCase();
 
   if (status === ARTWORK_MODERATION_STATUS.APPROVED) {
-    return "Approved";
+    return "Published";
   }
 
   if (status === ARTWORK_MODERATION_STATUS.REJECTED) {
@@ -178,6 +196,24 @@ function serializeAdminArtist(artist) {
   };
 }
 
+function serializeAdminUser(user) {
+  return {
+    id: user.id,
+    username: user.username || "User",
+    email: user.email || "Email not provided",
+    phone: user.phone || "",
+    role: buildUserRole(user),
+    status: buildUserStatus(user),
+    isActive: Boolean(user.isActive),
+    verified: Boolean(user.verified),
+    isAdmin: isAdminUser(user),
+    isSuperAdmin: isSuperAdminUser(user),
+    isArtist: Boolean(user.artist),
+    ordersCount: user._count?.orders || 0,
+    createdAt: user.createdAt
+  };
+}
+
 function serializeAdminArtistApplication(application) {
   const payload =
     application.payload && typeof application.payload === "object" ? application.payload : {};
@@ -237,30 +273,22 @@ function serializeAdminArtwork(artwork) {
   };
 }
 
-router.get("/admin/users", authRequired, adminRequired, async (_req, res) => {
+router.get("/admin/users", authRequired, adminRequired, async (req, res) => {
   try {
     const users = await userRepository.listUsersForAdmin();
-
-    const payload = users.map((user) => ({
-      id: user.id,
-      username: user.username || "User",
-      email: user.email || "Email not provided",
-      role: buildUserRole(user),
-      status: buildUserStatus(user),
-      isActive: Boolean(user.isActive),
-      verified: Boolean(user.verified),
-      isAdmin: isAdminUser(user),
-      isArtist: Boolean(user.artist),
-      ordersCount: user._count.orders,
-      createdAt: user.createdAt
-    }));
+    const payload = users.map(serializeAdminUser);
 
     return res.status(200).json({
       summary: {
         totalUsers: payload.length,
         activeUsers: payload.filter((user) => user.isActive).length,
         pendingVerificationUsers: payload.filter((user) => !user.verified).length,
-        adminUsers: payload.filter((user) => user.isAdmin).length
+        adminUsers: payload.filter((user) => user.isAdmin).length,
+        superAdminUsers: payload.filter((user) => user.isSuperAdmin).length
+      },
+      permissions: {
+        canManageAdmins: isSuperAdminUser(req.user),
+        isSuperAdmin: isSuperAdminUser(req.user)
       },
       users: payload
     });
@@ -272,6 +300,51 @@ router.get("/admin/users", authRequired, adminRequired, async (_req, res) => {
     });
   }
 });
+
+router.post(
+  "/admin/users/admins",
+  authRequired,
+  adminRequired,
+  superAdminRequired,
+  async (req, res) => {
+    try {
+      const username = normalizeText(req.body.username);
+      const email = normalizeEmail(req.body.email);
+      const phone = normalizeText(req.body.phone);
+      const isSuperAdmin = Boolean(req.body.isSuperAdmin);
+
+      if (!username || !email) {
+        return res.status(400).json({
+          message: "Username and email are required"
+        });
+      }
+
+      const invitedUser = await inviteAdminUser({
+        username,
+        email,
+        phone,
+        isSuperAdmin
+      });
+
+      return res.status(201).json({
+        message: isSuperAdmin ? "Super admin invitation sent" : "Admin invitation sent",
+        user: serializeAdminUser(invitedUser)
+      });
+    } catch (error) {
+      if (error.code === "P2002" || error.message === "Email already in use") {
+        return res.status(409).json({
+          message: "Email is already in use"
+        });
+      }
+
+      console.error("Admin invitation error:", error);
+
+      return res.status(500).json({
+        message: "Unable to invite this admin"
+      });
+    }
+  }
+);
 
 router.get("/admin/artists", authRequired, adminRequired, async (_req, res) => {
   try {
