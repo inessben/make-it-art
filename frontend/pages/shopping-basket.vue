@@ -23,7 +23,12 @@
 
       <div class="grid min-h-[420px] place-items-center py-16 text-center">
         <div class="max-w-md">
-          <img class="mx-auto h-12 w-12 opacity-60" src="/icons/shopping-basket.svg" alt="" />
+          <img
+            class="mx-auto h-12 w-12 opacity-60"
+            src="/icons/shopping-basket.svg"
+            alt=""
+            loading="lazy"
+          />
           <h2 class="mt-6 text-title-3">Your basket is empty</h2>
           <p class="mt-3 text-body-1 leading-7 text-slate-400">
             Artworks added from the marketplace will appear here.

@@ -307,7 +307,7 @@
             rel="noopener noreferrer"
             class="mt-7 inline-flex min-h-14 items-center justify-center gap-3 bg-slate-100 px-7 text-button-2 font-semibold text-black transition-colors hover:bg-slate-300"
           >
-            <img class="h-6 w-8" src="/icons/discord.svg" alt="" />
+            <img class="h-6 w-8" src="/icons/discord.svg" alt="" loading="lazy" />
             Join our Discord community
           </a>
         </div>

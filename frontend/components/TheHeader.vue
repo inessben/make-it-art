@@ -60,20 +60,20 @@
         >
           <template v-if="!auth.isAdmin">
             <NuxtLink to="/wallet" class="transition-opacity hover:opacity-70" aria-label="Wallet"
-              ><img class="h-5 w-5 sm:h-6 sm:w-6" src="/icons/wallet.svg" alt=""
+              ><img class="h-5 w-5 sm:h-6 sm:w-6" src="/icons/wallet.svg" alt="" loading="lazy"
             /></NuxtLink>
             <NuxtLink
               to="/shopping-basket"
               class="transition-opacity hover:opacity-70"
               aria-label="Shopping basket"
-              ><img class="h-6 w-6 sm:h-7 sm:w-7" src="/icons/shopping-basket.svg" alt=""
+              ><img class="h-6 w-6 sm:h-7 sm:w-7" src="/icons/shopping-basket.svg" alt="" loading="lazy"
             /></NuxtLink>
           </template>
           <NuxtLink
             :to="profileRoute"
             class="transition-opacity hover:opacity-70"
             aria-label="Profile"
-            ><img class="h-8 w-8 sm:h-9 sm:w-9" src="/icons/profile.svg" alt=""
+            ><img class="h-8 w-8 sm:h-9 sm:w-9" src="/icons/profile.svg" alt="" loading="lazy"
           /></NuxtLink>
         </nav>
         <NuxtLink
@@ -116,7 +116,7 @@
           class="flex items-center gap-4 border-b border-slate-800 py-5 text-title-3"
           @click="closeMenu"
         >
-          <img class="h-6 w-6" src="/icons/wallet.svg" alt="" />
+          <img class="h-6 w-6" src="/icons/wallet.svg" alt="" loading="lazy" />
           Wallet
         </NuxtLink>
         <NuxtLink
@@ -125,7 +125,7 @@
           class="flex items-center gap-4 border-b border-slate-800 py-5 text-title-3"
           @click="closeMenu"
         >
-          <img class="h-7 w-7" src="/icons/shopping-basket.svg" alt="" />
+          <img class="h-7 w-7" src="/icons/shopping-basket.svg" alt="" loading="lazy" />
           Shopping basket
         </NuxtLink>
         <NuxtLink
@@ -133,7 +133,7 @@
           class="flex items-center gap-4 py-5 text-title-3"
           @click="closeMenu"
         >
-          <img class="h-9 w-9" src="/icons/profile.svg" alt="" />
+          <img class="h-9 w-9" src="/icons/profile.svg" alt="" loading="lazy" />
           {{ auth.isAdmin ? "Admin dashboard" : "Account settings" }}
         </NuxtLink>
         <button

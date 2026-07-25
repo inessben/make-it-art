@@ -9,7 +9,12 @@
             to="/"
             class="ml-5 flex w-fit items-center gap-5"
             aria-label="Make It Art - Home"
-            ><img class="h-12 w-10 object-contain" src="/logo.png" alt="" /><span
+            ><img
+              class="h-12 w-10 object-contain"
+              src="/logo.png"
+              alt=""
+              loading="lazy"
+            /><span
               class="text-title-4"
               >MAKE IT ART</span
             ></NuxtLink
@@ -26,24 +31,24 @@
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Make It Art on X"
-              ><img class="h-8 w-8" src="/icons/x.svg" alt=""
+              ><img class="h-8 w-8" src="/icons/x.svg" alt="" loading="lazy"
             /></a>
             <a
               href="https://discord.gg/TsF3jMGDr3"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Join Make It Art on Discord"
-              ><img class="h-8 w-11" src="/icons/discord.svg" alt=""
+              ><img class="h-8 w-11" src="/icons/discord.svg" alt="" loading="lazy"
             /></a>
             <a
               href="https://www.instagram.com/makeitart.io/"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Make It Art on Instagram"
-              ><img class="h-8 w-8" src="/icons/instagram.svg" alt=""
+              ><img class="h-8 w-8" src="/icons/instagram.svg" alt="" loading="lazy"
             /></a>
             <a href="mailto:contact@makeitart.io" aria-label="Email Make It Art"
-              ><img class="h-8 w-11" src="/icons/mail.svg" alt=""
+              ><img class="h-8 w-11" src="/icons/mail.svg" alt="" loading="lazy"
             /></a>
           </nav>
         </section>

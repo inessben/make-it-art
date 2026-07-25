@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /account-settings
+Disallow: /orders
+Disallow: /wallet
+Disallow: /payment-methods
+Disallow: /settings
+Disallow: /wishlist
+Disallow: /shopping-basket
+Disallow: /cart
+Disallow: /checkout
+Disallow: /follows
+Disallow: /artist-profile
+Disallow: /become-artist
+Disallow: /verify-email
+Disallow: /reset-password
+Disallow: /forgot-password
+
+Sitemap: https://www.makeitart.io/sitemap.xml
+Sitemap: https://www.makeitart.io/sitemap-images.xml

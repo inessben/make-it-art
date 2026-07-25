@@ -24,6 +24,7 @@
           class="h-64 w-64 object-contain drop-shadow-[0_0_28px_rgba(123,44,255,0.42)] sm:h-80 sm:w-80 lg:h-[420px] lg:w-[420px]"
           src="/logo.png"
           alt=""
+          loading="lazy"
         />
       </div>
     </section>
