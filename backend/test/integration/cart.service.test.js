@@ -65,6 +65,14 @@ databaseTest("cart pricing is isolated per owner and revalidated server-side", a
       }
     });
 
+    await assert.rejects(
+      setCartItem(artistUser.id, { artworkId: artwork.id, quantity: 1 }),
+      (error) =>
+        error instanceof CartError &&
+        error.code === "SELF_PURCHASE_NOT_ALLOWED" &&
+        error.status === 403
+    );
+
     const buyerCart = await setCartItem(buyer.id, {
       artworkId: artwork.id,
       quantity: 1
@@ -81,6 +89,33 @@ databaseTest("cart pricing is isolated per owner and revalidated server-side", a
     assert.equal((await getCartSummary(buyer.id)).itemCount, 1);
     assert.equal((await getCartSummary(otherBuyer.id)).itemCount, 1);
     assert.equal((await getCartSummary(artistUser.id)).itemCount, 0);
+
+    await prisma.cart.create({
+      data: {
+        userId: artistUser.id,
+        version: 1,
+        items: {
+          create: {
+            artworkId: artwork.id,
+            quantity: 1
+          }
+        }
+      }
+    });
+    const legacySelfPurchaseCart = await getCartSummary(artistUser.id);
+    assert.equal(legacySelfPurchaseCart.payable, false);
+    assert.equal(legacySelfPurchaseCart.items[0].issue, "SELF_PURCHASE_NOT_ALLOWED");
+    await assert.rejects(
+      validateCartForCheckout({
+        userId: artistUser.id,
+        expectedVersion: legacySelfPurchaseCart.version,
+        expectedPricingFingerprint: legacySelfPurchaseCart.pricingFingerprint
+      }),
+      (error) =>
+        error instanceof CartError &&
+        error.code === "SELF_PURCHASE_NOT_ALLOWED" &&
+        error.status === 403
+    );
 
     await prisma.artwork.update({
       where: { id: artwork.id },

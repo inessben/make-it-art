@@ -29,21 +29,22 @@ class CartError extends Error {
   }
 }
 
-function pricingPolicy() {
+function pricingPolicy(buyerUserId = null) {
   return {
     vatRateBps: env.commerce.franceVatRateBps,
-    commissionRateBps: env.commerce.commissionRateBps
+    commissionRateBps: env.commerce.commissionRateBps,
+    buyerUserId
   };
 }
 
-function createEmptyCartSummary() {
+function createEmptyCartSummary(userId = null) {
   return buildCartSummary(
     {
       version: 1,
       updatedAt: null,
       items: []
     },
-    pricingPolicy()
+    pricingPolicy(userId)
   );
 }
 
@@ -56,7 +57,7 @@ async function findCart(client, userId) {
 
 async function getCartSummary(userId) {
   const cart = await findCart(prisma, userId);
-  return cart ? buildCartSummary(cart, pricingPolicy()) : createEmptyCartSummary();
+  return cart ? buildCartSummary(cart, pricingPolicy(userId)) : createEmptyCartSummary(userId);
 }
 
 async function getOrCreateCart(client, userId) {
@@ -85,9 +86,17 @@ async function lockArtworks(client, artworkIds) {
   );
 }
 
-function assertArtworkCanBeAdded(artwork, quantity) {
+function assertArtworkCanBeAdded(artwork, quantity, userId) {
   if (!artwork) {
     throw new CartError("ARTWORK_NOT_FOUND", "Artwork not found", 404);
+  }
+
+  if (artwork.artist?.userId === userId) {
+    throw new CartError(
+      "SELF_PURCHASE_NOT_ALLOWED",
+      "Vous ne pouvez pas acheter votre propre œuvre.",
+      403
+    );
   }
 
   if (artwork.saleStatus !== "AVAILABLE") {
@@ -124,9 +133,14 @@ async function setCartItem(userId, { artworkId, quantity }) {
     await lockArtworks(transaction, [artworkId]);
 
     const artwork = await transaction.artwork.findUnique({
-      where: { id: artworkId }
+      where: { id: artworkId },
+      include: {
+        artist: {
+          select: { userId: true }
+        }
+      }
     });
-    assertArtworkCanBeAdded(artwork, quantity);
+    assertArtworkCanBeAdded(artwork, quantity, userId);
 
     await transaction.cartItem.upsert({
       where: {
@@ -148,7 +162,7 @@ async function setCartItem(userId, { artworkId, quantity }) {
       data: { version: { increment: 1 } }
     });
 
-    return buildCartSummary(await findCart(transaction, userId), pricingPolicy());
+    return buildCartSummary(await findCart(transaction, userId), pricingPolicy(userId));
   });
 }
 
@@ -177,7 +191,7 @@ async function removeCartItem(userId, artworkId) {
       data: { version: { increment: 1 } }
     });
 
-    return buildCartSummary(await findCart(transaction, userId), pricingPolicy());
+    return buildCartSummary(await findCart(transaction, userId), pricingPolicy(userId));
   });
 }
 
@@ -201,7 +215,7 @@ async function clearCart(userId) {
       });
     }
 
-    return buildCartSummary(await findCart(transaction, userId), pricingPolicy());
+    return buildCartSummary(await findCart(transaction, userId), pricingPolicy(userId));
   });
 }
 
@@ -226,7 +240,16 @@ async function withLockedPayableCart(
       );
 
       const lockedCart = await findCart(transaction, userId);
-      const cartSummary = buildCartSummary(lockedCart, pricingPolicy());
+      const cartSummary = buildCartSummary(lockedCart, pricingPolicy(userId));
+
+      if (cartSummary.issues.some((issue) => issue.code === "SELF_PURCHASE_NOT_ALLOWED")) {
+        throw new CartError(
+          "SELF_PURCHASE_NOT_ALLOWED",
+          "Vous ne pouvez pas acheter votre propre œuvre.",
+          403,
+          cartSummary
+        );
+      }
 
       if (cartSummary.items.length === 0) {
         throw new CartError("CART_EMPTY", "Cart is empty", 409, cartSummary);
