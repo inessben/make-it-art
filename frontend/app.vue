@@ -1,6 +1,7 @@
 <template>
   <div class="min-h-screen bg-black font-sans">
     <TheHeader v-if="showGlobalNavigation" />
+    <AppHomeButton />
     <NuxtPage />
     <TheFooter v-if="showGlobalNavigation" />
     <UmamiAnalytics />
