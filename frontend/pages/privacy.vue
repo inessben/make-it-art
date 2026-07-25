@@ -136,6 +136,7 @@ const sections = [
       "Payment partners: Stripe, Revolut, Google Pay, Apple Pay, and Paylib (minimal data).",
       "Blockchain networks: Ethereum and Polygon (public, irreversible transactions).",
       "Storage providers: IPFS for artworks.",
+      "Analytics: Umami, self-hosted and only activated once you accept analytics cookies (see Cookie Policy).",
       "Legal and tax authorities, where legally required.",
       "Make it Art support team with limited, secure access."
     ],

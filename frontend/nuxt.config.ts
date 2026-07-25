@@ -23,7 +23,9 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || "/api"
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || "/api",
+      umamiSrc: process.env.NUXT_PUBLIC_UMAMI_SRC || "",
+      umamiWebsiteId: process.env.NUXT_PUBLIC_UMAMI_WEBSITE_ID || ""
     }
   }
 });

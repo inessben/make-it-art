@@ -256,8 +256,8 @@ const artist = computed(() => data.value?.artist || null);
 const artworks = computed(() => data.value?.artworks || []);
 const collections = computed(() => data.value?.collections || []);
 const initials = computed(() => getArtistInitials(artist.value?.displayName));
-const errorMessage = computed(
-  () => error.value?.data?.message || "The artist profile is temporarily unavailable."
+const errorMessage = computed(() =>
+  error.value ? error.value?.data?.message || "The artist profile is temporarily unavailable." : ""
 );
 
 const {

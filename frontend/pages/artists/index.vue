@@ -103,13 +103,12 @@
             :type="actionStatus || 'success'"
             :message="actionMessage"
           />
-          <AppStatePanel
+          <div
             v-if="pending"
-            class="mt-4"
-            type="loading"
-            title="Loading artists"
-            message="Curated artist profiles are being retrieved."
-          />
+            class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
+          >
+            <ArtistCardSkeleton v-for="index in pageSize" :key="index" />
+          </div>
           <AppStatePanel
             v-else-if="errorMessage"
             class="mt-4"
@@ -152,6 +151,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRequestHeaders, useRoute, useRouter } from "#app";
 import ArtistCard from "~/components/marketplace/ArtistCard.vue";
+import ArtistCardSkeleton from "~/components/marketplace/ArtistCardSkeleton.vue";
 import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
 import { useAuthStore } from "~/stores/auth";
 
@@ -181,8 +181,8 @@ const { data, pending, error, refresh } = await useFetch("/api/artists", {
 });
 
 const artists = computed(() => data.value?.artists || []);
-const errorMessage = computed(
-  () => error.value?.data?.message || "The artist directory is temporarily unavailable."
+const errorMessage = computed(() =>
+  error.value ? error.value?.data?.message || "The artist directory is temporarily unavailable." : ""
 );
 const hasActiveFilters = computed(
   () =>

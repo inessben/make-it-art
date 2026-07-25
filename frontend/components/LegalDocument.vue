@@ -60,4 +60,20 @@ defineProps({
 .legal-content :deep(.legal-note) {
   @apply mt-6 border-l-4 border-violet-600 bg-violet-950/40 px-5 py-4 text-slate-100;
 }
+
+.legal-content :deep(table) {
+  @apply mt-4 w-full border-collapse overflow-hidden text-left text-body-1;
+}
+
+.legal-content :deep(th) {
+  @apply border-b border-slate-700 bg-slate-900 px-4 py-3 text-subtitle-2 uppercase tracking-[0.08em] text-violet-300;
+}
+
+.legal-content :deep(td) {
+  @apply border-b border-slate-800 px-4 py-3 align-top text-slate-300;
+}
+
+.legal-content :deep(tr:last-child td) {
+  @apply border-b-0;
+}
 </style>

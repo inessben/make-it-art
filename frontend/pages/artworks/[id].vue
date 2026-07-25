@@ -219,8 +219,8 @@ const { data, pending, error, refresh } = await useFetch(`/api/artworks/${route.
 
 const artwork = computed(() => data.value?.artwork || null);
 const relatedArtworks = computed(() => data.value?.relatedArtworks || []);
-const errorMessage = computed(
-  () => error.value?.data?.message || "The artwork details are temporarily unavailable."
+const errorMessage = computed(() =>
+  error.value ? error.value?.data?.message || "The artwork details are temporarily unavailable." : ""
 );
 const formattedPrice = computed(() =>
   formatMarketplacePrice(artwork.value?.priceValue ?? artwork.value?.price)

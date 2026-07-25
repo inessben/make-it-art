@@ -115,13 +115,12 @@
             :message="actionMessage"
           />
 
-          <AppStatePanel
+          <div
             v-if="pending"
-            class="mt-4"
-            type="loading"
-            title="Loading artworks"
-            message="The latest marketplace artworks are being retrieved."
-          />
+            class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
+          >
+            <ArtworkCardSkeleton v-for="index in pageSize" :key="index" />
+          </div>
           <AppStatePanel
             v-else-if="errorMessage"
             class="mt-4"
@@ -164,6 +163,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRequestHeaders, useRoute, useRouter } from "#app";
 import ArtworkCard from "~/components/marketplace/ArtworkCard.vue";
+import ArtworkCardSkeleton from "~/components/marketplace/ArtworkCardSkeleton.vue";
 import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
 import { useAuthStore } from "~/stores/auth";
 
@@ -195,8 +195,8 @@ const { data, pending, error, refresh } = await useFetch("/api/artworks", {
 });
 
 const artworks = computed(() => data.value?.artworks || []);
-const errorMessage = computed(
-  () => error.value?.data?.message || "The artwork catalogue is temporarily unavailable."
+const errorMessage = computed(() =>
+  error.value ? error.value?.data?.message || "The artwork catalogue is temporarily unavailable." : ""
 );
 const hasActiveFilters = computed(
   () =>
