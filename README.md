@@ -134,9 +134,12 @@ Then update at least these values:
 - `SMTP_USER`
 - `SMTP_PASS`
 - `SMTP_FROM`
-- `STRIPE_SECRET_KEY` avec une clé serveur `sk_live_*`
+- `STRIPE_SECRET_KEY` avec, de préférence, une clé restreinte `rk_live_*` au moindre privilège (`sk_live_*` reste techniquement accepté)
 - `STRIPE_WEBHOOK_SECRET` avec le secret `whsec_*` propre à l'endpoint de production
+- `STRIPE_PAYMENT_METHOD_CONFIGURATION_ID` avec une configuration `pmc_*` revue et limitée à la carte
 - `NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` avec la clé publique correspondante `pk_live_*`
+- les champs `INVOICE_ISSUER_*` avec l'identité légale et fiscale réelle de Make It Art
+- `FRANCE_B2C_VAT_RATE_BPS` avec le taux validé par le responsable fiscal
 
 Important production defaults:
 
@@ -145,14 +148,35 @@ Important production defaults:
 - `NUXT_PUBLIC_API_BASE=/api`
 - `NUXT_PUBLIC_APP_BASE_URL=https://www.makeitart.io`
 
-La clé `STRIPE_SECRET_KEY` ne doit jamais être copiée dans une variable `NUXT_PUBLIC_*`. Avant
-d'activer Apple Pay, Google Pay ou Link, enregistrer chaque domaine et sous-domaine de paiement dans
-le Dashboard Stripe.
+La clé `STRIPE_SECRET_KEY` ne doit jamais être copiée dans une variable `NUXT_PUBLIC_*`. Le lancement
+est France B2C, carte uniquement, avec Make It Art comme marchand officiel et
+`STRIPE_TAX_ENABLED=false`. Apple Pay, Google Pay, Link, B2B et vente hors France restent désactivés ;
+leur activation exige la recette et les prérequis décrits dans la checklist.
 
 Les checkouts non payés sont contrôlés chaque minute par le backend (`CHECKOUT_EXPIRATION_SWEEP_MS`).
 Une exécution manuelle et idempotente reste disponible dans le conteneur avec
 `docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml exec backend npm run payments:expire-checkouts` ;
 si Stripe ne confirme pas l'annulation, la réservation n'est pas libérée automatiquement.
+
+Le worker d'outbox traite les emails, les droits numériques, les certificats et les factures de vente
+toutes les cinq secondes.
+Sa cadence, la taille des lots, le bail de reprise et les retries sont configurés par
+`FULFILLMENT_SWEEP_MS`, `FULFILLMENT_BATCH_SIZE`, `FULFILLMENT_LEASE_MS`,
+`FULFILLMENT_MAX_ATTEMPTS` et `FULFILLMENT_RETRY_BASE_MS`. Une exécution ponctuelle est disponible
+avec `docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml exec backend npm run payments:fulfillment`.
+Les droits et certificats sont persistés une seule fois par ligne de commande et apparaissent dans la
+commande privée. Une révocation après remboursement total reste prioritaire sur tout rejeu d'octroi.
+
+La gestion des litiges utilise la politique décidée `DISPUTE_RIGHTS_POLICY=SUSPEND_ON_OPEN`. En
+production, `DISPUTE_RIGHTS_POLICY_CONFIRMED=true` est obligatoire : ouverture = suspension, gain ou
+prévention = restauration, perte = révocation.
+
+La supervision admin détecte et permet de traiter les anomalies Stripe depuis `/admin/payments`.
+Sa cadence, le seuil d'ancienneté et le délai entre deux alertes d'une même catégorie sont configurés
+par `PAYMENT_ANOMALY_SWEEP_MS`, `PAYMENT_ANOMALY_STALE_MS` et
+`PAYMENT_ALERT_COOLDOWN_SECONDS`. Le runbook de diagnostic et de rejeu est documenté dans
+[`docs/PAYMENT_SECURITY_OPERATIONS.md`](docs/PAYMENT_SECURITY_OPERATIONS.md). Le moniteur,
+les webhooks, le rapprochement et l'outbox restent actifs lorsque `CHECKOUT_ENABLED=false`.
 
 ### Deploy on the VPS
 
