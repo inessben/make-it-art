@@ -63,7 +63,7 @@
               ><img class="h-5 w-5 sm:h-6 sm:w-6" src="/icons/wallet.svg" alt="" loading="lazy"
             /></NuxtLink>
             <NuxtLink
-              to="/shopping-basket"
+              to="/cart"
               class="transition-opacity hover:opacity-70"
               aria-label="Shopping basket"
               ><img
@@ -125,7 +125,7 @@
         </NuxtLink>
         <NuxtLink
           v-if="!auth.isAdmin"
-          to="/shopping-basket"
+          to="/cart"
           class="flex items-center gap-4 border-b border-slate-800 py-5 text-title-3"
           @click="closeMenu"
         >

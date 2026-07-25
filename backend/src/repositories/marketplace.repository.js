@@ -168,8 +168,12 @@ function sortArtworks(artworks, sort) {
 
   if (sort === "price-asc" || sort === "price-desc") {
     return artworks.sort((left, right) => {
-      const leftPrice = parsePriceValue(left.price || left.priceTokens);
-      const rightPrice = parsePriceValue(right.price || right.priceTokens);
+      const leftPrice = Number.isSafeInteger(left.priceAmount)
+        ? left.priceAmount / 100
+        : parsePriceValue(left.price || left.priceTokens);
+      const rightPrice = Number.isSafeInteger(right.priceAmount)
+        ? right.priceAmount / 100
+        : parsePriceValue(right.price || right.priceTokens);
 
       if (leftPrice === null && rightPrice === null) {
         return right.id - left.id;

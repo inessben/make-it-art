@@ -158,13 +158,114 @@
               </button>
               <button
                 type="button"
-                class="h-14 border border-slate-700 bg-transparent text-body-1 uppercase text-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
-                disabled
-                title="Purchasing will be enabled when artwork delivery is available."
+                class="inline-flex min-h-12 items-center justify-center rounded-2xl border px-6 text-sm font-semibold transition"
+                :class="
+                  isInCart
+                    ? 'border-[#F2C97D] bg-[#F2C97D]/10 text-[#F7D990]'
+                    : 'border-[#24314F] bg-[#0C111D] text-[#E6EDF7] hover:border-[#4A6CF7]'
+                "
+                :disabled="cart.loading"
+                @click="toggleCart"
               >
-                Purchasing unavailable
+                {{
+                  cart.loading
+                    ? "Mise à jour..."
+                    : isInCart
+                      ? "Retirer du panier"
+                      : "Ajouter au panier"
+                }}
               </button>
             </div>
+
+            <div
+              v-if="cartMessage || actionMessage"
+              class="rounded-2xl border border-[#203357] bg-[#091121] px-5 py-4 text-sm text-[#BFD0FF]"
+            >
+              {{ cartMessage || actionMessage }}
+            </div>
+
+            <section
+              v-if="showCollectorTools"
+              class="grid gap-4 rounded-[28px] border border-[#151E30] bg-[#050912] p-6"
+            >
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">Mes collections</p>
+                  <h2 class="mt-3 text-xl font-semibold text-white">
+                    Sauvegarder cette oeuvre dans une collection
+                  </h2>
+                  <p class="mt-2 text-sm text-[#96A4B8]">
+                    Utilise le bouton Favori pour la liste de souhaits. Ici, tu peux ranger l'oeuvre
+                    dans une collection personnelle.
+                  </p>
+                </div>
+                <NuxtLink
+                  to="/wishlist?tab=collections"
+                  class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#24314F] bg-[#0B111C] px-4 text-sm font-semibold text-[#D5E0FF] transition hover:bg-[#12192A]"
+                >
+                  Gérer
+                </NuxtLink>
+              </div>
+
+              <div v-if="collectionsLoading" class="text-sm text-[#96A4B8]">
+                Chargement de vos collections...
+              </div>
+              <div v-else class="grid gap-3 sm:grid-cols-[1fr_auto]">
+                <select
+                  v-model="selectedCollectionId"
+                  class="rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7]"
+                >
+                  <option value="">Choisir une collection</option>
+                  <option
+                    v-for="collection in personalCollections"
+                    :key="collection.id"
+                    :value="String(collection.id)"
+                  >
+                    {{ collection.title }} ({{ collection.itemsCount }})
+                  </option>
+                </select>
+
+                <button
+                  type="button"
+                  class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
+                  :disabled="collectionSubmitLoading"
+                  @click="addToCollection"
+                >
+                  {{ collectionSubmitLoading ? "Ajout..." : "Ajouter" }}
+                </button>
+              </div>
+
+              <p v-if="collectionMessage" class="text-sm text-[#BFD0FF]">
+                {{ collectionMessage }}
+              </p>
+              <p
+                v-if="!personalCollections.length && !collectionsLoading"
+                class="text-sm text-[#96A4B8]"
+              >
+                Cree ta premiere collection pour organiser tes reperes.
+              </p>
+            </section>
+
+            <section class="rounded-[28px] border border-[#151E30] bg-[#050912] p-6">
+              <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">Artiste</p>
+              <div v-if="artwork.artist" class="mt-4 grid gap-3">
+                <p class="text-2xl font-semibold text-white">
+                  {{ artwork.artist.displayName }}
+                </p>
+                <p class="text-sm leading-7 text-[#A4B0C0]">
+                  {{ artwork.artist.bio || "Cet artiste complete actuellement son profil public." }}
+                </p>
+                <div class="flex flex-wrap gap-2">
+                  <span
+                    v-for="style in artwork.artist.styles || []"
+                    :key="style"
+                    class="rounded-full bg-[#101728] px-3 py-1 text-xs font-medium text-[#C7D4EA]"
+                  >
+                    {{ style }}
+                  </span>
+                </div>
+              </div>
+            </section>
           </div>
         </section>
 
@@ -197,12 +298,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { navigateTo, useHead, useRequestHeaders, useRoute, useRuntimeConfig } from "#app";
 import ArtworkCard from "~/components/marketplace/ArtworkCard.vue";
 import { useAnalyticsEvent } from "~/composables/useAnalyticsEvent";
 import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
 import { useAuthStore } from "~/stores/auth";
+import { useCartStore } from "~/stores/cart";
 import {
   formatMarketplaceDate,
   formatMarketplacePrice,
@@ -213,11 +315,22 @@ const route = useRoute();
 const auth = useAuthStore();
 const config = useRuntimeConfig();
 const siteUrl = config.public.siteUrl.replace(/\/$/, "");
+const cart = useCartStore();
 const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
+const collectionsLoading = ref(false);
+const collectionSubmitLoading = ref(false);
+const collectionMessage = ref("");
+const cartMessage = ref("");
+const selectedCollectionId = ref("");
+const personalCollections = ref([]);
+
 const { data, pending, error, refresh } = await useFetch(`/api/artworks/${route.params.id}`, {
   headers: requestHeaders,
   credentials: "include",
-  default: () => ({ artwork: null, relatedArtworks: [] })
+  default: () => ({
+    artwork: null,
+    relatedArtworks: []
+  })
 });
 
 const artwork = computed(() => data.value?.artwork || null);
@@ -268,6 +381,12 @@ const formattedPrice = computed(() =>
   formatMarketplacePrice(artwork.value?.priceValue ?? artwork.value?.price)
 );
 const formattedDate = computed(() => formatMarketplaceDate(artwork.value?.createdAt));
+const showCollectorTools = computed(() => auth.user && !auth.isAdmin);
+const isInCart = computed(() =>
+  Boolean(
+    artwork.value?.id && cart.cart?.items?.some((item) => item.artworkId === artwork.value.id)
+  )
+);
 const artworkInitials = computed(() => getArtistInitials(artwork.value?.title || "Artwork"));
 const artistInitials = computed(() => getArtistInitials(artwork.value?.artist?.displayName));
 
@@ -282,17 +401,116 @@ const {
 } = useMarketplaceActions(auth);
 const { trackEvent } = useAnalyticsEvent();
 
+async function toggleCart() {
+  if (!artwork.value?.id) {
+    return;
+  }
+
+  if (!auth.user) {
+    await navigateTo("/login");
+    return;
+  }
+
+  if (auth.isAdmin) {
+    await navigateTo("/admin");
+    return;
+  }
+
+  cartMessage.value = "";
+
+  try {
+    if (isInCart.value) {
+      await cart.removeItem(artwork.value.id);
+      cartMessage.value = "Œuvre retirée du panier.";
+      return;
+    }
+
+    await cart.setItem(artwork.value.id, 1);
+    cartMessage.value = "Œuvre ajoutée au panier.";
+  } catch {
+    cartMessage.value = cart.error || "Impossible de mettre à jour votre panier.";
+  }
+}
+
+async function loadCollections() {
+  if (!showCollectorTools.value) {
+    personalCollections.value = [];
+    return;
+  }
+
+  collectionsLoading.value = true;
+
+  try {
+    const response = await $fetch("/api/collections/me", {
+      credentials: "include"
+    });
+
+    personalCollections.value = (response.collections || []).filter(
+      (collection) => !collection.isDefaultFavorites
+    );
+  } catch (error) {
+    collectionMessage.value = error?.data?.message || "Impossible de charger vos collections.";
+  } finally {
+    collectionsLoading.value = false;
+  }
+}
+
+async function addToCollection() {
+  if (!selectedCollectionId.value) {
+    collectionMessage.value = "Choisis d'abord une collection.";
+    return;
+  }
+
+  if (!artwork.value) {
+    return;
+  }
+
+  collectionSubmitLoading.value = true;
+  collectionMessage.value = "";
+
+  try {
+    const response = await $fetch(`/api/collections/me/${selectedCollectionId.value}/artworks`, {
+      method: "POST",
+      credentials: "include",
+      body: {
+        artworkId: artwork.value.id
+      }
+    });
+
+    personalCollections.value = personalCollections.value.map((collection) =>
+      collection.id === response.collection.id ? response.collection : collection
+    );
+    collectionMessage.value = "Oeuvre ajoutee a la collection.";
+  } catch (error) {
+    collectionMessage.value =
+      error?.data?.message || "Impossible d'ajouter cette oeuvre a la collection.";
+  } finally {
+    collectionSubmitLoading.value = false;
+  }
+}
+
 onMounted(async () => {
   if (artwork.value) {
     trackEvent("view_artwork", { artworkId: artwork.value.id });
   }
 
-  if (auth.user) return;
-  try {
-    await auth.fetchCurrentUser();
-    await refresh();
-  } catch {
-    // Public artwork page: anonymous visitors are allowed.
+  if (!auth.user) {
+    try {
+      await auth.fetchCurrentUser();
+      await refresh();
+    } catch {
+      // Public page: anonymous visitors are allowed.
+    }
   }
+
+  if (auth.user && !auth.isAdmin) {
+    try {
+      await cart.fetchCart();
+    } catch {
+      cartMessage.value = cart.error || "Impossible de charger votre panier.";
+    }
+  }
+
+  await loadCollections();
 });
 </script>

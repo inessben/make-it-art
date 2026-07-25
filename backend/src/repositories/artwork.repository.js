@@ -1,6 +1,38 @@
 const prisma = require("../lib/prisma");
 const { ARTWORK_MODERATION_STATUS } = require("../constants/artwork-moderation-status");
 
+const MAX_ARTWORK_PRICE_AMOUNT = 99_999_999;
+const LEGACY_PRICE_PATTERN = /^(\d{1,6})(?:[.,](\d{1,2}))?\s*(?:€|eur|tokens?)?$/i;
+
+function parsePriceAmount(price) {
+  const normalized =
+    typeof price === "number" ? String(price) : typeof price === "string" ? price.trim() : null;
+
+  if (typeof normalized !== "string") {
+    throw new Error("INVALID_ARTWORK_PRICE");
+  }
+
+  const match = normalized.match(LEGACY_PRICE_PATTERN);
+
+  if (!match) {
+    throw new Error("INVALID_ARTWORK_PRICE");
+  }
+
+  const majorAmount = Number(match[1]);
+  const minorAmount = Number((match[2] || "").padEnd(2, "0") || "0");
+  const priceAmount = majorAmount * 100 + minorAmount;
+
+  if (
+    !Number.isSafeInteger(priceAmount) ||
+    priceAmount <= 0 ||
+    priceAmount > MAX_ARTWORK_PRICE_AMOUNT
+  ) {
+    throw new Error("INVALID_ARTWORK_PRICE");
+  }
+
+  return priceAmount;
+}
+
 const artworkInclude = {
   category: true,
   artist: {
@@ -79,6 +111,8 @@ async function findOwnedArtwork({ artworkId, artistId }) {
 }
 
 async function createArtwork({ artistId, title, description, categoryId, price, protection }) {
+  const priceAmount = parsePriceAmount(price);
+
   return prisma.artwork.create({
     data: {
       artistId,
@@ -87,6 +121,11 @@ async function createArtwork({ artistId, title, description, categoryId, price, 
       categoryId: categoryId || null,
       price,
       priceTokens: price,
+      priceAmount,
+      currency: "EUR",
+      saleStatus: "AVAILABLE",
+      stockQuantity: 1,
+      reservedQuantity: 0,
       favoriteCount: 0,
       protection: Boolean(protection),
       moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED,
@@ -114,6 +153,12 @@ async function updateArtwork({
     throw new Error("ARTWORK_NOT_FOUND");
   }
 
+  const priceAmount = parsePriceAmount(price);
+  const shouldPublishDraft =
+    existing.saleStatus === "DRAFT" &&
+    existing.stockQuantity === 0 &&
+    existing.reservedQuantity === 0;
+
   return prisma.artwork.update({
     where: {
       id: artworkId
@@ -124,6 +169,14 @@ async function updateArtwork({
       categoryId: categoryId || null,
       price,
       priceTokens: price,
+      priceAmount,
+      currency: "EUR",
+      ...(shouldPublishDraft
+        ? {
+            saleStatus: "AVAILABLE",
+            stockQuantity: 1
+          }
+        : {}),
       protection: Boolean(protection),
       moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED,
       moderationNote: null,

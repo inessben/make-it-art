@@ -8,6 +8,21 @@ const defaultAdminBypassLoginCode = process.env.DEFAULT_ADMIN_BYPASS_LOGIN_CODE
   ? process.env.DEFAULT_ADMIN_BYPASS_LOGIN_CODE === "true"
   : nodeEnv !== "production";
 
+const defaultFranceVatRateBps = nodeEnv === "production" ? 0 : 2000;
+const developmentInvoiceIssuer =
+  nodeEnv === "production"
+    ? {}
+    : {
+        legalName: "Make It Art Sandbox",
+        addressLine1: "Adresse de test",
+        postalCode: "75000",
+        city: "Paris",
+        country: "FR",
+        registrationId: "SANDBOX",
+        vatId: "FR-SANDBOX",
+        email: "billing@make-it-art.local"
+      };
+
 module.exports = {
   nodeEnv,
   port: Number(process.env.PORT || 4000),
@@ -15,9 +30,12 @@ module.exports = {
   databaseUrl: process.env.DATABASE_URL || "",
   redisUrl: process.env.REDIS_URL || "",
   appBaseUrl: process.env.APP_BASE_URL || "http://localhost",
+  paymentAlertEmail: process.env.PAYMENT_ALERT_EMAIL || "",
+  checkoutEnabled: process.env.CHECKOUT_ENABLED !== "false",
   jwtSecret: process.env.JWT_SECRET || "dev_secret_change_me",
   sessionCookieName: process.env.SESSION_COOKIE_NAME || "mia_session",
   refreshCookieName: process.env.REFRESH_COOKIE_NAME || "mia_refresh",
+  csrfCookieName: process.env.CSRF_COOKIE_NAME || "mia_csrf",
   loginCodeCookieName: process.env.LOGIN_CODE_COOKIE_NAME || "mia_login_challenge",
   rememberDeviceCookieName: process.env.REMEMBER_DEVICE_COOKIE_NAME || "mia_remember_device",
   googleOAuth: {
@@ -39,6 +57,50 @@ module.exports = {
     email: process.env.DEFAULT_ADMIN_EMAIL || "admin@art.com",
     password: process.env.DEFAULT_ADMIN_PASSWORD || "admin123",
     bypassLoginCode: defaultAdminBypassLoginCode && nodeEnv !== "production"
+  },
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY || "",
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
+    paymentMethodConfigurationId: process.env.STRIPE_PAYMENT_METHOD_CONFIGURATION_ID || "",
+    checkoutExpirationSweepMs: Number(process.env.CHECKOUT_EXPIRATION_SWEEP_MS || 60000),
+    reconciliationSweepMs: Number(process.env.PAYMENT_RECONCILIATION_SWEEP_MS || 300000)
+  },
+  commerce: {
+    marketCountry: process.env.PAYMENT_MARKET_COUNTRY || "FR",
+    customerScope: process.env.PAYMENT_CUSTOMER_SCOPE || "B2C",
+    stripeTaxEnabled: process.env.STRIPE_TAX_ENABLED === "true",
+    franceVatRateBps: Number(process.env.FRANCE_B2C_VAT_RATE_BPS || defaultFranceVatRateBps),
+    commissionRateBps: Number(process.env.PLATFORM_COMMISSION_RATE_BPS || 700),
+    commissionInvoicingEnabled: process.env.COMMISSION_INVOICING_ENABLED === "true",
+    commissionVatRateBps: Number(process.env.COMMISSION_VAT_RATE_BPS || 0),
+    issuer: {
+      legalName: process.env.INVOICE_ISSUER_LEGAL_NAME || developmentInvoiceIssuer.legalName || "",
+      addressLine1:
+        process.env.INVOICE_ISSUER_ADDRESS_LINE1 || developmentInvoiceIssuer.addressLine1 || "",
+      addressLine2: process.env.INVOICE_ISSUER_ADDRESS_LINE2 || "",
+      postalCode:
+        process.env.INVOICE_ISSUER_POSTAL_CODE || developmentInvoiceIssuer.postalCode || "",
+      city: process.env.INVOICE_ISSUER_CITY || developmentInvoiceIssuer.city || "",
+      country: process.env.INVOICE_ISSUER_COUNTRY || developmentInvoiceIssuer.country || "FR",
+      registrationId:
+        process.env.INVOICE_ISSUER_REGISTRATION_ID || developmentInvoiceIssuer.registrationId || "",
+      vatId: process.env.INVOICE_ISSUER_VAT_ID || developmentInvoiceIssuer.vatId || "",
+      email: process.env.INVOICE_ISSUER_EMAIL || developmentInvoiceIssuer.email || ""
+    }
+  },
+  fulfillment: {
+    sweepMs: Number(process.env.FULFILLMENT_SWEEP_MS || 5000),
+    batchSize: Number(process.env.FULFILLMENT_BATCH_SIZE || 20),
+    leaseMs: Number(process.env.FULFILLMENT_LEASE_MS || 300000),
+    maxAttempts: Number(process.env.FULFILLMENT_MAX_ATTEMPTS || 5),
+    retryBaseMs: Number(process.env.FULFILLMENT_RETRY_BASE_MS || 5000)
+  },
+  paymentOperations: {
+    sweepMs: Number(process.env.PAYMENT_ANOMALY_SWEEP_MS || 300000),
+    staleMs: Number(process.env.PAYMENT_ANOMALY_STALE_MS || 300000),
+    alertCooldownSeconds: Number(process.env.PAYMENT_ALERT_COOLDOWN_SECONDS || 3600),
+    disputeRightsPolicy: process.env.DISPUTE_RIGHTS_POLICY || "SUSPEND_ON_OPEN",
+    disputeRightsPolicyConfirmed: process.env.DISPUTE_RIGHTS_POLICY_CONFIRMED === "true"
   },
   smtp: {
     host: process.env.SMTP_HOST || "",

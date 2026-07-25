@@ -51,6 +51,9 @@ function serializeApplicationDraft(draft) {
     contractAcceptedAt: draft.contractAcceptedAt,
     contractSignedAt: draft.contractSignedAt,
     contractVersion: draft.contractVersion || null,
+    contractRenewalRequired: Boolean(
+      draft.contractVersion && draft.contractVersion !== CONTRACT_VERSION
+    ),
     hasContractPdf: Boolean(draft.contractPdf),
     lastReminderSentAt: draft.lastReminderSentAt,
     createdAt: draft.createdAt,
@@ -231,6 +234,13 @@ async function resolveCategoryId({ categoryId }) {
 }
 
 function mapArtworkRouteError(error) {
+  if (error?.message === "INVALID_ARTWORK_PRICE") {
+    return {
+      status: 400,
+      message: "Le prix doit etre un montant EUR positif avec deux decimales maximum."
+    };
+  }
+
   if (error?.message === "ARTWORK_NOT_FOUND") {
     return {
       status: 404,
@@ -272,8 +282,7 @@ function buildContractFilename(applicationOrArtistPayload, fallbackName = "artis
 async function resolveApplicationContractPdf(application, fallbackUser) {
   const payload = extractArtistApplicationPayload(application);
   const existingPdf = ensureBuffer(application?.contractPdf);
-  const needsRegeneration =
-    application?.contractVersion !== CONTRACT_VERSION || !existingPdf || existingPdf.length === 0;
+  const needsRegeneration = !existingPdf || existingPdf.length === 0;
 
   if (!needsRegeneration) {
     return {

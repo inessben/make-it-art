@@ -7,11 +7,17 @@ function restoreCacheEntry(resolvedPath, originalCacheEntry) {
   delete require.cache[resolvedPath];
 }
 
-function loadModuleWithMocks(targetPath, mockedModules) {
+function loadModuleWithMocks(targetPath, mockedModules, { invalidate = [] } = {}) {
   const originalTarget = require.cache[targetPath];
   const originalMockedModules = new Map();
+  const originalInvalidatedModules = new Map();
 
   delete require.cache[targetPath];
+
+  invalidate.forEach((resolvedPath) => {
+    originalInvalidatedModules.set(resolvedPath, require.cache[resolvedPath]);
+    delete require.cache[resolvedPath];
+  });
 
   Object.entries(mockedModules).forEach(([resolvedPath, exports]) => {
     originalMockedModules.set(resolvedPath, require.cache[resolvedPath]);
@@ -33,6 +39,10 @@ function loadModuleWithMocks(targetPath, mockedModules) {
       restoreCacheEntry(targetPath, originalTarget);
 
       originalMockedModules.forEach((originalCacheEntry, resolvedPath) => {
+        restoreCacheEntry(resolvedPath, originalCacheEntry);
+      });
+
+      originalInvalidatedModules.forEach((originalCacheEntry, resolvedPath) => {
         restoreCacheEntry(resolvedPath, originalCacheEntry);
       });
     }

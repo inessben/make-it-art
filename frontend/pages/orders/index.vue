@@ -1,3 +1,4 @@
+<!-- Keep the history route beside /orders/[id] so Nuxt renders the detail page directly. -->
 <template>
   <main class="min-h-screen bg-black text-slate-100">
     <div
@@ -119,7 +120,7 @@
                       {{ formatOrderDate(transaction.date) }}
                     </td>
                     <td class="px-4 text-right text-body-1 text-slate-400">
-                      {{ formatTokenValue(transaction.value) }}
+                      {{ formatMoney(transaction.value, transaction.currency) }}
                     </td>
                     <td class="px-6 text-right">
                       <NuxtLink
@@ -188,6 +189,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "#app";
 import AccountSettingsSidebar from "~/components/account/AccountSettingsSidebar.vue";
+import { getOrderStatusPresentation } from "~/utils/order-status";
 
 definePageMeta({ middleware: "auth" });
 
@@ -201,15 +203,18 @@ const pageSize = 4;
 
 const transactions = computed(() =>
   orders.value.flatMap((order) =>
-    (order.artworks || []).map((artwork, index) => ({
-      key: `${order.id}-${artwork.id}-${index}`,
+    (order.items || []).map((item, index) => ({
+      key: `${order.id}-${item.id || item.artworkId}-${index}`,
       orderId: order.id,
-      orderNumber: order.number,
-      artworkId: artwork.id,
-      title: artwork.title || "Untitled artwork",
-      status: order.status || "Processing",
+      orderNumber: order.reference || order.number || `#${order.id}`,
+      artworkId: item.artworkId,
+      title: item.title || "Untitled artwork",
+      status: getOrderStatusPresentation(order.status).title,
       date: order.createdAt,
-      value: Number(artwork.priceTokens) || 0
+      value:
+        Number(item.subtotalAmount) ||
+        (Number(item.unitAmount) || 0) * Math.max(Number(item.quantity) || 1, 1),
+      currency: item.currency || order.currency || "EUR"
     }))
   )
 );
@@ -240,15 +245,18 @@ const rangeEnd = computed(() =>
   Math.min(currentPage.value * pageSize, filteredTransactions.value.length)
 );
 const portfolioValue = computed(() =>
-  orders.value.reduce((total, order) => total + (Number(order.totalToken) || 0), 0)
+  orders.value.reduce((total, order) => total + (Number(order.amount) || 0), 0)
 );
-const formattedPortfolioValue = computed(() => formatTokenValue(portfolioValue.value));
+const portfolioCurrency = computed(() => orders.value[0]?.currency || "EUR");
+const formattedPortfolioValue = computed(() =>
+  formatMoney(portfolioValue.value, portfolioCurrency.value)
+);
 
 watch(selectedStatus, () => goToPage(1));
 
 onMounted(async () => {
   try {
-    const response = await $fetch("/api/orders", {
+    const response = await $fetch("/api/v1/orders", {
       method: "GET",
       credentials: "include"
     });
@@ -260,9 +268,11 @@ onMounted(async () => {
   }
 });
 
-function formatTokenValue(value) {
-  const numericValue = Number(value) || 0;
-  return `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(numericValue)} tokens`;
+function formatMoney(value, currency = "EUR") {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: String(currency || "EUR").toUpperCase()
+  }).format((Number(value) || 0) / 100);
 }
 
 function formatOrderDate(value) {
@@ -296,7 +306,7 @@ function exportCsv() {
       transaction.orderNumber,
       transaction.status,
       formatOrderDate(transaction.date),
-      formatTokenValue(transaction.value)
+      formatMoney(transaction.value, transaction.currency)
     ])
   ];
   const csv = rows

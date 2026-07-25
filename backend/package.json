@@ -5,6 +5,15 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
+    "payments:expire-checkouts": "node src/jobs/expire-checkouts.js",
+    "payments:fulfillment": "node src/jobs/run-fulfillment.js",
+    "payments:reconcile": "node src/scripts/reconcile-payments.js",
+    "payments:test-alert": "node src/scripts/test-payment-alert.js",
+    "payments:validate-sandbox": "node src/scripts/validate-payment-sandbox.js",
+    "payments:validate-go-live": "node src/scripts/validate-go-live.js",
+    "payments:scan-secrets": "node src/scripts/validate-payment-sandbox.js",
+    "payments:seed-test": "node src/scripts/seed-payment-fixture.js",
+    "security:audit": "npm audit --omit=dev --audit-level=high",
     "test": "node --test \"test/**/*.test.js\"",
     "test:coverage": "node --test --experimental-test-coverage \"test/**/*.test.js\"",
     "lint": "eslint \"src/**/*.js\" \"test/**/*.js\" --max-warnings=0",
@@ -22,9 +31,10 @@
     "express": "^4.19.2",
     "express-rate-limit": "^8.5.2",
     "jsonwebtoken": "^9.0.3",
-    "nodemailer": "^8.0.7",
+    "nodemailer": "^9.0.3",
     "pg": "^8.16.0",
-    "redis": "^5.12.1"
+    "redis": "^5.12.1",
+    "stripe": "^22.3.2"
   },
   "devDependencies": {
     "eslint": "^8.57.1",

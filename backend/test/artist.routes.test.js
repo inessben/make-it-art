@@ -106,7 +106,7 @@ async function startArtistRoutesApp(t, overrides = {}) {
       }
     },
     [contractServicePath]: {
-      CONTRACT_VERSION: "make-it-art-artist-contract-v2",
+      CONTRACT_VERSION: "make-it-art-artist-contract-v3",
       extractArtistApplicationPayload(application) {
         return application?.payload || {};
       },
@@ -121,12 +121,12 @@ async function startArtistRoutesApp(t, overrides = {}) {
       renderArtistContract() {
         return {
           contractText: "CONTRAT TEST",
-          contractVersion: "make-it-art-artist-contract-v2"
+          contractVersion: "make-it-art-artist-contract-v3"
         };
       },
       async generateArtistContractPdf() {
         return {
-          contractVersion: "make-it-art-artist-contract-v2",
+          contractVersion: "make-it-art-artist-contract-v3",
           contractText: "CONTRAT TEST",
           pdfBuffer: Buffer.from("pdf"),
           signedAt: new Date("2026-07-04T12:34:00.000Z")
@@ -241,7 +241,7 @@ test("POST /artists/me submits a pending artist application with a signed contra
   assert.equal(response.body.user.artistApplication.status, "pending");
   assert.equal(calls.submitApplication.length, 1);
   assert.equal(calls.submitApplication[0].currentStep, 4);
-  assert.equal(calls.submitApplication[0].contractVersion, "make-it-art-artist-contract-v2");
+  assert.equal(calls.submitApplication[0].contractVersion, "make-it-art-artist-contract-v3");
   assert.equal(calls.submitApplication[0].submittedAt.toISOString(), "2026-07-04T12:34:00.000Z");
   assert.ok(Buffer.isBuffer(calls.submitApplication[0].contractPdf));
 });
@@ -500,7 +500,7 @@ test("GET /artists/me/contract.pdf supports forced download mode", async (t) => 
   assert.deepEqual(response.body, Buffer.from(pdfBytes));
 });
 
-test("GET /artists/me/contract.pdf regenerates legacy contracts with the stored signature timestamp", async (t) => {
+test("GET /artists/me/contract.pdf preserves the exact legacy contract that was signed", async (t) => {
   const { baseUrl, calls } = await startArtistRoutesApp(t, {
     findByUserIdResult: {
       id: 10,
@@ -524,11 +524,6 @@ test("GET /artists/me/contract.pdf regenerates legacy contracts with the stored 
   const response = await requestBinary(baseUrl, "/artists/me/contract.pdf");
 
   assert.equal(response.status, 200);
-  assert.deepEqual(response.body, Buffer.from("pdf"));
-  assert.equal(calls.updateStoredContract.applicationId, 10);
-  assert.equal(calls.updateStoredContract.contractVersion, "make-it-art-artist-contract-v2");
-  assert.equal(
-    calls.updateStoredContract.contractSignedAt.toISOString(),
-    "2026-07-04T12:34:00.000Z"
-  );
+  assert.deepEqual(response.body, Buffer.from("legacy-pdf"));
+  assert.equal(calls.updateStoredContract, undefined);
 });

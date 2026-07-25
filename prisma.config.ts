@@ -6,9 +6,9 @@ import { defineConfig } from "prisma/config";
 export default defineConfig({
   schema: "backend/prisma/schema.prisma",
   migrations: {
-    path: "prisma/migrations",
+    path: "backend/prisma/migrations"
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
-  },
+    url: process.env["DATABASE_URL"]
+  }
 });
