@@ -88,7 +88,7 @@
                 </p>
               </div>
               <button
-                v-if="artwork.artist"
+                v-if="artwork.artist && canFollowArtist(artwork.artist)"
                 type="button"
                 class="min-h-11 w-full border border-slate-800 px-5 text-subtitle-2 uppercase text-slate-300 transition hover:border-violet-600 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
                 :disabled="Boolean(followLoading[artwork.artist.id])"
@@ -220,7 +220,9 @@ const { data, pending, error, refresh } = await useFetch(`/api/artworks/${route.
 const artwork = computed(() => data.value?.artwork || null);
 const relatedArtworks = computed(() => data.value?.relatedArtworks || []);
 const errorMessage = computed(() =>
-  error.value ? error.value?.data?.message || "The artwork details are temporarily unavailable." : ""
+  error.value
+    ? error.value?.data?.message || "The artwork details are temporarily unavailable."
+    : ""
 );
 const formattedPrice = computed(() =>
   formatMarketplacePrice(artwork.value?.priceValue ?? artwork.value?.price)
@@ -232,6 +234,7 @@ const artistInitials = computed(() => getArtistInitials(artwork.value?.artist?.d
 const {
   actionMessage,
   actionStatus,
+  canFollowArtist,
   favoriteLoading,
   followLoading,
   toggleFavorite,

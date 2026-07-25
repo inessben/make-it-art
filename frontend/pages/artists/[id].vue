@@ -81,6 +81,7 @@
 
             <div class="grid gap-3 sm:flex sm:flex-wrap">
               <button
+                v-if="canFollowArtist(artist)"
                 type="button"
                 class="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                 :class="
@@ -263,6 +264,7 @@ const errorMessage = computed(() =>
 const {
   actionMessage,
   actionStatus,
+  canFollowArtist,
   favoriteLoading,
   followLoading,
   toggleFavorite,

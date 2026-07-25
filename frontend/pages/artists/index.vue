@@ -103,10 +103,7 @@
             :type="actionStatus || 'success'"
             :message="actionMessage"
           />
-          <div
-            v-if="pending"
-            class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
-          >
+          <div v-if="pending" class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <ArtistCardSkeleton v-for="index in pageSize" :key="index" />
           </div>
           <AppStatePanel
@@ -135,7 +132,7 @@
                 :key="artist.id"
                 :artist="artist"
                 :follow-loading="Boolean(followLoading[artist.id])"
-                :show-follow-action="true"
+                :show-follow-action="canFollowArtist(artist)"
                 @toggle-follow="toggleFollow"
               />
             </div>
@@ -182,7 +179,9 @@ const { data, pending, error, refresh } = await useFetch("/api/artists", {
 
 const artists = computed(() => data.value?.artists || []);
 const errorMessage = computed(() =>
-  error.value ? error.value?.data?.message || "The artist directory is temporarily unavailable." : ""
+  error.value
+    ? error.value?.data?.message || "The artist directory is temporarily unavailable."
+    : ""
 );
 const hasActiveFilters = computed(
   () =>
@@ -231,7 +230,8 @@ const paginatedArtists = computed(() => {
   return filteredArtists.value.slice(start, start + pageSize);
 });
 
-const { actionMessage, actionStatus, followLoading, toggleFollow } = useMarketplaceActions(auth);
+const { actionMessage, actionStatus, canFollowArtist, followLoading, toggleFollow } =
+  useMarketplaceActions(auth);
 
 watch(
   [searchTerm, style, sortBy, selectedTypes],
