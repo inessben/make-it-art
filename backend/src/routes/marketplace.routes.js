@@ -333,44 +333,39 @@ router.get("/artists/:id(\\d+)", attachViewer, async (req, res) => {
   }
 });
 
-router.post(
-  "/artists/:id(\\d+)/follow",
-  authRequired,
-  ensureCollectorAccount,
-  async (req, res) => {
-    try {
-      const artistId = normalizeResourceId(req.params.id);
+router.post("/artists/:id(\\d+)/follow", authRequired, ensureCollectorAccount, async (req, res) => {
+  try {
+    const artistId = normalizeResourceId(req.params.id);
 
-      if (!artistId) {
-        return res.status(404).json({
-          message: "Artiste introuvable."
-        });
-      }
-
-      await collectorRepository.followArtist({
-        userId: req.user.id,
-        artistId
-      });
-
-      return res.status(200).json({
-        message: "Vous suivez maintenant cet artiste."
-      });
-    } catch (error) {
-      const mappedError = mapRepositoryError(error);
-
-      if (mappedError) {
-        return res.status(mappedError.status).json({
-          message: mappedError.message
-        });
-      }
-
-      console.error("Follow create error:", error);
-      return res.status(500).json({
-        message: "Impossible de suivre cet artiste."
+    if (!artistId) {
+      return res.status(404).json({
+        message: "Artiste introuvable."
       });
     }
+
+    await collectorRepository.followArtist({
+      userId: req.user.id,
+      artistId
+    });
+
+    return res.status(200).json({
+      message: "Vous suivez maintenant cet artiste."
+    });
+  } catch (error) {
+    const mappedError = mapRepositoryError(error);
+
+    if (mappedError) {
+      return res.status(mappedError.status).json({
+        message: mappedError.message
+      });
+    }
+
+    console.error("Follow create error:", error);
+    return res.status(500).json({
+      message: "Impossible de suivre cet artiste."
+    });
   }
-);
+});
 
 router.delete(
   "/artists/:id(\\d+)/follow",

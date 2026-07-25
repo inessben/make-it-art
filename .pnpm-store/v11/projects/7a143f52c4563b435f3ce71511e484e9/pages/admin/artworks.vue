@@ -41,7 +41,9 @@
             <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">
               Artwork visibility
             </p>
-            <h2 class="mt-3 text-xl font-semibold text-slate-100">Published and restricted artworks</h2>
+            <h2 class="mt-3 text-xl font-semibold text-slate-100">
+              Published and restricted artworks
+            </h2>
           </div>
           <div class="grid gap-3 sm:grid-cols-2">
             <label class="border border-slate-800 bg-black px-4 py-3">

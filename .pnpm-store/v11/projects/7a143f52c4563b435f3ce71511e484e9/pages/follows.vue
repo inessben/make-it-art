@@ -146,8 +146,7 @@ if (auth.isAdmin) {
 }
 
 const activeTab = ref("following");
-const { actionMessage, followLoading, canFollowArtist, toggleFollow } =
-  useMarketplaceActions(auth);
+const { actionMessage, followLoading, canFollowArtist, toggleFollow } = useMarketplaceActions(auth);
 
 const {
   data: followingData,

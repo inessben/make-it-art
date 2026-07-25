@@ -238,8 +238,14 @@ const overview = computed(() => {
 const errorMessage = computed(() => error.value?.data?.message || "");
 const showCollectorShortcut = computed(() => user.value && !auth.isAdmin);
 
-const { actionMessage, favoriteLoading, followLoading, canFollowArtist, toggleFavorite, toggleFollow } =
-  useMarketplaceActions(auth);
+const {
+  actionMessage,
+  favoriteLoading,
+  followLoading,
+  canFollowArtist,
+  toggleFavorite,
+  toggleFollow
+} = useMarketplaceActions(auth);
 
 onMounted(async () => {
   try {

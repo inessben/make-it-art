@@ -329,8 +329,14 @@ const isInCart = computed(() =>
 );
 const hasArtistPublicProfile = computed(() => Number.isInteger(Number(artwork.value?.artist?.id)));
 
-const { actionMessage, favoriteLoading, followLoading, canFollowArtist, toggleFavorite, toggleFollow } =
-  useMarketplaceActions(auth);
+const {
+  actionMessage,
+  favoriteLoading,
+  followLoading,
+  canFollowArtist,
+  toggleFavorite,
+  toggleFollow
+} = useMarketplaceActions(auth);
 
 function toggleCart() {
   cart.hydrate();
