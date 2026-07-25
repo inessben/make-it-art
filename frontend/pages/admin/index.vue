@@ -292,7 +292,8 @@ const mainNavigation = [
   { label: "Artists", route: "/admin/artists", icon: "AR" },
   { label: "Artworks", route: "/admin/artworks", icon: "AW" },
   { label: "Orders", route: "/admin/orders", icon: "OR" },
-  { label: "Payments", route: "/admin/payments", icon: "PY" }
+  { label: "Payments", route: "/admin/payments", icon: "PY" },
+  { label: "Audit", route: "/admin/audit-log", icon: "LG" }
 ];
 const systemNavigation = [
   { label: "Applications", route: "/admin/artist-applications", icon: "AP" },

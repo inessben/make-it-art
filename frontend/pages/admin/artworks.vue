@@ -170,6 +170,12 @@
             </label>
 
             <div class="mt-5 flex flex-wrap gap-3">
+              <NuxtLink
+                :to="`/admin/audit-log?entityType=ARTWORK&entityId=${artwork.id}`"
+                class="inline-flex min-h-11 items-center justify-center border border-slate-700 bg-black px-5 text-sm font-semibold text-slate-100 transition hover:border-violet-600 hover:text-violet-300"
+              >
+                Open audit log
+              </NuxtLink>
               <button
                 v-if="artwork.status !== 'approved'"
                 type="button"

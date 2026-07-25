@@ -1,4 +1,5 @@
 const express = require("express");
+const prisma = require("../lib/prisma");
 const { authRequired } = require("../middlewares/auth-required.middleware");
 const {
   adminRequired,
@@ -15,10 +16,18 @@ const artistApplicationDraftRepository = require("../repositories/artist-applica
 const userRepository = require("../repositories/user.repository");
 const artistRepository = require("../repositories/artist.repository");
 const artworkRepository = require("../repositories/artwork.repository");
+const {
+  ADMIN_AUDIT_ENTITY_LABELS,
+  ADMIN_AUDIT_ENTITY_TYPES,
+  isAdminAuditEntityType,
+  listAdminAuditLogs,
+  parseAuditLimit
+} = require("../repositories/audit-log.repository");
 const orderRepository = require("../repositories/order.repository");
 const paymentRepository = require("../repositories/payment.repository");
 const { ensureBuffer } = require("../utils/ensure-buffer");
 const { inviteAdminUser } = require("../services/auth.service");
+const { writeAdminAuditLog } = require("../services/admin-audit.service");
 const {
   AdminUserManagementError,
   removeAdminAccess,
@@ -58,6 +67,10 @@ const PAYMENT_STATUS_LABELS = {
   PARTIALLY_REFUNDED: "Partially refunded",
   REFUNDED: "Refunded"
 };
+
+function getAdminAuditEntityLabel(entityType) {
+  return ADMIN_AUDIT_ENTITY_LABELS[entityType] || entityType || "Other";
+}
 
 function buildUserRole(user) {
   if (isSuperAdminUser(user)) {
@@ -511,6 +524,7 @@ function serializeAdminAuditLog(log) {
     id: log.id,
     action: log.action || "UNKNOWN_ACTION",
     entityType: log.entityType || "",
+    entityLabel: getAdminAuditEntityLabel(log.entityType),
     entityId: log.entityId || "",
     ipAddress: log.ipAddress || "",
     createdAt: log.createdAt,
@@ -886,7 +900,8 @@ function buildAdminArtistDetailPayload(artist) {
       user: serializeAdminActor(follow.user)
     })),
     collections: (artist.collections || []).map(serializeAdminCollectionSummary),
-    recentSales
+    recentSales,
+    auditLog: (artist.auditLogs || []).map(serializeAdminAuditLog)
   };
 }
 
@@ -1030,6 +1045,14 @@ router.post(
         email,
         phone,
         isSuperAdmin
+      });
+
+      await writeAdminAuditLog(prisma, {
+        actorUser: req.user,
+        action: isSuperAdmin ? "USER_SUPER_ADMIN_INVITED" : "USER_ADMIN_INVITED",
+        entityType: "USER",
+        entityId: invitedUser.id,
+        ipAddress: req.ip
       });
 
       return res.status(201).json({
@@ -1235,9 +1258,22 @@ router.patch("/admin/artists/:id/verification", authRequired, adminRequired, asy
       });
     }
 
-    const artist = await artistRepository.updateArtistVerification({
-      artistId,
-      verified
+    const artist = await prisma.$transaction(async (transaction) => {
+      const updatedArtist = await artistRepository.updateArtistVerification({
+        artistId,
+        verified,
+        prismaClient: transaction
+      });
+
+      await writeAdminAuditLog(transaction, {
+        actorUser: req.user,
+        action: verified ? "ARTIST_VERIFIED" : "ARTIST_UNVERIFIED",
+        entityType: "ARTIST",
+        entityId: artistId,
+        ipAddress: req.ip
+      });
+
+      return updatedArtist;
     });
 
     return res.status(200).json({
@@ -1309,18 +1345,45 @@ router.patch("/admin/artist-applications/:id", authRequired, adminRequired, asyn
       });
     }
 
-    const application =
-      status === ARTIST_APPLICATION_STATUS.APPROVED
-        ? await artistApplicationDraftRepository.markApproved({
-            applicationId,
-            reviewedByAdminId: req.user.id,
-            reviewNote
-          })
-        : await artistApplicationDraftRepository.markRejected({
-            applicationId,
-            reviewedByAdminId: req.user.id,
-            reviewNote
-          });
+    const application = await prisma.$transaction(async (transaction) => {
+      const reviewedApplication =
+        status === ARTIST_APPLICATION_STATUS.APPROVED
+          ? await artistApplicationDraftRepository.markApproved({
+              applicationId,
+              reviewedByAdminId: req.user.id,
+              reviewNote,
+              prismaClient: transaction
+            })
+          : await artistApplicationDraftRepository.markRejected({
+              applicationId,
+              reviewedByAdminId: req.user.id,
+              reviewNote,
+              prismaClient: transaction
+            });
+
+      await writeAdminAuditLog(transaction, {
+        actorUser: req.user,
+        action: `ARTIST_APPLICATION_${status.toUpperCase()}`,
+        entityType: "ARTIST_APPLICATION",
+        entityId: applicationId,
+        ipAddress: req.ip
+      });
+
+      if (
+        status === ARTIST_APPLICATION_STATUS.APPROVED &&
+        Number.isSafeInteger(reviewedApplication?.user?.artist?.id)
+      ) {
+        await writeAdminAuditLog(transaction, {
+          actorUser: req.user,
+          action: "ARTIST_PROFILE_ACTIVATED",
+          entityType: "ARTIST",
+          entityId: reviewedApplication.user.artist.id,
+          ipAddress: req.ip
+        });
+      }
+
+      return reviewedApplication;
+    });
 
     return res.status(200).json({
       message:
@@ -1449,11 +1512,24 @@ router.patch("/admin/artworks/:id/moderation", authRequired, adminRequired, asyn
       });
     }
 
-    const artwork = await artworkRepository.updateArtworkModeration({
-      artworkId,
-      status,
-      moderationNote,
-      moderatedByAdminId: req.user.id
+    const artwork = await prisma.$transaction(async (transaction) => {
+      const updatedArtwork = await artworkRepository.updateArtworkModeration({
+        artworkId,
+        status,
+        moderationNote,
+        moderatedByAdminId: req.user.id,
+        prismaClient: transaction
+      });
+
+      await writeAdminAuditLog(transaction, {
+        actorUser: req.user,
+        action: `ARTWORK_MODERATION_${status.toUpperCase()}`,
+        entityType: "ARTWORK",
+        entityId: artworkId,
+        ipAddress: req.ip
+      });
+
+      return updatedArtwork;
     });
 
     return res.status(200).json({
@@ -1615,6 +1691,46 @@ router.get("/admin/payments/:id", authRequired, adminRequired, async (req, res) 
 
     return res.status(500).json({
       message: "Unable to load this payment"
+    });
+  }
+});
+
+router.get("/admin/audit-log", authRequired, adminRequired, async (req, res) => {
+  const entityType = normalizeText(req.query.entityType).toUpperCase();
+
+  if (entityType && !isAdminAuditEntityType(entityType)) {
+    return res.status(400).json({
+      message: "Invalid audit entity type"
+    });
+  }
+
+  try {
+    const auditLog = await listAdminAuditLogs({
+      entityType,
+      entityId: normalizeText(req.query.entityId),
+      actorUserId: parsePositiveInteger(req.query.actorUserId),
+      actionQuery: normalizeText(req.query.action),
+      limit: parseAuditLimit(req.query.limit, 120)
+    });
+
+    return res.status(200).json({
+      summary: {
+        totalEntries: auditLog.totalEntries,
+        latestEntryAt: auditLog.entries[0]?.createdAt || null,
+        entityTypeCounts: auditLog.groupedEntries
+      },
+      filters: auditLog.filters,
+      entityTypes: ADMIN_AUDIT_ENTITY_TYPES.map((auditEntityType) => ({
+        value: auditEntityType,
+        label: getAdminAuditEntityLabel(auditEntityType)
+      })),
+      entries: auditLog.entries.map(serializeAdminAuditLog)
+    });
+  } catch (error) {
+    console.error("Admin audit log fetch error:", error);
+
+    return res.status(500).json({
+      message: "Unable to load admin audit log"
     });
   }
 });

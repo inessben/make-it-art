@@ -14,7 +14,10 @@ const artistRepositoryPath = require.resolve("../src/repositories/artist.reposit
 const artworkRepositoryPath = require.resolve("../src/repositories/artwork.repository");
 const orderRepositoryPath = require.resolve("../src/repositories/order.repository");
 const paymentRepositoryPath = require.resolve("../src/repositories/payment.repository");
+const auditLogRepositoryPath = require.resolve("../src/repositories/audit-log.repository");
+const prismaPath = require.resolve("../src/lib/prisma");
 const authServicePath = require.resolve("../src/services/auth.service");
+const adminAuditServicePath = require.resolve("../src/services/admin-audit.service");
 const adminUserManagementServicePath =
   require.resolve("../src/services/admin-user-management.service");
 
@@ -38,7 +41,16 @@ function adminMiddleware(_req, _res, next) {
 }
 
 async function startAdminDetailsApp(t, overrides = {}) {
+  const calls = {
+    listAdminAuditLogs: []
+  };
+
   const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
+    [prismaPath]: {
+      async $transaction(callback) {
+        return callback({});
+      }
+    },
     [authRequiredPath]: {
       authRequired: authMiddleware
     },
@@ -100,8 +112,65 @@ async function startAdminDetailsApp(t, overrides = {}) {
         return overrides.paymentDetail || null;
       }
     },
+    [auditLogRepositoryPath]: {
+      ADMIN_AUDIT_ENTITY_LABELS: {
+        USER: "Users",
+        ARTIST: "Artists",
+        ARTIST_APPLICATION: "Artist applications",
+        ARTWORK: "Artworks",
+        ORDER: "Orders",
+        PAYMENT: "Payments"
+      },
+      ADMIN_AUDIT_ENTITY_TYPES: [
+        "USER",
+        "ARTIST",
+        "ARTIST_APPLICATION",
+        "ARTWORK",
+        "ORDER",
+        "PAYMENT"
+      ],
+      isAdminAuditEntityType(value) {
+        return ["USER", "ARTIST", "ARTIST_APPLICATION", "ARTWORK", "ORDER", "PAYMENT"].includes(
+          String(value || "")
+            .trim()
+            .toUpperCase()
+        );
+      },
+      async listAdminAuditLogs(payload) {
+        calls.listAdminAuditLogs.push(payload);
+
+        return (
+          overrides.auditLogList || {
+            entries: [],
+            totalEntries: 0,
+            groupedEntries: [],
+            filters: {
+              entityType: payload.entityType || "",
+              entityId: payload.entityId || "",
+              actorUserId: payload.actorUserId || null,
+              actionQuery: payload.actionQuery || "",
+              limit: payload.limit || 120
+            }
+          }
+        );
+      },
+      parseAuditLimit(value, fallbackValue = 120) {
+        const parsedValue = Number.parseInt(String(value), 10);
+
+        if (!Number.isSafeInteger(parsedValue) || parsedValue < 1) {
+          return fallbackValue;
+        }
+
+        return Math.min(parsedValue, 200);
+      }
+    },
     [authServicePath]: {
       async inviteAdminUser() {
+        return null;
+      }
+    },
+    [adminAuditServicePath]: {
+      async writeAdminAuditLog() {
         return null;
       }
     },
@@ -137,6 +206,7 @@ async function startAdminDetailsApp(t, overrides = {}) {
   });
 
   return {
+    calls,
     baseUrl: `http://127.0.0.1:${server.address().port}`
   };
 }
@@ -355,6 +425,17 @@ test("GET /admin/artists/:id returns artist profile detail with recent sales", a
           }
         }
       ],
+      auditLogs: [
+        {
+          id: 77,
+          action: "ARTIST_VERIFIED",
+          entityType: "ARTIST",
+          entityId: "7",
+          ipAddress: "127.0.0.1",
+          createdAt: new Date("2026-07-20T14:00:00.000Z"),
+          user: adminUser
+        }
+      ],
       soldItemsCount: 1,
       _count: {
         artworks: 1,
@@ -371,6 +452,7 @@ test("GET /admin/artists/:id returns artist profile detail with recent sales", a
   assert.equal(response.body.metrics.soldItemsCount, 1);
   assert.equal(response.body.recentSales[0].order.reference, "#ORD-0031");
   assert.equal(response.body.recentSales[0].artwork.title, "Aurora");
+  assert.equal(response.body.auditLog[0].action, "ARTIST_VERIFIED");
 });
 
 test("GET /admin/orders/:publicId returns order history sections", async (t) => {
@@ -558,4 +640,53 @@ test("GET /admin/payments/:id returns payment detail with linked order history",
   assert.equal(response.body.payment.order.reference, "#ORD-0042");
   assert.equal(response.body.webhookEvents[0].eventType, "payment_intent.succeeded");
   assert.equal(response.body.auditLog[0].action, "STRIPE_WEBHOOK_REPLAYED");
+});
+
+test("GET /admin/audit-log returns filtered admin audit entries", async (t) => {
+  const { baseUrl, calls } = await startAdminDetailsApp(t, {
+    auditLogList: {
+      entries: [
+        {
+          id: 102,
+          action: "USER_ACCOUNT_SUSPENDED",
+          entityType: "USER",
+          entityId: "10",
+          ipAddress: "127.0.0.1",
+          createdAt: new Date("2026-07-24T09:00:00.000Z"),
+          user: adminUser
+        }
+      ],
+      totalEntries: 1,
+      groupedEntries: [
+        {
+          entityType: "USER",
+          label: "Users",
+          count: 1
+        }
+      ],
+      filters: {
+        entityType: "USER",
+        entityId: "10",
+        actorUserId: null,
+        actionQuery: "SUSPENDED",
+        limit: 60
+      }
+    }
+  });
+
+  const response = await requestJson(
+    baseUrl,
+    "/admin/audit-log?entityType=USER&entityId=10&action=SUSPENDED&limit=60"
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(calls.listAdminAuditLogs.length, 1);
+  assert.equal(calls.listAdminAuditLogs[0].entityType, "USER");
+  assert.equal(calls.listAdminAuditLogs[0].entityId, "10");
+  assert.equal(calls.listAdminAuditLogs[0].actionQuery, "SUSPENDED");
+  assert.equal(calls.listAdminAuditLogs[0].limit, 60);
+  assert.equal(response.body.summary.totalEntries, 1);
+  assert.equal(response.body.entries[0].action, "USER_ACCOUNT_SUSPENDED");
+  assert.equal(response.body.entries[0].entityLabel, "Users");
+  assert.equal(response.body.entityTypes[0].value, "USER");
 });

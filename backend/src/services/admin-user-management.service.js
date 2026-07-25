@@ -1,5 +1,6 @@
 const prisma = require("../lib/prisma");
 const { isAdminUser, isSuperAdminUser } = require("../middlewares/admin-required.middleware");
+const { writeAdminAuditLog } = require("./admin-audit.service");
 const { USER_ACCOUNT_STATUS, getUserAccountStatus } = require("../utils/user-account-status");
 
 class AdminUserManagementError extends Error {
@@ -16,23 +17,6 @@ const USER_INCLUDE = {
   artist: true,
   artistApplicationDraft: true
 };
-
-function normalizeIpAddress(ipAddress) {
-  return typeof ipAddress === "string" && ipAddress.trim() ? ipAddress.trim() : null;
-}
-
-async function writeAuditLog(transaction, { actorUser, action, targetUserId, ipAddress }) {
-  await transaction.auditLog.create({
-    data: {
-      userId: actorUser.id,
-      action,
-      entityType: "USER",
-      entityId: String(targetUserId),
-      ipAddress: normalizeIpAddress(ipAddress),
-      createdAt: new Date()
-    }
-  });
-}
 
 async function findTargetUser(transaction, targetUserId) {
   return transaction.user.findUnique({
@@ -150,10 +134,11 @@ async function updateUserAccountStatus({ actorUser, targetUserId, nextStatus, ip
       include: USER_INCLUDE
     });
 
-    await writeAuditLog(transaction, {
+    await writeAdminAuditLog(transaction, {
       actorUser,
       action: `USER_ACCOUNT_${nextStatus.toUpperCase()}`,
-      targetUserId,
+      entityType: "USER",
+      entityId: targetUserId,
       ipAddress
     });
 
@@ -205,10 +190,11 @@ async function removeAdminAccess({ actorUser, targetUserId, ipAddress }) {
       include: USER_INCLUDE
     });
 
-    await writeAuditLog(transaction, {
+    await writeAdminAuditLog(transaction, {
       actorUser,
       action: "USER_ADMIN_ACCESS_REMOVED",
-      targetUserId,
+      entityType: "USER",
+      entityId: targetUserId,
       ipAddress
     });
 
@@ -257,10 +243,11 @@ async function removeSuperAdminAccess({ actorUser, targetUserId, ipAddress }) {
       include: USER_INCLUDE
     });
 
-    await writeAuditLog(transaction, {
+    await writeAdminAuditLog(transaction, {
       actorUser,
       action: "USER_SUPER_ADMIN_ACCESS_REMOVED",
-      targetUserId,
+      entityType: "USER",
+      entityId: targetUserId,
       ipAddress
     });
 

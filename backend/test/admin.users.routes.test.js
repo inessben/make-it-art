@@ -14,7 +14,10 @@ const artistRepositoryPath = require.resolve("../src/repositories/artist.reposit
 const artworkRepositoryPath = require.resolve("../src/repositories/artwork.repository");
 const orderRepositoryPath = require.resolve("../src/repositories/order.repository");
 const paymentRepositoryPath = require.resolve("../src/repositories/payment.repository");
+const auditLogRepositoryPath = require.resolve("../src/repositories/audit-log.repository");
+const prismaPath = require.resolve("../src/lib/prisma");
 const authServicePath = require.resolve("../src/services/auth.service");
+const adminAuditServicePath = require.resolve("../src/services/admin-audit.service");
 const adminUserManagementServicePath =
   require.resolve("../src/services/admin-user-management.service");
 
@@ -68,7 +71,8 @@ async function startAdminUsersApp(t, overrides = {}) {
     inviteAdminUser: [],
     removeAdminAccess: [],
     removeSuperAdminAccess: [],
-    updateUserAccountStatus: []
+    updateUserAccountStatus: [],
+    auditLogs: []
   };
 
   const userRepository = {
@@ -130,6 +134,11 @@ async function startAdminUsersApp(t, overrides = {}) {
   };
 
   const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
+    [prismaPath]: {
+      async $transaction(callback) {
+        return callback({});
+      }
+    },
     [authRequiredPath]: buildAuthMiddleware(adminUser),
     [adminRequiredPath]: buildAdminMiddleware(adminUser),
     [applicationRepositoryPath]: {
@@ -164,6 +173,54 @@ async function startAdminUsersApp(t, overrides = {}) {
         return [];
       }
     },
+    [auditLogRepositoryPath]: {
+      ADMIN_AUDIT_ENTITY_LABELS: {
+        USER: "Users",
+        ARTIST: "Artists",
+        ARTIST_APPLICATION: "Artist applications",
+        ARTWORK: "Artworks",
+        ORDER: "Orders",
+        PAYMENT: "Payments"
+      },
+      ADMIN_AUDIT_ENTITY_TYPES: [
+        "USER",
+        "ARTIST",
+        "ARTIST_APPLICATION",
+        "ARTWORK",
+        "ORDER",
+        "PAYMENT"
+      ],
+      isAdminAuditEntityType(value) {
+        return ["USER", "ARTIST", "ARTIST_APPLICATION", "ARTWORK", "ORDER", "PAYMENT"].includes(
+          String(value || "")
+            .trim()
+            .toUpperCase()
+        );
+      },
+      async listAdminAuditLogs() {
+        return {
+          entries: [],
+          totalEntries: 0,
+          groupedEntries: [],
+          filters: {
+            entityType: "",
+            entityId: "",
+            actorUserId: null,
+            actionQuery: "",
+            limit: 120
+          }
+        };
+      },
+      parseAuditLimit(value, fallbackValue = 120) {
+        const parsedValue = Number.parseInt(String(value), 10);
+
+        if (!Number.isSafeInteger(parsedValue) || parsedValue < 1) {
+          return fallbackValue;
+        }
+
+        return Math.min(parsedValue, 200);
+      }
+    },
     [authServicePath]: {
       async inviteAdminUser(payload) {
         calls.inviteAdminUser.push(payload);
@@ -187,6 +244,12 @@ async function startAdminUsersApp(t, overrides = {}) {
             createdAt: new Date("2026-07-24T10:00:00.000Z")
           }
         );
+      }
+    },
+    [adminAuditServicePath]: {
+      async writeAdminAuditLog(_prismaClient, payload) {
+        calls.auditLogs.push(payload);
+        return null;
       }
     },
     [adminUserManagementServicePath]: {
@@ -342,6 +405,10 @@ test("POST /admin/users/admins lets a super admin create another admin", async (
   assert.equal(calls.inviteAdminUser[0].email, "ops@example.com");
   assert.equal(calls.inviteAdminUser[0].phone, "+33600000000");
   assert.equal(calls.inviteAdminUser[0].isSuperAdmin, true);
+  assert.equal(calls.auditLogs.length, 1);
+  assert.equal(calls.auditLogs[0].action, "USER_SUPER_ADMIN_INVITED");
+  assert.equal(calls.auditLogs[0].entityType, "USER");
+  assert.equal(calls.auditLogs[0].entityId, 99);
   assert.equal(response.body.user.role, "Super admin");
   assert.equal(response.body.user.isSuperAdmin, true);
   assert.equal(response.body.user.status, "Pending verification");

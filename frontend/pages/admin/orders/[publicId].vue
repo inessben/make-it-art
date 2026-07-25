@@ -18,6 +18,13 @@
         >
           Open customer
         </NuxtLink>
+        <NuxtLink
+          v-if="order?.publicId"
+          :to="`/admin/audit-log?entityType=ORDER&entityId=${order.publicId}`"
+          class="inline-flex items-center justify-center border border-slate-750 bg-black px-4 py-2 text-subtitle-2 uppercase tracking-[0.12em] text-slate-100 transition hover:border-violet-600 hover:text-violet-300"
+        >
+          Open audit log
+        </NuxtLink>
       </div>
     </template>
 

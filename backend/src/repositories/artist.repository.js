@@ -80,8 +80,8 @@ async function listArtistsForAdmin() {
   });
 }
 
-async function updateArtistVerification({ artistId, verified }) {
-  return prisma.artist.update({
+async function updateArtistVerification({ artistId, verified, prismaClient = prisma }) {
+  return prismaClient.artist.update({
     where: { id: artistId },
     data: {
       verified
@@ -167,7 +167,22 @@ async function findArtistDetailForAdmin(artistId) {
       return null;
     }
 
-    const [recentSales, soldItemsCount] = await Promise.all([
+    const auditEntityFilters = [
+      {
+        entityType: "ARTIST",
+        entityId: String(artist.id)
+      },
+      ...(artist.user?.artistApplicationDraft
+        ? [
+            {
+              entityType: "ARTIST_APPLICATION",
+              entityId: String(artist.user.artistApplicationDraft.id)
+            }
+          ]
+        : [])
+    ];
+
+    const [recentSales, soldItemsCount, auditLogs] = await Promise.all([
       transaction.orderItem.findMany({
         where: {
           artwork: {
@@ -213,13 +228,31 @@ async function findArtistDetailForAdmin(artistId) {
             artistId
           }
         }
-      })
+      }),
+      auditEntityFilters.length > 0
+        ? transaction.auditLog.findMany({
+            where: {
+              OR: auditEntityFilters
+            },
+            take: 30,
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+            include: {
+              user: {
+                include: {
+                  admin: true,
+                  artist: true
+                }
+              }
+            }
+          })
+        : []
     ]);
 
     return {
       ...artist,
       recentSales,
-      soldItemsCount
+      soldItemsCount,
+      auditLogs
     };
   });
 }

@@ -14,7 +14,10 @@ const artistRepositoryPath = require.resolve("../src/repositories/artist.reposit
 const artworkRepositoryPath = require.resolve("../src/repositories/artwork.repository");
 const orderRepositoryPath = require.resolve("../src/repositories/order.repository");
 const paymentRepositoryPath = require.resolve("../src/repositories/payment.repository");
+const auditLogRepositoryPath = require.resolve("../src/repositories/audit-log.repository");
+const prismaPath = require.resolve("../src/lib/prisma");
 const authServicePath = require.resolve("../src/services/auth.service");
+const adminAuditServicePath = require.resolve("../src/services/admin-audit.service");
 const adminUserManagementServicePath =
   require.resolve("../src/services/admin-user-management.service");
 
@@ -36,7 +39,8 @@ function adminMiddleware(_req, _res, next) {
 async function startAdminRoutesApp(t, overrides = {}) {
   const calls = {
     markApproved: [],
-    markRejected: []
+    markRejected: [],
+    auditLogs: []
   };
 
   const applicationRepository = {
@@ -91,6 +95,7 @@ async function startAdminRoutesApp(t, overrides = {}) {
           phone: "0102030405",
           username: "Ada Lovelace",
           artist: {
+            id: 19,
             verified: true
           }
         },
@@ -138,6 +143,11 @@ async function startAdminRoutesApp(t, overrides = {}) {
   };
 
   const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
+    [prismaPath]: {
+      async $transaction(callback) {
+        return callback({});
+      }
+    },
     [authRequiredPath]: {
       authRequired: authMiddleware
     },
@@ -180,8 +190,62 @@ async function startAdminRoutesApp(t, overrides = {}) {
         return [];
       }
     },
+    [auditLogRepositoryPath]: {
+      ADMIN_AUDIT_ENTITY_LABELS: {
+        USER: "Users",
+        ARTIST: "Artists",
+        ARTIST_APPLICATION: "Artist applications",
+        ARTWORK: "Artworks",
+        ORDER: "Orders",
+        PAYMENT: "Payments"
+      },
+      ADMIN_AUDIT_ENTITY_TYPES: [
+        "USER",
+        "ARTIST",
+        "ARTIST_APPLICATION",
+        "ARTWORK",
+        "ORDER",
+        "PAYMENT"
+      ],
+      isAdminAuditEntityType(value) {
+        return ["USER", "ARTIST", "ARTIST_APPLICATION", "ARTWORK", "ORDER", "PAYMENT"].includes(
+          String(value || "")
+            .trim()
+            .toUpperCase()
+        );
+      },
+      async listAdminAuditLogs() {
+        return {
+          entries: [],
+          totalEntries: 0,
+          groupedEntries: [],
+          filters: {
+            entityType: "",
+            entityId: "",
+            actorUserId: null,
+            actionQuery: "",
+            limit: 120
+          }
+        };
+      },
+      parseAuditLimit(value, fallbackValue = 120) {
+        const parsedValue = Number.parseInt(String(value), 10);
+
+        if (!Number.isSafeInteger(parsedValue) || parsedValue < 1) {
+          return fallbackValue;
+        }
+
+        return Math.min(parsedValue, 200);
+      }
+    },
     [authServicePath]: {
       async inviteAdminUser() {
+        return null;
+      }
+    },
+    [adminAuditServicePath]: {
+      async writeAdminAuditLog(_prismaClient, payload) {
+        calls.auditLogs.push(payload);
         return null;
       }
     },
@@ -273,6 +337,13 @@ test("PATCH /admin/artist-applications/:id approves an application", async (t) =
   assert.equal(calls.markApproved.length, 1);
   assert.equal(calls.markApproved[0].applicationId, 44);
   assert.equal(calls.markApproved[0].reviewedByAdminId, adminUser.id);
+  assert.equal(calls.auditLogs.length, 2);
+  assert.equal(calls.auditLogs[0].action, "ARTIST_APPLICATION_APPROVED");
+  assert.equal(calls.auditLogs[0].entityType, "ARTIST_APPLICATION");
+  assert.equal(calls.auditLogs[0].entityId, 44);
+  assert.equal(calls.auditLogs[1].action, "ARTIST_PROFILE_ACTIVATED");
+  assert.equal(calls.auditLogs[1].entityType, "ARTIST");
+  assert.equal(calls.auditLogs[1].entityId, 19);
 });
 
 test("GET /admin/artist-applications/:id/contract.pdf returns a valid PDF response for Uint8Array data", async (t) => {

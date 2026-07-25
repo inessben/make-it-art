@@ -18,6 +18,13 @@
         >
           Open linked user
         </NuxtLink>
+        <NuxtLink
+          v-if="artist?.id"
+          :to="`/admin/audit-log?entityType=ARTIST&entityId=${artist.id}`"
+          class="inline-flex items-center justify-center border border-slate-750 bg-black px-4 py-2 text-subtitle-2 uppercase tracking-[0.12em] text-slate-100 transition hover:border-violet-600 hover:text-violet-300"
+        >
+          Open audit log
+        </NuxtLink>
       </div>
     </template>
 
@@ -253,6 +260,34 @@
           </div>
         </article>
       </section>
+
+      <section class="border border-slate-800 bg-gradient-to-br from-slate-950 to-black p-5">
+        <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">Audit</p>
+        <h2 class="mt-3 text-xl font-semibold text-slate-100">Artist audit log</h2>
+
+        <div v-if="auditLog.length === 0" class="mt-6 text-sm text-slate-400">
+          No audit entry recorded for this artist scope.
+        </div>
+
+        <div v-else class="mt-6 grid gap-3">
+          <article
+            v-for="entry in auditLog"
+            :key="entry.id"
+            class="border border-slate-800 bg-black/30 p-4"
+          >
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <p class="font-semibold text-slate-100">{{ entry.action }}</p>
+              <span class="text-xs uppercase tracking-[0.12em] text-slate-500">
+                {{ formatDateTime(entry.createdAt) }}
+              </span>
+            </div>
+            <p class="mt-2 text-sm text-slate-400">
+              {{ entry.actor?.username || "System" }} - {{ entry.entityType }} /
+              {{ entry.entityId }}
+            </p>
+          </article>
+        </div>
+      </section>
     </template>
   </AdminShell>
 </template>
@@ -280,6 +315,7 @@ const artworks = ref([]);
 const followers = ref([]);
 const collections = ref([]);
 const recentSales = ref([]);
+const auditLog = ref([]);
 
 const summaryCards = computed(() => [
   {
@@ -328,6 +364,7 @@ async function loadArtistDetail() {
     followers.value = response.followers || [];
     collections.value = response.collections || [];
     recentSales.value = response.recentSales || [];
+    auditLog.value = response.auditLog || [];
   } catch (error) {
     if (error?.statusCode === 401) {
       await navigateTo("/login");
