@@ -1,4 +1,5 @@
 const prisma = require("../lib/prisma");
+const { isAdminUser } = require("./admin-required.middleware");
 
 const RECENT_AUTH_MAX_AGE_MS = 10 * 60 * 1000;
 
@@ -17,7 +18,7 @@ async function refundAdminRequired(req, res, next) {
   }
 
   const admin = await prisma.admin.findUnique({ where: { userId: req.user.id } });
-  if (!admin || req.user.role !== "ADMIN") {
+  if (!admin || !isAdminUser({ ...req.user, admin })) {
     return res.status(403).json({ message: "Forbidden", code: "REFUND_FORBIDDEN" });
   }
 
