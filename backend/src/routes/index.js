@@ -10,8 +10,8 @@ const router = express.Router();
 
 router.use(healthRoutes);
 router.use(authRoutes);
-router.use(marketplaceRoutes);
 router.use(artistRoutes);
+router.use(marketplaceRoutes);
 router.use(ordersRoutes);
 router.use(adminRoutes);
 module.exports = router;
