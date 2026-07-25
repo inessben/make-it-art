@@ -164,15 +164,18 @@
                     ? 'border-[#F2C97D] bg-[#F2C97D]/10 text-[#F7D990]'
                     : 'border-[#24314F] bg-[#0C111D] text-[#E6EDF7] hover:border-[#4A6CF7]'
                 "
-                :disabled="cart.loading"
+                :disabled="cart.loading || isOwnArtwork"
+                :title="isOwnArtwork ? 'Vous ne pouvez pas acheter votre propre œuvre.' : undefined"
                 @click="toggleCart"
               >
                 {{
                   cart.loading
                     ? "Mise à jour..."
-                    : isInCart
-                      ? "Retirer du panier"
-                      : "Ajouter au panier"
+                    : isOwnArtwork
+                      ? "Votre œuvre — achat impossible"
+                      : isInCart
+                        ? "Retirer du panier"
+                        : "Ajouter au panier"
                 }}
               </button>
             </div>
@@ -308,7 +311,8 @@ import { useCartStore } from "~/stores/cart";
 import {
   formatMarketplaceDate,
   formatMarketplacePrice,
-  getArtistInitials
+  getArtistInitials,
+  isArtworkOwnedByArtist
 } from "~/utils/marketplace";
 
 const route = useRoute();
@@ -382,6 +386,7 @@ const formattedPrice = computed(() =>
 );
 const formattedDate = computed(() => formatMarketplaceDate(artwork.value?.createdAt));
 const showCollectorTools = computed(() => auth.user && !auth.isAdmin);
+const isOwnArtwork = computed(() => isArtworkOwnedByArtist(artwork.value, auth.user));
 const isInCart = computed(() =>
   Boolean(
     artwork.value?.id && cart.cart?.items?.some((item) => item.artworkId === artwork.value.id)

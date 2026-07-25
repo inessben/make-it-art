@@ -6,7 +6,13 @@ const {
   calculateIncludedTax
 } = require("./commerce-policy");
 
-function getArtworkIssue(artwork, quantity) {
+function getArtworkIssue(artwork, quantity, buyerUserId = null) {
+  const artistUserId = artwork.artist?.userId ?? artwork.artist?.user?.id;
+
+  if (Number.isSafeInteger(buyerUserId) && artistUserId === buyerUserId) {
+    return "SELF_PURCHASE_NOT_ALLOWED";
+  }
+
   if (artwork.saleStatus !== "AVAILABLE") {
     return "ARTWORK_NOT_AVAILABLE";
   }
@@ -55,14 +61,14 @@ function createPricingFingerprint(version, items, summary) {
 
 function buildCartSummary(
   cart,
-  { vatRateBps = 2000, commissionRateBps = PLATFORM_COMMISSION_RATE_BPS } = {}
+  { vatRateBps = 2000, commissionRateBps = PLATFORM_COMMISSION_RATE_BPS, buyerUserId = null } = {}
 ) {
   const issues = [];
   const items = [...cart.items]
     .sort((left, right) => left.artworkId - right.artworkId)
     .map((cartItem) => {
       const { artwork } = cartItem;
-      const issue = getArtworkIssue(artwork, cartItem.quantity);
+      const issue = getArtworkIssue(artwork, cartItem.quantity, buyerUserId);
       const unitAmount = Number.isSafeInteger(artwork.priceAmount) ? artwork.priceAmount : 0;
       const subtotalAmount = unitAmount * cartItem.quantity;
       const discountAmount = 0;

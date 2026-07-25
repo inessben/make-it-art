@@ -38,3 +38,16 @@ export function getArtistInitials(name) {
     .map((part) => part[0]?.toUpperCase())
     .join("");
 }
+
+export function isArtworkOwnedByArtist(artwork, user) {
+  const artworkArtistId = Number(artwork?.artist?.id);
+  const userArtistId = Number(user?.artist?.id);
+
+  return (
+    Number.isSafeInteger(artworkArtistId) &&
+    artworkArtistId > 0 &&
+    Number.isSafeInteger(userArtistId) &&
+    userArtistId > 0 &&
+    artworkArtistId === userArtistId
+  );
+}

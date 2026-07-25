@@ -12,9 +12,19 @@ databaseTest("cart routes require ownership and reject client-managed prices", a
   const marker = randomUUID();
   const email = `cart-route-${marker}@make-it-art.test`;
   let server;
-  let userId;
+  const userIds = [];
 
   try {
+    const artistUser = await prisma.user.create({
+      data: {
+        email: `cart-route-artist-${marker}@make-it-art.test`,
+        username: `cart-route-artist-${marker}`,
+        isActive: true,
+        verified: true
+      }
+    });
+    userIds.push(artistUser.id);
+
     const user = await prisma.user.create({
       data: {
         email,
@@ -23,11 +33,11 @@ databaseTest("cart routes require ownership and reject client-managed prices", a
         verified: true
       }
     });
-    userId = user.id;
+    userIds.push(user.id);
 
     const artist = await prisma.artist.create({
       data: {
-        userId,
+        userId: artistUser.id,
         displayName: "Cart Route Artist"
       }
     });
@@ -88,6 +98,34 @@ databaseTest("cart routes require ownership and reject client-managed prices", a
     assert.equal(manipulatedResponse.status, 400);
     assert.equal((await manipulatedResponse.json()).code, "INVALID_CART_INPUT");
 
+    const artistToken = jwt.sign(
+      { sub: String(artistUser.id), email: artistUser.email },
+      env.jwtSecret,
+      { expiresIn: "5m" }
+    );
+    const artistHeaders = {
+      "content-type": "application/json",
+      cookie: `${env.sessionCookieName}=${artistToken}`
+    };
+    const artistCsrfResponse = await fetch(`${baseUrl}/api/v1/security/csrf-token`, {
+      headers: artistHeaders
+    });
+    assert.equal(artistCsrfResponse.status, 200);
+    const artistCsrfCookie = artistCsrfResponse.headers.get("set-cookie").split(";")[0];
+    const { csrfToken: artistCsrfToken } = await artistCsrfResponse.json();
+    const selfPurchaseResponse = await fetch(`${baseUrl}/api/v1/cart/items`, {
+      method: "POST",
+      headers: {
+        ...artistHeaders,
+        cookie: `${artistHeaders.cookie}; ${artistCsrfCookie}`,
+        origin: env.appBaseUrl,
+        "x-csrf-token": artistCsrfToken
+      },
+      body: JSON.stringify({ artworkId: artwork.id, quantity: 1 })
+    });
+    assert.equal(selfPurchaseResponse.status, 403);
+    assert.equal((await selfPurchaseResponse.json()).code, "SELF_PURCHASE_NOT_ALLOWED");
+
     const addResponse = await fetch(`${baseUrl}/api/v1/cart/items`, {
       method: "POST",
       headers: mutationHeaders,
@@ -146,16 +184,16 @@ databaseTest("cart routes require ownership and reject client-managed prices", a
       );
     }
 
-    if (userId) {
+    if (userIds.length > 0) {
       await prisma.cartItem.deleteMany({
-        where: { cart: { userId } }
+        where: { cart: { userId: { in: userIds } } }
       });
-      await prisma.cart.deleteMany({ where: { userId } });
+      await prisma.cart.deleteMany({ where: { userId: { in: userIds } } });
       await prisma.artwork.deleteMany({
         where: { title: { contains: marker } }
       });
-      await prisma.artist.deleteMany({ where: { userId } });
-      await prisma.user.deleteMany({ where: { id: userId } });
+      await prisma.artist.deleteMany({ where: { userId: { in: userIds } } });
+      await prisma.user.deleteMany({ where: { id: { in: userIds } } });
     }
 
     await prisma.$disconnect();

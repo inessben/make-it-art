@@ -183,7 +183,8 @@ function issueMessage(issue) {
   const messages = {
     ARTWORK_NOT_AVAILABLE: "Cette œuvre n’est plus disponible.",
     ARTWORK_PRICE_UNAVAILABLE: "Le prix actuel ne peut pas être confirmé.",
-    INSUFFICIENT_STOCK: "La quantité demandée n’est plus disponible."
+    INSUFFICIENT_STOCK: "La quantité demandée n’est plus disponible.",
+    SELF_PURCHASE_NOT_ALLOWED: "Vous ne pouvez pas acheter votre propre œuvre."
   };
 
   return messages[issue] || "Cet article doit être vérifié.";

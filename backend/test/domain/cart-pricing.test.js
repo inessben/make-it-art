@@ -21,7 +21,7 @@ function createCart(overrides = {}) {
           artist: {
             displayName: "Artist",
             verified: false,
-            user: { username: "artist" }
+            user: { id: 25, username: "artist" }
           }
         }
       }
@@ -56,6 +56,13 @@ test("an unavailable artwork makes the cart non-payable", () => {
 
   assert.equal(cart.payable, false);
   assert.deepEqual(cart.issues, [{ artworkId: 10, code: "ARTWORK_NOT_AVAILABLE" }]);
+});
+
+test("an artist's own artwork makes their cart non-payable", () => {
+  const cart = buildCartSummary(createCart(), { buyerUserId: 25 });
+
+  assert.equal(cart.payable, false);
+  assert.deepEqual(cart.issues, [{ artworkId: 10, code: "SELF_PURCHASE_NOT_ALLOWED" }]);
 });
 
 test("reserved stock is excluded from the available quantity", () => {
