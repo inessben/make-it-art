@@ -1,0 +1,19 @@
+{
+  "name": "Make It Art",
+  "short_name": "Make It Art",
+  "description": "Discover curated digital artworks and emerging artists on Make It Art.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

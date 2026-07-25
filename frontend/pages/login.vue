@@ -22,7 +22,7 @@
 
     <template v-else-if="!requiresCode">
       <button type="button" class="google-button" @click="startGoogleLogin">
-        <img class="google-icon" src="/google.svg" alt="" aria-hidden="true" />
+        <img class="google-icon" src="/google.svg" alt="" aria-hidden="true" loading="lazy" />
         <span>{{ GOOGLE_LOGIN_LABEL }}</span>
       </button>
 

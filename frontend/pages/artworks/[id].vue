@@ -198,7 +198,7 @@
 
 <script setup>
 import { computed, onMounted } from "vue";
-import { navigateTo, useRequestHeaders, useRoute } from "#app";
+import { navigateTo, useHead, useRequestHeaders, useRoute, useRuntimeConfig } from "#app";
 import ArtworkCard from "~/components/marketplace/ArtworkCard.vue";
 import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
 import { useAuthStore } from "~/stores/auth";
@@ -210,6 +210,8 @@ import {
 
 const route = useRoute();
 const auth = useAuthStore();
+const config = useRuntimeConfig();
+const siteUrl = config.public.siteUrl.replace(/\/$/, "");
 const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
 const { data, pending, error, refresh } = await useFetch(`/api/artworks/${route.params.id}`, {
   headers: requestHeaders,
@@ -219,6 +221,43 @@ const { data, pending, error, refresh } = await useFetch(`/api/artworks/${route.
 
 const artwork = computed(() => data.value?.artwork || null);
 const relatedArtworks = computed(() => data.value?.relatedArtworks || []);
+
+useHead({
+  script: [
+    {
+      type: "application/ld+json",
+      innerHTML: () => {
+        if (!artwork.value) return "";
+
+        const schema = {
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: artwork.value.title,
+          description: artwork.value.description || "Digital artwork available on Make It Art.",
+          url: `${siteUrl}/artworks/${artwork.value.id}`,
+          category: artwork.value.category?.name || "Digital artwork",
+          brand: artwork.value.artist
+            ? { "@type": "Person", name: artwork.value.artist.displayName }
+            : undefined
+        };
+
+        if (Number.isFinite(Number(artwork.value.priceValue))) {
+          schema.offers = {
+            "@type": "Offer",
+            url: `${siteUrl}/artworks/${artwork.value.id}`,
+            priceCurrency: "EUR",
+            price: Number(artwork.value.priceValue),
+            // Purchasing isn't live yet on the Platform; PreOrder reflects that
+            // honestly instead of falsely advertising InStock availability.
+            availability: "https://schema.org/PreOrder"
+          };
+        }
+
+        return JSON.stringify(schema);
+      }
+    }
+  ]
+});
 const errorMessage = computed(() =>
   error.value ? error.value?.data?.message || "The artwork details are temporarily unavailable." : ""
 );
