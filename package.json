@@ -28,7 +28,11 @@
     "ci": "npm run quality && npm run test",
     "security:audit": "npm --prefix backend run security:audit && npm --prefix frontend run security:audit",
     "payments:validate-sandbox": "npm --prefix backend run payments:validate-sandbox",
-    "precommit": "npm run quality",
+    "payments:validate-go-live": "npm --prefix backend run payments:validate-go-live",
+    "payments:scan-secrets": "npm --prefix backend run payments:scan-secrets",
+    "payments:reconcile": "npm --prefix backend run payments:reconcile --",
+    "payments:test-alert": "npm --prefix backend run payments:test-alert --",
+    "precommit": "npm run payments:scan-secrets && npm run quality",
     "prepush": "npm run ci"
   },
   "devDependencies": {
