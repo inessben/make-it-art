@@ -104,7 +104,7 @@ model Artwork {
   protection      Boolean?
   protectionId    Int?             @map("protection_id")
   price           String?
-  moderationStatus String          @default("pending") @map("moderation_status")
+  moderationStatus String          @default("approved") @map("moderation_status")
   moderationNote   String?         @map("moderation_note")
   moderatedAt      DateTime?       @map("moderated_at")
   moderatedByAdminId Int?          @map("moderated_by_admin_id")

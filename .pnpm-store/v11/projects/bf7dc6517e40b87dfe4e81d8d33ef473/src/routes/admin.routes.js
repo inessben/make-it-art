@@ -74,7 +74,7 @@ function buildArtworkStatus(artwork) {
   ).toLowerCase();
 
   if (status === ARTWORK_MODERATION_STATUS.APPROVED) {
-    return "Approved";
+    return "Published";
   }
 
   if (status === ARTWORK_MODERATION_STATUS.REJECTED) {

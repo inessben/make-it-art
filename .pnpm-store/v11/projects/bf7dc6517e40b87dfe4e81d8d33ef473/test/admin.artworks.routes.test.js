@@ -211,7 +211,7 @@ test("GET /admin/artworks returns real moderation statuses and summary counts", 
   assert.equal(response.body.summary.approvedArtworks, 1);
   assert.equal(response.body.summary.hiddenArtworks, 1);
   assert.equal(response.body.artworks[1].status, "approved");
-  assert.equal(response.body.artworks[1].statusLabel, "Approved");
+  assert.equal(response.body.artworks[1].statusLabel, "Published");
   assert.equal(response.body.artworks[1].reviewerName, "Admin");
 });
 

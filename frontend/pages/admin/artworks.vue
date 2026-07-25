@@ -1,7 +1,7 @@
 <template>
   <AdminShell
     title="Artworks"
-    description="Review submitted artworks, decide their visibility and keep the catalog aligned with real moderation statuses."
+    description="Monitor published artworks, hide or reject content when needed, and restore visibility when an artwork can be shown again."
   >
     <template #actions>
       <button
@@ -39,9 +39,9 @@
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">
-              Moderation queue
+              Artwork visibility
             </p>
-            <h2 class="mt-3 text-xl font-semibold text-slate-100">Artworks in review</h2>
+            <h2 class="mt-3 text-xl font-semibold text-slate-100">Published and restricted artworks</h2>
           </div>
           <div class="grid gap-3 sm:grid-cols-2">
             <label class="border border-slate-800 bg-black px-4 py-3">
@@ -60,8 +60,8 @@
                 class="w-full bg-transparent text-sm text-slate-100 outline-none"
               >
                 <option value="all">All statuses</option>
-                <option value="pending">Pending review</option>
-                <option value="approved">Approved</option>
+                <option value="pending">Pending hold</option>
+                <option value="approved">Published</option>
                 <option value="rejected">Rejected</option>
                 <option value="hidden">Hidden</option>
               </select>
@@ -158,7 +158,7 @@
                     :disabled="moderatingArtworkId === artwork.id"
                     @click="updateArtworkStatus(artwork, 'approved')"
                   >
-                    {{ moderationButtonLabel(artwork.id, "approved", "Approve") }}
+                    {{ moderationButtonLabel(artwork.id, "approved", "Publish") }}
                   </button>
                   <button
                     type="button"
@@ -198,17 +198,16 @@
 
         <div class="mt-6 grid gap-4">
           <div class="border border-slate-800 bg-black/30 p-5">
-            <p class="font-semibold text-slate-100">Pending review</p>
+            <p class="font-semibold text-slate-100">Published by default</p>
             <p class="mt-2 text-sm leading-6 text-slate-400">
-              New or edited artworks stay hidden from the public catalog until an admin decision is
-              recorded.
+              New and edited artworks from verified artists appear directly in the public catalog.
             </p>
           </div>
           <div class="border border-slate-800 bg-black/30 p-5">
-            <p class="font-semibold text-slate-100">Approved</p>
+            <p class="font-semibold text-slate-100">Publish or restore</p>
             <p class="mt-2 text-sm leading-6 text-slate-400">
-              Approved artworks become visible in the public marketplace and on the artist public
-              profile.
+              Use Publish to keep an artwork visible publicly or to restore a hidden or rejected
+              artwork.
             </p>
           </div>
           <div class="border border-slate-800 bg-black/30 p-5">
@@ -247,17 +246,17 @@ const summaries = computed(() => [
   {
     label: "Total artworks",
     value: summary.value.totalArtworks,
-    description: "All artworks currently stored in the moderation workflow."
+    description: "All artworks currently stored across the public catalog and restricted states."
   },
   {
-    label: "Pending review",
+    label: "Pending hold",
     value: summary.value.pendingArtworks,
-    description: "Awaiting an admin decision before public visibility."
+    description: "Legacy or manually paused artworks that are not currently public."
   },
   {
-    label: "Approved",
+    label: "Published",
     value: summary.value.approvedArtworks,
-    description: "Visible in the public catalog and artist profile."
+    description: "Visible in the public catalog and on the artist profile."
   },
   {
     label: "Rejected",
