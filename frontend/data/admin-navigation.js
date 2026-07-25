@@ -36,6 +36,12 @@ export const adminNavigation = [
     icon: "PY"
   },
   {
+    label: "Analytics",
+    description: "Traffic, funnels and events",
+    route: "/admin/analytics",
+    icon: "AN"
+  },
+  {
     label: "Settings",
     description: "Admin account and security",
     route: "/admin/settings",

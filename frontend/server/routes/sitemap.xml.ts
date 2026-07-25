@@ -12,7 +12,9 @@ interface ArtistSummary {
 
 function toIsoDate(value: string | null): string {
   const date = value ? new Date(value) : new Date();
-  return Number.isNaN(date.getTime()) ? new Date().toISOString().slice(0, 10) : date.toISOString().slice(0, 10);
+  return Number.isNaN(date.getTime())
+    ? new Date().toISOString().slice(0, 10)
+    : date.toISOString().slice(0, 10);
 }
 
 function urlEntry(loc: string, lastmod: string, changefreq: string, priority: string): string {
@@ -53,19 +55,17 @@ export default defineEventHandler(async (event) => {
 
     dynamicEntries = [
       ...(artworksResponse.artworks || []).map((artwork) =>
-        urlEntry(
-          `${siteUrl}/artworks/${artwork.id}`,
-          toIsoDate(artwork.createdAt),
-          "weekly",
-          "0.7"
-        )
+        urlEntry(`${siteUrl}/artworks/${artwork.id}`, toIsoDate(artwork.createdAt), "weekly", "0.7")
       ),
       ...(artistsResponse.artists || []).map((artist) =>
         urlEntry(`${siteUrl}/artists/${artist.id}`, toIsoDate(artist.createdAt), "weekly", "0.7")
       )
     ];
   } catch (error) {
-    console.error("sitemap.xml: failed to load marketplace data, falling back to static pages only", error);
+    console.error(
+      "sitemap.xml: failed to load marketplace data, falling back to static pages only",
+      error
+    );
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

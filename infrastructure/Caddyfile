@@ -20,6 +20,19 @@ www.makeitart.io {
     reverse_proxy backend:4000
   }
 
+  # First-party tracker: only the script and the event-collection endpoint are
+  # exposed. Umami's dashboard/API stay internal-only (backend talks to Umami
+  # directly over app_net for the admin Analytics tab).
+  handle /stats/script.js {
+    rewrite * /script.js
+    reverse_proxy umami:3000
+  }
+
+  handle /stats/api/send {
+    rewrite * /api/send
+    reverse_proxy umami:3000
+  }
+
   handle {
     reverse_proxy frontend:3000
   }

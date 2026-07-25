@@ -34,6 +34,54 @@ services:
     networks:
       - app_net
 
+  umami-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - ./.env.production
+    environment:
+      POSTGRES_DB: ${UMAMI_DB_NAME:-umami}
+      POSTGRES_USER: ${UMAMI_DB_USER:-umami}
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD}
+    volumes:
+      - umami_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${UMAMI_DB_USER:-umami} -d ${UMAMI_DB_NAME:-umami}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app_net
+
+  # No `ports:` mapping on purpose: never exposed to the internet directly.
+  # Reached only via the Caddy /stats/ proxy (tracker) and server-to-server
+  # from backend (admin API). The Umami dashboard UI is never publicly routed.
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    restart: unless-stopped
+    env_file:
+      - ./.env.production
+    environment:
+      DATABASE_URL: postgresql://${UMAMI_DB_USER:-umami}:${UMAMI_DB_PASSWORD}@umami-db:5432/${UMAMI_DB_NAME:-umami}
+      APP_SECRET: ${UMAMI_APP_SECRET}
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:3000/api/heartbeat',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    networks:
+      - app_net
+
   backend:
     build:
       context: ../backend
@@ -62,11 +110,17 @@ services:
       SMTP_USER: ${SMTP_USER}
       SMTP_PASS: ${SMTP_PASS}
       SMTP_FROM: ${SMTP_FROM}
+      UMAMI_INTERNAL_URL: http://umami:3000
+      UMAMI_API_USERNAME: ${UMAMI_API_USERNAME}
+      UMAMI_API_PASSWORD: ${UMAMI_API_PASSWORD}
+      UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID}
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
+      umami:
+        condition: service_started
     healthcheck:
       test:
         [
@@ -100,6 +154,7 @@ services:
       NUXT_HOST: 0.0.0.0
       NUXT_PORT: 3000
       NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-/api}
+      NUXT_PUBLIC_UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
     depends_on:
       backend:
         condition: service_healthy
@@ -133,6 +188,8 @@ services:
         condition: service_healthy
       frontend:
         condition: service_healthy
+      umami:
+        condition: service_started
     ports:
       - "80:80"
       - "443:443"
@@ -149,6 +206,7 @@ services:
 volumes:
   db_data:
   redis_data:
+  umami_db_data:
   caddy_data:
   caddy_config:
 

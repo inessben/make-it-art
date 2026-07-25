@@ -47,5 +47,11 @@ module.exports = {
     user: process.env.SMTP_USER || "",
     pass: process.env.SMTP_PASS || "",
     from: process.env.SMTP_FROM || "Make It Art <no-reply@make-it-art.local>"
+  },
+  umami: {
+    internalUrl: process.env.UMAMI_INTERNAL_URL || "http://umami:3000",
+    username: process.env.UMAMI_API_USERNAME || "",
+    password: process.env.UMAMI_API_PASSWORD || "",
+    websiteId: process.env.UMAMI_WEBSITE_ID || ""
   }
 };

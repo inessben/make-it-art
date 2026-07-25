@@ -1,7 +1,9 @@
 import { navigateTo } from "#app";
 import { ref } from "vue";
+import { useAnalyticsEvent } from "~/composables/useAnalyticsEvent";
 
 export function useMarketplaceActions(auth) {
+  const { trackEvent } = useAnalyticsEvent();
   const favoriteLoading = ref({});
   const followLoading = ref({});
   const actionMessage = ref("");
@@ -91,6 +93,10 @@ export function useMarketplaceActions(auth) {
         : "Artwork removed from your favorites.";
       actionStatus.value = "success";
 
+      if (nextState) {
+        trackEvent("add_to_wishlist", { artworkId: artwork.id });
+      }
+
       return true;
     } catch (error) {
       actionMessage.value = error?.data?.message || "Unable to update your favorites.";
@@ -130,6 +136,10 @@ export function useMarketplaceActions(auth) {
         ? "You are now following this artist."
         : "You are no longer following this artist.";
       actionStatus.value = "success";
+
+      if (nextState) {
+        trackEvent("follow_artist", { artistId: artist.id });
+      }
 
       return true;
     } catch (error) {

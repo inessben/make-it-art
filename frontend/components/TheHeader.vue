@@ -66,7 +66,11 @@
               to="/shopping-basket"
               class="transition-opacity hover:opacity-70"
               aria-label="Shopping basket"
-              ><img class="h-6 w-6 sm:h-7 sm:w-7" src="/icons/shopping-basket.svg" alt="" loading="lazy"
+              ><img
+                class="h-6 w-6 sm:h-7 sm:w-7"
+                src="/icons/shopping-basket.svg"
+                alt=""
+                loading="lazy"
             /></NuxtLink>
           </template>
           <NuxtLink

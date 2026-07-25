@@ -47,6 +47,52 @@ services:
     networks:
       - app_net
 
+  umami-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${UMAMI_DB_NAME:-umami}
+      POSTGRES_USER: ${UMAMI_DB_USER:-umami}
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD:-umami_dev_password}
+    volumes:
+      - umami_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${UMAMI_DB_USER:-umami} -d ${UMAMI_DB_NAME:-umami}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app_net
+
+  # Self-hosted analytics collector. Deliberately has no `ports:` mapping: it is
+  # never exposed directly to the host or the internet. The tracker script and
+  # collect endpoint are reached only through nginx's narrow /stats/ proxy
+  # (see nginx/default.conf), and the admin API is called server-to-server by
+  # the backend over app_net. The Umami dashboard UI itself is never exposed.
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${UMAMI_DB_USER:-umami}:${UMAMI_DB_PASSWORD:-umami_dev_password}@umami-db:5432/${UMAMI_DB_NAME:-umami}
+      APP_SECRET: ${UMAMI_APP_SECRET:-dev_umami_secret_change_me}
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:3000/api/heartbeat',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    networks:
+      - app_net
+
   backend:
     build:
       context: ../backend
@@ -72,6 +118,10 @@ services:
       SMTP_PORT: 1025
       SMTP_SECURE: "false"
       SMTP_FROM: Make It Art <no-reply@make-it-art.local>
+      UMAMI_INTERNAL_URL: http://umami:3000
+      UMAMI_API_USERNAME: ${UMAMI_API_USERNAME:-admin}
+      UMAMI_API_PASSWORD: ${UMAMI_API_PASSWORD:-umami}
+      UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
     ports:
       - "4000:4000"
     depends_on:
@@ -80,6 +130,8 @@ services:
       redis:
         condition: service_healthy
       mailpit:
+        condition: service_started
+      umami:
         condition: service_started
     healthcheck:
       test:
@@ -144,12 +196,15 @@ services:
         condition: service_healthy
       frontend:
         condition: service_healthy
+      umami:
+        condition: service_started
     networks:
       - app_net
 
 volumes:
   db_data:
   redis_data:
+  umami_db_data:
 
 networks:
   app_net:

@@ -9,12 +9,7 @@
             to="/"
             class="ml-5 flex w-fit items-center gap-5"
             aria-label="Make It Art - Home"
-            ><img
-              class="h-12 w-10 object-contain"
-              src="/logo.png"
-              alt=""
-              loading="lazy"
-            /><span
+            ><img class="h-12 w-10 object-contain" src="/logo.png" alt="" loading="lazy" /><span
               class="text-title-4"
               >MAKE IT ART</span
             ></NuxtLink

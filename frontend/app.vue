@@ -3,7 +3,6 @@
     <TheHeader v-if="showGlobalNavigation" />
     <NuxtPage />
     <TheFooter v-if="showGlobalNavigation" />
-    <UmamiAnalytics />
     <CookieConsentBanner />
   </div>
 </template>
@@ -69,7 +68,9 @@ const privateRoutePrefixes = [
   "/forgot-password"
 ];
 const isPrivateRoute = computed(() =>
-  privateRoutePrefixes.some((prefix) => route.path === prefix || route.path.startsWith(`${prefix}/`))
+  privateRoutePrefixes.some(
+    (prefix) => route.path === prefix || route.path.startsWith(`${prefix}/`)
+  )
 );
 
 const seoByRoute = {

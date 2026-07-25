@@ -200,6 +200,7 @@
 import { computed, onMounted } from "vue";
 import { navigateTo, useHead, useRequestHeaders, useRoute, useRuntimeConfig } from "#app";
 import ArtworkCard from "~/components/marketplace/ArtworkCard.vue";
+import { useAnalyticsEvent } from "~/composables/useAnalyticsEvent";
 import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
 import { useAuthStore } from "~/stores/auth";
 import {
@@ -279,8 +280,13 @@ const {
   toggleFavorite,
   toggleFollow
 } = useMarketplaceActions(auth);
+const { trackEvent } = useAnalyticsEvent();
 
 onMounted(async () => {
+  if (artwork.value) {
+    trackEvent("view_artwork", { artworkId: artwork.value.id });
+  }
+
   if (auth.user) return;
   try {
     await auth.fetchCurrentUser();
