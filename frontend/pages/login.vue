@@ -209,7 +209,7 @@ async function handleLogin() {
     redirectTo = response.redirectTo || auth.defaultAuthenticatedRoute;
   } catch (error) {
     message.value = error?.data?.message || "Login failed";
-    canResendVerification.value = error?.statusCode === 403;
+    canResendVerification.value = error?.data?.code === "EMAIL_NOT_VERIFIED";
   } finally {
     loading.value = false;
   }

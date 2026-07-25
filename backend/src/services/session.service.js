@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const env = require("../config/env");
 const { redis } = require("../lib/redis");
 const userRepository = require("../repositories/user.repository");
+const { isUserAllowedToAuthenticate } = require("../utils/user-account-status");
 
 const ACCESS_TOKEN_MAX_AGE_MS = 1000 * 60 * 15;
 const REFRESH_TOKEN_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7;
@@ -74,7 +75,7 @@ async function rotateRefreshToken(refreshToken) {
   }
   const user = await userRepository.findById(Number(session.userId));
 
-  if (!user || !user.verified || !user.isActive) {
+  if (!isUserAllowedToAuthenticate(user)) {
     return null;
   }
 
@@ -139,7 +140,7 @@ async function getUserFromRequest(req) {
     const payload = jwt.verify(token, env.jwtSecret);
     const user = await userRepository.findById(Number(payload.sub));
 
-    if (!user || !user.verified || !user.isActive) {
+    if (!isUserAllowedToAuthenticate(user)) {
       return null;
     }
 

@@ -9,6 +9,7 @@ const passwordResetTokenRepository = require("../repositories/password-reset-tok
 const env = require("../config/env");
 const argon2 = require("argon2");
 const crypto = require("crypto");
+const { assertUserCanAuthenticate } = require("../utils/user-account-status");
 
 async function loginWithEmail(email, password) {
   const normalizedEmail = normalizeEmail(email);
@@ -18,9 +19,7 @@ async function loginWithEmail(email, password) {
     console.log("[auth] login attempt for unknown email:", normalizedEmail);
     throw new Error("Invalid credentials");
   }
-  if (!user.verified || !user.isActive) {
-    throw new Error("Email not verified");
-  }
+  assertUserCanAuthenticate(user);
   if (!user.passwordHash) {
     throw new Error("Invalid credentials.");
   }

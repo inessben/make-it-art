@@ -100,6 +100,7 @@ model User {
   createdAt                  DateTime?                @map("created_at")
   bio                        String?
   isActive                   Boolean?                 @map("is_active")
+  blockedAt                  DateTime?                @map("blocked_at")
   walletAddress              String?                  @map("wallet_addresse")
   verified                   Boolean?
   phone                      String?

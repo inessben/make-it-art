@@ -20,10 +20,21 @@ const paymentRepository = require("../repositories/payment.repository");
 const { ensureBuffer } = require("../utils/ensure-buffer");
 const { inviteAdminUser } = require("../services/auth.service");
 const {
+  AdminUserManagementError,
+  removeAdminAccess,
+  removeSuperAdminAccess,
+  updateUserAccountStatus
+} = require("../services/admin-user-management.service");
+const {
   extractArtistApplicationPayload,
   resolveContractSignedAt,
   generateArtistContractPdf
 } = require("../services/artist-contract.service");
+const {
+  USER_ACCOUNT_STATUS,
+  getUserAccountStatus,
+  getUserAccountStatusLabel
+} = require("../utils/user-account-status");
 
 const router = express.Router();
 
@@ -69,15 +80,7 @@ function buildUserRole(user) {
 }
 
 function buildUserStatus(user) {
-  if (!user.verified) {
-    return "Pending verification";
-  }
-
-  if (!user.isActive) {
-    return "Inactive";
-  }
-
-  return "Active";
+  return getUserAccountStatusLabel(user);
 }
 
 function normalizeText(value) {
@@ -86,6 +89,34 @@ function normalizeText(value) {
 
 function normalizeEmail(value) {
   return normalizeText(value).toLowerCase();
+}
+
+function parsePositiveInteger(value) {
+  const parsedValue = Number.parseInt(String(value), 10);
+
+  if (!Number.isSafeInteger(parsedValue) || parsedValue <= 0) {
+    return null;
+  }
+
+  return parsedValue;
+}
+
+function handleAdminUserManagementError(res, error, fallbackMessage) {
+  if (
+    error instanceof AdminUserManagementError ||
+    (Number.isInteger(error?.statusCode) && typeof error?.code === "string")
+  ) {
+    return res.status(error.statusCode).json({
+      code: error.code,
+      message: error.message
+    });
+  }
+
+  console.error(fallbackMessage, error);
+
+  return res.status(500).json({
+    message: "Unable to update this user"
+  });
 }
 
 function buildArtworkStatus(artwork) {
@@ -284,7 +315,9 @@ function serializeAdminUser(user) {
     phone: user.phone || "",
     role: buildUserRole(user),
     status: buildUserStatus(user),
+    statusCode: getUserAccountStatus(user),
     isActive: Boolean(user.isActive),
+    blockedAt: user.blockedAt || null,
     verified: Boolean(user.verified),
     isAdmin: isAdminUser(user),
     isSuperAdmin: isSuperAdminUser(user),
@@ -361,13 +394,21 @@ router.get("/admin/users", authRequired, adminRequired, async (req, res) => {
     return res.status(200).json({
       summary: {
         totalUsers: payload.length,
-        activeUsers: payload.filter((user) => user.isActive).length,
-        pendingVerificationUsers: payload.filter((user) => !user.verified).length,
+        activeUsers: payload.filter((user) => user.statusCode === USER_ACCOUNT_STATUS.ACTIVE)
+          .length,
+        pendingVerificationUsers: payload.filter(
+          (user) => user.statusCode === USER_ACCOUNT_STATUS.PENDING_VERIFICATION
+        ).length,
+        suspendedUsers: payload.filter((user) => user.statusCode === USER_ACCOUNT_STATUS.SUSPENDED)
+          .length,
+        blockedUsers: payload.filter((user) => user.statusCode === USER_ACCOUNT_STATUS.BLOCKED)
+          .length,
         adminUsers: payload.filter((user) => user.isAdmin).length,
         superAdminUsers: payload.filter((user) => user.isSuperAdmin).length
       },
       permissions: {
         canManageAdmins: isSuperAdminUser(req.user),
+        currentUserId: req.user.id,
         isSuperAdmin: isSuperAdminUser(req.user)
       },
       users: payload
@@ -425,6 +466,92 @@ router.post(
     }
   }
 );
+
+router.patch(
+  "/admin/users/:userId/account-status",
+  authRequired,
+  adminRequired,
+  async (req, res) => {
+    const targetUserId = parsePositiveInteger(req.params.userId);
+
+    if (!targetUserId) {
+      return res.status(400).json({
+        message: "Invalid user id"
+      });
+    }
+
+    try {
+      const updatedUser = await updateUserAccountStatus({
+        actorUser: req.user,
+        targetUserId,
+        nextStatus: String(req.body.status || "")
+          .trim()
+          .toLowerCase(),
+        ipAddress: req.ip
+      });
+
+      const nextStatus = getUserAccountStatus(updatedUser);
+      const successMessages = {
+        [USER_ACCOUNT_STATUS.ACTIVE]: "User account reactivated",
+        [USER_ACCOUNT_STATUS.SUSPENDED]: "User account suspended",
+        [USER_ACCOUNT_STATUS.BLOCKED]: "User account blocked",
+        [USER_ACCOUNT_STATUS.PENDING_VERIFICATION]: "User status updated"
+      };
+
+      return res.status(200).json({
+        message: successMessages[nextStatus] || "User status updated",
+        user: serializeAdminUser(updatedUser)
+      });
+    } catch (error) {
+      return handleAdminUserManagementError(res, error, "Admin user account status update error:");
+    }
+  }
+);
+
+router.patch("/admin/users/:userId/admin-access", authRequired, adminRequired, async (req, res) => {
+  const targetUserId = parsePositiveInteger(req.params.userId);
+
+  if (!targetUserId) {
+    return res.status(400).json({
+      message: "Invalid user id"
+    });
+  }
+
+  try {
+    const action = String(req.body.action || "")
+      .trim()
+      .toLowerCase();
+    let updatedUser = null;
+    let successMessage = "Admin access updated";
+
+    if (action === "remove_admin") {
+      updatedUser = await removeAdminAccess({
+        actorUser: req.user,
+        targetUserId,
+        ipAddress: req.ip
+      });
+      successMessage = "Admin access removed";
+    } else if (action === "remove_super_admin") {
+      updatedUser = await removeSuperAdminAccess({
+        actorUser: req.user,
+        targetUserId,
+        ipAddress: req.ip
+      });
+      successMessage = "Super admin access removed";
+    } else {
+      return res.status(400).json({
+        message: "Invalid admin access action"
+      });
+    }
+
+    return res.status(200).json({
+      message: successMessage,
+      user: serializeAdminUser(updatedUser)
+    });
+  } catch (error) {
+    return handleAdminUserManagementError(res, error, "Admin access update error:");
+  }
+});
 
 router.get("/admin/artists", authRequired, adminRequired, async (_req, res) => {
   try {

@@ -14,6 +14,7 @@ const userRepositoryPath = require.resolve("../src/repositories/user.repository"
 const twoFactorLoginServicePath = require.resolve("../src/services/two-factor-login.service");
 const serializeAuthUserPath = require.resolve("../src/utils/serialize-auth-user");
 const envPath = require.resolve("../src/config/env");
+const userAccountStatusPath = require.resolve("../src/utils/user-account-status");
 
 const env = {
   nodeEnv: "production",
@@ -41,11 +42,47 @@ async function startAuthRoutesApp(t, overrides = {}) {
     verifyLoginCode: []
   };
 
+  class AccountAccessError extends Error {
+    constructor(code, message) {
+      super(message);
+      this.code = code;
+    }
+  }
+
+  const USER_ACCOUNT_ERROR_CODES = {
+    EMAIL_NOT_VERIFIED: "EMAIL_NOT_VERIFIED",
+    ACCOUNT_SUSPENDED: "ACCOUNT_SUSPENDED",
+    ACCOUNT_BLOCKED: "ACCOUNT_BLOCKED"
+  };
+
   const twoFactorLoginService = {
     async startLoginWithCode(payload) {
       calls.startLoginWithCode.push(payload);
 
       if (overrides.startLoginError) {
+        if (typeof overrides.startLoginError === "string") {
+          if (overrides.startLoginError === "Email not verified") {
+            throw new AccountAccessError(
+              USER_ACCOUNT_ERROR_CODES.EMAIL_NOT_VERIFIED,
+              overrides.startLoginError
+            );
+          }
+
+          if (overrides.startLoginError === "Account suspended") {
+            throw new AccountAccessError(
+              USER_ACCOUNT_ERROR_CODES.ACCOUNT_SUSPENDED,
+              overrides.startLoginError
+            );
+          }
+
+          if (overrides.startLoginError === "Account blocked") {
+            throw new AccountAccessError(
+              USER_ACCOUNT_ERROR_CODES.ACCOUNT_BLOCKED,
+              overrides.startLoginError
+            );
+          }
+        }
+
         throw new Error(overrides.startLoginError);
       }
 
@@ -98,6 +135,10 @@ async function startAuthRoutesApp(t, overrides = {}) {
           email: user.email
         };
       }
+    },
+    [userAccountStatusPath]: {
+      AccountAccessError,
+      USER_ACCOUNT_ERROR_CODES
     },
     [envPath]: env
   });
@@ -282,7 +323,23 @@ test("POST /auth/login maps unverified users to 403", async (t) => {
   });
 
   assert.equal(response.status, 403);
+  assert.equal(response.body.code, "EMAIL_NOT_VERIFIED");
   assert.equal(response.body.message, "Please verify your email before logging in.");
+});
+
+test("POST /auth/login maps suspended users to 403", async (t) => {
+  const { baseUrl } = await startAuthRoutesApp(t, {
+    startLoginError: "Account suspended"
+  });
+
+  const response = await postJson(baseUrl, "/auth/login", {
+    email: "artist@example.com",
+    password: "Password1!"
+  });
+
+  assert.equal(response.status, 403);
+  assert.equal(response.body.code, "ACCOUNT_SUSPENDED");
+  assert.equal(response.body.message, "This account is suspended. Please contact support.");
 });
 
 test("POST /auth/login maps invalid credentials to 401", async (t) => {

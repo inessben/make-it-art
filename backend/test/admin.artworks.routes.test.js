@@ -15,6 +15,8 @@ const artworkRepositoryPath = require.resolve("../src/repositories/artwork.repos
 const orderRepositoryPath = require.resolve("../src/repositories/order.repository");
 const paymentRepositoryPath = require.resolve("../src/repositories/payment.repository");
 const authServicePath = require.resolve("../src/services/auth.service");
+const adminUserManagementServicePath =
+  require.resolve("../src/services/admin-user-management.service");
 
 const adminUser = {
   id: 1,
@@ -158,6 +160,18 @@ async function startAdminArtworksApp(t, overrides = {}) {
     },
     [authServicePath]: {
       async inviteAdminUser() {
+        return null;
+      }
+    },
+    [adminUserManagementServicePath]: {
+      AdminUserManagementError: class AdminUserManagementError extends Error {},
+      async updateUserAccountStatus() {
+        return null;
+      },
+      async removeAdminAccess() {
+        return null;
+      },
+      async removeSuperAdminAccess() {
         return null;
       }
     }

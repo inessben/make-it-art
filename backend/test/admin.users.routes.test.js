@@ -15,6 +15,8 @@ const artworkRepositoryPath = require.resolve("../src/repositories/artwork.repos
 const orderRepositoryPath = require.resolve("../src/repositories/order.repository");
 const paymentRepositoryPath = require.resolve("../src/repositories/payment.repository");
 const authServicePath = require.resolve("../src/services/auth.service");
+const adminUserManagementServicePath =
+  require.resolve("../src/services/admin-user-management.service");
 
 function buildAdminUser({ isSuperAdmin }) {
   return {
@@ -63,7 +65,10 @@ function buildAdminMiddleware(adminUser) {
 async function startAdminUsersApp(t, overrides = {}) {
   const adminUser = overrides.authUser || buildAdminUser({ isSuperAdmin: true });
   const calls = {
-    inviteAdminUser: []
+    inviteAdminUser: [],
+    removeAdminAccess: [],
+    removeSuperAdminAccess: [],
+    updateUserAccountStatus: []
   };
 
   const userRepository = {
@@ -183,6 +188,86 @@ async function startAdminUsersApp(t, overrides = {}) {
           }
         );
       }
+    },
+    [adminUserManagementServicePath]: {
+      AdminUserManagementError: class AdminUserManagementError extends Error {
+        constructor(code, message, statusCode = 400) {
+          super(message);
+          this.code = code;
+          this.statusCode = statusCode;
+        }
+      },
+      async updateUserAccountStatus(payload) {
+        calls.updateUserAccountStatus.push(payload);
+
+        if (overrides.updateUserAccountStatusError) {
+          throw overrides.updateUserAccountStatusError;
+        }
+
+        return (
+          overrides.updateUserAccountStatusResult || {
+            id: payload.targetUserId,
+            username: "Collector",
+            email: "collector@example.com",
+            phone: null,
+            verified: true,
+            isActive: false,
+            blockedAt: null,
+            role: null,
+            admin: null,
+            artist: null,
+            createdAt: new Date("2026-07-10T09:00:00.000Z")
+          }
+        );
+      },
+      async removeAdminAccess(payload) {
+        calls.removeAdminAccess.push(payload);
+
+        if (overrides.removeAdminAccessError) {
+          throw overrides.removeAdminAccessError;
+        }
+
+        return (
+          overrides.removeAdminAccessResult || {
+            id: payload.targetUserId,
+            username: "Backoffice Admin",
+            email: "admin2@example.com",
+            phone: null,
+            verified: true,
+            isActive: true,
+            blockedAt: null,
+            role: null,
+            admin: null,
+            artist: null,
+            createdAt: new Date("2026-07-11T09:00:00.000Z")
+          }
+        );
+      },
+      async removeSuperAdminAccess(payload) {
+        calls.removeSuperAdminAccess.push(payload);
+
+        if (overrides.removeSuperAdminAccessError) {
+          throw overrides.removeSuperAdminAccessError;
+        }
+
+        return (
+          overrides.removeSuperAdminAccessResult || {
+            id: payload.targetUserId,
+            username: "Lead Admin",
+            email: "lead-admin@example.com",
+            phone: null,
+            verified: true,
+            isActive: true,
+            blockedAt: null,
+            role: "admin",
+            admin: {
+              isSuperAdmin: false
+            },
+            artist: null,
+            createdAt: new Date("2026-07-12T09:00:00.000Z")
+          }
+        );
+      }
     }
   });
 
@@ -233,6 +318,7 @@ test("GET /admin/users exposes super admin counts and permissions", async (t) =>
   assert.equal(response.body.summary.adminUsers, 2);
   assert.equal(response.body.summary.superAdminUsers, 1);
   assert.equal(response.body.permissions.canManageAdmins, true);
+  assert.equal(response.body.permissions.currentUserId, 1);
   assert.equal(response.body.users[2].role, "Super admin");
   assert.equal(response.body.users[2].isSuperAdmin, true);
 });
@@ -277,4 +363,56 @@ test("POST /admin/users/admins rejects standard admins", async (t) => {
   assert.equal(response.status, 403);
   assert.equal(response.body.message, "Super admin access required");
   assert.equal(calls.inviteAdminUser.length, 0);
+});
+
+test("PATCH /admin/users/:id/account-status updates a user status", async (t) => {
+  const { baseUrl, calls } = await startAdminUsersApp(t);
+  const response = await requestJson(baseUrl, "/admin/users/10/account-status", {
+    method: "PATCH",
+    body: {
+      status: "suspended"
+    }
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.message, "User account suspended");
+  assert.equal(response.body.user.status, "Suspended");
+  assert.equal(calls.updateUserAccountStatus.length, 1);
+  assert.equal(calls.updateUserAccountStatus[0].targetUserId, 10);
+  assert.equal(calls.updateUserAccountStatus[0].nextStatus, "suspended");
+});
+
+test("PATCH /admin/users/:id/admin-access removes admin access", async (t) => {
+  const { baseUrl, calls } = await startAdminUsersApp(t);
+  const response = await requestJson(baseUrl, "/admin/users/11/admin-access", {
+    method: "PATCH",
+    body: {
+      action: "remove_admin"
+    }
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.message, "Admin access removed");
+  assert.equal(response.body.user.isAdmin, false);
+  assert.equal(calls.removeAdminAccess.length, 1);
+  assert.equal(calls.removeAdminAccess[0].targetUserId, 11);
+});
+
+test("PATCH /admin/users/:id/admin-access returns service errors", async (t) => {
+  const error = new Error("You cannot change your own access from this page.");
+  error.code = "SELF_MANAGEMENT_NOT_ALLOWED";
+  error.statusCode = 409;
+  const { baseUrl } = await startAdminUsersApp(t, {
+    removeAdminAccessError: error
+  });
+  const response = await requestJson(baseUrl, "/admin/users/1/admin-access", {
+    method: "PATCH",
+    body: {
+      action: "remove_admin"
+    }
+  });
+
+  assert.equal(response.status, 409);
+  assert.equal(response.body.code, "SELF_MANAGEMENT_NOT_ALLOWED");
+  assert.equal(response.body.message, "You cannot change your own access from this page.");
 });
