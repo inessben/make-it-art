@@ -55,8 +55,7 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     return null;
   }
 
-  const hasFiatPrice =
-    Number.isSafeInteger(artwork.priceAmount) && artwork.priceAmount > 0;
+  const hasFiatPrice = Number.isSafeInteger(artwork.priceAmount) && artwork.priceAmount > 0;
   const priceValue = hasFiatPrice
     ? artwork.priceAmount / 100
     : parsePriceValue(artwork.price || artwork.priceTokens);

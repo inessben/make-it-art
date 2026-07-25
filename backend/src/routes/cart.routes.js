@@ -1,5 +1,6 @@
 const express = require("express");
 const { authRequired } = require("../middlewares/auth-required.middleware");
+const { csrfProtection } = require("../middlewares/csrf.middleware");
 const { cartRateLimit } = require("../middlewares/rate-limit.middleware");
 const {
   CartError,
@@ -63,7 +64,7 @@ router.get("/cart", authRequired, cartRateLimit, async (req, res) => {
   }
 });
 
-router.post("/cart/items", authRequired, cartRateLimit, async (req, res) => {
+router.post("/cart/items", authRequired, cartRateLimit, csrfProtection, async (req, res) => {
   try {
     assertOnlyFields(req.body, ["artworkId", "quantity"]);
     const artworkId = parsePositiveInteger(req.body.artworkId, "artworkId");
@@ -76,17 +77,23 @@ router.post("/cart/items", authRequired, cartRateLimit, async (req, res) => {
   }
 });
 
-router.delete("/cart/items/:artworkId", authRequired, cartRateLimit, async (req, res) => {
-  try {
-    const artworkId = parsePositiveInteger(req.params.artworkId, "artworkId");
-    const cart = await removeCartItem(req.user.id, artworkId);
-    return res.status(200).json({ cart });
-  } catch (error) {
-    return sendError(res, error);
+router.delete(
+  "/cart/items/:artworkId",
+  authRequired,
+  cartRateLimit,
+  csrfProtection,
+  async (req, res) => {
+    try {
+      const artworkId = parsePositiveInteger(req.params.artworkId, "artworkId");
+      const cart = await removeCartItem(req.user.id, artworkId);
+      return res.status(200).json({ cart });
+    } catch (error) {
+      return sendError(res, error);
+    }
   }
-});
+);
 
-router.delete("/cart", authRequired, cartRateLimit, async (req, res) => {
+router.delete("/cart", authRequired, cartRateLimit, csrfProtection, async (req, res) => {
   try {
     const cart = await clearCart(req.user.id);
     return res.status(200).json({ cart });
@@ -95,7 +102,7 @@ router.delete("/cart", authRequired, cartRateLimit, async (req, res) => {
   }
 });
 
-router.post("/cart/validate", authRequired, cartRateLimit, async (req, res) => {
+router.post("/cart/validate", authRequired, cartRateLimit, csrfProtection, async (req, res) => {
   try {
     assertOnlyFields(req.body, ["cartVersion", "pricingFingerprint"]);
     const expectedVersion = parsePositiveInteger(req.body.cartVersion, "cartVersion");

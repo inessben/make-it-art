@@ -1,6 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { randomUUID } = require("node:crypto");
+const { franceB2COrderFields, franceB2COrderItemFields } = require("../helpers/commerce-fixture");
 
 const databaseTest = process.env.DATABASE_URL ? test : test.skip;
 
@@ -386,6 +387,7 @@ async function createFixture(prisma) {
       status: "PAID",
       subtotalAmount: 1000,
       totalAmount: 1000,
+      ...franceB2COrderFields({ buyer, grossAmount: 1000 }),
       paidAt: new Date(),
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
       items: {
@@ -394,7 +396,8 @@ async function createFixture(prisma) {
           artworkTitle: artwork.title,
           artistName: artist.displayName,
           unitAmount: 1000,
-          subtotalAmount: 1000
+          subtotalAmount: 1000,
+          ...franceB2COrderItemFields({ grossAmount: 1000 })
         }
       }
     }

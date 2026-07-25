@@ -1,6 +1,15 @@
 const nodemailer = require("nodemailer");
 const env = require("../config/env");
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 function createTransporter() {
   if (!env.smtp.host) {
     throw new Error("SMTP_HOST is required to send emails");
@@ -9,7 +18,10 @@ function createTransporter() {
   const transportConfig = {
     host: env.smtp.host,
     port: env.smtp.port,
-    secure: env.smtp.secure
+    secure: env.smtp.secure,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 60000
   };
 
   if (env.smtp.user || env.smtp.pass) {
@@ -159,19 +171,15 @@ async function sendLoginCodeEmail({ to, username, code }) {
   });
 }
 
-function buildPaymentConfirmationMessage({ to, username, orderPublicId }) {
+function buildPaymentConfirmationMessage({ to, username, orderPublicId, messageId }) {
   const orderUrl = `${env.appBaseUrl}/orders/${encodeURIComponent(orderPublicId)}`;
   const displayName = username || "collector";
-  const safeName = String(displayName)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+  const safeName = escapeHtml(displayName);
 
   return {
     from: env.smtp.from,
     to,
+    ...(messageId ? { messageId } : {}),
     subject: "Your Make It Art order is confirmed",
     text: [
       `Hello ${displayName},`,
@@ -196,17 +204,104 @@ async function sendPaymentConfirmationEmail(input) {
   return transporter.sendMail(buildPaymentConfirmationMessage(input));
 }
 
-async function sendPaymentOperationsAlert({ code, count }) {
+function buildRefundStatusMessage({
+  to,
+  username,
+  orderPublicId,
+  refundPublicId,
+  status,
+  amount,
+  currency,
+  providerReference,
+  messageId
+}) {
+  const orderUrl = `${env.appBaseUrl}/orders/${encodeURIComponent(orderPublicId)}`;
+  const displayName = username || "collector";
+  const safeName = escapeHtml(displayName);
+  const formattedAmount = `${(amount / 100).toFixed(2)} ${currency}`;
+  const succeeded = status === "SUCCEEDED";
+  const statusText = succeeded
+    ? "Your refund has been confirmed."
+    : "Your refund could not be completed.";
+  const referenceText = providerReference
+    ? `Bank reference: ${providerReference}`
+    : "A bank reference is not available yet.";
+
+  return {
+    from: env.smtp.from,
+    to,
+    ...(messageId ? { messageId } : {}),
+    subject: succeeded
+      ? "Your Make It Art refund is confirmed"
+      : "Your Make It Art refund needs attention",
+    text: [
+      `Hello ${displayName},`,
+      statusText,
+      `Refund: ${refundPublicId}`,
+      `Amount: ${formattedAmount}`,
+      ...(succeeded ? [referenceText] : []),
+      `View your order after signing in: ${orderUrl}`,
+      "This message never contains card or bank account details."
+    ].join("\n\n"),
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+        <h1 style="font-size: 22px;">Refund status</h1>
+        <p>Hello ${safeName},</p>
+        <p>${statusText}</p>
+        <p>Amount: ${formattedAmount}</p>
+        ${succeeded ? `<p>${escapeHtml(referenceText)}</p>` : ""}
+        <p><a href="${orderUrl}">View your order after signing in</a></p>
+        <p>This message never contains card or bank account details.</p>
+      </div>
+    `
+  };
+}
+
+async function sendRefundStatusEmail(input) {
+  const transporter = createTransporter();
+  return transporter.sendMail(buildRefundStatusMessage(input));
+}
+
+async function sendPaymentOperationsAlert({
+  code,
+  count,
+  reference,
+  ageSeconds,
+  deadlineAt,
+  recommendedAction
+}) {
   if (!env.paymentAlertEmail) return null;
   const safeCode = String(code)
     .replace(/[^A-Z0-9_:-]/g, "")
     .slice(0, 120);
   const safeCount = Number.isSafeInteger(count) ? count : 1;
+  const safeReference = String(reference || "not-available")
+    .replace(/[^A-Za-z0-9_:-]/g, "")
+    .slice(0, 160);
+  const safeAgeSeconds = Number.isSafeInteger(ageSeconds) && ageSeconds >= 0 ? ageSeconds : null;
+  const deadlineTimestamp = deadlineAt ? new Date(deadlineAt).getTime() : NaN;
+  const safeDeadline = Number.isFinite(deadlineTimestamp)
+    ? new Date(deadlineTimestamp).toISOString()
+    : "not-applicable";
+  const safeAction = String(recommendedAction || "Open payment supervision and follow the runbook")
+    .replace(/[^A-Za-z0-9 .,;:'-]/g, "")
+    .slice(0, 240);
+  const supervisionUrl = `${env.appBaseUrl}/admin/payments`;
   return createTransporter().sendMail({
     from: env.smtp.from,
     to: env.paymentAlertEmail,
     subject: `[Make It Art payment alert] ${safeCode}`,
-    text: `Payment operations alert\nCode: ${safeCode}\nCount: ${safeCount}\nNo bank or card data is included.`
+    text: [
+      "Payment operations alert",
+      `Code: ${safeCode}`,
+      `Count: ${safeCount}`,
+      `Oldest sample: ${safeReference}`,
+      `Sample age: ${safeAgeSeconds === null ? "unknown" : `${safeAgeSeconds}s`}`,
+      `Evidence deadline: ${safeDeadline}`,
+      `Recommended action: ${safeAction}`,
+      `Runbook and supervision: ${supervisionUrl}`,
+      "No bank, card or customer data is included."
+    ].join("\n")
   });
 }
 
@@ -217,5 +312,7 @@ module.exports = {
   sendLoginCodeEmail,
   buildPaymentConfirmationMessage,
   sendPaymentConfirmationEmail,
+  buildRefundStatusMessage,
+  sendRefundStatusEmail,
   sendPaymentOperationsAlert
 };

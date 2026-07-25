@@ -15,6 +15,7 @@ function eventPayload(overrides = {}) {
   return JSON.stringify({
     id: "evt_test_signed",
     object: "event",
+    livemode: false,
     type: "payment_intent.processing",
     data: { object: { id: "pi_test_signed" } },
     ...overrides
@@ -114,6 +115,24 @@ test("missing, invalid, expired, and payload-mismatched signatures mutate nothin
   }
 });
 
+test("a sandbox event is rejected by a live webhook before persistence", async () => {
+  const payload = eventPayload();
+  const prismaClient = createPrismaStub();
+
+  await assert.rejects(
+    receiveStripeWebhook({
+      rawBody: Buffer.from(payload),
+      signature: sign(payload),
+      stripeClient,
+      webhookSecret,
+      expectedLivemode: true,
+      prismaClient
+    }),
+    (error) => error instanceof StripeWebhookError && error.code === "STRIPE_EVENT_MODE_MISMATCH"
+  );
+  assert.equal(prismaClient.rows.size, 0);
+});
+
 test("the same Stripe event id is acknowledged without a second durable effect", async () => {
   const payload = eventPayload();
   const prismaClient = createPrismaStub();
@@ -160,8 +179,37 @@ test("signed refund events are dispatched to the refund processor", async () => 
   assert.equal(result.outcome, "applied");
 });
 
+test("signed dispute events are dispatched to the dispute processor", async () => {
+  const payload = eventPayload({
+    id: "evt_dispute_signed",
+    type: "charge.dispute.created",
+    data: { object: { id: "dp_test_signed", status: "needs_response" } }
+  });
+  let disputeCalls = 0;
+  const result = await receiveStripeWebhook({
+    rawBody: Buffer.from(payload),
+    signature: sign(payload),
+    stripeClient,
+    webhookSecret,
+    prismaClient: createPrismaStub(),
+    processPaymentEvent: async () => {
+      throw new Error("payment processor must not receive dispute events");
+    },
+    processDisputeEvent: async () => {
+      disputeCalls += 1;
+      return { duplicate: false, outcome: "applied" };
+    }
+  });
+
+  assert.equal(disputeCalls, 1);
+  assert.equal(result.outcome, "applied");
+});
+
 test("only the minimal payment and refund lifecycle event set is persisted", async () => {
   assert.deepEqual([...SUPPORTED_STRIPE_EVENT_TYPES].sort(), [
+    "charge.dispute.closed",
+    "charge.dispute.created",
+    "charge.dispute.updated",
     "payment_intent.canceled",
     "payment_intent.payment_failed",
     "payment_intent.processing",

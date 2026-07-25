@@ -1,15 +1,12 @@
 const crypto = require("node:crypto");
 const prisma = require("../lib/prisma");
+const { isPaymentIntentReusable } = require("../domain/payment-intent-state");
 const { getStripeClient } = require("../lib/stripe");
 const { canTransitionOrder, canTransitionPayment } = require("../domain/payment-state");
 const { getCartSummary } = require("./cart.service");
+const { reconcilePaymentIntent } = require("./payment-monitoring.service");
 
 const OPEN_ORDER_STATUSES = ["PENDING_PAYMENT", "PAYMENT_PROCESSING", "PAYMENT_FAILED"];
-const REUSABLE_PAYMENT_INTENT_STATUSES = [
-  "requires_payment_method",
-  "requires_confirmation",
-  "requires_action"
-];
 
 class CheckoutRecoveryError extends Error {
   constructor(code, message, status = 409) {
@@ -49,6 +46,8 @@ async function finalizeLocalCancellation({ prismaClient, order, reason, provider
             return false;
           }
 
+          await transaction.$queryRaw`SELECT "id" FROM "cart" WHERE "id" = ${lockedOrder.cartId} FOR UPDATE`;
+
           for (const reservation of lockedOrder.reservations.filter(
             (candidate) => candidate.status === "ACTIVE"
           )) {
@@ -77,6 +76,13 @@ async function finalizeLocalCancellation({ prismaClient, order, reason, provider
           await transaction.order.update({
             where: { id: lockedOrder.id },
             data: { status: "CANCELED", canceledAt: new Date() }
+          });
+          await transaction.cart.updateMany({
+            where: {
+              id: lockedOrder.cartId,
+              version: lockedOrder.cartVersion
+            },
+            data: { version: { increment: 1 } }
           });
 
           const transitions = [
@@ -144,7 +150,17 @@ async function cancelOrderSafely({
       intent = await stripeClient.paymentIntents.retrieve(payment.providerPaymentId);
 
       if (intent.status === "succeeded") {
-        return { canceled: false, protectedPayment: true, status: intent.status };
+        const reconciliation = await reconcilePaymentIntent({
+          intent,
+          localPaymentStatus: payment.status,
+          prismaClient
+        });
+        return {
+          canceled: false,
+          protectedPayment: true,
+          reconciled: reconciliation.reconciled,
+          status: intent.status
+        };
       }
 
       if (intent.status !== "canceled") {
@@ -288,38 +304,74 @@ async function resumeCheckout({
     throw new CheckoutRecoveryError("CHECKOUT_NOT_RESUMABLE", "This payment was canceled", 409);
   }
 
-  const requiresConfirmation = REUSABLE_PAYMENT_INTENT_STATUSES.includes(intent.status);
-  const nextPaymentStatus = intent.status === "processing" ? "PROCESSING" : payment.status;
-  let nextOrderStatus = intent.status === "processing" ? "PAYMENT_PROCESSING" : order.status;
-  if (requiresConfirmation && canTransitionOrder(order.status, "PENDING_PAYMENT")) {
+  const reconciliation = await reconcilePaymentIntent({
+    intent,
+    localPaymentStatus: payment.status,
+    prismaClient
+  });
+  let synchronizedOrder = order;
+  let synchronizedPayment = payment;
+
+  if (reconciliation.reconciled) {
+    synchronizedOrder = await prismaClient.order.findUnique({
+      where: { id: order.id },
+      include: { payments: { orderBy: { checkoutVersion: "desc" } } }
+    });
+    synchronizedPayment = synchronizedOrder.payments[0];
+  }
+
+  const requiresConfirmation = isPaymentIntentReusable(intent.status);
+
+  if (!requiresConfirmation) {
+    return {
+      orderId: synchronizedOrder.publicId,
+      orderStatus: synchronizedOrder.status,
+      amount: synchronizedOrder.totalAmount,
+      currency: synchronizedOrder.currency,
+      billingDetails: synchronizedOrder.billingSnapshot,
+      paymentStatus: intent.status,
+      requiresConfirmation: false,
+      clientSecret: null
+    };
+  }
+
+  if (!intent.client_secret) {
+    throw new CheckoutRecoveryError(
+      "STRIPE_RESPONSE_INVALID",
+      "Payment provider returned an incomplete response",
+      503
+    );
+  }
+
+  let nextOrderStatus = synchronizedOrder.status;
+  if (canTransitionOrder(synchronizedOrder.status, "PENDING_PAYMENT")) {
     nextOrderStatus = "PENDING_PAYMENT";
   }
 
   await prismaClient.$transaction([
     prismaClient.payment.update({
-      where: { id: payment.id },
+      where: { id: synchronizedPayment.id },
       data: {
         providerStatus: intent.status,
-        ...(requiresConfirmation && canTransitionPayment(payment.status, "PENDING")
+        ...(canTransitionPayment(synchronizedPayment.status, "PENDING")
           ? { status: "PENDING", failureCode: null }
-          : {}),
-        ...(nextPaymentStatus === "PROCESSING" ? { status: "PROCESSING" } : {})
+          : {})
       }
     }),
     prismaClient.order.update({
-      where: { id: order.id },
+      where: { id: synchronizedOrder.id },
       data: {
-        ...(nextOrderStatus === "PENDING_PAYMENT" ? { status: "PENDING_PAYMENT" } : {}),
-        ...(nextOrderStatus === "PAYMENT_PROCESSING" ? { status: "PAYMENT_PROCESSING" } : {})
+        ...(nextOrderStatus === "PENDING_PAYMENT" ? { status: "PENDING_PAYMENT" } : {})
       }
     })
   ]);
 
   return {
-    orderId: order.publicId,
+    orderId: synchronizedOrder.publicId,
     orderStatus: nextOrderStatus,
-    amount: order.totalAmount,
-    currency: order.currency,
+    amount: synchronizedOrder.totalAmount,
+    currency: synchronizedOrder.currency,
+    billingDetails: synchronizedOrder.billingSnapshot,
     paymentStatus: intent.status,
     requiresConfirmation,
     clientSecret: requiresConfirmation ? intent.client_secret : null
@@ -360,7 +412,6 @@ async function expireStaleCheckouts({
 module.exports = {
   CheckoutRecoveryError,
   OPEN_ORDER_STATUSES,
-  REUSABLE_PAYMENT_INTENT_STATUSES,
   cancelOrderSafely,
   cancelSupersededCheckouts,
   expireStaleCheckouts,

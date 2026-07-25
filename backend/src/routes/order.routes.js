@@ -10,6 +10,8 @@ const { CheckoutError, initializeCheckout } = require("../services/checkout.serv
 const { getOwnedOrder, listOwnedOrders } = require("../services/order-query.service");
 const { CheckoutRecoveryError, resumeCheckout } = require("../services/checkout-recovery.service");
 const { assertCheckoutEnabled } = require("../services/checkout-availability.service");
+const { CommercePolicyError } = require("../domain/commerce-policy");
+const { getOwnedSaleInvoicePdf } = require("../services/invoice.service");
 
 const router = express.Router();
 const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -68,7 +70,8 @@ function sendCheckoutError(res, error) {
   if (
     error instanceof CartError ||
     error instanceof CheckoutError ||
-    error instanceof CheckoutRecoveryError
+    error instanceof CheckoutRecoveryError ||
+    error instanceof CommercePolicyError
   ) {
     if (error.providerCode) {
       console.error("Stripe checkout provider error:", {
@@ -115,11 +118,12 @@ router.post(
 
     try {
       assertCheckoutEnabled();
-      assertOnlyFields(req.body, ["cartVersion", "pricingFingerprint"]);
+      assertOnlyFields(req.body, ["cartVersion", "pricingFingerprint", "billingDetails"]);
       const result = await initializeCheckout({
         userId: req.user.id,
         cartVersion: parseCartVersion(req.body.cartVersion),
         pricingFingerprint: parsePricingFingerprint(req.body.pricingFingerprint),
+        billingDetails: req.body.billingDetails,
         clientIdempotencyKey: parseIdempotencyKey(req.get("idempotency-key"))
       });
 
@@ -128,10 +132,12 @@ router.post(
           id: result.orderId,
           status: result.orderStatus,
           amount: result.amount,
-          currency: result.currency
+          currency: result.currency,
+          billingDetails: result.billingDetails
         },
         payment: {
           status: result.paymentStatus,
+          requiresConfirmation: result.requiresConfirmation,
           clientSecret: result.clientSecret
         }
       });
@@ -167,7 +173,8 @@ router.post(
           id: result.orderId,
           status: result.orderStatus,
           amount: result.amount,
-          currency: result.currency
+          currency: result.currency,
+          billingDetails: result.billingDetails
         },
         payment: {
           status: result.paymentStatus,
@@ -210,6 +217,35 @@ router.get("/orders/:publicId", authRequired, async (req, res) => {
   } catch (error) {
     console.error("Order lookup failed", { name: error.name, code: error.code });
     return res.status(500).json({ message: "Order status is temporarily unavailable" });
+  }
+});
+
+router.get("/orders/:publicId/invoices/:invoicePublicId.pdf", authRequired, async (req, res) => {
+  res.set("Cache-Control", "private, no-store");
+  if (
+    !UUID_V4_PATTERN.test(req.params.publicId) ||
+    !UUID_V4_PATTERN.test(req.params.invoicePublicId)
+  ) {
+    return res.status(404).json({ message: "Invoice not found" });
+  }
+
+  try {
+    const invoice = await getOwnedSaleInvoicePdf({
+      userId: req.user.id,
+      orderPublicId: req.params.publicId,
+      invoicePublicId: req.params.invoicePublicId
+    });
+    if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+
+    res.set("Content-Type", "application/pdf");
+    res.set(
+      "Content-Disposition",
+      `attachment; filename="${invoice.number.replace(/[^A-Za-z0-9_-]/g, "_")}.pdf"`
+    );
+    return res.status(200).send(invoice.pdf);
+  } catch (error) {
+    console.error("Invoice download failed", { name: error.name, code: error.code });
+    return res.status(500).json({ message: "Invoice is temporarily unavailable" });
   }
 });
 

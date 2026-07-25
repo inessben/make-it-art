@@ -48,10 +48,9 @@ router.get("/orders", authRequired, async (req, res) => {
         artworks: order.items.map((item) => ({
           id: item.artwork.id,
           title: item.artwork.title,
-          priceTokens:
-            item.priceTokens || formatAmount(item.unitAmount, item.currency),
+          priceTokens: item.priceTokens || formatAmount(item.unitAmount, item.currency),
           unitAmount: item.unitAmount,
-          currency: item.currency,
+          currency: item.currency
         }))
       }))
     });
@@ -102,19 +101,16 @@ router.get("/orders/:id", authRequired, async (req, res) => {
           id: item.id,
           artworkId: item.artworkId,
           artworkTitle: item.artwork.title,
-          priceTokens:
-            item.priceTokens || formatAmount(item.unitAmount, item.currency),
+          priceTokens: item.priceTokens || formatAmount(item.unitAmount, item.currency),
           unitAmount: item.unitAmount,
-          currency: item.currency,
+          currency: item.currency
         })),
         payments: order.payments.map((payment) => ({
           id: payment.id,
           method: payment.method,
-          transactionId:
-            payment.transactionId || payment.providerPaymentId || null,
+          transactionId: payment.transactionId || payment.providerPaymentId || null,
           providerPaymentId: payment.providerPaymentId,
-          price:
-            payment.price || formatAmount(payment.amount, payment.currency),
+          price: payment.price || formatAmount(payment.amount, payment.currency),
           amount: payment.amount,
           currency: payment.currency,
           status: payment.status,

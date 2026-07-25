@@ -1,4 +1,8 @@
+const { Prisma } = require("@prisma/client");
 const prisma = require("../lib/prisma");
+const env = require("../config/env");
+const { isFranceB2COrder } = require("../domain/commerce-policy");
+const { isTransactionWriteConflict, waitForTransactionRetry } = require("../lib/transaction-retry");
 const { canTransitionOrder, canTransitionPayment } = require("../domain/payment-state");
 
 const EVENT_TARGETS = Object.freeze({
@@ -23,7 +27,15 @@ const EVENT_TARGETS = Object.freeze({
 const FULFILLMENT_TASK_TYPES = Object.freeze([
   "SEND_PAYMENT_CONFIRMATION",
   "GRANT_DOWNLOAD_RIGHTS",
-  "GENERATE_CERTIFICATE"
+  "GENERATE_CERTIFICATE",
+  "ISSUE_SALE_INVOICE"
+]);
+
+const RETRYABLE_CHARGE_ROTATION_PAYMENT_STATUSES = new Set(["PENDING", "PROCESSING", "FAILED"]);
+const RETRYABLE_CHARGE_ROTATION_ORDER_STATUSES = new Set([
+  "PENDING_PAYMENT",
+  "PAYMENT_PROCESSING",
+  "PAYMENT_FAILED"
 ]);
 
 class PaymentFinalizationError extends Error {
@@ -34,15 +46,50 @@ class PaymentFinalizationError extends Error {
   }
 }
 
+function stripeId(value) {
+  return typeof value === "string" ? value : value?.id;
+}
+
+function canRotateProviderCharge(payment) {
+  return (
+    RETRYABLE_CHARGE_ROTATION_PAYMENT_STATUSES.has(payment.status) &&
+    RETRYABLE_CHARGE_ROTATION_ORDER_STATUSES.has(payment.order.status)
+  );
+}
+
 function validatePaymentIntent(paymentIntent, payment) {
   const errors = [];
   const expectedCurrency = payment.currency.toLowerCase();
 
   if (paymentIntent.id !== payment.providerPaymentId) errors.push("PAYMENT_INTENT_ID_MISMATCH");
+  if (
+    payment.providerChargeId &&
+    stripeId(paymentIntent.latest_charge) &&
+    stripeId(paymentIntent.latest_charge) !== payment.providerChargeId &&
+    !canRotateProviderCharge(payment)
+  ) {
+    errors.push("PAYMENT_CHARGE_ID_MISMATCH");
+  }
   if (paymentIntent.amount !== payment.amount) errors.push("PAYMENT_AMOUNT_MISMATCH");
   if (paymentIntent.currency !== expectedCurrency) errors.push("PAYMENT_CURRENCY_MISMATCH");
   if (paymentIntent.metadata?.order_id !== payment.order.publicId) {
     errors.push("PAYMENT_ORDER_MISMATCH");
+  }
+  if (!isFranceB2COrder(payment.order)) {
+    errors.push("PAYMENT_COMMERCE_POLICY_MISMATCH");
+  }
+  if (
+    payment.order.billingSnapshot?.customerType !== "B2C" ||
+    payment.order.billingSnapshot?.address?.country !== "FR"
+  ) {
+    errors.push("PAYMENT_BILLING_SNAPSHOT_MISMATCH");
+  }
+  if (
+    !Number.isSafeInteger(payment.order.taxRateBps) ||
+    payment.order.taxRateBps <= 0 ||
+    payment.order.subtotalExcludingTaxAmount + payment.order.taxAmount !== payment.order.totalAmount
+  ) {
+    errors.push("PAYMENT_TAX_SNAPSHOT_MISMATCH");
   }
   if (paymentIntent.status === "succeeded" && paymentIntent.amount_received !== payment.amount) {
     errors.push("PAYMENT_RECEIVED_AMOUNT_MISMATCH");
@@ -94,6 +141,64 @@ async function consumeReservations(transaction, payment) {
     where: { orderId: payment.orderId, status: "ACTIVE" },
     data: { status: "CONSUMED" }
   });
+}
+
+async function removePurchasedItemsFromCart(transaction, payment) {
+  const { order } = payment;
+
+  await transaction.$queryRaw(
+    Prisma.sql`SELECT "id" FROM "cart" WHERE "id" = ${order.cartId} FOR UPDATE`
+  );
+
+  const cart = await transaction.cart.findUnique({
+    where: { id: order.cartId },
+    include: { items: true }
+  });
+
+  if (!cart) return;
+
+  if (cart.version === order.cartVersion) {
+    const removed = await transaction.cartItem.deleteMany({
+      where: { cartId: cart.id }
+    });
+
+    if (removed.count > 0) {
+      await transaction.cart.update({
+        where: { id: cart.id },
+        data: { version: { increment: 1 } }
+      });
+    }
+
+    return;
+  }
+
+  let cartChanged = false;
+
+  for (const orderItem of order.items) {
+    const cartItem = cart.items.find((item) => item.artworkId === orderItem.artworkId);
+
+    if (!cartItem) continue;
+
+    const remainingQuantity = cartItem.quantity - orderItem.quantity;
+
+    if (remainingQuantity > 0) {
+      await transaction.cartItem.update({
+        where: { id: cartItem.id },
+        data: { quantity: remainingQuantity }
+      });
+    } else {
+      await transaction.cartItem.delete({ where: { id: cartItem.id } });
+    }
+
+    cartChanged = true;
+  }
+
+  if (cartChanged) {
+    await transaction.cart.update({
+      where: { id: cart.id },
+      data: { version: { increment: 1 } }
+    });
+  }
 }
 
 async function releaseReservations(transaction, payment) {
@@ -158,8 +263,11 @@ async function flagPaymentForReview(transaction, event, payment, validationError
 }
 
 async function enqueueFulfillment(transaction, payment) {
+  const taskTypes = env.commerce.commissionInvoicingEnabled
+    ? [...FULFILLMENT_TASK_TYPES, "ISSUE_COMMISSION_INVOICES"]
+    : FULFILLMENT_TASK_TYPES;
   await transaction.fulfillmentTask.createMany({
-    data: FULFILLMENT_TASK_TYPES.map((taskType) => ({
+    data: taskTypes.map((taskType) => ({
       orderId: payment.orderId,
       taskType,
       taskKey: `order:${payment.order.publicId}:${taskType}`
@@ -178,6 +286,14 @@ async function applyPaymentEvent(transaction, event, payment) {
     return { outcome: "review", validationErrors };
   }
 
+  const providerChargeId = stripeId(paymentIntent.latest_charge);
+  if (providerChargeId && providerChargeId !== payment.providerChargeId) {
+    await transaction.payment.update({
+      where: { id: payment.id },
+      data: { providerChargeId }
+    });
+  }
+
   const currentPaymentStatus = payment.status;
   const currentOrderStatus = payment.order.status;
   const nextPaymentStatus = canTransitionPayment(currentPaymentStatus, target.paymentStatus)
@@ -194,6 +310,7 @@ async function applyPaymentEvent(transaction, event, payment) {
     currentOrderStatus !== "PAID"
   ) {
     await consumeReservations(transaction, payment);
+    await removePurchasedItemsFromCart(transaction, payment);
   }
 
   if (event.type === "payment_intent.canceled" && nextOrderStatus === "CANCELED") {
@@ -284,7 +401,7 @@ async function processStripePaymentEvent({ event, prismaClient = prisma }) {
 
   let lastError;
 
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
     try {
       return await prismaClient.$transaction(
         async (transaction) => {
@@ -314,7 +431,7 @@ async function processStripePaymentEvent({ event, prismaClient = prisma }) {
             where: { providerPaymentId: event.data.object.id },
             include: {
               order: {
-                include: { reservations: true }
+                include: { reservations: true, items: true }
               }
             }
           });
@@ -349,7 +466,8 @@ async function processStripePaymentEvent({ event, prismaClient = prisma }) {
       );
     } catch (error) {
       lastError = error;
-      if (error.code !== "P2034" || attempt === 3) break;
+      if (!isTransactionWriteConflict(error) || attempt === 5) break;
+      await waitForTransactionRetry(attempt);
     }
   }
 

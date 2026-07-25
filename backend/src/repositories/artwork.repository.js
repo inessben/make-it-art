@@ -6,11 +6,7 @@ const LEGACY_PRICE_PATTERN = /^(\d{1,6})(?:[.,](\d{1,2}))?\s*(?:€|eur|tokens?)
 
 function parsePriceAmount(price) {
   const normalized =
-    typeof price === "number"
-      ? String(price)
-      : typeof price === "string"
-        ? price.trim()
-        : null;
+    typeof price === "number" ? String(price) : typeof price === "string" ? price.trim() : null;
 
   if (typeof normalized !== "string") {
     throw new Error("INVALID_ARTWORK_PRICE");
@@ -114,14 +110,7 @@ async function findOwnedArtwork({ artworkId, artistId }) {
   });
 }
 
-async function createArtwork({
-  artistId,
-  title,
-  description,
-  categoryId,
-  price,
-  protection,
-}) {
+async function createArtwork({ artistId, title, description, categoryId, price, protection }) {
   const priceAmount = parsePriceAmount(price);
 
   return prisma.artwork.create({
@@ -185,7 +174,7 @@ async function updateArtwork({
       ...(shouldPublishDraft
         ? {
             saleStatus: "AVAILABLE",
-            stockQuantity: 1,
+            stockQuantity: 1
           }
         : {}),
       protection: Boolean(protection),

@@ -56,9 +56,29 @@ databaseTest("cart routes require ownership and reject client-managed prices", a
     const unauthenticatedResponse = await fetch(`${baseUrl}/api/v1/cart`);
     assert.equal(unauthenticatedResponse.status, 401);
 
-    const manipulatedResponse = await fetch(`${baseUrl}/api/v1/cart/items`, {
+    const mutationWithoutCsrf = await fetch(`${baseUrl}/api/v1/cart/items`, {
       method: "POST",
       headers,
+      body: JSON.stringify({ artworkId: artwork.id, quantity: 1 })
+    });
+    assert.equal(mutationWithoutCsrf.status, 403);
+    assert.equal((await mutationWithoutCsrf.json()).code, "CSRF_VALIDATION_FAILED");
+
+    const csrfResponse = await fetch(`${baseUrl}/api/v1/security/csrf-token`, { headers });
+    assert.equal(csrfResponse.status, 200);
+    assert.equal(csrfResponse.headers.get("cache-control"), "no-store");
+    const csrfCookie = csrfResponse.headers.get("set-cookie").split(";")[0];
+    const { csrfToken } = await csrfResponse.json();
+    const mutationHeaders = {
+      ...headers,
+      cookie: `${headers.cookie}; ${csrfCookie}`,
+      origin: env.appBaseUrl,
+      "x-csrf-token": csrfToken
+    };
+
+    const manipulatedResponse = await fetch(`${baseUrl}/api/v1/cart/items`, {
+      method: "POST",
+      headers: mutationHeaders,
       body: JSON.stringify({
         artworkId: artwork.id,
         quantity: 1,
@@ -70,7 +90,7 @@ databaseTest("cart routes require ownership and reject client-managed prices", a
 
     const addResponse = await fetch(`${baseUrl}/api/v1/cart/items`, {
       method: "POST",
-      headers,
+      headers: mutationHeaders,
       body: JSON.stringify({ artworkId: artwork.id, quantity: 1 })
     });
     assert.equal(addResponse.status, 200);
@@ -93,16 +113,8 @@ databaseTest("cart routes require ownership and reject client-managed prices", a
     assert.equal(checkoutWithoutCsrf.status, 403);
     assert.equal((await checkoutWithoutCsrf.json()).code, "CSRF_VALIDATION_FAILED");
 
-    const csrfResponse = await fetch(`${baseUrl}/api/v1/security/csrf-token`, { headers });
-    assert.equal(csrfResponse.status, 200);
-    assert.equal(csrfResponse.headers.get("cache-control"), "no-store");
-    const csrfCookie = csrfResponse.headers.get("set-cookie").split(";")[0];
-    const { csrfToken } = await csrfResponse.json();
     const checkoutHeaders = {
-      ...headers,
-      cookie: `${headers.cookie}; ${csrfCookie}`,
-      origin: env.appBaseUrl,
-      "x-csrf-token": csrfToken,
+      ...mutationHeaders,
       "idempotency-key": randomUUID()
     };
 
@@ -123,7 +135,7 @@ databaseTest("cart routes require ownership and reject client-managed prices", a
 
     const removeResponse = await fetch(`${baseUrl}/api/v1/cart/items/${artwork.id}`, {
       method: "DELETE",
-      headers
+      headers: mutationHeaders
     });
     assert.equal(removeResponse.status, 200);
     assert.equal((await removeResponse.json()).cart.itemCount, 0);

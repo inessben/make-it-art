@@ -63,114 +63,118 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
 
   delete require.cache[artistRequiredPath];
 
-  const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
-    [authRequiredPath]: buildAuthMiddleware(currentAuthUser),
-    [applicationRepositoryPath]: {
-      async findByUserId() {
-        return overrides.findByUserIdResult || null;
-      }
-    },
-    [artistRepositoryPath]: {
-      async findByUserId() {
-        return hasOverride(overrides, "artistResult") ? overrides.artistResult : verifiedArtist;
-      }
-    },
-    [artworkRepositoryPath]: {
-      async listArtworksByArtistId(artistId) {
-        calls.listArtworksByArtistId.push(artistId);
+  const { moduleExports: router, restore } = loadModuleWithMocks(
+    routesPath,
+    {
+      [authRequiredPath]: buildAuthMiddleware(currentAuthUser),
+      [applicationRepositoryPath]: {
+        async findByUserId() {
+          return overrides.findByUserIdResult || null;
+        }
+      },
+      [artistRepositoryPath]: {
+        async findByUserId() {
+          return hasOverride(overrides, "artistResult") ? overrides.artistResult : verifiedArtist;
+        }
+      },
+      [artworkRepositoryPath]: {
+        async listArtworksByArtistId(artistId) {
+          calls.listArtworksByArtistId.push(artistId);
 
-        return overrides.listArtworksResult || [];
-      },
-      async createArtwork(payload) {
-        calls.createArtwork.push(payload);
+          return overrides.listArtworksResult || [];
+        },
+        async createArtwork(payload) {
+          calls.createArtwork.push(payload);
 
-        return (
-          overrides.createArtworkResult || {
-            id: 42,
-            artistId: payload.artistId,
-            title: payload.title,
-            description: payload.description,
-            price: payload.price,
-            priceTokens: payload.price,
-            favoriteCount: 0,
-            protection: payload.protection,
-            moderationStatus: "approved",
-            moderationNote: null,
-            moderatedAt: null,
-            moderatedByAdmin: null,
-            createdAt: new Date("2026-07-08T10:00:00.000Z"),
-            category: {
-              id: payload.categoryId || 1,
-              name: "Illustration"
-            },
-            artist: verifiedArtist,
-            favorites: []
-          }
-        );
+          return (
+            overrides.createArtworkResult || {
+              id: 42,
+              artistId: payload.artistId,
+              title: payload.title,
+              description: payload.description,
+              price: payload.price,
+              priceTokens: payload.price,
+              favoriteCount: 0,
+              protection: payload.protection,
+              moderationStatus: "approved",
+              moderationNote: null,
+              moderatedAt: null,
+              moderatedByAdmin: null,
+              createdAt: new Date("2026-07-08T10:00:00.000Z"),
+              category: {
+                id: payload.categoryId || 1,
+                name: "Illustration"
+              },
+              artist: verifiedArtist,
+              favorites: []
+            }
+          );
+        },
+        async updateArtwork() {
+          throw new Error("ARTWORK_NOT_FOUND");
+        },
+        async deleteArtwork() {
+          throw new Error("ARTWORK_NOT_FOUND");
+        }
       },
-      async updateArtwork() {
-        throw new Error("ARTWORK_NOT_FOUND");
+      [categoryRepositoryPath]: {
+        async ensurePredefinedCategories() {
+          return [{ id: 9, name: "Illustration" }];
+        },
+        async listCategories() {
+          return [{ id: 9, name: "Illustration" }];
+        },
+        async findById(categoryId) {
+          return {
+            id: categoryId,
+            name: "Illustration"
+          };
+        },
+        async isPredefinedCategory(categoryId) {
+          return categoryId === 9;
+        }
       },
-      async deleteArtwork() {
-        throw new Error("ARTWORK_NOT_FOUND");
+      [userRepositoryPath]: {
+        async findById() {
+          return currentAuthUser;
+        }
+      },
+      [contractServicePath]: {
+        CONTRACT_VERSION: "make-it-art-artist-contract-v2",
+        extractArtistApplicationPayload() {
+          return {};
+        },
+        resolveContractSignedAt() {
+          return new Date("2026-07-04T12:34:00.000Z");
+        },
+        renderArtistContract() {
+          return {
+            contractText: "CONTRAT TEST",
+            contractVersion: "make-it-art-artist-contract-v2"
+          };
+        },
+        async generateArtistContractPdf() {
+          return {
+            contractVersion: "make-it-art-artist-contract-v2",
+            contractText: "CONTRAT TEST",
+            pdfBuffer: Buffer.from("pdf"),
+            signedAt: new Date("2026-07-04T12:34:00.000Z")
+          };
+        }
+      },
+      [serializeAuthUserPath]: {
+        serializeAuthUser(user) {
+          return {
+            id: user.id,
+            email: user.email
+          };
+        }
       }
     },
-    [categoryRepositoryPath]: {
-      async ensurePredefinedCategories() {
-        return [{ id: 9, name: "Illustration" }];
-      },
-      async listCategories() {
-        return [{ id: 9, name: "Illustration" }];
-      },
-      async findById(categoryId) {
-        return {
-          id: categoryId,
-          name: "Illustration"
-        };
-      },
-      async isPredefinedCategory(categoryId) {
-        return categoryId === 9;
-      }
-    },
-    [userRepositoryPath]: {
-      async findById() {
-        return currentAuthUser;
-      }
-    },
-    [contractServicePath]: {
-      CONTRACT_VERSION: "make-it-art-artist-contract-v2",
-      extractArtistApplicationPayload() {
-        return {};
-      },
-      resolveContractSignedAt() {
-        return new Date("2026-07-04T12:34:00.000Z");
-      },
-      renderArtistContract() {
-        return {
-          contractText: "CONTRAT TEST",
-          contractVersion: "make-it-art-artist-contract-v2"
-        };
-      },
-      async generateArtistContractPdf() {
-        return {
-          contractVersion: "make-it-art-artist-contract-v2",
-          contractText: "CONTRAT TEST",
-          pdfBuffer: Buffer.from("pdf"),
-          signedAt: new Date("2026-07-04T12:34:00.000Z")
-        };
-      }
-    },
-    [serializeAuthUserPath]: {
-      serializeAuthUser(user) {
-        return {
-          id: user.id,
-          email: user.email
-        };
-      }
+    {
+      invalidate: [artistRequiredPath]
     }
-  }, {
-    invalidate: [artistRequiredPath],
-  });
+  );
 
   const app = express();
   app.use(express.json({ limit: "2mb" }));

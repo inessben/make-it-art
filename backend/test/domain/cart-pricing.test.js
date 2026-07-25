@@ -34,16 +34,19 @@ test("the cart total and commission are calculated from server artwork data", ()
   const cart = buildCartSummary(createCart());
 
   assert.equal(cart.subtotalAmount, 2500);
+  assert.equal(cart.netAmount, 2083);
+  assert.equal(cart.taxAmount, 417);
+  assert.equal(cart.taxRateBps, 2000);
   assert.equal(cart.totalAmount, 2500);
-  assert.equal(cart.commissionAmount, 375);
+  assert.equal(cart.commissionAmount, 146);
+  assert.equal(cart.commissionRateBps, 700);
   assert.equal(cart.currency, "EUR");
   assert.equal(cart.payable, true);
   assert.match(cart.pricingFingerprint, /^[a-f0-9]{64}$/);
 });
 
-test("verified artists use the reduced commission", () => {
-  assert.equal(calculateCommissionAmount(10000, true), 1000);
-  assert.equal(calculateCommissionAmount(10000, false), 1500);
+test("the 7 percent commission is calculated from the amount excluding tax", () => {
+  assert.equal(calculateCommissionAmount(10000, 700), 700);
 });
 
 test("an unavailable artwork makes the cart non-payable", () => {

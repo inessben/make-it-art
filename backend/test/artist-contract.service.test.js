@@ -58,7 +58,16 @@ test("renderArtistContract includes the signature date and time in the contract 
     effectiveDate: new Date("2026-07-04T13:45:00.000Z")
   });
 
-  assert.match(contractText, /Signature date and time: .*15:45.*Europe\/Paris/);
+  assert.match(contractText, /Date et heure de signature : .*15:45.*Europe\/Paris/);
+  assert.match(contractText, /Make It Art est le marchand officiel/);
+  assert.match(
+    contractText,
+    /commission fixe de 7 % sur le montant hors taxes.*apres toute reduction ou promotion/
+  );
+  assert.match(
+    contractText,
+    /frais Stripe, remboursements et chargebacks sont a la charge de Make It Art/
+  );
 });
 
 test("resolveContractSignedAt falls back to the submission timestamp when needed", () => {
@@ -71,6 +80,6 @@ test("resolveContractSignedAt falls back to the submission timestamp when needed
   assert.equal(signedAt.toISOString(), "2026-07-03T08:20:00.000Z");
 });
 
-test("contract version reflects the timestamped signature PDF format", () => {
-  assert.equal(CONTRACT_VERSION, "make-it-art-artist-contract-v2");
+test("contract version reflects the France B2C merchant and commission terms", () => {
+  assert.equal(CONTRACT_VERSION, "make-it-art-artist-contract-v3");
 });

@@ -47,8 +47,26 @@ databaseTest("the payment schema enforces monetary integrity and uniqueness", as
         cartId: cart.id,
         cartVersion: 1,
         pricingFingerprint: "a".repeat(64),
+        customerType: "B2C",
+        marketCountry: "FR",
+        billingSnapshot: {
+          customerType: "B2C",
+          name: "Payment Schema Buyer",
+          email,
+          address: {
+            line1: "1 rue de Paris",
+            postalCode: "75001",
+            city: "Paris",
+            country: "FR"
+          }
+        },
         subtotalAmount: 1000,
-        commissionAmount: 150,
+        subtotalExcludingTaxAmount: 833,
+        taxAmount: 167,
+        taxRateBps: 2000,
+        taxBehavior: "INCLUSIVE",
+        commissionAmount: 58,
+        commissionRateBps: 700,
         totalAmount: 1000,
         currency: "EUR",
         expiresAt: new Date(Date.now() + 15 * 60 * 1000),
@@ -60,7 +78,11 @@ databaseTest("the payment schema enforces monetary integrity and uniqueness", as
             quantity: 1,
             unitAmount: 1000,
             subtotalAmount: 1000,
-            commissionAmount: 150,
+            netAmount: 833,
+            taxAmount: 167,
+            taxRateBps: 2000,
+            commissionAmount: 58,
+            commissionRateBps: 700,
             currency: "EUR"
           }
         }
@@ -115,10 +137,79 @@ databaseTest("the payment schema enforces monetary integrity and uniqueness", as
           cartId: cart.id,
           cartVersion: 2,
           pricingFingerprint: "b".repeat(64),
+          customerType: "B2C",
+          marketCountry: "FR",
+          billingSnapshot: {
+            customerType: "B2C",
+            name: "Payment Schema Buyer",
+            email,
+            address: {
+              line1: "1 rue de Paris",
+              postalCode: "75001",
+              city: "Paris",
+              country: "FR"
+            }
+          },
           subtotalAmount: 1000,
+          subtotalExcludingTaxAmount: 833,
+          taxAmount: 167,
+          taxRateBps: 2000,
+          taxBehavior: "INCLUSIVE",
+          commissionAmount: 58,
+          commissionRateBps: 700,
           totalAmount: 999,
           currency: "EUR",
           expiresAt: new Date(Date.now() + 15 * 60 * 1000)
+        }
+      })
+    );
+
+    await assert.rejects(
+      prisma.order.create({
+        data: {
+          userId,
+          cartId: cart.id,
+          cartVersion: 3,
+          pricingFingerprint: "c".repeat(64),
+          customerType: "B2C",
+          marketCountry: "FR",
+          billingSnapshot: {
+            customerType: "B2C",
+            name: "Payment Schema Buyer",
+            email,
+            address: {
+              line1: "1 rue de Paris",
+              postalCode: "75001",
+              city: "Paris",
+              country: "FR"
+            }
+          },
+          subtotalAmount: 1000,
+          subtotalExcludingTaxAmount: 833,
+          taxAmount: 167,
+          taxRateBps: 2000,
+          taxBehavior: "INCLUSIVE",
+          commissionAmount: 58,
+          commissionRateBps: 700,
+          totalAmount: 1000,
+          currency: "EUR",
+          expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+          items: {
+            create: {
+              artworkId: artwork.id,
+              artworkTitle: artwork.title,
+              artistName: artist.displayName,
+              quantity: 1,
+              unitAmount: 1000,
+              subtotalAmount: 1000,
+              netAmount: 833,
+              taxAmount: 167,
+              taxRateBps: 2000,
+              commissionAmount: 59,
+              commissionRateBps: 700,
+              currency: "EUR"
+            }
+          }
         }
       })
     );

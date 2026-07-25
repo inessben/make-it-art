@@ -47,13 +47,12 @@ const cartRateLimit = asExpressMiddleware(
     limit: isProduction ? 120 : 1000,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) =>
-      req.user ? `cart-user:${req.user.id}` : ipKeyGenerator(req.ip),
+    keyGenerator: (req) => (req.user ? `cart-user:${req.user.id}` : ipKeyGenerator(req.ip)),
     message: {
       message: "Too many cart requests. Please try again later.",
-      code: "CART_RATE_LIMITED",
-    },
-  }),
+      code: "CART_RATE_LIMITED"
+    }
+  })
 );
 
 const checkoutIpRateLimit = asExpressMiddleware(
@@ -65,9 +64,9 @@ const checkoutIpRateLimit = asExpressMiddleware(
     keyGenerator: ipKeyGenerator,
     message: {
       message: "Too many checkout attempts. Please try again later.",
-      code: "CHECKOUT_RATE_LIMITED",
-    },
-  }),
+      code: "CHECKOUT_RATE_LIMITED"
+    }
+  })
 );
 
 const checkoutUserRateLimit = asExpressMiddleware(
@@ -79,9 +78,9 @@ const checkoutUserRateLimit = asExpressMiddleware(
     keyGenerator: (req) => `checkout-user:${req.user.id}`,
     message: {
       message: "Too many checkout attempts. Please try again later.",
-      code: "CHECKOUT_RATE_LIMITED",
-    },
-  }),
+      code: "CHECKOUT_RATE_LIMITED"
+    }
+  })
 );
 
 const securityRateLimit = asExpressMiddleware(
@@ -90,13 +89,12 @@ const securityRateLimit = asExpressMiddleware(
     limit: isProduction ? 30 : 300,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) =>
-      req.user ? `security-user:${req.user.id}` : ipKeyGenerator(req.ip),
+    keyGenerator: (req) => (req.user ? `security-user:${req.user.id}` : ipKeyGenerator(req.ip)),
     message: {
       message: "Too many security token requests. Please try again later.",
-      code: "SECURITY_RATE_LIMITED",
-    },
-  }),
+      code: "SECURITY_RATE_LIMITED"
+    }
+  })
 );
 
 const refundRateLimit = asExpressMiddleware(
@@ -105,13 +103,27 @@ const refundRateLimit = asExpressMiddleware(
     limit: isProduction ? 10 : 100,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) =>
-      req.user ? `refund-admin:${req.user.id}` : ipKeyGenerator(req.ip),
+    keyGenerator: (req) => (req.user ? `refund-admin:${req.user.id}` : ipKeyGenerator(req.ip)),
     message: {
       message: "Too many refund requests. Please try again later.",
-      code: "REFUND_RATE_LIMITED",
-    },
-  }),
+      code: "REFUND_RATE_LIMITED"
+    }
+  })
+);
+
+const paymentOperationsRateLimit = asExpressMiddleware(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: isProduction ? 20 : 200,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) =>
+      req.user ? `payment-operations-admin:${req.user.id}` : ipKeyGenerator(req.ip),
+    message: {
+      message: "Too many payment operations. Please try again later.",
+      code: "PAYMENT_OPERATIONS_RATE_LIMITED"
+    }
+  })
 );
 
 module.exports = {
@@ -121,5 +133,6 @@ module.exports = {
   checkoutIpRateLimit,
   checkoutUserRateLimit,
   securityRateLimit,
-  refundRateLimit
+  refundRateLimit,
+  paymentOperationsRateLimit
 };

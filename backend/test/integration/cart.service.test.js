@@ -75,7 +75,9 @@ databaseTest("cart pricing is isolated per owner and revalidated server-side", a
     });
 
     assert.equal(buyerCart.totalAmount, 2500);
-    assert.equal(buyerCart.items[0].commissionAmount, 375);
+    assert.equal(buyerCart.items[0].netAmount, 2083);
+    assert.equal(buyerCart.items[0].taxAmount, 417);
+    assert.equal(buyerCart.items[0].commissionAmount, 146);
     assert.equal((await getCartSummary(buyer.id)).itemCount, 1);
     assert.equal((await getCartSummary(otherBuyer.id)).itemCount, 1);
     assert.equal((await getCartSummary(artistUser.id)).itemCount, 0);

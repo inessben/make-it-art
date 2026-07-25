@@ -1,5 +1,6 @@
 const { Prisma } = require("@prisma/client");
 const prisma = require("../lib/prisma");
+const env = require("../config/env");
 const { buildCartSummary } = require("../domain/cart-pricing");
 
 const cartInclude = {
@@ -28,12 +29,22 @@ class CartError extends Error {
   }
 }
 
+function pricingPolicy() {
+  return {
+    vatRateBps: env.commerce.franceVatRateBps,
+    commissionRateBps: env.commerce.commissionRateBps
+  };
+}
+
 function createEmptyCartSummary() {
-  return buildCartSummary({
-    version: 1,
-    updatedAt: null,
-    items: []
-  });
+  return buildCartSummary(
+    {
+      version: 1,
+      updatedAt: null,
+      items: []
+    },
+    pricingPolicy()
+  );
 }
 
 async function findCart(client, userId) {
@@ -45,7 +56,7 @@ async function findCart(client, userId) {
 
 async function getCartSummary(userId) {
   const cart = await findCart(prisma, userId);
-  return cart ? buildCartSummary(cart) : createEmptyCartSummary();
+  return cart ? buildCartSummary(cart, pricingPolicy()) : createEmptyCartSummary();
 }
 
 async function getOrCreateCart(client, userId) {
@@ -137,7 +148,7 @@ async function setCartItem(userId, { artworkId, quantity }) {
       data: { version: { increment: 1 } }
     });
 
-    return buildCartSummary(await findCart(transaction, userId));
+    return buildCartSummary(await findCart(transaction, userId), pricingPolicy());
   });
 }
 
@@ -166,7 +177,7 @@ async function removeCartItem(userId, artworkId) {
       data: { version: { increment: 1 } }
     });
 
-    return buildCartSummary(await findCart(transaction, userId));
+    return buildCartSummary(await findCart(transaction, userId), pricingPolicy());
   });
 }
 
@@ -190,7 +201,7 @@ async function clearCart(userId) {
       });
     }
 
-    return buildCartSummary(await findCart(transaction, userId));
+    return buildCartSummary(await findCart(transaction, userId), pricingPolicy());
   });
 }
 
@@ -215,7 +226,7 @@ async function withLockedPayableCart(
       );
 
       const lockedCart = await findCart(transaction, userId);
-      const cartSummary = buildCartSummary(lockedCart);
+      const cartSummary = buildCartSummary(lockedCart, pricingPolicy());
 
       if (cartSummary.items.length === 0) {
         throw new CartError("CART_EMPTY", "Cart is empty", 409, cartSummary);

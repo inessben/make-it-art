@@ -21,11 +21,7 @@ app.use(
         .map((value) => value.trim())
         .filter(Boolean);
 
-      if (
-        !origin ||
-        allowedOrigins.includes("*") ||
-        allowedOrigins.includes(origin)
-      ) {
+      if (!origin || allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 

@@ -1,4 +1,5 @@
 const prisma = require("../lib/prisma");
+const { isTransactionWriteConflict, waitForTransactionRetry } = require("../lib/transaction-retry");
 const { canTransitionOrder, canTransitionPayment } = require("../domain/payment-state");
 
 const REFUND_EVENT_TYPES = new Set(["refund.created", "refund.updated", "refund.failed"]);
@@ -150,7 +151,7 @@ async function applySucceededRefund(transaction, event, refund, stripeRefund) {
       where: {
         orderId: refund.orderId,
         taskType: "GRANT_DOWNLOAD_RIGHTS",
-        status: "PENDING"
+        status: { in: ["PENDING", "PROCESSING", "FAILED"] }
       },
       data: { status: "CANCELED" }
     });
@@ -254,7 +255,7 @@ async function processStripeRefundEvent({ event, prismaClient = prisma }) {
   }
 
   let lastError;
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
     try {
       return await prismaClient.$transaction(
         async (transaction) => {
@@ -320,7 +321,8 @@ async function processStripeRefundEvent({ event, prismaClient = prisma }) {
       );
     } catch (error) {
       lastError = error;
-      if (error.code !== "P2034" || attempt === 3) break;
+      if (!isTransactionWriteConflict(error) || attempt === 5) break;
+      await waitForTransactionRetry(attempt);
     }
   }
   await persistFailedEvent(prismaClient, event, lastError);

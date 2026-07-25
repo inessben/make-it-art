@@ -1,13 +1,10 @@
 const crypto = require("node:crypto");
-
-const STANDARD_COMMISSION_BPS = 1500;
-const VERIFIED_ARTIST_COMMISSION_BPS = 1000;
-
-function calculateCommissionAmount(amount, artistVerified) {
-  const basisPoints = artistVerified ? VERIFIED_ARTIST_COMMISSION_BPS : STANDARD_COMMISSION_BPS;
-
-  return Math.round((amount * basisPoints) / 10000);
-}
+const {
+  INCLUSIVE_TAX_BEHAVIOR,
+  PLATFORM_COMMISSION_RATE_BPS,
+  calculateCommissionAmount,
+  calculateIncludedTax
+} = require("./commerce-policy");
 
 function getArtworkIssue(artwork, quantity) {
   if (artwork.saleStatus !== "AVAILABLE") {
@@ -27,15 +24,28 @@ function getArtworkIssue(artwork, quantity) {
   return null;
 }
 
-function createPricingFingerprint(version, items, totalAmount) {
+function createPricingFingerprint(version, items, summary) {
   const pricingSnapshot = {
     version,
-    totalAmount,
+    subtotalAmount: summary.subtotalAmount,
+    discountAmount: summary.discountAmount,
+    netAmount: summary.netAmount,
+    taxAmount: summary.taxAmount,
+    taxRateBps: summary.taxRateBps,
+    taxBehavior: summary.taxBehavior,
+    commissionAmount: summary.commissionAmount,
+    commissionRateBps: summary.commissionRateBps,
+    totalAmount: summary.totalAmount,
     items: items.map((item) => ({
       artworkId: item.artworkId,
       quantity: item.quantity,
       unitAmount: item.unitAmount,
+      discountAmount: item.discountAmount,
+      netAmount: item.netAmount,
+      taxAmount: item.taxAmount,
+      taxRateBps: item.taxRateBps,
       commissionAmount: item.commissionAmount,
+      commissionRateBps: item.commissionRateBps,
       currency: item.currency
     }))
   };
@@ -43,7 +53,10 @@ function createPricingFingerprint(version, items, totalAmount) {
   return crypto.createHash("sha256").update(JSON.stringify(pricingSnapshot)).digest("hex");
 }
 
-function buildCartSummary(cart) {
+function buildCartSummary(
+  cart,
+  { vatRateBps = 2000, commissionRateBps = PLATFORM_COMMISSION_RATE_BPS } = {}
+) {
   const issues = [];
   const items = [...cart.items]
     .sort((left, right) => left.artworkId - right.artworkId)
@@ -52,10 +65,10 @@ function buildCartSummary(cart) {
       const issue = getArtworkIssue(artwork, cartItem.quantity);
       const unitAmount = Number.isSafeInteger(artwork.priceAmount) ? artwork.priceAmount : 0;
       const subtotalAmount = unitAmount * cartItem.quantity;
-      const commissionAmount = calculateCommissionAmount(
-        subtotalAmount,
-        artwork.artist.verified === true
-      );
+      const discountAmount = 0;
+      const grossAfterDiscountAmount = subtotalAmount - discountAmount;
+      const { netAmount, taxAmount } = calculateIncludedTax(grossAfterDiscountAmount, vatRateBps);
+      const commissionAmount = calculateCommissionAmount(netAmount, commissionRateBps);
       const availableQuantity = Math.max(artwork.stockQuantity - artwork.reservedQuantity, 0);
 
       if (issue) {
@@ -73,34 +86,50 @@ function buildCartSummary(cart) {
         availableQuantity,
         unitAmount,
         subtotalAmount,
+        discountAmount,
+        netAmount,
+        taxAmount,
+        taxRateBps: vatRateBps,
         commissionAmount,
+        commissionRateBps,
         currency: artwork.currency,
         issue
       };
     });
 
   const subtotalAmount = items.reduce((total, item) => total + item.subtotalAmount, 0);
+  const discountAmount = items.reduce((total, item) => total + item.discountAmount, 0);
+  const netAmount = items.reduce((total, item) => total + item.netAmount, 0);
+  const taxAmount = items.reduce((total, item) => total + item.taxAmount, 0);
   const commissionAmount = items.reduce((total, item) => total + item.commissionAmount, 0);
-  const totalAmount = subtotalAmount;
+  const totalAmount = subtotalAmount - discountAmount;
+  const summary = {
+    subtotalAmount,
+    discountAmount,
+    netAmount,
+    taxAmount,
+    taxRateBps: vatRateBps,
+    taxBehavior: INCLUSIVE_TAX_BEHAVIOR,
+    commissionAmount,
+    commissionRateBps,
+    totalAmount
+  };
 
   return {
     version: cart.version,
     updatedAt: cart.updatedAt,
     currency: "EUR",
-    subtotalAmount,
-    commissionAmount,
-    totalAmount,
+    ...summary,
     itemCount: items.reduce((total, item) => total + item.quantity, 0),
     payable: items.length > 0 && issues.length === 0,
-    pricingFingerprint: createPricingFingerprint(cart.version, items, totalAmount),
+    pricingFingerprint: createPricingFingerprint(cart.version, items, summary),
     issues,
     items
   };
 }
 
 module.exports = {
-  STANDARD_COMMISSION_BPS,
-  VERIFIED_ARTIST_COMMISSION_BPS,
+  PLATFORM_COMMISSION_RATE_BPS,
   calculateCommissionAmount,
   buildCartSummary
 };

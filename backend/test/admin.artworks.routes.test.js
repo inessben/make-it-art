@@ -148,7 +148,7 @@ async function startAdminArtworksApp(t, overrides = {}) {
     },
     [orderRepositoryPath]: {
       async listOrdersForAdmin() {
-        return [];
+        return overrides.listOrdersForAdminResult || [];
       }
     },
     [paymentRepositoryPath]: {
@@ -236,4 +236,79 @@ test("PATCH /admin/artworks/:id/moderation updates the artwork moderation status
     moderationNote: "Le visuel doit etre retravaille.",
     moderatedByAdminId: adminUser.id
   });
+});
+
+test("GET /admin/orders exposes only the safe refund balance and history", async (t) => {
+  const orderPublicId = "b5cb23ef-d417-4ad4-af3f-0e8f3394262e";
+  const { baseUrl } = await startAdminArtworksApp(t, {
+    listOrdersForAdminResult: [
+      {
+        id: 42,
+        publicId: orderPublicId,
+        status: "PARTIALLY_REFUNDED",
+        totalAmount: 1990,
+        currency: "EUR",
+        createdAt: new Date("2026-07-25T10:00:00.000Z"),
+        user: {
+          username: "Refund Buyer",
+          email: "buyer@example.test"
+        },
+        items: [{ id: 1 }],
+        payments: [
+          {
+            id: 7,
+            checkoutVersion: 1,
+            providerPaymentId: "pi_must_not_be_exposed",
+            status: "PARTIALLY_REFUNDED",
+            amount: 1990,
+            currency: "EUR",
+            refunds: [
+              {
+                publicId: "2b8294f5-dab0-40db-a22f-d1ec119045b4",
+                providerRefundId: "re_must_not_be_exposed",
+                idempotencyKey: "d78ff548-6138-46d9-8f55-f8a819e4a8af",
+                status: "SUCCEEDED",
+                amount: 500,
+                currency: "EUR",
+                reasonCode: "CUSTOMER_REQUEST",
+                createdAt: new Date("2026-07-25T10:10:00.000Z"),
+                updatedAt: new Date("2026-07-25T10:11:00.000Z")
+              },
+              {
+                publicId: "3c0d5bc9-58eb-487d-a30a-ccdd86bbbc9c",
+                status: "PENDING",
+                amount: 300,
+                currency: "EUR",
+                reasonCode: "DUPLICATE",
+                createdAt: new Date("2026-07-25T10:12:00.000Z"),
+                updatedAt: new Date("2026-07-25T10:12:00.000Z")
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  });
+
+  const response = await requestJson(baseUrl, "/admin/orders");
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.orders[0].publicId, orderPublicId);
+  assert.equal(response.body.orders[0].status, "Partially refunded");
+  assert.equal(response.body.orders[0].refundedAmount, 500);
+  assert.equal(response.body.orders[0].pendingRefundAmount, 300);
+  assert.equal(response.body.orders[0].refundableAmount, 1190);
+  assert.equal(response.body.orders[0].canRefund, true);
+  assert.deepEqual(response.body.orders[0].refunds[0], {
+    id: "2b8294f5-dab0-40db-a22f-d1ec119045b4",
+    status: "SUCCEEDED",
+    amount: 500,
+    currency: "EUR",
+    reason: "CUSTOMER_REQUEST",
+    createdAt: "2026-07-25T10:10:00.000Z",
+    updatedAt: "2026-07-25T10:11:00.000Z"
+  });
+  assert.equal(JSON.stringify(response.body).includes("pi_must_not_be_exposed"), false);
+  assert.equal(JSON.stringify(response.body).includes("re_must_not_be_exposed"), false);
+  assert.equal(JSON.stringify(response.body).includes("d78ff548"), false);
 });

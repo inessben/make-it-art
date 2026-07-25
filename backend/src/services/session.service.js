@@ -78,9 +78,7 @@ async function rotateRefreshToken(refreshToken) {
     return null;
   }
 
-  const authenticatedAt = session.authTime
-    ? new Date(session.authTime)
-    : new Date(0);
+  const authenticatedAt = session.authTime ? new Date(session.authTime) : new Date(0);
   return createSession(user, { authenticatedAt });
 }
 
@@ -147,7 +145,7 @@ async function getUserFromRequest(req) {
 
     Object.defineProperty(user, "sessionAuthenticatedAt", {
       value: new Date(payload.auth_time * 1000),
-      enumerable: false,
+      enumerable: false
     });
     return user;
   } catch (_error) {

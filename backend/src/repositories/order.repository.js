@@ -13,7 +13,18 @@ async function listOrdersForAdmin() {
     include: {
       user: true,
       items: true,
-      payments: true
+      payments: {
+        orderBy: {
+          checkoutVersion: "desc"
+        },
+        include: {
+          refunds: {
+            orderBy: {
+              createdAt: "desc"
+            }
+          }
+        }
+      }
     }
   });
 }

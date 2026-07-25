@@ -13,7 +13,11 @@ const ALLOWED_FIELDS = new Set([
   "eventId",
   "paymentIntentId",
   "orderId",
-  "supportReference"
+  "supportReference",
+  "taskId",
+  "taskType",
+  "taskKey",
+  "attemptCount"
 ]);
 
 function sanitizePaymentLog(details = {}) {

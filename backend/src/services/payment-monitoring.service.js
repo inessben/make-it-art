@@ -3,7 +3,11 @@ const prisma = require("../lib/prisma");
 const { redis } = require("../lib/redis");
 const { logPaymentEvent } = require("../lib/payment-logger");
 const { getStripeClient } = require("../lib/stripe");
-const { processStripePaymentEvent } = require("./payment-finalization.service");
+const {
+  EVENT_TARGETS,
+  processStripePaymentEvent,
+  validatePaymentIntent
+} = require("./payment-finalization.service");
 const { sendPaymentOperationsAlert } = require("./mail.service");
 
 const INVALID_SIGNATURE_THRESHOLD = 10;
@@ -48,21 +52,155 @@ function eventTypeForIntent(intent, localStatus) {
   return null;
 }
 
+function reconciliationEventForIntent(intent, eventType) {
+  const latestCharge =
+    typeof intent.latest_charge === "string"
+      ? intent.latest_charge
+      : intent.latest_charge?.id || "none";
+  const digest = crypto
+    .createHash("sha256")
+    .update(`${intent.id}:${intent.status}:${latestCharge}`)
+    .digest("hex");
+
+  return {
+    id: `evt_reconcile_${digest}`,
+    type: eventType,
+    data: { object: intent }
+  };
+}
+
+async function inspectStalePayments({
+  prismaClient = prisma,
+  stripeClient = getStripeClient(),
+  now = new Date(),
+  expectedLivemode = process.env.NODE_ENV === "production" ? true : undefined,
+  staleMs = 5 * 60 * 1000,
+  limit = 100
+} = {}) {
+  const staleBefore = new Date(now.getTime() - staleMs);
+  const orders = await prismaClient.order.findMany({
+    where: {
+      status: { in: ["PENDING_PAYMENT", "PAYMENT_PROCESSING", "PAYMENT_FAILED"] },
+      updatedAt: { lte: staleBefore }
+    },
+    include: { payments: { orderBy: { checkoutVersion: "desc" }, take: 1 } },
+    take: limit
+  });
+  const rows = [];
+  const summary = {
+    scanned: orders.length,
+    consistent: 0,
+    reconcilable: 0,
+    waiting: 0,
+    reviewRequired: 0,
+    failed: 0
+  };
+
+  for (const order of orders) {
+    const payment = order.payments[0];
+    if (!payment?.providerPaymentId) {
+      summary.waiting += 1;
+      rows.push({
+        orderId: order.publicId,
+        orderStatus: order.status,
+        paymentStatus: payment?.status || null,
+        providerStatus: null,
+        outcome: "WAITING",
+        validationCodes: ["PAYMENT_INTENT_NOT_LINKED"]
+      });
+      continue;
+    }
+
+    try {
+      const intent = await stripeClient.paymentIntents.retrieve(payment.providerPaymentId);
+      const validationCodes = validatePaymentIntent(intent, {
+        ...payment,
+        order
+      });
+      if (typeof expectedLivemode === "boolean" && intent.livemode !== expectedLivemode) {
+        validationCodes.push("PAYMENT_MODE_MISMATCH");
+      }
+
+      const eventType = eventTypeForIntent(intent, payment.status);
+      const target = EVENT_TARGETS[eventType];
+      let outcome;
+      if (validationCodes.length > 0) {
+        outcome = "REVIEW_REQUIRED";
+        summary.reviewRequired += 1;
+      } else if (!target) {
+        outcome = "WAITING";
+        summary.waiting += 1;
+      } else if (order.status === target.orderStatus && payment.status === target.paymentStatus) {
+        outcome = "CONSISTENT";
+        summary.consistent += 1;
+      } else {
+        outcome = "RECONCILE";
+        summary.reconcilable += 1;
+      }
+
+      rows.push({
+        orderId: order.publicId,
+        orderStatus: order.status,
+        paymentStatus: payment.status,
+        providerStatus: intent.status,
+        outcome,
+        validationCodes: validationCodes.sort()
+      });
+    } catch (error) {
+      summary.failed += 1;
+      rows.push({
+        orderId: order.publicId,
+        orderStatus: order.status,
+        paymentStatus: payment.status,
+        providerStatus: null,
+        outcome: "FAILED",
+        validationCodes: [String(error.code || "STRIPE_RETRIEVAL_FAILED")]
+      });
+    }
+  }
+
+  return { summary, rows };
+}
+
+async function reconcilePaymentIntent({ intent, localPaymentStatus, prismaClient = prisma }) {
+  const eventType = eventTypeForIntent(intent, localPaymentStatus);
+
+  if (!eventType) {
+    return { reconciled: false, eventType: null, result: null };
+  }
+
+  const result = await processStripePaymentEvent({
+    event: reconciliationEventForIntent(intent, eventType),
+    prismaClient
+  });
+
+  return { reconciled: true, eventType, result };
+}
+
 async function reconcileStalePayments({
   prismaClient = prisma,
   stripeClient = getStripeClient(),
-  now = new Date()
+  now = new Date(),
+  alertSender = sendPaymentOperationsAlert,
+  paymentReconciler = reconcilePaymentIntent,
+  logger = logPaymentEvent
 } = {}) {
   const staleBefore = new Date(now.getTime() - 5 * 60 * 1000);
   const orders = await prismaClient.order.findMany({
     where: {
-      status: { in: ["PENDING_PAYMENT", "PAYMENT_PROCESSING"] },
+      status: { in: ["PENDING_PAYMENT", "PAYMENT_PROCESSING", "PAYMENT_FAILED"] },
       updatedAt: { lte: staleBefore }
     },
     include: { payments: { orderBy: { checkoutVersion: "desc" }, take: 1 } },
     take: 100
   });
-  const summary = { scanned: orders.length, repaired: 0, deferred: 0, failed: 0 };
+  const summary = {
+    scanned: orders.length,
+    repaired: 0,
+    deferred: 0,
+    mismatched: 0,
+    failed: 0
+  };
 
   for (const order of orders) {
     const payment = order.payments[0];
@@ -72,23 +210,37 @@ async function reconcileStalePayments({
     }
     try {
       const intent = await stripeClient.paymentIntents.retrieve(payment.providerPaymentId);
-      const eventType = eventTypeForIntent(intent, payment.status);
-      if (!eventType) {
+      const mismatched =
+        intent.status === "succeeded" &&
+        (order.status !== "PAID" || payment.status !== "SUCCEEDED");
+
+      if (mismatched) {
+        summary.mismatched += 1;
+        logger(
+          "payment_state_mismatch_detected",
+          {
+            code: "STRIPE_SUCCEEDED_LOCAL_NOT_PAID",
+            status: order.status,
+            paymentIntentId: payment.providerPaymentId,
+            orderId: order.publicId
+          },
+          "warn"
+        );
+      }
+
+      const reconciliation = await paymentReconciler({
+        intent,
+        localPaymentStatus: payment.status,
+        prismaClient
+      });
+      if (!reconciliation.reconciled) {
         summary.deferred += 1;
         continue;
       }
-      const digest = crypto
-        .createHash("sha256")
-        .update(`${intent.id}:${intent.status}:${intent.latest_charge || "none"}`)
-        .digest("hex");
-      await processStripePaymentEvent({
-        event: { id: `evt_reconcile_${digest}`, type: eventType, data: { object: intent } },
-        prismaClient
-      });
       summary.repaired += 1;
     } catch (error) {
       summary.failed += 1;
-      logPaymentEvent(
+      logger(
         "reconciliation_failed",
         {
           code: error.code || "RECONCILIATION_FAILED",
@@ -100,9 +252,15 @@ async function reconcileStalePayments({
     }
   }
   if (summary.failed > 0) {
-    await sendPaymentOperationsAlert({
+    await alertSender({
       code: "PAYMENT_RECONCILIATION_FAILED",
       count: summary.failed
+    });
+  }
+  if (summary.mismatched > 0) {
+    await alertSender({
+      code: "PAYMENT_STATE_MISMATCH_REPAIRED",
+      count: summary.mismatched
     });
   }
   return summary;
@@ -111,6 +269,9 @@ async function reconcileStalePayments({
 module.exports = {
   INVALID_SIGNATURE_THRESHOLD,
   eventTypeForIntent,
+  inspectStalePayments,
+  reconcilePaymentIntent,
+  reconciliationEventForIntent,
   reconcileStalePayments,
   recordInvalidWebhookSignature
 };

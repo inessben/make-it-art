@@ -20,7 +20,6 @@ const paymentRepository = require("../repositories/payment.repository");
 const { ensureBuffer } = require("../utils/ensure-buffer");
 const { inviteAdminUser } = require("../services/auth.service");
 const {
-  CONTRACT_VERSION,
   extractArtistApplicationPayload,
   resolveContractSignedAt,
   generateArtistContractPdf
@@ -36,7 +35,7 @@ const ORDER_STATUS_LABELS = {
   PAID: "Paid",
   CANCELED: "Canceled",
   PARTIALLY_REFUNDED: "Partially refunded",
-  REFUNDED: "Refunded",
+  REFUNDED: "Refunded"
 };
 
 const PAYMENT_STATUS_LABELS = {
@@ -46,7 +45,7 @@ const PAYMENT_STATUS_LABELS = {
   FAILED: "Failed",
   CANCELED: "Canceled",
   PARTIALLY_REFUNDED: "Partially refunded",
-  REFUNDED: "Refunded",
+  REFUNDED: "Refunded"
 };
 
 function buildUserRole(user) {
@@ -114,19 +113,11 @@ function buildOrderStatus(order) {
     return ORDER_STATUS_LABELS[order.status] || order.status;
   }
 
-  if (
-    order.payments.some(
-      (payment) => buildPaymentStatus(payment) === "Succeeded",
-    )
-  ) {
+  if (order.payments.some((payment) => buildPaymentStatus(payment) === "Succeeded")) {
     return "Paid";
   }
 
-  if (
-    order.payments.some(
-      (payment) => buildPaymentStatus(payment) === "Refunded",
-    )
-  ) {
+  if (order.payments.some((payment) => buildPaymentStatus(payment) === "Refunded")) {
     return "Refunded";
   }
 
@@ -144,8 +135,9 @@ function buildPaymentStatus(payment) {
 async function resolveApplicationContractPdf(application) {
   const payload = extractArtistApplicationPayload(application);
   const existingPdf = ensureBuffer(application?.contractPdf);
-  const needsRegeneration =
-    application?.contractVersion !== CONTRACT_VERSION || !existingPdf || existingPdf.length === 0;
+  // A signed contract is an immutable legal artefact. Keep legacy PDFs available
+  // instead of silently regenerating them with the current contract wording.
+  const needsRegeneration = !existingPdf || existingPdf.length === 0;
 
   if (!needsRegeneration) {
     return {
@@ -221,10 +213,42 @@ function getOrderAmountValue(order) {
     return order.totalAmount / 100;
   }
 
-  return order.payments.reduce(
-    (sum, payment) => sum + getPaymentAmountValue(payment),
-    0,
+  return order.payments.reduce((sum, payment) => sum + getPaymentAmountValue(payment), 0);
+}
+
+function getAdminRefundSummary(order) {
+  const payment = order.payments.find(
+    (candidate) =>
+      candidate.providerPaymentId &&
+      ["SUCCEEDED", "PARTIALLY_REFUNDED", "REFUNDED"].includes(candidate.status)
   );
+  const refunds = payment?.refunds || [];
+  const succeededAmount = refunds
+    .filter((refund) => refund.status === "SUCCEEDED")
+    .reduce((total, refund) => total + refund.amount, 0);
+  const pendingAmount = refunds
+    .filter((refund) => refund.status === "PENDING")
+    .reduce((total, refund) => total + refund.amount, 0);
+  const refundableAmount = payment
+    ? Math.max(payment.amount - succeededAmount - pendingAmount, 0)
+    : 0;
+
+  return {
+    currency: payment?.currency || order.currency || "EUR",
+    refundedAmount: succeededAmount,
+    pendingRefundAmount: pendingAmount,
+    refundableAmount,
+    canRefund: ["PAID", "PARTIALLY_REFUNDED"].includes(order.status) && refundableAmount > 0,
+    refunds: refunds.map((refund) => ({
+      id: refund.publicId,
+      status: refund.status,
+      amount: refund.amount,
+      currency: refund.currency,
+      reason: refund.reasonCode,
+      createdAt: refund.createdAt,
+      updatedAt: refund.updatedAt
+    }))
+  };
 }
 
 function getArtworkPriceLabel(artwork) {
@@ -314,7 +338,7 @@ function serializeAdminArtwork(artwork) {
     artistId: artwork.artistId,
     artistName: artwork.artist?.displayName || artwork.artist?.user?.username || "Unknown artist",
     category: artwork.category?.name || "No category",
-    price: artwork.price || artwork.priceTokens || "Price not set",
+    price: getArtworkPriceLabel(artwork),
     protection: Boolean(artwork.protection),
     favoriteCount: artwork.favoriteCount ?? artwork._count?.favorites ?? 0,
     ordersCount: artwork._count?.orderItems ?? 0,
@@ -689,18 +713,25 @@ router.get("/admin/orders", authRequired, adminRequired, async (_req, res) => {
 
     const payload = orders.map((order) => {
       const amountValue = getOrderAmountValue(order);
+      const refundSummary = getAdminRefundSummary(order);
 
       return {
         id: order.id,
+        publicId: order.publicId,
         reference: `#ORD-${String(order.id).padStart(4, "0")}`,
         customer: order.user?.username || order.user?.email || "User",
         customerEmail: order.user?.email || "Email not provided",
         status: buildOrderStatus(order),
+        statusCode: order.status,
+        totalAmount: Number.isSafeInteger(order.totalAmount)
+          ? order.totalAmount
+          : Math.round(amountValue * 100),
         amountValue,
         amount: formatCurrencyAmount(amountValue),
         itemsCount: order.items.length,
         paymentsCount: order.payments.length,
-        createdAt: order.createdAt
+        createdAt: order.createdAt,
+        ...refundSummary
       };
     });
 

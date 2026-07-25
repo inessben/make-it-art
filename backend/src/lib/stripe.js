@@ -1,6 +1,7 @@
 const Stripe = require("stripe");
 const env = require("../config/env");
 
+const STRIPE_API_VERSION = "2026-06-24.dahlia";
 let stripeClient;
 
 function getStripeClient() {
@@ -12,6 +13,7 @@ function getStripeClient() {
 
   if (!stripeClient) {
     stripeClient = new Stripe(env.stripe.secretKey, {
+      apiVersion: STRIPE_API_VERSION,
       maxNetworkRetries: 2,
       appInfo: {
         name: "Make It Art",
@@ -24,5 +26,6 @@ function getStripeClient() {
 }
 
 module.exports = {
+  STRIPE_API_VERSION,
   getStripeClient
 };
