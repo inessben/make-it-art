@@ -190,15 +190,13 @@
             >
               <div class="flex items-center justify-between gap-4">
                 <div>
-                  <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
-                    Mes collections
-                  </p>
+                  <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">Mes collections</p>
                   <h2 class="mt-3 text-xl font-semibold text-white">
                     Sauvegarder cette oeuvre dans une collection
                   </h2>
                   <p class="mt-2 text-sm text-[#96A4B8]">
-                    Utilise le bouton Favori pour la liste de souhaits. Ici, tu
-                    peux ranger l'oeuvre dans une collection personnelle.
+                    Utilise le bouton Favori pour la liste de souhaits. Ici, tu peux ranger l'oeuvre
+                    dans une collection personnelle.
                   </p>
                 </div>
                 <NuxtLink
@@ -248,21 +246,14 @@
               </p>
             </section>
 
-            <section
-              class="rounded-[28px] border border-[#151E30] bg-[#050912] p-6"
-            >
-              <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
-                Artiste
-              </p>
+            <section class="rounded-[28px] border border-[#151E30] bg-[#050912] p-6">
+              <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">Artiste</p>
               <div v-if="artwork.artist" class="mt-4 grid gap-3">
                 <p class="text-2xl font-semibold text-white">
                   {{ artwork.artist.displayName }}
                 </p>
                 <p class="text-sm leading-7 text-[#A4B0C0]">
-                  {{
-                    artwork.artist.bio ||
-                    "Cet artiste complete actuellement son profil public."
-                  }}
+                  {{ artwork.artist.bio || "Cet artiste complete actuellement son profil public." }}
                 </p>
                 <div class="flex flex-wrap gap-2">
                   <span
@@ -325,9 +316,7 @@ const auth = useAuthStore();
 const config = useRuntimeConfig();
 const siteUrl = config.public.siteUrl.replace(/\/$/, "");
 const cart = useCartStore();
-const requestHeaders = import.meta.server
-  ? useRequestHeaders(["cookie"])
-  : undefined;
+const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
 const collectionsLoading = ref(false);
 const collectionSubmitLoading = ref(false);
 const collectionMessage = ref("");
@@ -335,17 +324,14 @@ const cartMessage = ref("");
 const selectedCollectionId = ref("");
 const personalCollections = ref([]);
 
-const { data, pending, error, refresh } = await useFetch(
-  `/api/artworks/${route.params.id}`,
-  {
-    headers: requestHeaders,
-    credentials: "include",
-    default: () => ({
-      artwork: null,
-      relatedArtworks: [],
-    }),
-  },
-);
+const { data, pending, error, refresh } = await useFetch(`/api/artworks/${route.params.id}`, {
+  headers: requestHeaders,
+  credentials: "include",
+  default: () => ({
+    artwork: null,
+    relatedArtworks: []
+  })
+});
 
 const artwork = computed(() => data.value?.artwork || null);
 const relatedArtworks = computed(() => data.value?.relatedArtworks || []);
@@ -392,19 +378,14 @@ const errorMessage = computed(() =>
     : ""
 );
 const formattedPrice = computed(() =>
-  formatMarketplacePrice(artwork.value?.priceValue ?? artwork.value?.price),
+  formatMarketplacePrice(artwork.value?.priceValue ?? artwork.value?.price)
 );
-const formattedDate = computed(() =>
-  formatMarketplaceDate(artwork.value?.createdAt),
-);
+const formattedDate = computed(() => formatMarketplaceDate(artwork.value?.createdAt));
 const showCollectorTools = computed(() => auth.user && !auth.isAdmin);
 const isInCart = computed(() =>
   Boolean(
-    artwork.value?.id &&
-      cart.cart?.items?.some(
-        (item) => item.artworkId === artwork.value.id,
-      ),
-  ),
+    artwork.value?.id && cart.cart?.items?.some((item) => item.artworkId === artwork.value.id)
+  )
 );
 const artworkInitials = computed(() => getArtistInitials(artwork.value?.title || "Artwork"));
 const artistInitials = computed(() => getArtistInitials(artwork.value?.artist?.displayName));
@@ -447,8 +428,7 @@ async function toggleCart() {
     await cart.setItem(artwork.value.id, 1);
     cartMessage.value = "Œuvre ajoutée au panier.";
   } catch {
-    cartMessage.value =
-      cart.error || "Impossible de mettre à jour votre panier.";
+    cartMessage.value = cart.error || "Impossible de mettre à jour votre panier.";
   }
 }
 
@@ -462,15 +442,14 @@ async function loadCollections() {
 
   try {
     const response = await $fetch("/api/collections/me", {
-      credentials: "include",
+      credentials: "include"
     });
 
     personalCollections.value = (response.collections || []).filter(
-      (collection) => !collection.isDefaultFavorites,
+      (collection) => !collection.isDefaultFavorites
     );
   } catch (error) {
-    collectionMessage.value =
-      error?.data?.message || "Impossible de charger vos collections.";
+    collectionMessage.value = error?.data?.message || "Impossible de charger vos collections.";
   } finally {
     collectionsLoading.value = false;
   }
@@ -490,27 +469,21 @@ async function addToCollection() {
   collectionMessage.value = "";
 
   try {
-    const response = await $fetch(
-      `/api/collections/me/${selectedCollectionId.value}/artworks`,
-      {
-        method: "POST",
-        credentials: "include",
-        body: {
-          artworkId: artwork.value.id,
-        },
-      },
-    );
+    const response = await $fetch(`/api/collections/me/${selectedCollectionId.value}/artworks`, {
+      method: "POST",
+      credentials: "include",
+      body: {
+        artworkId: artwork.value.id
+      }
+    });
 
     personalCollections.value = personalCollections.value.map((collection) =>
-      collection.id === response.collection.id
-        ? response.collection
-        : collection,
+      collection.id === response.collection.id ? response.collection : collection
     );
     collectionMessage.value = "Oeuvre ajoutee a la collection.";
   } catch (error) {
     collectionMessage.value =
-      error?.data?.message ||
-      "Impossible d'ajouter cette oeuvre a la collection.";
+      error?.data?.message || "Impossible d'ajouter cette oeuvre a la collection.";
   } finally {
     collectionSubmitLoading.value = false;
   }
@@ -534,8 +507,7 @@ onMounted(async () => {
     try {
       await cart.fetchCart();
     } catch {
-      cartMessage.value =
-        cart.error || "Impossible de charger votre panier.";
+      cartMessage.value = cart.error || "Impossible de charger votre panier.";
     }
   }
 

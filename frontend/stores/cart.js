@@ -5,10 +5,18 @@ export const useCartStore = defineStore("cart", {
     cart: null,
     loading: false,
     error: "",
-    validationMessage: "",
+    validationMessage: ""
   }),
 
   actions: {
+    async csrfHeaders() {
+      const response = await $fetch("/api/v1/security/csrf-token", {
+        credentials: "include"
+      });
+
+      return { "x-csrf-token": response.csrfToken };
+    },
+
     async runCartRequest(request, fallbackMessage) {
       this.loading = true;
       this.error = "";
@@ -34,44 +42,44 @@ export const useCartStore = defineStore("cart", {
       return this.runCartRequest(
         () =>
           $fetch("/api/v1/cart", {
-            credentials: "include",
+            credentials: "include"
           }),
-        "Impossible de charger votre panier.",
+        "Impossible de charger votre panier."
       );
     },
 
     async setItem(artworkId, quantity) {
-      return this.runCartRequest(
-        () =>
-          $fetch("/api/v1/cart/items", {
-            method: "POST",
-            credentials: "include",
-            body: { artworkId, quantity },
-          }),
-        "Impossible de mettre à jour cet article.",
-      );
+      return this.runCartRequest(async () => {
+        const headers = await this.csrfHeaders();
+        return $fetch("/api/v1/cart/items", {
+          method: "POST",
+          credentials: "include",
+          headers,
+          body: { artworkId, quantity }
+        });
+      }, "Impossible de mettre à jour cet article.");
     },
 
     async removeItem(artworkId) {
-      return this.runCartRequest(
-        () =>
-          $fetch(`/api/v1/cart/items/${artworkId}`, {
-            method: "DELETE",
-            credentials: "include",
-          }),
-        "Impossible de retirer cet article.",
-      );
+      return this.runCartRequest(async () => {
+        const headers = await this.csrfHeaders();
+        return $fetch(`/api/v1/cart/items/${artworkId}`, {
+          method: "DELETE",
+          credentials: "include",
+          headers
+        });
+      }, "Impossible de retirer cet article.");
     },
 
     async clearCart() {
-      return this.runCartRequest(
-        () =>
-          $fetch("/api/v1/cart", {
-            method: "DELETE",
-            credentials: "include",
-          }),
-        "Impossible de vider votre panier.",
-      );
+      return this.runCartRequest(async () => {
+        const headers = await this.csrfHeaders();
+        return $fetch("/api/v1/cart", {
+          method: "DELETE",
+          credentials: "include",
+          headers
+        });
+      }, "Impossible de vider votre panier.");
     },
 
     async validateForCheckout() {
@@ -80,23 +88,23 @@ export const useCartStore = defineStore("cart", {
       }
 
       try {
-        await this.runCartRequest(
-          () =>
-            $fetch("/api/v1/cart/validate", {
-              method: "POST",
-              credentials: "include",
-              body: {
-                cartVersion: this.cart.version,
-                pricingFingerprint: this.cart.pricingFingerprint,
-              },
-            }),
-          "Votre panier doit être vérifié avant le paiement.",
-        );
+        await this.runCartRequest(async () => {
+          const headers = await this.csrfHeaders();
+          return $fetch("/api/v1/cart/validate", {
+            method: "POST",
+            credentials: "include",
+            headers,
+            body: {
+              cartVersion: this.cart.version,
+              pricingFingerprint: this.cart.pricingFingerprint
+            }
+          });
+        }, "Votre panier doit être vérifié avant le paiement.");
         this.validationMessage = "Prix et disponibilité confirmés.";
         return true;
       } catch {
         return false;
       }
-    },
-  },
+    }
+  }
 });

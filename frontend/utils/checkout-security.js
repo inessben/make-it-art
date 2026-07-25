@@ -3,11 +3,26 @@ const IDEMPOTENCY_KEY_PATTERN =
 const PRICING_FINGERPRINT_PATTERN = /^[0-9a-f]{64}$/i;
 const SENSITIVE_VALUE_PATTERN =
   /(pi_[A-Za-z0-9]+_secret_[A-Za-z0-9]+|[spr]k_(?:test|live|restricted)_[A-Za-z0-9]+)/i;
+const REUSABLE_PAYMENT_STATUSES = new Set([
+  "requires_payment_method",
+  "requires_confirmation",
+  "requires_action"
+]);
+const PAYMENT_INTENT_CLIENT_SECRET_PATTERN = /^pi_[A-Za-z0-9_]+_secret_[A-Za-z0-9]+$/;
 
 export const CHECKOUT_ORDER_STORAGE_KEY = "mia.checkout.order";
 
 export function isPublishableStripeKey(value) {
   return typeof value === "string" && /^pk_(?:test|live)_[A-Za-z0-9]+$/.test(value);
+}
+
+export function canMountPaymentElement(payment) {
+  return Boolean(
+    payment?.requiresConfirmation === true &&
+    REUSABLE_PAYMENT_STATUSES.has(payment.status) &&
+    typeof payment.clientSecret === "string" &&
+    PAYMENT_INTENT_CLIENT_SECRET_PATTERN.test(payment.clientSecret)
+  );
 }
 
 export function getCheckoutStorageKey(cart) {

@@ -28,8 +28,7 @@ export default defineNuxtConfig({
       umamiWebsiteId: process.env.NUXT_PUBLIC_UMAMI_WEBSITE_ID || "",
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || "https://www.makeitart.io",
       appBaseUrl: process.env.NUXT_PUBLIC_APP_BASE_URL || "http://localhost",
-      stripePublishableKey:
-        process.env.NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
+      stripePublishableKey: process.env.NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
     },
     apiInternalBase: (process.env.NUXT_API_PROXY_TARGET || "http://localhost:4000/api/**").replace(
       /\/\*\*$/,

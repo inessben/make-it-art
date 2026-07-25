@@ -4,13 +4,9 @@
       class="mx-auto w-full max-w-[1120px] rounded-[32px] border border-[#1A1F2A] bg-[#01050E] p-8 shadow-[0_32px_90px_rgba(0,0,0,0.22)]"
       aria-labelledby="order-title"
     >
-      <div
-        class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"
-      >
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-            Commande privée
-          </p>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Commande privée</p>
           <h1
             id="order-title"
             class="mt-4 break-all text-[clamp(2rem,2.5vw,2.8rem)] font-semibold leading-[1.05]"
@@ -18,11 +14,7 @@
             {{ order ? "Commande " + order.id : "Détail de la commande" }}
           </h1>
           <p class="mt-4 max-w-2xl leading-7 text-[#A0ADB4]">
-            {{
-              order
-                ? presentation.title
-                : "Le statut est chargé depuis votre espace privé."
-            }}
+            {{ order ? presentation.title : "Le statut est chargé depuis votre espace privé." }}
           </p>
         </div>
         <button
@@ -51,14 +43,10 @@
       </div>
 
       <div v-else-if="order" class="mt-10 space-y-6">
-        <div
-          class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6"
-        >
+        <div class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
           <div class="flex flex-col gap-5 sm:flex-row sm:justify-between">
             <div>
-              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-                Statut vérifié
-              </p>
+              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Statut vérifié</p>
               <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
                 {{ presentation.title }}
               </h2>
@@ -70,7 +58,7 @@
               class="inline-flex h-fit items-center rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em]"
               :class="statusToneClass"
             >
-              {{ statusLabel(order.status) }}
+              {{ presentation.badgeLabel }}
             </span>
           </div>
 
@@ -83,40 +71,76 @@
           </NuxtLink>
         </div>
 
-        <div
-          class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6"
-        >
+        <div class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
           <div class="grid gap-4 sm:grid-cols-3">
             <div>
-              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-                Référence
-              </p>
+              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Référence</p>
               <p class="mt-2 break-all text-sm font-semibold text-[#E6EDF7]">
                 {{ order.id }}
               </p>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-                Date
-              </p>
+              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Date</p>
               <p class="mt-2 text-lg text-[#A0ADB4]">
                 {{ formatDate(order.createdAt) }}
               </p>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-                Montant
-              </p>
+              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Montant</p>
               <p class="mt-2 text-lg font-semibold text-[#E6EDF7]">
                 {{ formatMoney(order.amount, order.currency) }}
               </p>
             </div>
           </div>
+          <dl v-if="order.pricing" class="mt-6 grid gap-3 border-t border-[#1A1F2A] pt-5 text-sm">
+            <div class="flex justify-between gap-4">
+              <dt class="text-[#A0ADB4]">Total HT</dt>
+              <dd class="font-semibold text-[#E6EDF7]">
+                {{ formatMoney(order.pricing.netAmount, order.currency) }}
+              </dd>
+            </div>
+            <div class="flex justify-between gap-4">
+              <dt class="text-[#A0ADB4]">
+                TVA incluse ({{ formatRate(order.pricing.taxRateBps) }})
+              </dt>
+              <dd class="font-semibold text-[#E6EDF7]">
+                {{ formatMoney(order.pricing.taxAmount, order.currency) }}
+              </dd>
+            </div>
+            <div class="flex justify-between gap-4 border-t border-[#1A1F2A] pt-3">
+              <dt class="font-semibold text-white">Total TTC</dt>
+              <dd class="font-semibold text-white">
+                {{ formatMoney(order.pricing.totalAmount, order.currency) }}
+              </dd>
+            </div>
+          </dl>
         </div>
 
-        <div
+        <section
+          v-if="order.invoices?.length"
           class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6"
+          aria-labelledby="invoices-title"
         >
+          <h2 id="invoices-title" class="text-lg font-semibold text-[#E6EDF7]">Factures</h2>
+          <div class="mt-5 grid gap-3">
+            <a
+              v-for="invoice in order.invoices"
+              :key="invoice.id"
+              :href="invoiceDownloadUrl(invoice)"
+              class="flex items-center justify-between gap-4 rounded-2xl border border-[#1A1F2A] bg-[#0d1120] px-5 py-4 text-sm transition hover:border-[#4A6CF7]"
+            >
+              <span>
+                <span class="block font-semibold text-white">{{ invoice.number }}</span>
+                <span class="mt-1 block text-xs text-[#A0ADB4]">
+                  Émise le {{ formatDate(invoice.issuedAt) }}
+                </span>
+              </span>
+              <span class="font-semibold text-[#BFD0FF]">Télécharger le PDF</span>
+            </a>
+          </div>
+        </section>
+
+        <div class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
           <h2 class="text-lg font-semibold text-[#E6EDF7]">Œuvres</h2>
           <div class="mt-5 space-y-4">
             <article
@@ -124,9 +148,7 @@
               :key="item.title + '-' + item.artistName + '-' + index"
               class="rounded-2xl border border-[#1A1F2A] bg-[#0d1120] p-4"
             >
-              <div
-                class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-              >
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p class="text-base font-semibold text-[#E6EDF7]">
                     {{ item.title || "Œuvre" }}
@@ -142,38 +164,68 @@
                   {{ formatMoney(item.unitAmount, item.currency) }} / unité
                 </span>
               </div>
+
+              <div
+                v-if="item.delivery?.downloadRights || item.delivery?.certificate"
+                class="mt-4 grid gap-3 border-t border-[#1A1F2A] pt-4 sm:grid-cols-2"
+              >
+                <div
+                  v-if="item.delivery.downloadRights"
+                  class="rounded-xl border border-[#1A1F2A] bg-[#090017] p-3"
+                >
+                  <p class="text-xs uppercase tracking-[0.14em] text-[#4A6CF7]">
+                    Droits numériques
+                  </p>
+                  <p class="mt-2 text-sm font-semibold text-[#E6EDF7]">
+                    {{ deliveryStatus(item.delivery.downloadRights.status).label }}
+                  </p>
+                  <p class="mt-1 text-xs leading-5 text-[#A0ADB4]">
+                    {{ deliveryStatus(item.delivery.downloadRights.status).message }}
+                  </p>
+                </div>
+
+                <div
+                  v-if="item.delivery.certificate"
+                  class="rounded-xl border border-[#1A1F2A] bg-[#090017] p-3"
+                >
+                  <p class="text-xs uppercase tracking-[0.14em] text-[#4A6CF7]">
+                    Certificat de propriété
+                  </p>
+                  <p class="mt-2 break-all text-sm font-semibold text-[#E6EDF7]">
+                    {{ item.delivery.certificate.number }}
+                  </p>
+                  <p class="mt-1 text-xs text-[#A0ADB4]">
+                    {{ deliveryStatus(item.delivery.certificate.status).label }} · émis le
+                    {{ formatDate(item.delivery.certificate.issuedAt) }}
+                  </p>
+                  <details class="mt-3 text-xs text-[#71809A]">
+                    <summary class="cursor-pointer text-[#A0ADB4]">Vérifier le certificat</summary>
+                    <p class="mt-2 break-all">
+                      Empreinte SHA-256 : {{ item.delivery.certificate.fingerprint }}
+                    </p>
+                  </details>
+                </div>
+              </div>
             </article>
           </div>
         </div>
 
-        <div
-          v-if="order.payment"
-          class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6"
-        >
+        <div v-if="order.payment" class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
           <h2 class="text-lg font-semibold text-[#E6EDF7]">Paiement</h2>
           <div class="mt-5 grid gap-4 sm:grid-cols-2">
-            <div
-              class="rounded-2xl border border-[#1A1F2A] bg-[#0d1120] p-4"
-            >
-              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-                Prestataire
-              </p>
+            <div class="rounded-2xl border border-[#1A1F2A] bg-[#0d1120] p-4">
+              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Prestataire</p>
               <p class="mt-2 text-sm text-[#A0ADB4]">Stripe</p>
             </div>
-            <div
-              class="rounded-2xl border border-[#1A1F2A] bg-[#0d1120] p-4"
-            >
-              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-                Statut interne
-              </p>
+            <div class="rounded-2xl border border-[#1A1F2A] bg-[#0d1120] p-4">
+              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Statut interne</p>
               <p class="mt-2 text-sm text-[#A0ADB4]">
-                {{ paymentStatusLabel(order.payment.status) }}
+                {{ getPaymentStatusLabel(order.payment.status) }}
               </p>
             </div>
           </div>
           <p class="mt-4 text-xs leading-6 text-[#71809A]">
-            Seules les informations non sensibles confirmées côté serveur sont
-            affichées ici.
+            Seules les informations non sensibles confirmées côté serveur sont affichées ici.
           </p>
         </div>
 
@@ -182,12 +234,9 @@
           class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6"
           aria-labelledby="refunds-title"
         >
-          <h2 id="refunds-title" class="text-lg font-semibold text-[#E6EDF7]">
-            Remboursements
-          </h2>
+          <h2 id="refunds-title" class="text-lg font-semibold text-[#E6EDF7]">Remboursements</h2>
           <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
-            Ces statuts proviennent de votre commande privée et sont confirmés
-            côté serveur.
+            Ces statuts proviennent de votre commande privée et sont confirmés côté serveur.
           </p>
 
           <div class="mt-5 grid gap-4">
@@ -197,9 +246,7 @@
               class="rounded-2xl border bg-[#0d1120] p-5"
               :class="refundToneClass(refund.status)"
             >
-              <div
-                class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
-              >
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p class="font-semibold text-[#E6EDF7]">
                     {{ getRefundStatusPresentation(refund.status).label }}
@@ -234,20 +281,20 @@ import { computed, onMounted, ref } from "vue";
 import { navigateTo, useRoute } from "#app";
 import {
   getOrderStatusPresentation,
-  getRefundStatusPresentation,
+  getPaymentStatusLabel,
+  getRefundStatusPresentation
 } from "~/utils/order-status";
+import { getDigitalDeliveryPresentation } from "~/utils/digital-delivery";
 
 definePageMeta({
-  middleware: "auth",
+  middleware: "auth"
 });
 
 const route = useRoute();
 const loading = ref(true);
 const errorMessage = ref("");
 const order = ref(null);
-const presentation = computed(() =>
-  getOrderStatusPresentation(order.value?.status),
-);
+const presentation = computed(() => getOrderStatusPresentation(order.value?.status));
 const orderActionTarget = computed(() => {
   const target = presentation.value.action?.to;
 
@@ -257,7 +304,7 @@ const orderActionTarget = computed(() => {
 
   return {
     path: "/checkout",
-    query: { order: order.value?.id },
+    query: { order: order.value?.id }
   };
 });
 const statusToneClass = computed(() => {
@@ -266,6 +313,7 @@ const statusToneClass = computed(() => {
     error: "bg-[#2B1014] text-[#FECACA]",
     warning: "bg-[#2B220E] text-[#F7D990]",
     pending: "bg-[#1C3350] text-[#67B7FF]",
+    neutral: "bg-[#1A1F2A] text-[#A0ADB4]"
   };
 
   return tones[presentation.value.tone] || tones.warning;
@@ -280,13 +328,12 @@ async function loadOrder() {
   try {
     const publicId = encodeURIComponent(String(route.params.id));
     const response = await $fetch("/api/v1/orders/" + publicId, {
-      credentials: "include",
+      credentials: "include"
     });
     order.value = response.order;
   } catch {
     order.value = null;
-    errorMessage.value =
-      "Cette commande n’existe pas ou n’appartient pas à votre compte.";
+    errorMessage.value = "Cette commande n’existe pas ou n’appartient pas à votre compte.";
   } finally {
     loading.value = false;
   }
@@ -295,7 +342,7 @@ async function loadOrder() {
 function formatMoney(amount, currency = "EUR") {
   return new Intl.NumberFormat("fr-FR", {
     style: "currency",
-    currency,
+    currency
   }).format(amount / 100);
 }
 
@@ -306,43 +353,32 @@ function formatDate(value) {
 
   return new Intl.DateTimeFormat("fr-FR", {
     dateStyle: "medium",
-    timeStyle: "short",
+    timeStyle: "short"
   }).format(new Date(value));
 }
 
-function statusLabel(status) {
-  const labels = {
-    PENDING_PAYMENT: "Paiement en attente",
-    PAYMENT_PROCESSING: "Vérification en cours",
-    PAID: "Payée",
-    PAYMENT_FAILED: "Paiement refusé",
-    PAYMENT_REVIEW: "En cours d’examen",
-    CANCELED: "Annulée",
-  };
-
-  return labels[status] || "Statut indisponible";
+function formatRate(basisPoints) {
+  return `${Number(basisPoints || 0) / 100} %`;
 }
 
-function paymentStatusLabel(status) {
-  const labels = {
-    PENDING: "En attente",
-    PROCESSING: "En cours",
-    SUCCEEDED: "Confirmé",
-    FAILED: "Échoué",
-    CANCELED: "Annulé",
-  };
-
-  return labels[status] || "Indisponible";
+function invoiceDownloadUrl(invoice) {
+  return `/api/v1/orders/${encodeURIComponent(order.value.id)}/invoices/${encodeURIComponent(
+    invoice.id
+  )}.pdf`;
 }
 
 function refundToneClass(status) {
   const tones = {
     PENDING: "border-[#1C3350]",
     SUCCEEDED: "border-[#245C3C]",
-    FAILED: "border-[#6C1F2D]",
+    FAILED: "border-[#6C1F2D]"
   };
 
   return tones[status] || "border-[#1A1F2A]";
+}
+
+function deliveryStatus(status) {
+  return getDigitalDeliveryPresentation(status);
 }
 
 function navigateBack() {

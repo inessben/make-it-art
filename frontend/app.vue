@@ -111,7 +111,7 @@ const seoByRoute = {
   "/payment-methods": ["Payment Methods", "Manage the payment methods linked to your account."],
   "/settings": ["Settings", "Manage your ACCOUNT preferences."],
   "/wallet": ["Wallet", "Review your balance and recent wallet activity."],
-  "/shopping-basket": ["Shopping Basket", "Review the artworks in your shopping basket."],
+  "/cart": ["Shopping Basket", "Review the artworks in your shopping basket."],
   "/become-artist": [
     "Become an Artist",
     "Submit your artist application and signed creator agreement."

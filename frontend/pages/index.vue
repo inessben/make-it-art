@@ -180,7 +180,7 @@
           aria-label="Next artworks"
           @click="scrollFeaturedArtworks(1)"
         >
-          >
+          &gt;
         </button>
       </div>
 
@@ -278,7 +278,7 @@
           aria-label="Next artists"
           @click="scrollHomeArtists(1)"
         >
-          >
+          &gt;
         </button>
       </div>
     </section>

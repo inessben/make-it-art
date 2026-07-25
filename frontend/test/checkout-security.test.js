@@ -2,11 +2,47 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   buildPaymentReturnUrl,
+  canMountPaymentElement,
   createSecureUuid,
   getOrCreateIdempotencyKey,
   getSafePaymentError,
   isPublishableStripeKey
 } from "../utils/checkout-security.js";
+
+test("the Payment Element mounts only for a reusable server-approved intent", () => {
+  assert.equal(
+    canMountPaymentElement({
+      status: "requires_payment_method",
+      requiresConfirmation: true,
+      clientSecret: "pi_test_123_secret_public123"
+    }),
+    true
+  );
+
+  for (const status of ["succeeded", "processing", "canceled", "requires_capture"]) {
+    assert.equal(
+      canMountPaymentElement({
+        status,
+        requiresConfirmation: true,
+        clientSecret: "pi_test_123_secret_public123"
+      }),
+      false
+    );
+  }
+
+  assert.equal(
+    canMountPaymentElement({
+      status: "requires_action",
+      requiresConfirmation: false,
+      clientSecret: "pi_test_123_secret_public123"
+    }),
+    false
+  );
+  assert.equal(
+    canMountPaymentElement({ status: "requires_action", requiresConfirmation: true }),
+    false
+  );
+});
 
 test("only Stripe publishable keys are accepted by the browser", () => {
   assert.equal(isPublishableStripeKey("pk_test_public123"), true);

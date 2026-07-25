@@ -4,13 +4,9 @@
       class="mx-auto grid w-full max-w-[1160px] gap-8 rounded-[32px] border border-[#1A1F2A] bg-[#01050E] p-7 shadow-[0_32px_90px_rgba(0,0,0,0.22)]"
       aria-labelledby="cart-title"
     >
-      <header
-        class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
-      >
+      <header class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-            Panier sécurisé
-          </p>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Panier sécurisé</p>
           <h1
             id="cart-title"
             class="mt-4 text-[clamp(2rem,2.6vw,3rem)] font-semibold leading-[1.05] text-white"
@@ -18,8 +14,7 @@
             Récapitulatif
           </h1>
           <p class="mt-4 max-w-3xl text-sm leading-6 text-[#A0ADB4]">
-            Les prix et la disponibilité sont vérifiés côté serveur avant le
-            paiement.
+            Les prix et la disponibilité sont vérifiés côté serveur avant le paiement.
           </p>
         </div>
 
@@ -70,11 +65,7 @@
                 Prix unitaire :
                 {{ formatMoney(item.unitAmount, item.currency) }}
               </p>
-              <p
-                v-if="item.issue"
-                class="mt-3 text-sm text-[#FBC8D0]"
-                role="alert"
-              >
+              <p v-if="item.issue" class="mt-3 text-sm text-[#FBC8D0]" role="alert">
                 {{ issueMessage(item.issue) }}
               </p>
             </div>
@@ -133,9 +124,7 @@
               {{ formatMoney(cartSummary.totalAmount, cartSummary.currency) }}
             </p>
             <p class="mt-1 text-sm text-[#A0ADB4]">
-              {{ cartSummary.itemCount }} article{{
-                cartSummary.itemCount > 1 ? "s" : ""
-              }}
+              {{ cartSummary.itemCount }} article{{ cartSummary.itemCount > 1 ? "s" : "" }}
             </p>
           </div>
 
@@ -169,16 +158,11 @@ import { onMounted } from "vue";
 import { useCartStore } from "~/stores/cart";
 
 definePageMeta({
-  middleware: "auth",
+  middleware: "auth"
 });
 
 const cartStore = useCartStore();
-const {
-  cart: cartSummary,
-  loading,
-  error,
-  validationMessage,
-} = storeToRefs(cartStore);
+const { cart: cartSummary, loading, error, validationMessage } = storeToRefs(cartStore);
 
 onMounted(async () => {
   try {
@@ -191,7 +175,7 @@ onMounted(async () => {
 function formatMoney(amount, currency = "EUR") {
   return new Intl.NumberFormat("fr-FR", {
     style: "currency",
-    currency,
+    currency
   }).format(amount / 100);
 }
 
@@ -199,7 +183,7 @@ function issueMessage(issue) {
   const messages = {
     ARTWORK_NOT_AVAILABLE: "Cette œuvre n’est plus disponible.",
     ARTWORK_PRICE_UNAVAILABLE: "Le prix actuel ne peut pas être confirmé.",
-    INSUFFICIENT_STOCK: "La quantité demandée n’est plus disponible.",
+    INSUFFICIENT_STOCK: "La quantité demandée n’est plus disponible."
   };
 
   return messages[issue] || "Cet article doit être vérifié.";
