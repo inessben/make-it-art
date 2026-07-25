@@ -152,7 +152,7 @@
           aria-label="Previous artworks"
           @click="scrollFeaturedArtworks(-1)"
         >
-          <
+          &lt;
         </button>
 
         <div
@@ -223,7 +223,7 @@
           aria-label="Previous artists"
           @click="scrollHomeArtists(-1)"
         >
-          <
+          &lt;
         </button>
 
         <div
