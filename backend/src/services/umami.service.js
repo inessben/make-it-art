@@ -14,7 +14,10 @@ class UmamiError extends Error {
 
 function assertConfigured() {
   if (!env.umami.username || !env.umami.password) {
-    throw new UmamiError("Umami API credentials are not configured (UMAMI_API_USERNAME/PASSWORD).", 503);
+    throw new UmamiError(
+      "Umami API credentials are not configured (UMAMI_API_USERNAME/PASSWORD).",
+      503
+    );
   }
 
   if (!env.umami.websiteId) {

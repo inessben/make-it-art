@@ -213,7 +213,10 @@ const kpiCards = computed(() => [
   { label: "Unique visitors", value: (overview.value?.uniqueVisitors ?? 0).toLocaleString() },
   { label: "Pageviews", value: (overview.value?.pageviews ?? 0).toLocaleString() },
   { label: "Sessions", value: (overview.value?.sessions ?? 0).toLocaleString() },
-  { label: "Avg session duration", value: formatDuration(overview.value?.avgSessionDurationSeconds) },
+  {
+    label: "Avg session duration",
+    value: formatDuration(overview.value?.avgSessionDurationSeconds)
+  },
   { label: "Bounce rate", value: `${overview.value?.bounceRate ?? 0}%` },
   { label: "Active now", value: (activeVisitors.value ?? 0).toLocaleString() }
 ]);

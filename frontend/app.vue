@@ -68,7 +68,9 @@ const privateRoutePrefixes = [
   "/forgot-password"
 ];
 const isPrivateRoute = computed(() =>
-  privateRoutePrefixes.some((prefix) => route.path === prefix || route.path.startsWith(`${prefix}/`))
+  privateRoutePrefixes.some(
+    (prefix) => route.path === prefix || route.path.startsWith(`${prefix}/`)
+  )
 );
 
 const seoByRoute = {

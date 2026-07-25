@@ -115,10 +115,7 @@
             :message="actionMessage"
           />
 
-          <div
-            v-if="pending"
-            class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
-          >
+          <div v-if="pending" class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <ArtworkCardSkeleton v-for="index in pageSize" :key="index" />
           </div>
           <AppStatePanel
@@ -196,7 +193,9 @@ const { data, pending, error, refresh } = await useFetch("/api/artworks", {
 
 const artworks = computed(() => data.value?.artworks || []);
 const errorMessage = computed(() =>
-  error.value ? error.value?.data?.message || "The artwork catalogue is temporarily unavailable." : ""
+  error.value
+    ? error.value?.data?.message || "The artwork catalogue is temporarily unavailable."
+    : ""
 );
 const hasActiveFilters = computed(
   () =>

@@ -24,8 +24,10 @@ async function computeFunnel(key, { startAt, endAt }) {
 
   const steps = funnel.steps.map((step, index) => {
     const count = countByEvent.get(step.event) || 0;
-    const previousCount = index === 0 ? count : countByEvent.get(funnel.steps[index - 1].event) || 0;
-    const dropoffRate = index === 0 || previousCount === 0 ? 0 : round(100 - (count / previousCount) * 100);
+    const previousCount =
+      index === 0 ? count : countByEvent.get(funnel.steps[index - 1].event) || 0;
+    const dropoffRate =
+      index === 0 || previousCount === 0 ? 0 : round(100 - (count / previousCount) * 100);
 
     return { ...step, count, dropoffRate };
   });

@@ -260,7 +260,9 @@ useHead({
   ]
 });
 const errorMessage = computed(() =>
-  error.value ? error.value?.data?.message || "The artwork details are temporarily unavailable." : ""
+  error.value
+    ? error.value?.data?.message || "The artwork details are temporarily unavailable."
+    : ""
 );
 const formattedPrice = computed(() =>
   formatMarketplacePrice(artwork.value?.priceValue ?? artwork.value?.price)
