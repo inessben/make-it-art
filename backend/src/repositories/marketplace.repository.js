@@ -2,6 +2,7 @@ const prisma = require("../lib/prisma");
 const { extractArtistApplicationPayload } = require("../services/artist-contract.service");
 const { ARTWORK_MODERATION_STATUS } = require("../constants/artwork-moderation-status");
 const { parsePriceValue } = require("../utils/serialize-marketplace");
+const { syncArtistCollectionsOwnership } = require("./collector.repository");
 
 function buildArtworkInclude(viewerId) {
   return {
@@ -86,7 +87,9 @@ function buildArtistInclude(viewerId) {
       where: {
         artistId: {
           not: null
-        }
+        },
+        isPrivate: false,
+        isDefaultFavorites: false
       },
       orderBy: [
         {
@@ -357,6 +360,21 @@ async function listPublicArtists({
   sort = "featured",
   limit = 18
 } = {}) {
+  const verifiedArtists = await prisma.artist.findMany({
+    where: {
+      verified: true
+    },
+    select: {
+      userId: true
+    }
+  });
+
+  await Promise.all(
+    [...new Set(verifiedArtists.map((artist) => artist.userId).filter(Boolean))].map((userId) =>
+      syncArtistCollectionsOwnership(userId)
+    )
+  );
+
   const artists = await prisma.artist.findMany({
     where: {
       verified: true
@@ -374,6 +392,22 @@ async function listPublicArtists({
 }
 
 async function findPublicArtistById({ artistId, viewerId = null }) {
+  const artistOwner = await prisma.artist.findUnique({
+    where: {
+      id: artistId
+    },
+    select: {
+      userId: true,
+      verified: true
+    }
+  });
+
+  if (!artistOwner || !artistOwner.verified) {
+    return null;
+  }
+
+  await syncArtistCollectionsOwnership(artistOwner.userId);
+
   const artist = await prisma.artist.findUnique({
     where: {
       id: artistId
