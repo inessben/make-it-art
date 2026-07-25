@@ -37,11 +37,8 @@ COPY . .
 RUN npx prisma generate --config prisma.config.ts
 
 
-# Applique les migrations Prisma au démarrage du conteneur
-CMD npx prisma migrate deploy && npm run dev
-
 EXPOSE 4000
 
-CMD ["npm", "run", "dev"]
-
 ENV PDF_PYTHON_PATH=/usr/bin/python3
+
+CMD ["sh", "-c", "npx prisma migrate deploy --config prisma.config.ts && npm run dev"]
