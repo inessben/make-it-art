@@ -115,10 +115,7 @@
             :message="actionMessage"
           />
 
-          <div
-            v-if="pending"
-            class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
-          >
+          <div v-if="pending" class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <ArtworkCardSkeleton v-for="index in pageSize" :key="index" />
           </div>
           <AppStatePanel
@@ -171,7 +168,6 @@ const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
 const showFilters = ref(false);
-const searchTerm = ref("");
 const minimumPrice = ref("");
 const maximumPrice = ref("");
 const sortBy = ref("latest");
@@ -183,7 +179,9 @@ const categoryOptions = [
   { label: "Graphical assets", value: "graphic" },
   { label: "Photography", value: "photography" }
 ];
+const initialSearch = typeof route.query.search === "string" ? route.query.search : "";
 const initialCategory = typeof route.query.artType === "string" ? route.query.artType : "";
+const searchTerm = ref(initialSearch);
 const selectedCategories = ref(initialCategory ? [initialCategory] : []);
 const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
 
@@ -196,7 +194,9 @@ const { data, pending, error, refresh } = await useFetch("/api/artworks", {
 
 const artworks = computed(() => data.value?.artworks || []);
 const errorMessage = computed(() =>
-  error.value ? error.value?.data?.message || "The artwork catalogue is temporarily unavailable." : ""
+  error.value
+    ? error.value?.data?.message || "The artwork catalogue is temporarily unavailable."
+    : ""
 );
 const hasActiveFilters = computed(
   () =>
@@ -275,6 +275,13 @@ watch(
     await router.replace({ path: route.path, query });
   },
   { deep: true }
+);
+
+watch(
+  () => route.query.search,
+  (search) => {
+    searchTerm.value = typeof search === "string" ? search : "";
+  }
 );
 
 watch(

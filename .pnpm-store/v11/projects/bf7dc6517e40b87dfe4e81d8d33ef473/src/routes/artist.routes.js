@@ -32,7 +32,7 @@ function ensureNonAdminArtistAccess(req, res, next) {
   return next();
 }
 
-router.use("/artists", authRequired, ensureNonAdminArtistAccess);
+router.use("/artists/me", authRequired, ensureNonAdminArtistAccess);
 
 function serializeApplicationDraft(draft) {
   if (!draft) {
