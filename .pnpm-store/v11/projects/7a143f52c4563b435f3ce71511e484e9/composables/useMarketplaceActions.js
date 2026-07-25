@@ -49,6 +49,16 @@ export function useMarketplaceActions(auth) {
     };
   }
 
+  function canFollowArtist(artist) {
+    if (!artist?.id || auth.isAdmin) {
+      return false;
+    }
+
+    const currentArtistId = Number(auth.user?.artist?.id || 0);
+
+    return !currentArtistId || currentArtistId !== Number(artist.id);
+  }
+
   async function toggleFavorite(artwork) {
     actionMessage.value = "";
     actionStatus.value = "";
@@ -87,6 +97,12 @@ export function useMarketplaceActions(auth) {
     actionMessage.value = "";
     actionStatus.value = "";
 
+    if (!canFollowArtist(artist)) {
+      actionMessage.value = "Tu ne peux pas suivre ton propre profil artiste.";
+      actionStatus.value = "error";
+      return false;
+    }
+
     if (!(await ensureCollectorSession())) {
       return false;
     }
@@ -122,6 +138,7 @@ export function useMarketplaceActions(auth) {
     actionStatus,
     favoriteLoading,
     followLoading,
+    canFollowArtist,
     toggleFavorite,
     toggleFollow
   };

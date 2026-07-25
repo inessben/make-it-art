@@ -72,7 +72,7 @@
             :key="artist.id"
             :artist="artist"
             :follow-loading="Boolean(followLoading[artist.id])"
-            :show-follow-action="true"
+            :show-follow-action="canFollowArtist(artist)"
             @toggle-follow="toggleFollow"
           />
         </div>
@@ -146,7 +146,8 @@ if (auth.isAdmin) {
 }
 
 const activeTab = ref("following");
-const { actionMessage, followLoading, toggleFollow } = useMarketplaceActions(auth);
+const { actionMessage, followLoading, canFollowArtist, toggleFollow } =
+  useMarketplaceActions(auth);
 
 const {
   data: followingData,
