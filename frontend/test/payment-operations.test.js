@@ -66,6 +66,32 @@ test("dispute rows show only aggregate evidence audit data", () => {
   assert.equal(row.action.type, "dispute");
 });
 
+test("pending refunds expose only operational references and a direct payment link", () => {
+  const [row] = buildPaymentAnomalyRows({
+    refunds: [
+      {
+        id: "0a0b0c0d-1111-2222-3333-444455556666",
+        paymentId: 12,
+        paymentStatus: "SUCCEEDED",
+        orderId: "order-public",
+        status: "PENDING",
+        providerStatus: "pending",
+        amount: 2500,
+        currency: "EUR",
+        reasonCode: "CUSTOMER_REQUEST",
+        requestedBy: "Admin"
+      }
+    ]
+  });
+
+  assert.equal(row.category, "Remboursement");
+  assert.equal(row.reference, "0a0b0c0d-1111-2222-3333-444455556666");
+  assert.equal(row.link.route, "/admin/payments/12");
+  assert.match(row.detail, /Paiement #12/);
+  assert.match(row.detail, /CUSTOMER_REQUEST/);
+  assert.equal(JSON.stringify(row).includes("client_secret"), false);
+});
+
 test("buildPaymentOperationRequest only builds explicit replay and reconciliation routes", () => {
   assert.deepEqual(buildPaymentOperationRequest({ type: "task", id: 42 }), {
     url: "/api/v1/admin/payments/anomalies/tasks/42/replay",

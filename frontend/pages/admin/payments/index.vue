@@ -54,7 +54,7 @@
         </span>
       </div>
 
-      <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
         <div
           v-for="item in anomalyCounters"
           :key="item.label"
@@ -110,15 +110,24 @@
                 {{ row.detail }} · {{ formatDateTime(row.occurredAt) }}
               </p>
             </div>
-            <button
-              v-if="row.action"
-              type="button"
-              class="inline-flex shrink-0 items-center justify-center rounded-2xl border border-[#F2C97D]/50 bg-[#F2C97D]/10 px-4 py-2 text-sm font-semibold text-[#F2C97D] transition hover:bg-[#F2C97D]/20 disabled:cursor-wait disabled:opacity-60"
-              :disabled="Boolean(activeOperation)"
-              @click="runPaymentOperation(row.action)"
-            >
-              {{ activeOperation === row.key ? "Traitement..." : row.action.label }}
-            </button>
+            <div class="flex shrink-0 flex-wrap gap-3">
+              <NuxtLink
+                v-if="row.link"
+                :to="row.link.route"
+                class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] px-4 py-2 text-sm font-semibold text-[#E6EDF7] transition hover:border-[#4A6CF7] hover:text-[#9DB4FF]"
+              >
+                {{ row.link.label }}
+              </NuxtLink>
+              <button
+                v-if="row.action"
+                type="button"
+                class="inline-flex items-center justify-center rounded-2xl border border-[#F2C97D]/50 bg-[#F2C97D]/10 px-4 py-2 text-sm font-semibold text-[#F2C97D] transition hover:bg-[#F2C97D]/20 disabled:cursor-wait disabled:opacity-60"
+                :disabled="Boolean(activeOperation)"
+                @click="runPaymentOperation(row.action)"
+              >
+                {{ activeOperation === row.key ? "Traitement..." : row.action.label }}
+              </button>
+            </div>
           </div>
         </article>
       </div>
@@ -273,6 +282,7 @@ const anomalySummary = computed(() => ({
   webhooks: anomalies.value.summary?.webhooks || 0,
   tasks: anomalies.value.summary?.tasks || 0,
   orders: anomalies.value.summary?.orders || 0,
+  refunds: anomalies.value.summary?.refunds || 0,
   alerts: anomalies.value.summary?.alerts || 0,
   disputes: anomalies.value.summary?.disputes || 0,
   total: anomalies.value.summary?.total || 0
@@ -282,6 +292,7 @@ const anomalyCounters = computed(() => [
   { label: "Webhooks", value: anomalySummary.value.webhooks },
   { label: "Finalisations", value: anomalySummary.value.tasks },
   { label: "Commandes", value: anomalySummary.value.orders },
+  { label: "Remboursements", value: anomalySummary.value.refunds },
   { label: "Litiges", value: anomalySummary.value.disputes },
   { label: "Alertes", value: anomalySummary.value.alerts }
 ]);

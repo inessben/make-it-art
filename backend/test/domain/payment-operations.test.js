@@ -49,6 +49,7 @@ test("anomaly alerts are aggregated and throttled without financial or personal 
       ],
       count: async () => 2
     },
+    refund: { findMany: async () => [], count: async () => 0 },
     fulfillmentTask: { findMany: async () => [], count: async () => 0 },
     order: { findMany: async () => [], count: async () => 0 },
     paymentOperatorAlert: { findMany: async () => [], count: async () => 0 },
@@ -93,6 +94,7 @@ test("a failed anomaly notification is eligible for retry on the next sweep", as
   const values = new Set();
   const prismaClient = {
     stripeWebhookEvent: { findMany: async () => [], count: async () => 1 },
+    refund: { findMany: async () => [], count: async () => 0 },
     fulfillmentTask: { findMany: async () => [], count: async () => 0 },
     order: { findMany: async () => [], count: async () => 0 },
     paymentOperatorAlert: { findMany: async () => [], count: async () => 0 },

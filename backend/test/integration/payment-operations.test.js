@@ -22,14 +22,17 @@ databaseTest("payment anomalies are minimal and every recovery action is audited
     const webhook = anomalies.webhooks.find((entry) => entry.id === fixture.webhook.id);
     const task = anomalies.tasks.find((entry) => entry.id === fixture.task.id);
     const order = anomalies.orders.find((entry) => entry.id === fixture.order.publicId);
+    const refund = anomalies.refunds.find((entry) => entry.id === fixture.refund.publicId);
     const alert = anomalies.alerts.find((entry) => entry.id === fixture.alert.id);
 
     assert.equal(webhook.replayable, true);
     assert.equal(task.replayable, true);
     assert.equal(order.reconcileable, true);
+    assert.equal(refund.status, "PENDING");
+    assert.equal(refund.paymentId, fixture.payment.id);
     assert.equal(alert.status, "OPEN");
     assert.doesNotMatch(
-      JSON.stringify({ webhook, task, order, alert }),
+      JSON.stringify({ webhook, task, order, refund, alert }),
       /client_secret|providerPaymentId|email|card|address/i
     );
 
@@ -324,13 +327,27 @@ async function createFixture(prisma) {
       code: "PAYMENT_AMOUNT_MISMATCH"
     }
   });
-  return { buyer, adminUser, cart, order, payment, task, webhook, alert };
+  const refund = await prisma.refund.create({
+    data: {
+      orderId: order.id,
+      paymentId: payment.id,
+      requestedByUserId: adminUser.id,
+      idempotencyKey: `refund-${marker}`,
+      amount: 250,
+      currency: "EUR",
+      status: "PENDING",
+      reasonCode: "CUSTOMER_REQUEST",
+      providerStatus: "pending"
+    }
+  });
+  return { buyer, adminUser, cart, order, payment, task, webhook, alert, refund };
 }
 
 async function cleanup(prisma, fixture) {
   await prisma.auditLog.deleteMany({
     where: { userId: { in: [fixture.buyer.id, fixture.adminUser.id] } }
   });
+  await prisma.refund.deleteMany({ where: { orderId: fixture.order.id } });
   await prisma.paymentOperatorAlert.deleteMany({ where: { orderId: fixture.order.id } });
   await prisma.stripeWebhookEvent.deleteMany({ where: { paymentId: fixture.payment.id } });
   await prisma.fulfillmentTask.deleteMany({ where: { orderId: fixture.order.id } });
