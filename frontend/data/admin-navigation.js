@@ -18,6 +18,12 @@ export const adminNavigation = [
     icon: "AR"
   },
   {
+    label: "Applications",
+    description: "Artist contract reviews",
+    route: "/admin/artist-applications",
+    icon: "AP"
+  },
+  {
     label: "Artworks",
     description: "Content moderation",
     route: "/admin/artworks",

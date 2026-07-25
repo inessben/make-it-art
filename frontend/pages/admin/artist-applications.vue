@@ -167,6 +167,13 @@
               >
                 Open PDF agreement
               </a>
+              <NuxtLink
+                v-if="application.artistId"
+                :to="`/admin/artists/${application.artistId}`"
+                class="inline-flex min-h-11 items-center justify-center border border-slate-800 bg-black px-5 text-sm font-semibold text-slate-100 transition hover:border-violet-600 hover:text-violet-300"
+              >
+                Open artist profile
+              </NuxtLink>
               <button
                 v-if="application.status !== 'approved'"
                 type="button"

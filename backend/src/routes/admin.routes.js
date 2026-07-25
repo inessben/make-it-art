@@ -290,6 +290,28 @@ function getArtworkPriceLabel(artwork) {
   return artwork.price || artwork.priceTokens || "Price not set";
 }
 
+function buildOrderReference(orderId) {
+  return `#ORD-${String(orderId).padStart(4, "0")}`;
+}
+
+function buildPaymentReference(paymentId) {
+  return `PAY-${String(paymentId).padStart(5, "0")}`;
+}
+
+function serializeAdminActor(user) {
+  if (!user) {
+    return null;
+  }
+
+  return {
+    id: user.id,
+    username: user.username || user.email || "User",
+    email: user.email || "",
+    isAdmin: isAdminUser(user),
+    isSuperAdmin: isSuperAdminUser(user)
+  };
+}
+
 function serializeAdminArtist(artist) {
   return {
     id: artist.id,
@@ -336,6 +358,7 @@ function serializeAdminArtistApplication(application) {
   return {
     id: application.id,
     userId: application.userId,
+    artistId: application.user?.artist?.id || null,
     applicantName: applicantName || application.user?.username || "User",
     displayName,
     email: application.user?.email || "Email not provided",
@@ -383,6 +406,568 @@ function serializeAdminArtwork(artwork) {
     isPubliclyVisible:
       String(artwork.moderationStatus || "").toLowerCase() === ARTWORK_MODERATION_STATUS.APPROVED,
     createdAt: artwork.createdAt
+  };
+}
+
+function serializeAdminArtistApplicationSummary(application) {
+  if (!application) {
+    return null;
+  }
+
+  const payload =
+    application.payload && typeof application.payload === "object" ? application.payload : {};
+  const applicantName = [payload.firstName, payload.lastName].filter(Boolean).join(" ").trim();
+  const displayName = payload.displayName || application.user?.username || "Unnamed artist";
+  const hasContractPdf = Boolean(application.contractPdf || application.signatureDataUrl);
+
+  return {
+    id: application.id,
+    status: application.status || ARTIST_APPLICATION_STATUS.DRAFT,
+    applicantName: applicantName || application.user?.username || "User",
+    displayName,
+    artType: payload.artType || "Not provided",
+    styles: Array.isArray(payload.styles) ? payload.styles : [],
+    portfolioUrl: payload.portfolioUrl || "",
+    socialHandle: payload.socialHandle || "",
+    reviewNote: application.reviewNote || "",
+    submittedAt: application.submittedAt || application.completedAt || application.updatedAt,
+    reviewedAt: application.reviewedAt || null,
+    contractSignedAt: application.contractSignedAt || null,
+    contractAcceptedAt: application.contractAcceptedAt || null,
+    reviewerName: application.reviewedByAdmin?.username || application.reviewedByAdmin?.email || "",
+    hasContractPdf,
+    contractPdfUrl: hasContractPdf
+      ? `/api/admin/artist-applications/${application.id}/contract.pdf`
+      : null
+  };
+}
+
+function serializeAdminArtworkSummary(artwork) {
+  if (!artwork) {
+    return null;
+  }
+
+  return {
+    id: artwork.id,
+    title: artwork.title || "Untitled artwork",
+    artistId: artwork.artistId,
+    artistName: artwork.artist?.displayName || artwork.artist?.user?.username || "Unknown artist",
+    category: artwork.category?.name || "No category",
+    priceAmount: Number.isSafeInteger(artwork.priceAmount) ? artwork.priceAmount : null,
+    priceLabel: getArtworkPriceLabel(artwork),
+    currency: artwork.currency || "EUR",
+    favoriteCount: artwork.favoriteCount ?? artwork._count?.favorites ?? 0,
+    ordersCount: artwork._count?.orderItems ?? 0,
+    moderationStatus: String(
+      artwork.moderationStatus || ARTWORK_MODERATION_STATUS.APPROVED
+    ).toLowerCase(),
+    moderationLabel: buildArtworkStatus(artwork),
+    saleStatus: artwork.saleStatus || "DRAFT",
+    stockQuantity: artwork.stockQuantity ?? 0,
+    reservedQuantity: artwork.reservedQuantity ?? 0,
+    createdAt: artwork.createdAt
+  };
+}
+
+function serializeAdminCollectionSummary(collection) {
+  return {
+    id: collection.id,
+    title: collection.title || "Untitled collection",
+    description: collection.description || "",
+    isPrivate: Boolean(collection.isPrivate),
+    isDefaultFavorites: Boolean(collection.isDefaultFavorites),
+    itemsCount: collection._count?.items || 0,
+    createdAt: collection.createdAt
+  };
+}
+
+function serializeAdminFavoriteSummary(favorite) {
+  return {
+    id: favorite.id,
+    createdAt: favorite.createdAt,
+    artwork: serializeAdminArtworkSummary(favorite.artwork)
+  };
+}
+
+function serializeAdminFollowSummary(follow) {
+  return {
+    id: follow.id,
+    createdAt: follow.createdAt,
+    artist: follow.artist
+      ? {
+          id: follow.artist.id,
+          name: follow.artist.displayName || follow.artist.user?.username || "Unnamed artist",
+          verified: Boolean(follow.artist.verified),
+          artworksCount: follow.artist._count?.artworks || 0,
+          followersCount: follow.artist._count?.followers || 0,
+          collectionsCount: follow.artist._count?.collections || 0
+        }
+      : null
+  };
+}
+
+function serializeAdminAuditLog(log) {
+  return {
+    id: log.id,
+    action: log.action || "UNKNOWN_ACTION",
+    entityType: log.entityType || "",
+    entityId: log.entityId || "",
+    ipAddress: log.ipAddress || "",
+    createdAt: log.createdAt,
+    actor: serializeAdminActor(log.user)
+  };
+}
+
+function serializeAdminOrderSummary(order) {
+  const amountValue = getOrderAmountValue(order);
+  const refundSummary = getAdminRefundSummary(order);
+
+  return {
+    id: order.id,
+    publicId: order.publicId,
+    reference: buildOrderReference(order.id),
+    status: buildOrderStatus(order),
+    statusCode: order.status,
+    totalAmount: Number.isSafeInteger(order.totalAmount)
+      ? order.totalAmount
+      : Math.round(amountValue * 100),
+    currency: order.currency || refundSummary.currency || "EUR",
+    itemsCount: order.items?.length || 0,
+    paymentsCount: order.payments?.length || 0,
+    refundedAmount: refundSummary.refundedAmount,
+    pendingRefundAmount: refundSummary.pendingRefundAmount,
+    refundableAmount: refundSummary.refundableAmount,
+    createdAt: order.createdAt
+  };
+}
+
+function serializeAdminPaymentSummary(payment) {
+  if (!payment) {
+    return null;
+  }
+
+  return {
+    id: payment.id,
+    reference: buildPaymentReference(payment.id),
+    orderId: payment.orderId,
+    orderReference: buildOrderReference(payment.orderId),
+    status: buildPaymentStatus(payment),
+    statusCode: payment.status,
+    provider: payment.provider || "STRIPE",
+    method: payment.method || "Unknown",
+    amount: payment.amount,
+    refundedAmount: payment.refundedAmount ?? 0,
+    currency: payment.currency || "EUR",
+    providerPaymentId: payment.providerPaymentId || "",
+    providerChargeId: payment.providerChargeId || "",
+    providerStatus: payment.providerStatus || "",
+    failureCode: payment.failureCode || "",
+    createdAt: payment.createdAt,
+    updatedAt: payment.updatedAt,
+    succeededAt: payment.succeededAt || null,
+    failedAt: payment.failedAt || null,
+    canceledAt: payment.canceledAt || null
+  };
+}
+
+function serializeAdminWebhookEvent(event) {
+  return {
+    id: event.id,
+    eventId: event.eventId,
+    eventType: event.eventType,
+    stripeObjectId: event.stripeObjectId || "",
+    status: event.status,
+    attemptCount: event.attemptCount,
+    lastErrorCode: event.lastErrorCode || "",
+    createdAt: event.createdAt,
+    processedAt: event.processedAt || null
+  };
+}
+
+function serializeAdminRefundDetail(refund) {
+  return {
+    id: refund.id,
+    publicId: refund.publicId,
+    paymentId: refund.paymentId,
+    paymentReference: refund.payment ? buildPaymentReference(refund.payment.id) : null,
+    status: refund.status,
+    providerRefundId: refund.providerRefundId || "",
+    providerStatus: refund.providerStatus || "",
+    providerReference: refund.providerReference || "",
+    amount: refund.amount,
+    currency: refund.currency || "EUR",
+    reasonCode: refund.reasonCode || "",
+    failureCode: refund.failureCode || "",
+    requestedBy: serializeAdminActor(refund.requestedBy),
+    createdAt: refund.createdAt,
+    updatedAt: refund.updatedAt,
+    succeededAt: refund.succeededAt || null,
+    failedAt: refund.failedAt || null,
+    webhookEvents: (refund.webhookEvents || []).map(serializeAdminWebhookEvent)
+  };
+}
+
+function serializeAdminTransition(transition) {
+  return {
+    id: transition.id,
+    paymentId: transition.paymentId || null,
+    stripeEventId: transition.stripeEventId,
+    stripeObjectId: transition.stripeObjectId,
+    entityType: transition.entityType,
+    previousStatus: transition.previousStatus,
+    nextStatus: transition.nextStatus,
+    reasonCode: transition.reasonCode,
+    createdAt: transition.createdAt
+  };
+}
+
+function serializeAdminFulfillmentTask(task) {
+  return {
+    id: task.id,
+    taskType: task.taskType,
+    taskKey: task.taskKey,
+    status: task.status,
+    attemptCount: task.attemptCount,
+    availableAt: task.availableAt,
+    lockedAt: task.lockedAt || null,
+    lastErrorCode: task.lastErrorCode || "",
+    effectReference: task.effectReference || "",
+    createdAt: task.createdAt,
+    processedAt: task.processedAt || null
+  };
+}
+
+function serializeAdminOperatorAlert(alert) {
+  return {
+    id: alert.id,
+    paymentId: alert.paymentId || null,
+    code: alert.code,
+    status: alert.status,
+    stripeEventId: alert.stripeEventId,
+    stripeObjectId: alert.stripeObjectId,
+    createdAt: alert.createdAt,
+    resolvedAt: alert.resolvedAt || null
+  };
+}
+
+function serializeAdminDisputeEvidenceAudit(audit) {
+  return {
+    id: audit.id,
+    providerStatus: audit.providerStatus,
+    submissionCount: audit.submissionCount,
+    hasEvidence: Boolean(audit.hasEvidence),
+    fileReferences: Array.isArray(audit.fileReferences) ? audit.fileReferences : [],
+    capturedAt: audit.capturedAt,
+    capturedBy: serializeAdminActor(audit.capturedBy)
+  };
+}
+
+function serializeAdminDispute(dispute) {
+  return {
+    id: dispute.id,
+    paymentId: dispute.paymentId,
+    providerDisputeId: dispute.providerDisputeId,
+    providerChargeId: dispute.providerChargeId,
+    status: dispute.status,
+    providerStatus: dispute.providerStatus,
+    reason: dispute.reason,
+    amount: dispute.amount,
+    currency: dispute.currency || "EUR",
+    evidenceDueAt: dispute.evidenceDueAt || null,
+    createdAt: dispute.createdAt,
+    updatedAt: dispute.updatedAt,
+    closedAt: dispute.closedAt || null,
+    webhookEvents: (dispute.webhookEvents || []).map(serializeAdminWebhookEvent),
+    evidenceAudits: (dispute.evidenceAudits || []).map(serializeAdminDisputeEvidenceAudit)
+  };
+}
+
+function serializeAdminInvoice(invoice) {
+  return {
+    id: invoice.id,
+    publicId: invoice.publicId,
+    number: invoice.number,
+    type: invoice.type,
+    recipientReference: invoice.recipientReference,
+    subtotalAmount: invoice.subtotalAmount,
+    discountAmount: invoice.discountAmount,
+    netAmount: invoice.netAmount,
+    taxAmount: invoice.taxAmount,
+    totalAmount: invoice.totalAmount,
+    currency: invoice.currency || "EUR",
+    issuedAt: invoice.issuedAt,
+    hasPdf: Boolean(invoice.pdf)
+  };
+}
+
+function serializeAdminDigitalEntitlement(entitlement) {
+  return {
+    id: entitlement.id,
+    orderItemId: entitlement.orderItemId,
+    userId: entitlement.userId,
+    artworkId: entitlement.artworkId,
+    status: entitlement.status,
+    sourceTaskKey: entitlement.sourceTaskKey,
+    grantedAt: entitlement.grantedAt,
+    suspendedAt: entitlement.suspendedAt || null,
+    revokedAt: entitlement.revokedAt || null,
+    updatedAt: entitlement.updatedAt,
+    orderItem: entitlement.orderItem
+      ? {
+          id: entitlement.orderItem.id,
+          artworkTitle: entitlement.orderItem.artworkTitle,
+          artistName: entitlement.orderItem.artistName,
+          quantity: entitlement.orderItem.quantity,
+          unitAmount: entitlement.orderItem.unitAmount,
+          subtotalAmount: entitlement.orderItem.subtotalAmount,
+          currency: entitlement.orderItem.currency || "EUR"
+        }
+      : null,
+    artwork: entitlement.artwork ? serializeAdminArtworkSummary(entitlement.artwork) : null,
+    owner: serializeAdminActor(entitlement.user)
+  };
+}
+
+function serializeAdminOwnershipCertificate(certificate) {
+  return {
+    id: certificate.id,
+    publicId: certificate.publicId,
+    certificateNumber: certificate.certificateNumber,
+    orderItemId: certificate.orderItemId,
+    userId: certificate.userId,
+    artworkId: certificate.artworkId,
+    status: certificate.status,
+    issuedAt: certificate.issuedAt,
+    suspendedAt: certificate.suspendedAt || null,
+    revokedAt: certificate.revokedAt || null,
+    updatedAt: certificate.updatedAt,
+    orderItem: certificate.orderItem
+      ? {
+          id: certificate.orderItem.id,
+          artworkTitle: certificate.orderItem.artworkTitle,
+          artistName: certificate.orderItem.artistName,
+          quantity: certificate.orderItem.quantity,
+          unitAmount: certificate.orderItem.unitAmount,
+          subtotalAmount: certificate.orderItem.subtotalAmount,
+          currency: certificate.orderItem.currency || "EUR"
+        }
+      : null,
+    artwork: certificate.artwork ? serializeAdminArtworkSummary(certificate.artwork) : null,
+    owner: serializeAdminActor(certificate.user)
+  };
+}
+
+function serializeAdminReservation(reservation) {
+  return {
+    id: reservation.id,
+    artworkId: reservation.artworkId,
+    quantity: reservation.quantity,
+    status: reservation.status,
+    expiresAt: reservation.expiresAt,
+    createdAt: reservation.createdAt,
+    updatedAt: reservation.updatedAt,
+    artwork: reservation.artwork ? serializeAdminArtworkSummary(reservation.artwork) : null
+  };
+}
+
+function serializeAdminOrderItem(item) {
+  return {
+    id: item.id,
+    artworkId: item.artworkId,
+    artworkTitle: item.artworkTitle,
+    artistName: item.artistName,
+    quantity: item.quantity,
+    unitAmount: item.unitAmount,
+    subtotalAmount: item.subtotalAmount,
+    discountAmount: item.discountAmount,
+    netAmount: item.netAmount,
+    taxAmount: item.taxAmount,
+    taxRateBps: item.taxRateBps,
+    commissionAmount: item.commissionAmount,
+    commissionRateBps: item.commissionRateBps,
+    currency: item.currency || "EUR",
+    createdAt: item.createdAt,
+    artwork: item.artwork ? serializeAdminArtworkSummary(item.artwork) : null
+  };
+}
+
+function buildAdminUserDetailPayload(user) {
+  return {
+    user: {
+      ...serializeAdminUser(user),
+      bio: user.bio || "",
+      phone: user.phone || "",
+      artistProfile: user.artist
+        ? {
+            id: user.artist.id,
+            name: user.artist.displayName || user.username || "Unnamed artist",
+            verified: Boolean(user.artist.verified),
+            artworksCount: user.artist._count?.artworks || 0,
+            followersCount: user.artist._count?.followers || 0,
+            collectionsCount: user.artist._count?.collections || 0,
+            createdAt: user.artist.createdAt || null,
+            artworksPreview: (user.artist.artworks || []).map(serializeAdminArtworkSummary),
+            collectionsPreview: (user.artist.collections || []).map(serializeAdminCollectionSummary)
+          }
+        : null,
+      artistApplication: serializeAdminArtistApplicationSummary(user.artistApplicationDraft)
+    },
+    metrics: {
+      ordersCount: user._count?.orders || 0,
+      collectionsCount: user._count?.personalCollections || 0,
+      favoritesCount: user._count?.favorites || 0,
+      followsCount: user._count?.follows || 0,
+      activityCount: user._count?.auditLogs || 0,
+      refundsRequestedCount: user._count?.refundsRequested || 0
+    },
+    recentOrders: (user.orders || []).map(serializeAdminOrderSummary),
+    collections: (user.personalCollections || []).map(serializeAdminCollectionSummary),
+    favorites: (user.favorites || []).map(serializeAdminFavoriteSummary),
+    follows: (user.follows || []).map(serializeAdminFollowSummary),
+    accountHistory: (user.accountAuditLogs || []).map(serializeAdminAuditLog),
+    activityHistory: (user.auditLogs || []).map(serializeAdminAuditLog)
+  };
+}
+
+function buildAdminArtistDetailPayload(artist) {
+  const recentSales = (artist.recentSales || []).map((orderItem) => ({
+    id: orderItem.id,
+    artworkId: orderItem.artworkId,
+    artworkTitle: orderItem.artworkTitle,
+    artistName: orderItem.artistName,
+    quantity: orderItem.quantity,
+    unitAmount: orderItem.unitAmount,
+    subtotalAmount: orderItem.subtotalAmount,
+    currency: orderItem.currency || "EUR",
+    createdAt: orderItem.createdAt,
+    artwork: orderItem.artwork ? serializeAdminArtworkSummary(orderItem.artwork) : null,
+    order: orderItem.order
+      ? {
+          id: orderItem.order.id,
+          publicId: orderItem.order.publicId,
+          reference: buildOrderReference(orderItem.order.id),
+          status: ORDER_STATUS_LABELS[orderItem.order.status] || orderItem.order.status,
+          totalAmount: orderItem.order.totalAmount,
+          currency: orderItem.order.currency || "EUR",
+          createdAt: orderItem.order.createdAt,
+          customer: serializeAdminActor(orderItem.order.user)
+        }
+      : null
+  }));
+
+  return {
+    artist: {
+      ...serializeAdminArtist(artist),
+      user: {
+        ...serializeAdminActor(artist.user),
+        phone: artist.user?.phone || "",
+        role: buildUserRole({
+          ...artist.user,
+          artist: {
+            id: artist.id
+          }
+        }),
+        status: buildUserStatus(artist.user),
+        verified: Boolean(artist.user?.verified),
+        createdAt: artist.user?.createdAt || null
+      },
+      application: serializeAdminArtistApplicationSummary(artist.user?.artistApplicationDraft)
+    },
+    metrics: {
+      artworksCount: artist._count?.artworks || 0,
+      followersCount: artist._count?.followers || 0,
+      collectionsCount: artist._count?.collections || 0,
+      soldItemsCount: artist.soldItemsCount || 0
+    },
+    artworks: (artist.artworks || []).map(serializeAdminArtworkSummary),
+    followers: (artist.followers || []).map((follow) => ({
+      id: follow.id,
+      createdAt: follow.createdAt,
+      user: serializeAdminActor(follow.user)
+    })),
+    collections: (artist.collections || []).map(serializeAdminCollectionSummary),
+    recentSales
+  };
+}
+
+function buildAdminOrderDetailPayload(order) {
+  return {
+    order: {
+      id: order.id,
+      publicId: order.publicId,
+      reference: buildOrderReference(order.id),
+      status: buildOrderStatus(order),
+      statusCode: order.status,
+      customerType: order.customerType,
+      marketCountry: order.marketCountry,
+      currency: order.currency || "EUR",
+      subtotalAmount: order.subtotalAmount,
+      discountAmount: order.discountAmount,
+      subtotalExcludingTaxAmount: order.subtotalExcludingTaxAmount,
+      taxAmount: order.taxAmount,
+      taxRateBps: order.taxRateBps,
+      taxBehavior: order.taxBehavior,
+      feeAmount: order.feeAmount,
+      commissionAmount: order.commissionAmount,
+      commissionRateBps: order.commissionRateBps,
+      totalAmount: order.totalAmount,
+      pricingFingerprint: order.pricingFingerprint,
+      billingSnapshot: order.billingSnapshot || null,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+      paidAt: order.paidAt || null,
+      canceledAt: order.canceledAt || null,
+      expiresAt: order.expiresAt,
+      customer: serializeAdminActor(order.user)
+    },
+    items: (order.items || []).map(serializeAdminOrderItem),
+    payments: (order.payments || []).map((payment) => ({
+      ...serializeAdminPaymentSummary(payment),
+      refunds: (payment.refunds || []).map(serializeAdminRefundDetail)
+    })),
+    refunds: (order.refunds || []).map(serializeAdminRefundDetail),
+    transitions: (order.financialTransitions || []).map(serializeAdminTransition),
+    fulfillmentTasks: (order.fulfillmentTasks || []).map(serializeAdminFulfillmentTask),
+    alerts: (order.operatorAlerts || []).map(serializeAdminOperatorAlert),
+    disputes: (order.disputes || []).map(serializeAdminDispute),
+    invoices: (order.invoices || []).map(serializeAdminInvoice),
+    entitlements: (order.digitalEntitlements || []).map(serializeAdminDigitalEntitlement),
+    ownershipCertificates: (order.ownershipCertificates || []).map(
+      serializeAdminOwnershipCertificate
+    ),
+    reservations: (order.reservations || []).map(serializeAdminReservation),
+    auditLog: (order.auditLogs || []).map(serializeAdminAuditLog)
+  };
+}
+
+function buildAdminPaymentDetailPayload(payment) {
+  return {
+    payment: {
+      ...serializeAdminPaymentSummary(payment),
+      order: payment.order
+        ? {
+            id: payment.order.id,
+            publicId: payment.order.publicId,
+            reference: buildOrderReference(payment.order.id),
+            status: buildOrderStatus(payment.order),
+            statusCode: payment.order.status,
+            currency: payment.order.currency || "EUR",
+            subtotalAmount: payment.order.subtotalAmount,
+            taxAmount: payment.order.taxAmount,
+            totalAmount: payment.order.totalAmount,
+            createdAt: payment.order.createdAt,
+            paidAt: payment.order.paidAt || null,
+            customer: serializeAdminActor(payment.order.user),
+            items: (payment.order.items || []).map(serializeAdminOrderItem)
+          }
+        : null
+    },
+    refunds: (payment.refunds || []).map(serializeAdminRefundDetail),
+    webhookEvents: (payment.webhookEvents || []).map(serializeAdminWebhookEvent),
+    transitions: (payment.financialTransitions || []).map(serializeAdminTransition),
+    alerts: (payment.operatorAlerts || []).map(serializeAdminOperatorAlert),
+    disputes: (payment.disputes || []).map(serializeAdminDispute),
+    auditLog: (payment.auditLogs || []).map(serializeAdminAuditLog)
   };
 }
 
@@ -466,6 +1051,34 @@ router.post(
     }
   }
 );
+
+router.get("/admin/users/:userId", authRequired, adminRequired, async (req, res) => {
+  const userId = parsePositiveInteger(req.params.userId);
+
+  if (!userId) {
+    return res.status(400).json({
+      message: "Invalid user id"
+    });
+  }
+
+  try {
+    const user = await userRepository.findUserDetailForAdmin(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    return res.status(200).json(buildAdminUserDetailPayload(user));
+  } catch (error) {
+    console.error("Admin user detail fetch error:", error);
+
+    return res.status(500).json({
+      message: "Unable to load this user"
+    });
+  }
+});
 
 router.patch(
   "/admin/users/:userId/account-status",
@@ -573,6 +1186,34 @@ router.get("/admin/artists", authRequired, adminRequired, async (_req, res) => {
 
     return res.status(500).json({
       message: "Unable to load admin artists"
+    });
+  }
+});
+
+router.get("/admin/artists/:id", authRequired, adminRequired, async (req, res) => {
+  try {
+    const artistId = Number(req.params.id);
+
+    if (!Number.isInteger(artistId) || artistId < 1) {
+      return res.status(400).json({
+        message: "Invalid artist id"
+      });
+    }
+
+    const artist = await artistRepository.findArtistDetailForAdmin(artistId);
+
+    if (!artist) {
+      return res.status(404).json({
+        message: "Artist profile not found"
+      });
+    }
+
+    return res.status(200).json(buildAdminArtistDetailPayload(artist));
+  } catch (error) {
+    console.error("Admin artist detail fetch error:", error);
+
+    return res.status(500).json({
+      message: "Unable to load this artist profile"
     });
   }
 });
@@ -880,6 +1521,34 @@ router.get("/admin/orders", authRequired, adminRequired, async (_req, res) => {
   }
 });
 
+router.get("/admin/orders/:publicId", authRequired, adminRequired, async (req, res) => {
+  const publicId = normalizeText(req.params.publicId);
+
+  if (!publicId) {
+    return res.status(400).json({
+      message: "Invalid order id"
+    });
+  }
+
+  try {
+    const order = await orderRepository.findOrderDetailForAdmin(publicId);
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found"
+      });
+    }
+
+    return res.status(200).json(buildAdminOrderDetailPayload(order));
+  } catch (error) {
+    console.error("Admin order detail fetch error:", error);
+
+    return res.status(500).json({
+      message: "Unable to load this order"
+    });
+  }
+});
+
 router.get("/admin/payments", authRequired, adminRequired, async (_req, res) => {
   try {
     const payments = await paymentRepository.listPaymentsForAdmin();
@@ -918,6 +1587,34 @@ router.get("/admin/payments", authRequired, adminRequired, async (_req, res) => 
 
     return res.status(500).json({
       message: "Unable to load admin payments"
+    });
+  }
+});
+
+router.get("/admin/payments/:id", authRequired, adminRequired, async (req, res) => {
+  const paymentId = parsePositiveInteger(req.params.id);
+
+  if (!paymentId) {
+    return res.status(400).json({
+      message: "Invalid payment id"
+    });
+  }
+
+  try {
+    const payment = await paymentRepository.findPaymentDetailForAdmin(paymentId);
+
+    if (!payment) {
+      return res.status(404).json({
+        message: "Payment not found"
+      });
+    }
+
+    return res.status(200).json(buildAdminPaymentDetailPayload(payment));
+  } catch (error) {
+    console.error("Admin payment detail fetch error:", error);
+
+    return res.status(500).json({
+      message: "Unable to load this payment"
     });
   }
 });

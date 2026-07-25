@@ -253,6 +253,12 @@
                 </td>
                 <td class="px-5 py-4">
                   <div class="flex max-w-[280px] flex-wrap gap-2">
+                    <NuxtLink
+                      :to="`/admin/users/${user.id}`"
+                      class="inline-flex items-center justify-center border border-slate-750 bg-black px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-100 transition hover:border-violet-600 hover:text-violet-300"
+                    >
+                      Details
+                    </NuxtLink>
                     <button
                       v-for="action in getUserActions(user)"
                       :key="action.key"

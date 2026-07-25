@@ -90,9 +90,144 @@ async function updateArtistVerification({ artistId, verified }) {
   });
 }
 
+async function findArtistDetailForAdmin(artistId) {
+  const artistRecord = await prisma.artist.findUnique({
+    where: { id: artistId },
+    select: {
+      userId: true
+    }
+  });
+
+  if (!artistRecord?.userId) {
+    return null;
+  }
+
+  await syncArtistCollectionsOwnership(artistRecord.userId);
+
+  return prisma.$transaction(async (transaction) => {
+    const artist = await transaction.artist.findUnique({
+      where: { id: artistId },
+      include: {
+        user: {
+          include: {
+            admin: true,
+            artistApplicationDraft: {
+              include: {
+                reviewedByAdmin: {
+                  include: {
+                    admin: true
+                  }
+                }
+              }
+            }
+          }
+        },
+        artworks: {
+          take: 12,
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          include: {
+            category: true,
+            _count: {
+              select: {
+                favorites: true,
+                orderItems: true
+              }
+            }
+          }
+        },
+        collections: {
+          take: 8,
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          include: {
+            _count: {
+              select: {
+                items: true
+              }
+            }
+          }
+        },
+        followers: {
+          take: 12,
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          include: {
+            user: true
+          }
+        },
+        _count: {
+          select: {
+            artworks: true,
+            followers: true,
+            collections: true
+          }
+        }
+      }
+    });
+
+    if (!artist) {
+      return null;
+    }
+
+    const [recentSales, soldItemsCount] = await Promise.all([
+      transaction.orderItem.findMany({
+        where: {
+          artwork: {
+            artistId
+          }
+        },
+        take: 10,
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        include: {
+          artwork: {
+            select: {
+              id: true,
+              title: true,
+              category: {
+                select: {
+                  name: true
+                }
+              }
+            }
+          },
+          order: {
+            select: {
+              id: true,
+              publicId: true,
+              status: true,
+              currency: true,
+              totalAmount: true,
+              createdAt: true,
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  email: true
+                }
+              }
+            }
+          }
+        }
+      }),
+      transaction.orderItem.count({
+        where: {
+          artwork: {
+            artistId
+          }
+        }
+      })
+    ]);
+
+    return {
+      ...artist,
+      recentSales,
+      soldItemsCount
+    };
+  });
+}
+
 module.exports = {
   findByUserId,
   saveArtistApplication,
   listArtistsForAdmin,
-  updateArtistVerification
+  updateArtistVerification,
+  findArtistDetailForAdmin
 };

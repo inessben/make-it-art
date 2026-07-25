@@ -203,6 +203,12 @@
                 {{ payment.status }}
               </span>
               <span class="text-sm text-[#8E9AA7]">{{ formatDate(payment.createdAt) }}</span>
+              <NuxtLink
+                :to="`/admin/payments/${payment.id}`"
+                class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#E6EDF7] transition hover:border-[#4A6CF7] hover:text-[#9DB4FF]"
+              >
+                Details
+              </NuxtLink>
             </div>
           </div>
         </div>

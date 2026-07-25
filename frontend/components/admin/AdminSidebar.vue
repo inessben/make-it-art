@@ -106,8 +106,12 @@ const auth = useAuthStore();
 const { user } = storeToRefs(auth);
 const adminMenuOpen = ref(false);
 const adminInitials = computed(() => getArtistInitials(user.value?.username || "Admin"));
-const mainNavigation = adminNavigation.filter((item) => item.route !== "/admin/settings");
-const systemNavigation = adminNavigation.filter((item) => item.route === "/admin/settings");
+const mainNavigation = adminNavigation.filter(
+  (item) => !["/admin/settings", "/admin/artist-applications"].includes(item.route)
+);
+const systemNavigation = adminNavigation.filter((item) =>
+  ["/admin/artist-applications", "/admin/settings"].includes(item.route)
+);
 
 watch(
   () => route.fullPath,

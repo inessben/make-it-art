@@ -295,7 +295,7 @@ const mainNavigation = [
   { label: "Payments", route: "/admin/payments", icon: "PY" }
 ];
 const systemNavigation = [
-  { label: "Moderation", route: "/admin/artists", icon: "MD" },
+  { label: "Applications", route: "/admin/artist-applications", icon: "AP" },
   { label: "Settings", route: "/admin/settings", icon: "ST" }
 ];
 
