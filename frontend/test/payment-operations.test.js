@@ -35,7 +35,7 @@ test("buildPaymentAnomalyRows exposes operational references without payment sec
   assert.deepEqual(rows[0].action, {
     type: "webhook",
     id: "evt_safe",
-    label: "Rejouer depuis Stripe"
+    label: "Replay from Stripe"
   });
   assert.equal(JSON.stringify(rows).includes("client_secret"), false);
   assert.equal(JSON.stringify(rows).includes("providerPaymentId"), false);
@@ -60,8 +60,8 @@ test("dispute rows show only aggregate evidence audit data", () => {
     ]
   });
 
-  assert.match(row.detail, /2 soumission/);
-  assert.match(row.detail, /3 fichier/);
+  assert.match(row.detail, /2 submission/);
+  assert.match(row.detail, /3 Stripe file/);
   assert.equal(JSON.stringify(row).includes("file_safe"), false);
   assert.equal(row.action.type, "dispute");
 });
@@ -84,10 +84,10 @@ test("pending refunds expose only operational references and a direct payment li
     ]
   });
 
-  assert.equal(row.category, "Remboursement");
+  assert.equal(row.category, "Refund");
   assert.equal(row.reference, "0a0b0c0d-1111-2222-3333-444455556666");
   assert.equal(row.link.route, "/admin/payments/12");
-  assert.match(row.detail, /Paiement #12/);
+  assert.match(row.detail, /Payment #12/);
   assert.match(row.detail, /CUSTOMER_REQUEST/);
   assert.equal(JSON.stringify(row).includes("client_secret"), false);
 });
@@ -113,12 +113,12 @@ test("paymentOperationErrorMessage explains recent authentication and coherent-s
     paymentOperationErrorMessage({
       data: { code: "RECENT_AUTHENTICATION_REQUIRED" }
     }),
-    /Reconnectez-vous/
+    /Sign in again/
   );
   assert.match(
     paymentOperationErrorMessage({
       data: { code: "PAYMENT_STATE_STILL_INCOHERENT" }
     }),
-    /Rapprochez/
+    /Reconcile/
   );
 });
