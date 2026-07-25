@@ -1,7 +1,11 @@
 # Dependencies
 node_modules/
+.pnpm/
+.pnpm-store/
+**/.pnpm-store/
 .pnp
 .pnp.js
+.pnpm-store
 
 # Testing
 coverage/
