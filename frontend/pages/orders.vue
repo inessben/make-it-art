@@ -43,15 +43,12 @@
           <article class="min-h-[106px] rounded border border-slate-800 bg-slate-950/70 px-6 py-6">
             <p class="text-subtitle-2 uppercase text-slate-100">Total collected</p>
             <p class="mt-3 text-title-3 text-slate-400">
-              {{ transactions.length }}
-              {{ transactions.length === 1 ? "Artwork" : "Artworks" }}
+              {{ transactions.length }} {{ transactions.length === 1 ? "Artwork" : "Artworks" }}
             </p>
           </article>
           <article class="min-h-[106px] rounded border border-slate-800 bg-slate-950/70 px-6 py-6">
             <p class="text-subtitle-2 uppercase text-slate-100">Portfolio value</p>
-            <p class="mt-3 text-title-3 text-slate-400">
-              {{ formattedPortfolioValue }}
-            </p>
+            <p class="mt-3 text-title-3 text-slate-400">{{ formattedPortfolioValue }}</p>
           </article>
         </section>
 
@@ -141,8 +138,7 @@
               class="flex min-h-20 flex-col gap-5 border-t border-slate-800 px-6 py-5 sm:flex-row sm:items-center sm:justify-between"
             >
               <p class="text-subtitle-2 uppercase">
-                Showing {{ rangeStart }}–{{ rangeEnd }} of
-                {{ filteredTransactions.length }}
+                Showing {{ rangeStart }}–{{ rangeEnd }} of {{ filteredTransactions.length }}
                 transactions
               </p>
               <nav class="flex items-center gap-1" aria-label="Order history pagination">

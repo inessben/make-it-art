@@ -6,9 +6,7 @@
   >
     <section v-for="section in sections" :key="section.title">
       <h2>{{ section.title }}</h2>
-      <p v-for="paragraph in section.paragraphs || []" :key="paragraph">
-        {{ paragraph }}
-      </p>
+      <p v-for="paragraph in section.paragraphs || []" :key="paragraph">{{ paragraph }}</p>
 
       <p v-if="section.contactEmail">
         To exercise these rights, contact:
@@ -24,8 +22,7 @@
 
       <p v-if="section.cnil" class="legal-note">
         If you believe your rights are not being respected, you have the right to file a complaint
-        with the
-        <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">CNIL</a>.
+        with the <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">CNIL</a>.
       </p>
 
       <p v-if="section.important" class="legal-note">{{ section.important }}</p>
@@ -36,9 +33,7 @@
 
       <div v-for="subsection in section.subsections || []" :key="subsection.title">
         <h3>{{ subsection.title }}</h3>
-        <p v-for="paragraph in subsection.paragraphs || []" :key="paragraph">
-          {{ paragraph }}
-        </p>
+        <p v-for="paragraph in subsection.paragraphs || []" :key="paragraph">{{ paragraph }}</p>
         <ul v-if="subsection.items?.length">
           <li v-for="item in subsection.items" :key="item">{{ item }}</li>
         </ul>
@@ -141,6 +136,7 @@ const sections = [
       "Payment partners: Stripe, Revolut, Google Pay, Apple Pay, and Paylib (minimal data).",
       "Blockchain networks: Ethereum and Polygon (public, irreversible transactions).",
       "Storage providers: IPFS for artworks.",
+      "Analytics: Umami, self-hosted and only activated once you accept analytics cookies (see Cookie Policy).",
       "Legal and tax authorities, where legally required.",
       "Make it Art support team with limited, secure access."
     ],

@@ -64,6 +64,7 @@
           <nav class="mt-7 flex flex-col gap-[18px] text-footer">
             <NuxtLink class="hover:text-violet-400" to="/terms">Terms &amp; Conditions</NuxtLink
             ><NuxtLink class="hover:text-violet-400" to="/privacy">Privacy Policy</NuxtLink
+            ><NuxtLink class="hover:text-violet-400" to="/cookies">Cookie Policy</NuxtLink
             ><NuxtLink class="hover:text-violet-400" to="/about-us">About Us</NuxtLink
             ><a class="hover:text-violet-400" href="mailto:contact@makeitart.io">Contact</a>
           </nav>

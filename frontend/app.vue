@@ -3,6 +3,8 @@
     <TheHeader v-if="showGlobalNavigation" />
     <NuxtPage />
     <TheFooter v-if="showGlobalNavigation" />
+    <UmamiAnalytics />
+    <CookieConsentBanner />
   </div>
 </template>
 

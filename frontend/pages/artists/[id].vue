@@ -15,12 +15,6 @@
         message="The artist portfolio is being retrieved."
       />
       <AppStatePanel
-        v-else-if="notFound"
-        type="empty"
-        title="Artist not found"
-        message="This profile is unavailable or no longer visible in the public directory."
-      />
-      <AppStatePanel
         v-else-if="errorMessage"
         type="error"
         title="Unable to load this artist"
@@ -28,6 +22,12 @@
         action-label="Try again"
         :action-disabled="pending"
         @action="refresh"
+      />
+      <AppStatePanel
+        v-else-if="!artist"
+        type="empty"
+        title="Artist not found"
+        message="This profile is no longer available in the public directory."
       />
       <template v-else-if="artist">
         <section
@@ -81,7 +81,6 @@
 
             <div class="grid gap-3 sm:flex sm:flex-wrap">
               <button
-                v-if="canFollowArtist(artist)"
                 type="button"
                 class="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                 :class="
@@ -89,15 +88,15 @@
                     ? 'border-amber-300 bg-amber-300/10 text-amber-200'
                     : 'border-slate-750 bg-slate-850 text-slate-100 hover:border-violet-700'
                 "
-                :disabled="!hasArtistId || Boolean(followLoading[artist.id])"
+                :disabled="Boolean(followLoading[artist.id])"
                 @click="toggleFollow(artist)"
               >
                 {{
-                  hasArtistId && followLoading[artist.id]
+                  followLoading[artist.id]
                     ? "Updating..."
                     : artist.isFollowed
                       ? "Unfollow"
-                      : "Follow"
+                      : "Follow this artist"
                 }}
               </button>
 
@@ -257,28 +256,15 @@ const artist = computed(() => data.value?.artist || null);
 const artworks = computed(() => data.value?.artworks || []);
 const collections = computed(() => data.value?.collections || []);
 const initials = computed(() => getArtistInitials(artist.value?.displayName));
-const hasArtistId = computed(() => Number.isInteger(Number(artist.value?.id)));
-const notFound = computed(() => {
-  const status = error.value?.statusCode || error.value?.status || 0;
-  return status === 404;
-});
-const errorMessage = computed(() => {
-  if (notFound.value) {
-    return "";
-  }
-
-  return (
-    error.value?.data?.message ||
-    (error.value ? "The artist profile is temporarily unavailable." : "")
-  );
-});
+const errorMessage = computed(() =>
+  error.value ? error.value?.data?.message || "The artist profile is temporarily unavailable." : ""
+);
 
 const {
   actionMessage,
   actionStatus,
   favoriteLoading,
   followLoading,
-  canFollowArtist,
   toggleFavorite,
   toggleFollow
 } = useMarketplaceActions(auth);

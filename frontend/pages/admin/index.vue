@@ -112,12 +112,8 @@
               <p class="text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">
                 {{ stat.label }}
               </p>
-              <p class="mt-5 text-title-3 text-slate-100">
-                {{ loading ? "—" : stat.value }}
-              </p>
-              <p class="mt-2 line-clamp-2 text-subtitle-3 text-slate-500">
-                {{ stat.description }}
-              </p>
+              <p class="mt-5 text-title-3 text-slate-100">{{ loading ? "—" : stat.value }}</p>
+              <p class="mt-2 line-clamp-2 text-subtitle-3 text-slate-500">{{ stat.description }}</p>
             </article>
           </section>
 
@@ -167,9 +163,7 @@
                   :key="application.id"
                   class="p-6"
                 >
-                  <p class="truncate text-body-1">
-                    {{ application.displayName }}
-                  </p>
+                  <p class="truncate text-body-1">{{ application.displayName }}</p>
                   <p class="mt-2 truncate text-subtitle-2 text-slate-500">
                     {{ application.artType }} · {{ application.email }}
                   </p>
@@ -224,16 +218,10 @@
                 <tbody class="divide-y divide-slate-800">
                   <tr v-for="user in filteredUsers.slice(0, 5)" :key="user.id">
                     <td class="px-6 py-4">
-                      <p class="text-footer text-slate-100">
-                        {{ user.username }}
-                      </p>
-                      <p class="mt-1 text-subtitle-3 text-slate-500">
-                        {{ user.email }}
-                      </p>
+                      <p class="text-footer text-slate-100">{{ user.username }}</p>
+                      <p class="mt-1 text-subtitle-3 text-slate-500">{{ user.email }}</p>
                     </td>
-                    <td class="px-6 py-4 text-footer text-slate-400">
-                      {{ user.role }}
-                    </td>
+                    <td class="px-6 py-4 text-footer text-slate-400">{{ user.role }}</td>
                     <td class="px-6 py-4">
                       <span
                         class="border px-3 py-1 text-subtitle-3"
@@ -241,9 +229,7 @@
                         >{{ user.status }}</span
                       >
                     </td>
-                    <td class="px-6 py-4 text-footer text-slate-400">
-                      {{ user.ordersCount }}
-                    </td>
+                    <td class="px-6 py-4 text-footer text-slate-400">{{ user.ordersCount }}</td>
                     <td class="px-6 py-4 text-footer text-slate-500">
                       {{ formatDate(user.createdAt) }}
                     </td>
@@ -367,11 +353,9 @@ function statusClass(status) {
 
 function formatDate(value) {
   return value
-    ? new Intl.DateTimeFormat("en-US", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-      }).format(new Date(value))
+    ? new Intl.DateTimeFormat("en-US", { day: "2-digit", month: "short", year: "numeric" }).format(
+        new Date(value)
+      )
     : "—";
 }
 

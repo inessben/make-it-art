@@ -13,15 +13,11 @@
         <div class="min-w-0">
           <div class="flex flex-wrap items-center gap-2">
             <NuxtLink
-              v-if="hasPublicProfile"
               :to="`/artists/${artist.id}`"
               class="text-lg font-semibold text-white transition hover:text-violet-200"
             >
               {{ artist.displayName }}
             </NuxtLink>
-            <span v-else class="text-lg font-semibold text-white">
-              {{ artist.displayName }}
-            </span>
             <span
               class="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-widest"
               :class="
@@ -93,14 +89,6 @@
         </p>
       </div>
     </div>
-
-    <NuxtLink
-      v-if="hasPublicProfile"
-      :to="`/artists/${artist.id}`"
-      class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-750 bg-slate-850 px-4 text-sm font-semibold text-slate-100 transition hover:border-violet-700 hover:text-violet-200"
-    >
-      View profile
-    </NuxtLink>
   </article>
 </template>
 
@@ -130,5 +118,4 @@ const limitedStyles = computed(() => {
 });
 
 const initials = computed(() => getArtistInitials(props.artist.displayName));
-const hasPublicProfile = computed(() => Number.isInteger(Number(props.artist?.id)));
 </script>

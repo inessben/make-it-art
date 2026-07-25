@@ -12,9 +12,7 @@
         {{ adminInitials }}
       </div>
       <div class="min-w-0">
-        <p class="truncate text-body-1 uppercase">
-          {{ user?.username || "Administrator" }}
-        </p>
+        <p class="truncate text-body-1 uppercase">{{ user?.username || "Administrator" }}</p>
         <span
           class="mt-2 inline-flex border border-slate-750 px-2 py-0.5 text-subtitle-3 uppercase text-slate-400"
         >

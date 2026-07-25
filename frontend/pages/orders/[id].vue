@@ -45,9 +45,7 @@
           <div class="grid gap-4 sm:grid-cols-3">
             <div>
               <p class="text-xs uppercase tracking-widest text-violet-700">Order</p>
-              <p class="mt-2 text-lg font-semibold text-slate-100">
-                {{ order.number }}
-              </p>
+              <p class="mt-2 text-lg font-semibold text-slate-100">{{ order.number }}</p>
             </div>
             <div>
               <p class="text-xs uppercase tracking-widest text-violet-700">Date</p>
@@ -55,9 +53,7 @@
             </div>
             <div>
               <p class="text-xs uppercase tracking-widest text-violet-700">Amount</p>
-              <p class="mt-2 text-lg font-semibold text-slate-100">
-                {{ order.total }}
-              </p>
+              <p class="mt-2 text-lg font-semibold text-slate-100">{{ order.total }}</p>
             </div>
           </div>
         </div>
@@ -75,9 +71,7 @@
             >
               <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p class="text-sm text-slate-400">
-                    {{ item.artworkTitle || "Artwork" }}
-                  </p>
+                  <p class="text-sm text-slate-400">{{ item.artworkTitle || "Artwork" }}</p>
                   <p class="mt-1 text-base font-semibold text-slate-100">
                     {{ item.priceTokens }} tokens
                   </p>
@@ -103,15 +97,11 @@
           <div class="mt-5 grid gap-4 sm:grid-cols-2">
             <div class="rounded-2xl border border-slate-800 bg-slate-850 p-4">
               <p class="text-xs uppercase tracking-widest text-violet-700">Method</p>
-              <p class="mt-2 text-sm text-slate-400">
-                {{ order.payments[0].method || "—" }}
-              </p>
+              <p class="mt-2 text-sm text-slate-400">{{ order.payments[0].method || "—" }}</p>
             </div>
             <div class="rounded-2xl border border-slate-800 bg-slate-850 p-4">
               <p class="text-xs uppercase tracking-widest text-violet-700">Status</p>
-              <p class="mt-2 text-sm text-slate-400">
-                {{ order.payments[0].status || "—" }}
-              </p>
+              <p class="mt-2 text-sm text-slate-400">{{ order.payments[0].status || "—" }}</p>
             </div>
           </div>
         </div>

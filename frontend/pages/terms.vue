@@ -6,14 +6,11 @@
   >
     <section v-for="section in sections" :key="section.title">
       <h2>{{ section.title }}</h2>
-      <p v-for="paragraph in section.paragraphs || []" :key="paragraph">
-        {{ paragraph }}
-      </p>
+      <p v-for="paragraph in section.paragraphs || []" :key="paragraph">{{ paragraph }}</p>
 
       <p v-if="section.acceptancePrivacy">
         By creating an account or using the Platform, the User unconditionally accepts these Terms
-        as well as the
-        <NuxtLink to="/privacy">Privacy Policy</NuxtLink>.
+        as well as the <NuxtLink to="/privacy">Privacy Policy</NuxtLink>.
       </p>
       <p v-if="section.dataPrivacy">
         The processing of personal data is described in the
@@ -26,9 +23,7 @@
 
       <div v-for="subsection in section.subsections || []" :key="subsection.title">
         <h3>{{ subsection.title }}</h3>
-        <p v-for="paragraph in subsection.paragraphs || []" :key="paragraph">
-          {{ paragraph }}
-        </p>
+        <p v-for="paragraph in subsection.paragraphs || []" :key="paragraph">{{ paragraph }}</p>
         <ul v-if="subsection.items?.length">
           <li v-for="item in subsection.items" :key="item">{{ item }}</li>
         </ul>

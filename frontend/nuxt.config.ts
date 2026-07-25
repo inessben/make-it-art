@@ -1,14 +1,3 @@
-type RuntimeEnv = Record<string, string | undefined>;
-
-const runtimeEnv =
-  (
-    globalThis as typeof globalThis & {
-      process?: {
-        env?: RuntimeEnv;
-      };
-    }
-  ).process?.env ?? {};
-
 export default defineNuxtConfig({
   modules: ["@nuxtjs/tailwindcss", "@pinia/nuxt"],
   css: ["~/assets/styles/main.scss"],
@@ -29,12 +18,14 @@ export default defineNuxtConfig({
   },
   routeRules: {
     "/api/**": {
-      proxy: runtimeEnv.NUXT_API_PROXY_TARGET || "http://localhost:4000/api/**"
+      proxy: process.env.NUXT_API_PROXY_TARGET || "http://localhost:4000/api/**"
     }
   },
   runtimeConfig: {
     public: {
-      apiBase: runtimeEnv.NUXT_PUBLIC_API_BASE || "/api"
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || "/api",
+      umamiSrc: process.env.NUXT_PUBLIC_UMAMI_SRC || "",
+      umamiWebsiteId: process.env.NUXT_PUBLIC_UMAMI_WEBSITE_ID || ""
     }
   }
 });
