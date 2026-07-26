@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const docsRoutes = require("./docs.routes");
 const healthRoutes = require("./health.routes");
 const authRoutes = require("./auth.routes");
 const ordersRoutes = require("./orders.routes");
@@ -24,6 +25,7 @@ router.use(
   })
 );
 
+router.use(docsRoutes);
 router.use(healthRoutes);
 router.use(authRoutes);
 router.use(artistRoutes);
