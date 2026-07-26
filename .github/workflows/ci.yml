@@ -86,7 +86,7 @@ jobs:
           JWT_SECRET: ci_test_secret_not_for_production
         run: npm test --workspaces=false
       - name: Backend production dependency audit
-        run: npm run security:audit --workspaces=false
+        run: npm audit --omit=dev --omit=optional --audit-level=high --workspaces=false
 
   compose_config:
     runs-on: ubuntu-latest
