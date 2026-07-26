@@ -23,23 +23,33 @@
   "dependencies": {
     "@pinia/nuxt": "^0.11.3",
     "@stripe/stripe-js": "^9.10.0",
-    "nuxt": "^3.21.8",
+    "nuxt": "4.5.0",
     "pinia": "^3.0.4"
+  },
+  "overrides": {
+    "immutable": "5.1.9",
+    "archiver": {
+      "readdir-glob": "3.0.0"
+    },
+    "archiver-utils": {
+      "glob": "^13.0.0"
+    }
   },
   "devDependencies": {
     "@nuxtjs/tailwindcss": "^6.14.0",
     "@typescript-eslint/eslint-plugin": "^8.26.0",
     "@typescript-eslint/parser": "^8.26.0",
     "autoprefixer": "^10.4.20",
-    "eslint": "^8.57.1",
+    "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.0.1",
-    "eslint-plugin-vue": "^9.32.0",
+    "eslint-plugin-vue": "^10.10.0",
     "postcss": "^8.4.49",
     "prettier": "^3.5.3",
     "sass": "^1.77.8",
     "tailwindcss": "^3.4.14",
     "typescript": "^5.7.3",
     "vite": "^7.3.6",
+    "vue-eslint-parser": "^10.3.0",
     "vue-tsc": "^3.2.9"
   }
 }

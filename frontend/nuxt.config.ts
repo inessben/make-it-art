@@ -20,9 +20,11 @@ export default defineNuxtConfig({
       ]
     }
   },
-  routeRules: {
-    "/api/**": {
-      proxy: environment.NUXT_API_PROXY_TARGET || "http://localhost:4000/api/**"
+  nitro: {
+    routeRules: {
+      "/api/**": {
+        proxy: environment.NUXT_API_PROXY_TARGET || "http://localhost:4000/api/**"
+      }
     }
   },
   runtimeConfig: {
