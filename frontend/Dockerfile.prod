@@ -3,6 +3,9 @@ FROM node:22-alpine AS build
 WORKDIR /app
 
 ARG NPM_REGISTRY=https://registry.npmjs.org
+ARG NUXT_API_PROXY_TARGET=http://backend:4000/api/**
+
+ENV NUXT_API_PROXY_TARGET=${NUXT_API_PROXY_TARGET}
 
 COPY package*.json ./
 
