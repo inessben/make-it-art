@@ -1,26 +1,17 @@
 <template>
   <!-- Pas fan du main si qlq peut le modif svp  -->
-  <main
-    class="min-h-screen grid place-items-center px-6 py-10 bg-[#000000] text-[#E6EDF7]"
-  >
+  <main class="min-h-screen grid place-items-center px-6 py-10 bg-[#000000] text-[#E6EDF7]">
     <div
       class="w-full max-w-[1120px] grid gap-7 rounded-[32px] border border-[#1A1F2A] bg-[#01050E] p-7 shadow-[0_32px_90px_rgba(0,0,0,0.22)]"
     >
-      <header
-        class="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between"
-      >
+      <header class="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
         <div class="max-w-3xl">
-          <p class="mb-3 text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-            Mon compte
-          </p>
-          <h1
-            class="text-[clamp(2rem,2.5vw,2.8rem)] leading-[1.05] font-semibold"
-          >
+          <p class="mb-3 text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Mon compte</p>
+          <h1 class="text-[clamp(2rem,2.5vw,2.8rem)] leading-[1.05] font-semibold">
             Gérez votre compte et vos préférences
           </h1>
           <p class="mt-4 max-w-2xl text-[#A0ADB4]">
-            Accédez à vos informations de compte, vos préférences et vos
-            services.
+            Accédez à vos informations de compte, vos préférences et vos services.
           </p>
         </div>
 
@@ -53,9 +44,7 @@
         class="flex flex-col gap-6 rounded-[24px] border border-[#1A1F2A] bg-[#01050E] p-6 sm:flex-row sm:items-center sm:justify-between"
       >
         <div class="grid gap-3">
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-            Bienvenue
-          </p>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Bienvenue</p>
           <h2 class="text-3xl font-semibold">
             {{ user.username || "Utilisateur" }}
           </h2>
@@ -86,7 +75,13 @@
           <div
             class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#4A6CF7]/10 text-2xl text-[#4A6CF7]"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
               <!-- eslint-disable-next-line vue/no-v-html -->
               <g v-html="card.icon"></g>
             </svg>
@@ -112,7 +107,7 @@ import { computed, ref } from "vue";
 import { useAuthStore } from "~/stores/auth";
 
 definePageMeta({
-  middleware: "auth",
+  middleware: "auth"
 });
 
 const auth = useAuthStore();
@@ -120,9 +115,7 @@ const { user, loading } = storeToRefs(auth);
 const message = ref("");
 const artistApplicationStatus = computed(() => auth.artistApplicationStatus);
 const artistActionRoute = computed(() =>
-  auth.isArtist || artistApplicationStatus.value
-    ? "/artist-profile"
-    : "/become-artist",
+  auth.isArtist || artistApplicationStatus.value ? "/artist-profile" : "/become-artist"
 );
 const artistActionLabel = computed(() => {
   if (auth.isArtist) {
@@ -166,7 +159,7 @@ const cards = computed(() => [
     ',
     title: "Paramètres du profil",
     route: "/account-settings",
-    description: "Mettez à jour vos informations personnelles",
+    description: "Mettez à jour vos informations personnelles"
   },
   {
     icon: '\
@@ -178,7 +171,7 @@ const cards = computed(() => [
     route: artistActionRoute.value,
     description: auth.isArtist
       ? "Gérez votre portfolio artistique"
-      : "Créez votre profil artiste MVP",
+      : "Créez votre profil artiste MVP"
   },
   {
     icon: '\
@@ -186,7 +179,7 @@ const cards = computed(() => [
     ',
     title: "Liste de souhaits",
     route: "/wishlist",
-    description: "Favoris, collections et suivi d'artistes",
+    description: "Favoris, collections et suivi d'artistes"
   },
   {
     icon: '\
@@ -197,7 +190,7 @@ const cards = computed(() => [
     ',
     title: "Follows / Followers",
     route: "/follows",
-    description: "Voir qui vous suivez et qui vous suit",
+    description: "Voir qui vous suivez et qui vous suit"
   },
   {
     icon: '\
@@ -208,7 +201,7 @@ const cards = computed(() => [
     ',
     title: "Panier",
     route: "/cart",
-    description: "Ajouter / retirer des oeuvres et voir le recap",
+    description: "Ajouter / retirer des oeuvres et voir le recap"
   },
   {
     icon: '\
@@ -218,7 +211,7 @@ const cards = computed(() => [
     ',
     title: "Historique des commandes",
     route: "/orders",
-    description: "Consultez vos commandes passées",
+    description: "Consultez vos commandes passées"
   },
   {
     icon: '\
@@ -227,7 +220,7 @@ const cards = computed(() => [
     ',
     title: "Moyens de paiement",
     route: "/payment-methods",
-    description: "Gérez vos options de paiement",
+    description: "Gérez vos options de paiement"
   },
   {
     icon: '\
@@ -236,7 +229,7 @@ const cards = computed(() => [
     ',
     title: "Portefeuille",
     route: "/wallet",
-    description: "Consultez votre solde et vos transactions",
+    description: "Consultez votre solde et vos transactions"
   },
   {
     icon: '\
@@ -246,7 +239,7 @@ const cards = computed(() => [
     ',
     title: "Adresses",
     route: "/addresses",
-    description: "Gérez vos adresses de livraison",
+    description: "Gérez vos adresses de livraison"
   },
   {
     icon: '\
@@ -255,7 +248,7 @@ const cards = computed(() => [
     ',
     title: "Notifications",
     route: "/notifications",
-    description: "Alertes de vente et activite metier",
+    description: "Alertes de vente et activite metier"
   },
   {
     icon: '\
@@ -271,8 +264,8 @@ const cards = computed(() => [
     ',
     title: "Paramètres",
     route: "/settings",
-    description: "Préférences du compte",
-  },
+    description: "Préférences du compte"
+  }
 ]);
 
 async function handleLogout() {

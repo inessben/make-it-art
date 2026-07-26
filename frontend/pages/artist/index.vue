@@ -36,16 +36,10 @@
       <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
         <div class="flex items-end justify-between gap-4">
           <div>
-            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-              Analytics
-            </p>
-            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
-              Ventes sur 6 mois
-            </h2>
+            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Analytics</p>
+            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Ventes sur 6 mois</h2>
           </div>
-          <span
-            class="rounded-full bg-[#4A6CF7]/10 px-4 py-2 text-sm font-semibold text-[#4A6CF7]"
-          >
+          <span class="rounded-full bg-[#4A6CF7]/10 px-4 py-2 text-sm font-semibold text-[#4A6CF7]">
             Live data
           </span>
         </div>
@@ -107,12 +101,8 @@
       </article>
 
       <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-        <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-          Top oeuvres
-        </p>
-        <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
-          Meilleures performances
-        </h2>
+        <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Top oeuvres</p>
+        <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Meilleures performances</h2>
 
         <div
           v-if="!loading && analytics.topArtworks.length === 0"
@@ -139,12 +129,8 @@
     <section class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-            Activite recente
-          </p>
-          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
-            Dernieres ventes
-          </h2>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Activite recente</p>
+          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Dernieres ventes</h2>
         </div>
         <NuxtLink
           to="/artist/sales"
@@ -161,10 +147,7 @@
         Les ventes apparaitront ici des qu'un collectionneur finalisera un achat.
       </div>
 
-      <div
-        v-else
-        class="mt-6 overflow-hidden rounded-[22px] border border-[#1A1F2A]"
-      >
+      <div v-else class="mt-6 overflow-hidden rounded-[22px] border border-[#1A1F2A]">
         <table class="min-w-full divide-y divide-[#1A1F2A] text-left text-sm">
           <thead class="bg-[#01050E] text-xs uppercase tracking-[0.16em] text-[#7F8A99]">
             <tr>
@@ -195,7 +178,7 @@ import { computed, onMounted, ref } from "vue";
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "artist",
+  middleware: "artist"
 });
 
 const loading = ref(true);
@@ -204,7 +187,7 @@ const stats = ref([]);
 const performance = ref({});
 const analytics = ref({
   salesByMonth: [],
-  topArtworks: [],
+  topArtworks: []
 });
 const recentSales = ref([]);
 
@@ -215,28 +198,23 @@ const performanceCards = computed(() => {
     {
       label: "Croissance",
       value: `${data.revenueGrowthPercent ?? 0}%`,
-      description: "Evolution du CA vs mois precedent.",
+      description: "Evolution du CA vs mois precedent."
     },
     {
       label: "Panier moyen",
       value: data.avgSaleValue || "EUR 0.00",
-      description: "Montant moyen par vente confirmee.",
+      description: "Montant moyen par vente confirmee."
     },
     {
       label: "Conversion",
       value: `${data.conversionRate ?? 0}%`,
-      description: "Ratio ventes / favoris sur votre catalogue.",
-    },
+      description: "Ratio ventes / favoris sur votre catalogue."
+    }
   ];
 });
 
 const maxMonthlyRevenue = computed(() =>
-  Math.max(
-    ...(analytics.value.salesByMonth || []).map(
-      (month) => month.grossRevenueValue || 0,
-    ),
-    1,
-  ),
+  Math.max(...(analytics.value.salesByMonth || []).map((month) => month.grossRevenueValue || 0), 1)
 );
 
 onMounted(async () => {
@@ -256,7 +234,7 @@ function formatDate(value) {
   return new Date(value).toLocaleDateString("fr-FR", {
     day: "2-digit",
     month: "short",
-    year: "numeric",
+    year: "numeric"
   });
 }
 
@@ -266,14 +244,14 @@ async function loadDashboard() {
 
   try {
     const response = await $fetch("/api/artists/me/dashboard", {
-      credentials: "include",
+      credentials: "include"
     });
 
     stats.value = response.stats || [];
     performance.value = response.performance || {};
     analytics.value = response.analytics || {
       salesByMonth: [],
-      topArtworks: [],
+      topArtworks: []
     };
     recentSales.value = response.recentSales || [];
   } catch (error) {
@@ -287,8 +265,7 @@ async function loadDashboard() {
       return;
     }
 
-    errorMessage.value =
-      error?.data?.message || "Impossible de charger le dashboard artiste.";
+    errorMessage.value = error?.data?.message || "Impossible de charger le dashboard artiste.";
   } finally {
     loading.value = false;
   }

@@ -20,8 +20,8 @@ router.use(
   "/uploads",
   express.static(path.resolve(__dirname, "../../uploads"), {
     fallthrough: false,
-    maxAge: "7d",
-  }),
+    maxAge: "7d"
+  })
 );
 
 router.use(healthRoutes);

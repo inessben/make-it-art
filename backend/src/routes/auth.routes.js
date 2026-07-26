@@ -18,10 +18,8 @@ const {
 const { authRateLimit, strictAuthRateLimit } = require("../middlewares/rate-limit.middleware");
 const { authRequired } = require("../middlewares/auth-required.middleware");
 const userRepository = require("../repositories/user.repository");
-const {
-  getPasswordConfirmationError,
-  getPasswordValidationError
-} = require("../utils/password-validation");
+const { validateNewPassword } = require("../services/password-security.service");
+const { getPasswordConfirmationError } = require("../utils/password-validation");
 const { serializeAuthUser } = require("../utils/serialize-auth-user");
 const { isAdminUser } = require("../middlewares/admin-required.middleware");
 const { AccountAccessError, USER_ACCOUNT_ERROR_CODES } = require("../utils/user-account-status");
@@ -97,6 +95,7 @@ router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
 
       return res.status(200).json({
         message: "Login successful",
+        passwordCompromised: Boolean(result.passwordCompromised),
         requiresCode: false,
         redirectTo: getAuthenticatedAppPath(result.user),
         user: serializeAuthUser(result.user)
@@ -107,6 +106,7 @@ router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
 
     return res.status(200).json({
       message: "Login code sent. Please check your email.",
+      passwordCompromised: Boolean(result.passwordCompromised),
       requiresCode: true
     });
   } catch (error) {
@@ -241,13 +241,21 @@ router.post("/auth/register", authRateLimit, async (req, res) => {
       });
     }
 
-    const passwordError =
-      getPasswordValidationError(password) ||
-      getPasswordConfirmationError(password, confirmPassword);
+    const passwordError = getPasswordConfirmationError(password, confirmPassword);
 
     if (passwordError) {
       return res.status(400).json({
         message: passwordError
+      });
+    }
+
+    const passwordSecurityError = await validateNewPassword(password, {
+      userInputs: [username, email]
+    });
+
+    if (passwordSecurityError) {
+      return res.status(passwordSecurityError.status).json({
+        message: passwordSecurityError.message
       });
     }
 
@@ -394,14 +402,6 @@ router.patch("/auth/password", authRequired, async (req, res) => {
       });
     }
 
-    const passwordError = getPasswordValidationError(newPassword);
-
-    if (passwordError) {
-      return res.status(400).json({
-        message: passwordError
-      });
-    }
-
     if (newPassword === currentPassword) {
       return res.status(400).json({
         message: "New password must be different from current password"
@@ -413,6 +413,16 @@ router.patch("/auth/password", authRequired, async (req, res) => {
     if (!isValid) {
       return res.status(401).json({
         message: "Current password is incorrect"
+      });
+    }
+
+    const passwordSecurityError = await validateNewPassword(newPassword, {
+      userInputs: [req.user.username, req.user.email]
+    });
+
+    if (passwordSecurityError) {
+      return res.status(passwordSecurityError.status).json({
+        message: passwordSecurityError.message
       });
     }
 
@@ -464,7 +474,7 @@ router.post("/auth/forgot-password", authRateLimit, async (req, res) => {
   }
 });
 
-router.post("/auth/reset-password", async (req, res) => {
+router.post("/auth/reset-password", authRateLimit, async (req, res) => {
   try {
     const { token, password, confirmPassword } = req.body;
 
@@ -474,13 +484,19 @@ router.post("/auth/reset-password", async (req, res) => {
       });
     }
 
-    const passwordError =
-      getPasswordValidationError(password) ||
-      getPasswordConfirmationError(password, confirmPassword);
+    const passwordError = getPasswordConfirmationError(password, confirmPassword);
 
     if (passwordError) {
       return res.status(400).json({
         message: passwordError
+      });
+    }
+
+    const passwordSecurityError = await validateNewPassword(password);
+
+    if (passwordSecurityError) {
+      return res.status(passwordSecurityError.status).json({
+        message: passwordSecurityError.message
       });
     }
 

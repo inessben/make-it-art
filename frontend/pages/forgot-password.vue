@@ -1,19 +1,27 @@
 <template>
   <AuthPanel
     title="Forgot password"
-    description="Enter your account email and we will send you a secure reset link."
+    :description="
+      requestSucceeded ? '' : 'Enter your account email and we will send you a secure reset link.'
+    "
     max-width="440px"
     @submit="handleSubmit"
   >
-    <TextField id="email" v-model="email" label="Email" type="email" autocomplete="email" />
+    <template v-if="requestSucceeded">
+      <FormMessage message="If this email exists, a password reset link has been sent." />
+    </template>
 
-    <SubmitButton label="Send reset link" loading-label="Sending..." :loading="loading" />
+    <template v-else>
+      <TextField id="email" v-model="email" label="Email" type="email" autocomplete="email" />
 
-    <FormMessage :message="message" />
+      <SubmitButton label="Send reset link" loading-label="Sending..." :loading="loading" />
 
-    <p class="auth-link">
-      <NuxtLink to="/login">Back to login</NuxtLink>
-    </p>
+      <FormMessage :message="message" />
+
+      <p class="auth-link">
+        <NuxtLink to="/login">Back to login</NuxtLink>
+      </p>
+    </template>
   </AuthPanel>
 </template>
 
@@ -21,21 +29,26 @@
 const email = ref("");
 const message = ref("");
 const loading = ref(false);
+const requestSucceeded = ref(false);
 
 async function handleSubmit() {
+  if (loading.value || requestSucceeded.value) {
+    return;
+  }
+
   loading.value = true;
   message.value = "";
 
   try {
-    const response = await $fetch("/api/auth/forgot-password", {
+    await $fetch("/api/auth/forgot-password", {
       method: "POST",
       body: {
         email: email.value
       }
     });
 
-    message.value =
-      response.message || "If this email exists, a password reset link has been sent.";
+    email.value = "";
+    requestSucceeded.value = true;
   } catch (error) {
     message.value =
       error?.data?.message || "If this email exists, a password reset link has been sent.";

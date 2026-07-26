@@ -4,7 +4,7 @@ const {
   parseAmount,
   formatCurrencyAmount,
   buildOrderStatus,
-  computeNetRevenue,
+  computeNetRevenue
 } = require("../src/utils/commerce");
 
 test("parseAmount normalizes currency strings", () => {
@@ -16,9 +16,9 @@ test("parseAmount normalizes currency strings", () => {
 test("buildOrderStatus derives paid status from payments", () => {
   assert.equal(
     buildOrderStatus({
-      payments: [{ status: "Succeeded" }],
+      payments: [{ status: "Succeeded" }]
     }),
-    "Paid",
+    "Paid"
   );
 });
 

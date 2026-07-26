@@ -134,6 +134,7 @@
                   :disabled="savingPassword"
                   type="password"
                   autocomplete="new-password"
+                  :minlength="MIN_PASSWORD_LENGTH"
                   class="h-12 border-b border-slate-750 bg-slate-900 px-5 text-body-1 text-slate-100 outline-none focus:border-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </label>
@@ -144,10 +145,15 @@
                   :disabled="savingPassword"
                   type="password"
                   autocomplete="new-password"
+                  :minlength="MIN_PASSWORD_LENGTH"
                   class="h-12 border-b border-slate-750 bg-slate-900 px-5 text-body-1 text-slate-100 outline-none focus:border-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </label>
             </div>
+            <PasswordStrengthFeedback
+              :password="password.next"
+              :user-inputs="[profile.username, profile.email]"
+            />
           </div>
 
           <button
@@ -231,7 +237,8 @@ import AccountSettingsSidebar from "~/components/account/AccountSettingsSidebar.
 import { useAuthStore } from "~/stores/auth";
 import {
   getPasswordConfirmationError,
-  getPasswordValidationError
+  getPasswordValidationError,
+  MIN_PASSWORD_LENGTH
 } from "~/utils/password-validation";
 
 const props = defineProps({
@@ -357,7 +364,7 @@ async function updatePassword() {
     return;
   }
   const validationError =
-    getPasswordValidationError(password.next) ||
+    getPasswordValidationError(password.next, [profile.username, profile.email]) ||
     getPasswordConfirmationError(password.next, password.confirmation);
   if (validationError) {
     errorMessage.value = validationError;

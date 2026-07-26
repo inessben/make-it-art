@@ -10,6 +10,7 @@
       v-model="password"
       label="New password"
       autocomplete="new-password"
+      :minlength="MIN_PASSWORD_LENGTH"
     />
 
     <PasswordStrengthFeedback :password="password" />
@@ -19,6 +20,7 @@
       v-model="confirmPassword"
       label="Confirm password"
       autocomplete="new-password"
+      :minlength="MIN_PASSWORD_LENGTH"
     />
 
     <SubmitButton label="Reset password" loading-label="Resetting..." :loading="loading" />
@@ -34,7 +36,8 @@
 <script setup>
 import {
   getPasswordConfirmationError,
-  getPasswordValidationError
+  getPasswordValidationError,
+  MIN_PASSWORD_LENGTH
 } from "~/utils/password-validation";
 
 const route = useRoute();

@@ -3,17 +3,17 @@ const prisma = require("../lib/prisma");
 async function listNotificationsForUser(userId, { limit = 50 } = {}) {
   return prisma.notification.findMany({
     where: {
-      userId,
+      userId
     },
     orderBy: [
       {
-        createdAt: "desc",
+        createdAt: "desc"
       },
       {
-        id: "desc",
-      },
+        id: "desc"
+      }
     ],
-    take: limit,
+    take: limit
   });
 }
 
@@ -21,18 +21,12 @@ async function countUnreadForUser(userId) {
   return prisma.notification.count({
     where: {
       userId,
-      readAt: null,
-    },
+      readAt: null
+    }
   });
 }
 
-async function createNotification({
-  userId,
-  type,
-  title,
-  message,
-  payload = null,
-}) {
+async function createNotification({ userId, type, title, message, payload = null }) {
   return prisma.notification.create({
     data: {
       userId,
@@ -40,8 +34,8 @@ async function createNotification({
       title,
       message,
       payload,
-      createdAt: new Date(),
-    },
+      createdAt: new Date()
+    }
   });
 }
 
@@ -50,11 +44,11 @@ async function markNotificationRead({ notificationId, userId }) {
     where: {
       id: notificationId,
       userId,
-      readAt: null,
+      readAt: null
     },
     data: {
-      readAt: new Date(),
-    },
+      readAt: new Date()
+    }
   });
 
   if (result.count === 0) {
@@ -64,8 +58,8 @@ async function markNotificationRead({ notificationId, userId }) {
   return prisma.notification.findFirst({
     where: {
       id: notificationId,
-      userId,
-    },
+      userId
+    }
   });
 }
 
@@ -73,11 +67,11 @@ async function markAllNotificationsRead(userId) {
   const result = await prisma.notification.updateMany({
     where: {
       userId,
-      readAt: null,
+      readAt: null
     },
     data: {
-      readAt: new Date(),
-    },
+      readAt: new Date()
+    }
   });
 
   return result.count;
@@ -88,5 +82,5 @@ module.exports = {
   countUnreadForUser,
   createNotification,
   markNotificationRead,
-  markAllNotificationsRead,
+  markAllNotificationsRead
 };

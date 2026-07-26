@@ -8,6 +8,7 @@
         :value="modelValue"
         :type="showPassword ? 'text' : 'password'"
         :autocomplete="autocomplete"
+        :minlength="minlength"
         required
         @input="$emit('update:modelValue', $event.target.value)"
       />
@@ -46,6 +47,10 @@ defineProps({
   autocomplete: {
     type: String,
     default: "current-password"
+  },
+  minlength: {
+    type: Number,
+    default: undefined
   }
 });
 

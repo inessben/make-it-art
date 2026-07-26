@@ -1,35 +1,54 @@
 <template>
   <AuthPanel title="Create your account" max-width="480px" @submit="handleRegister">
-    <TextField id="username" v-model="form.username" label="Username" autocomplete="username" />
+    <template v-if="registrationSucceeded">
+      <FormMessage message="Account created. Please verify your email before logging in." />
+    </template>
 
-    <TextField id="email" v-model="form.email" label="Email" type="email" autocomplete="email" />
+    <template v-else>
+      <TextField id="username" v-model="form.username" label="Username" autocomplete="username" />
 
-    <TextField id="phone" v-model="form.phone" label="Phone number" type="tel" autocomplete="tel" />
+      <TextField id="email" v-model="form.email" label="Email" type="email" autocomplete="email" />
 
-    <PasswordField
-      id="password"
-      v-model="form.password"
-      label="Password"
-      autocomplete="new-password"
-    />
+      <TextField
+        id="phone"
+        v-model="form.phone"
+        label="Phone number"
+        type="tel"
+        autocomplete="tel"
+      />
 
-    <PasswordStrengthFeedback :password="form.password" />
+      <PasswordField
+        id="password"
+        v-model="form.password"
+        label="Password"
+        autocomplete="new-password"
+        :minlength="MIN_PASSWORD_LENGTH"
+      />
 
-    <PasswordField
-      id="confirm-password"
-      v-model="form.confirmPassword"
-      label="Confirm password"
-      autocomplete="new-password"
-    />
+      <PasswordStrengthFeedback
+        :password="form.password"
+        :user-inputs="[form.username, form.email]"
+      />
 
-    <SubmitButton label="Create account" loading-label="Creating account..." :loading="loading" />
+      <PasswordField
+        id="confirm-password"
+        v-model="form.confirmPassword"
+        label="Confirm password"
+        autocomplete="new-password"
+        :minlength="MIN_PASSWORD_LENGTH"
+      />
 
-    <FormMessage :message="message" />
+      <SubmitButton label="Create account" loading-label="Creating account..." :loading="loading" />
 
-    <p class="text-center text-body-1 text-slate-400">
-      Already have an account?
-      <NuxtLink class="font-semibold text-violet-400 hover:underline" to="/login">Sign in</NuxtLink>
-    </p>
+      <FormMessage :message="message" />
+
+      <p class="text-center text-body-1 text-slate-400">
+        Already have an account?
+        <NuxtLink class="font-semibold text-violet-400 hover:underline" to="/login">
+          Sign in
+        </NuxtLink>
+      </p>
+    </template>
   </AuthPanel>
 </template>
 
@@ -37,7 +56,8 @@
 import { reactive, ref } from "vue";
 import {
   getPasswordConfirmationError,
-  getPasswordValidationError
+  getPasswordValidationError,
+  MIN_PASSWORD_LENGTH
 } from "~/utils/password-validation";
 
 definePageMeta({
@@ -54,12 +74,17 @@ const form = reactive({
 
 const message = ref("");
 const loading = ref(false);
+const registrationSucceeded = ref(false);
 
 async function handleRegister() {
+  if (loading.value || registrationSucceeded.value) {
+    return;
+  }
+
   message.value = "";
 
   const passwordError =
-    getPasswordValidationError(form.password) ||
+    getPasswordValidationError(form.password, [form.username, form.email]) ||
     getPasswordConfirmationError(form.password, form.confirmPassword);
 
   if (passwordError) {
@@ -70,7 +95,7 @@ async function handleRegister() {
   loading.value = true;
 
   try {
-    const response = await $fetch("/api/auth/register", {
+    await $fetch("/api/auth/register", {
       method: "POST",
       credentials: "include",
       body: {
@@ -82,7 +107,14 @@ async function handleRegister() {
       }
     });
 
-    message.value = response.message || "Account created";
+    Object.assign(form, {
+      username: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirmPassword: ""
+    });
+    registrationSucceeded.value = true;
   } catch (error) {
     message.value = error?.data?.message || "Registration failed";
   } finally {

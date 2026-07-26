@@ -9,8 +9,9 @@
           Publier une oeuvre
         </h1>
         <p class="mt-4 max-w-2xl text-sm leading-7 text-[#96A4B8]">
-          Dépose le visuel de ton œuvre comme sur Instagram ou Pinterest, puis complète les informations pour la rendre visible dans le catalogue public.
-          Seuls les artistes vérifiés peuvent publier.
+          Dépose le visuel de ton œuvre comme sur Instagram ou Pinterest, puis complète les
+          informations pour la rendre visible dans le catalogue public. Seuls les artistes vérifiés
+          peuvent publier.
         </p>
       </header>
 
@@ -50,9 +51,7 @@
                 <p class="text-sm font-semibold text-white">
                   Glisse une image ou clique pour parcourir
                 </p>
-                <p class="mt-2 text-sm text-[#96A4B8]">
-                  JPG, PNG, WEBP ou GIF · 10 Mo max
-                </p>
+                <p class="mt-2 text-sm text-[#96A4B8]">JPG, PNG, WEBP ou GIF · 10 Mo max</p>
               </div>
             </div>
 
@@ -267,7 +266,7 @@ async function submitArtwork() {
     const response = await $fetch("/api/artists/me/artworks", {
       method: "POST",
       credentials: "include",
-      body: formData,
+      body: formData
     });
 
     formMessage.value = response.message || "Oeuvre publiee avec succes.";

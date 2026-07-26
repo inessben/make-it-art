@@ -238,53 +238,48 @@ async function listOrderItemsForArtist(artistId) {
   return prisma.orderItem.findMany({
     where: {
       artwork: {
-        artistId,
-      },
+        artistId
+      }
     },
     orderBy: [
       {
         order: {
-          createdAt: "desc",
-        },
+          createdAt: "desc"
+        }
       },
       {
-        id: "desc",
-      },
+        id: "desc"
+      }
     ],
     include: {
       artwork: {
         include: {
           artist: {
             include: {
-              user: true,
-            },
-          },
-        },
+              user: true
+            }
+          }
+        }
       },
       order: {
         include: {
           user: true,
-          payments: true,
-        },
-      },
-    },
+          payments: true
+        }
+      }
+    }
   });
 }
 
-async function createCheckoutOrder({
-  userId,
-  lineItems,
-  paymentMethod,
-  totalAmount,
-}) {
+async function createCheckoutOrder({ userId, lineItems, paymentMethod, totalAmount }) {
   return prisma.$transaction(async (tx) => {
     const order = await tx.order.create({
       data: {
         userId,
         status: "Paid",
         totalToken: Math.round(totalAmount),
-        createdAt: new Date(),
-      },
+        createdAt: new Date()
+      }
     });
 
     const orderItems = [];
@@ -294,29 +289,29 @@ async function createCheckoutOrder({
         data: {
           orderId: order.id,
           artworkId: lineItem.artworkId,
-          priceTokens: String(lineItem.unitPrice),
-        },
+          priceTokens: String(lineItem.unitPrice)
+        }
       });
 
       orderItems.push(orderItem);
 
       await tx.artwork.update({
         where: {
-          id: lineItem.artworkId,
+          id: lineItem.artworkId
         },
         data: {
-          isSold: true,
-        },
+          isSold: true
+        }
       });
 
       await tx.ownershipToken.updateMany({
         where: {
           artworkId: lineItem.artworkId,
-          isCurrentOwner: true,
+          isCurrentOwner: true
         },
         data: {
-          isCurrentOwner: false,
-        },
+          isCurrentOwner: false
+        }
       });
 
       await tx.ownershipToken.create({
@@ -324,8 +319,8 @@ async function createCheckoutOrder({
           artworkId: lineItem.artworkId,
           ownerId: userId,
           acquiredAt: new Date(),
-          isCurrentOwner: true,
-        },
+          isCurrentOwner: true
+        }
       });
     }
 
@@ -335,14 +330,14 @@ async function createCheckoutOrder({
         method: paymentMethod,
         price: formatCheckoutPrice(totalAmount),
         status: "Succeeded",
-        createdAt: new Date(),
-      },
+        createdAt: new Date()
+      }
     });
 
     return {
       order,
       orderItems,
-      payment,
+      payment
     };
   });
 }
@@ -355,5 +350,5 @@ module.exports = {
   listOrdersForAdmin,
   findOrderDetailForAdmin,
   listOrderItemsForArtist,
-  createCheckoutOrder,
+  createCheckoutOrder
 };

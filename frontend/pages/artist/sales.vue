@@ -35,12 +35,8 @@
     <section class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-            Historique
-          </p>
-          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
-            Toutes vos ventes
-          </h2>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Historique</p>
+          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Toutes vos ventes</h2>
         </div>
         <div class="grid gap-3 sm:grid-cols-2">
           <label class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3">
@@ -88,10 +84,7 @@
         Aucune vente ne correspond aux filtres actuels.
       </div>
 
-      <div
-        v-else
-        class="mt-6 overflow-hidden rounded-[22px] border border-[#1A1F2A]"
-      >
+      <div v-else class="mt-6 overflow-hidden rounded-[22px] border border-[#1A1F2A]">
         <table class="min-w-full divide-y divide-[#1A1F2A] text-left text-sm">
           <thead class="bg-[#01050E] text-xs uppercase tracking-[0.16em] text-[#7F8A99]">
             <tr>
@@ -133,7 +126,7 @@ import { computed, onMounted, ref } from "vue";
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "artist",
+  middleware: "artist"
 });
 
 const loading = ref(true);
@@ -147,31 +140,30 @@ const summaryCards = computed(() => [
   {
     label: "Ventes payees",
     value: summary.value.totalSales ?? 0,
-    description: "Transactions confirmees sur votre catalogue.",
+    description: "Transactions confirmees sur votre catalogue."
   },
   {
     label: "Revenus bruts",
     value: summary.value.grossRevenue || "EUR 0.00",
-    description: "Montant total avant commission plateforme.",
+    description: "Montant total avant commission plateforme."
   },
   {
     label: "Revenus nets",
     value: summary.value.netRevenue || "EUR 0.00",
-    description: `Part artiste apres commission (${summary.value.commissionRate || "7%"}).`,
+    description: `Part artiste apres commission (${summary.value.commissionRate || "7%"}).`
   },
   {
     label: "En attente",
     value: summary.value.pendingSales ?? 0,
-    description: "Ventes avec paiement non confirme.",
-  },
+    description: "Ventes avec paiement non confirme."
+  }
 ]);
 
 const filteredSales = computed(() => {
   const query = searchTerm.value.trim().toLowerCase();
 
   return sales.value.filter((sale) => {
-    const matchesStatus =
-      statusFilter.value === "all" || sale.status === statusFilter.value;
+    const matchesStatus = statusFilter.value === "all" || sale.status === statusFilter.value;
 
     if (!matchesStatus) {
       return false;
@@ -181,12 +173,7 @@ const filteredSales = computed(() => {
       return true;
     }
 
-    const haystack = [
-      sale.reference,
-      sale.artworkTitle,
-      sale.buyer,
-      sale.buyerEmail,
-    ]
+    const haystack = [sale.reference, sale.artworkTitle, sale.buyer, sale.buyerEmail]
       .join(" ")
       .toLowerCase();
 
@@ -218,7 +205,7 @@ function formatDate(value) {
   return new Date(value).toLocaleDateString("fr-FR", {
     day: "2-digit",
     month: "short",
-    year: "numeric",
+    year: "numeric"
   });
 }
 
@@ -228,7 +215,7 @@ async function loadSales() {
 
   try {
     const response = await $fetch("/api/artists/me/sales", {
-      credentials: "include",
+      credentials: "include"
     });
 
     summary.value = response.summary || {};
@@ -244,8 +231,7 @@ async function loadSales() {
       return;
     }
 
-    errorMessage.value =
-      error?.data?.message || "Impossible de charger vos ventes.";
+    errorMessage.value = error?.data?.message || "Impossible de charger vos ventes.";
   } finally {
     loading.value = false;
   }

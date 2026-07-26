@@ -16,7 +16,8 @@
             Finaliser l'achat
           </h1>
           <p class="mt-4 max-w-3xl text-sm leading-6 text-[#A0ADB4]">
-            Paiement simulé : la commande est enregistrée en base et les artistes concernés reçoivent une notification de vente.
+            Paiement simulé : la commande est enregistrée en base et les artistes concernés
+            reçoivent une notification de vente.
           </p>
         </div>
 
@@ -297,8 +298,7 @@ import { storeToRefs } from "pinia";
 import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useCartStore } from "~/stores/cart";
 import { useAuthStore } from "~/stores/auth";
-import { formatMarketplacePrice } from "~/utils/marketplace";
-import { 
+import {
   buildPaymentReturnUrl,
   canMountPaymentElement,
   CHECKOUT_ORDER_STORAGE_KEY,

@@ -232,9 +232,7 @@
             >
               <div class="flex items-center justify-between gap-4">
                 <div>
-                  <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
-                    My collections
-                  </p>
+                  <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">My collections</p>
                   <h2 class="mt-3 text-xl font-semibold text-white">
                     Save this artwork to a collection
                   </h2>
@@ -314,9 +312,7 @@
         </section>
 
         <section class="mt-12 border border-slate-900 bg-slate-950/50 p-4 sm:mt-16 sm:p-8">
-          <h2 class="text-title-3 uppercase text-slate-100 sm:text-title-2">
-            More by this artist
-          </h2>
+          <h2 class="text-title-3 uppercase text-slate-100 sm:text-title-2">More by this artist</h2>
           <div
             v-if="relatedArtworks.length"
             class="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"

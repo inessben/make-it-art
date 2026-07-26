@@ -5,34 +5,24 @@ const express = require("express");
 const { loadModuleWithMocks } = require("./helpers/mock-require");
 
 const routesPath = require.resolve("../src/routes/artist.routes");
-const authRequiredPath =
-  require.resolve("../src/middlewares/auth-required.middleware");
+const authRequiredPath = require.resolve("../src/middlewares/auth-required.middleware");
 const applicationRepositoryPath =
   require.resolve("../src/repositories/artist-application-draft.repository");
-const artistRepositoryPath =
-  require.resolve("../src/repositories/artist.repository");
-const artworkRepositoryPath =
-  require.resolve("../src/repositories/artwork.repository");
-const categoryRepositoryPath =
-  require.resolve("../src/repositories/category.repository");
-const userRepositoryPath =
-  require.resolve("../src/repositories/user.repository");
-const contractServicePath =
-  require.resolve("../src/services/artist-contract.service");
-const serializeAuthUserPath =
-  require.resolve("../src/utils/serialize-auth-user");
-const uploadArtworkMiddlewarePath =
-  require.resolve("../src/middlewares/upload-artwork.middleware");
+const artistRepositoryPath = require.resolve("../src/repositories/artist.repository");
+const artworkRepositoryPath = require.resolve("../src/repositories/artwork.repository");
+const categoryRepositoryPath = require.resolve("../src/repositories/category.repository");
+const userRepositoryPath = require.resolve("../src/repositories/user.repository");
+const contractServicePath = require.resolve("../src/services/artist-contract.service");
+const serializeAuthUserPath = require.resolve("../src/utils/serialize-auth-user");
+const uploadArtworkMiddlewarePath = require.resolve("../src/middlewares/upload-artwork.middleware");
 const artistRequiredMiddlewarePath =
   require.resolve("../src/middlewares/artist-required.middleware");
-const analyticsServicePath = require.resolve(
-  "../src/services/artist-analytics.service",
-);
+const analyticsServicePath = require.resolve("../src/services/artist-analytics.service");
 
 const authUser = {
   id: 7,
   email: "artist@example.com",
-  username: "Ada Lovelace",
+  username: "Ada Lovelace"
 };
 
 const verifiedArtist = {
@@ -43,8 +33,8 @@ const verifiedArtist = {
   _count: {
     artworks: 2,
     followers: 5,
-    collections: 1,
-  },
+    collections: 1
+  }
 };
 
 function buildAuthMiddleware(user) {
@@ -52,7 +42,7 @@ function buildAuthMiddleware(user) {
     authRequired(req, _res, next) {
       req.user = user;
       next();
-    },
+    }
   };
 }
 
@@ -60,7 +50,7 @@ async function startArtistDashboardApp(t, overrides = {}) {
   const calls = {
     buildArtistDashboardPayload: [],
     buildArtistSalesPayload: [],
-    listArtworksByArtistId: [],
+    listArtworksByArtistId: []
   };
 
   const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
@@ -68,21 +58,23 @@ async function startArtistDashboardApp(t, overrides = {}) {
     [applicationRepositoryPath]: {
       async findByUserId() {
         return null;
-      },
+      }
     },
     [artistRepositoryPath]: {
       async findByUserId() {
         return verifiedArtist;
-      },
+      }
     },
     [artworkRepositoryPath]: {
       async listArtworksByArtistId(artistId) {
         calls.listArtworksByArtistId.push(artistId);
-        return overrides.artworks || [
-          { id: 1, favoriteCount: 3 },
-          { id: 2, favoriteCount: 7 },
-        ];
-      },
+        return (
+          overrides.artworks || [
+            { id: 1, favoriteCount: 3 },
+            { id: 2, favoriteCount: 7 }
+          ]
+        );
+      }
     },
     [categoryRepositoryPath]: {},
     [userRepositoryPath]: {},
@@ -91,32 +83,36 @@ async function startArtistDashboardApp(t, overrides = {}) {
     [uploadArtworkMiddlewarePath]: {
       handleArtworkUpload(_req, _res, next) {
         next();
-      },
+      }
     },
     [artistRequiredMiddlewarePath]: {
       async ensureVerifiedArtist(req, _res, next) {
         req.artist = verifiedArtist;
         next();
-      },
+      }
     },
     [analyticsServicePath]: {
       async buildArtistDashboardPayload(artistId, artistStats) {
         calls.buildArtistDashboardPayload.push({ artistId, artistStats });
-        return overrides.dashboard || {
-          stats: [{ label: "Ventes", value: 2 }],
-          performance: { salesToday: 1 },
-          analytics: { salesByMonth: [], topArtworks: [] },
-          recentSales: [],
-        };
+        return (
+          overrides.dashboard || {
+            stats: [{ label: "Ventes", value: 2 }],
+            performance: { salesToday: 1 },
+            analytics: { salesByMonth: [], topArtworks: [] },
+            recentSales: []
+          }
+        );
       },
       async buildArtistSalesPayload(artistId) {
         calls.buildArtistSalesPayload.push(artistId);
-        return overrides.sales || {
-          summary: { totalSales: 2 },
-          sales: [],
-        };
-      },
-    },
+        return (
+          overrides.sales || {
+            summary: { totalSales: 2 },
+            sales: []
+          }
+        );
+      }
+    }
   });
 
   const app = express();

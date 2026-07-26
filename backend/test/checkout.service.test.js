@@ -4,23 +4,21 @@ const { loadModuleWithMocks } = require("./helpers/mock-require");
 
 const servicePath = require.resolve("../src/services/checkout.service");
 const prismaPath = require.resolve("../src/lib/prisma");
-const orderRepositoryPath =
-  require.resolve("../src/repositories/order.repository");
-const notificationRepositoryPath =
-  require.resolve("../src/repositories/notification.repository");
+const orderRepositoryPath = require.resolve("../src/repositories/order.repository");
+const notificationRepositoryPath = require.resolve("../src/repositories/notification.repository");
 const mailServicePath = require.resolve("../src/services/mail.service");
 const envPath = require.resolve("../src/config/env");
 
 const buyer = {
   id: 5,
   username: "Collector One",
-  email: "collector@example.com",
+  email: "collector@example.com"
 };
 
 const artistUser = {
   id: 9,
   email: "artist@example.com",
-  username: "Ada Art",
+  username: "Ada Art"
 };
 
 const artwork = {
@@ -32,8 +30,8 @@ const artwork = {
     id: 3,
     userId: artistUser.id,
     displayName: "Ada Art",
-    user: artistUser,
-  },
+    user: artistUser
+  }
 };
 
 function loadCheckoutService(overrides = {}) {
@@ -42,26 +40,26 @@ function loadCheckoutService(overrides = {}) {
     createNotification: [],
     sendArtistSaleEmail: [],
     findMany: [],
-    findUnique: [],
+    findUnique: []
   };
 
   const { moduleExports: service, restore } = loadModuleWithMocks(servicePath, {
     [envPath]: {
-      appBaseUrl: "http://localhost:3000",
+      appBaseUrl: "http://localhost:3000"
     },
     [prismaPath]: {
       artwork: {
         async findMany(query) {
           calls.findMany.push(query);
           return overrides.artworks || [artwork];
-        },
+        }
       },
       user: {
         async findUnique(query) {
           calls.findUnique.push(query);
           return buyer;
-        },
-      },
+        }
+      }
     },
     [orderRepositoryPath]: {
       async createCheckoutOrder(payload) {
@@ -72,35 +70,35 @@ function loadCheckoutService(overrides = {}) {
             id: 77,
             status: "Paid",
             totalToken: 120,
-            createdAt: new Date("2026-07-08T10:00:00.000Z"),
+            createdAt: new Date("2026-07-08T10:00:00.000Z")
           },
           payment: {
             id: 1,
-            status: "Succeeded",
-          },
+            status: "Succeeded"
+          }
         };
-      },
+      }
     },
     [notificationRepositoryPath]: {
       async createNotification(payload) {
         calls.createNotification.push(payload);
         return {
           id: 1,
-          ...payload,
+          ...payload
         };
-      },
+      }
     },
     [mailServicePath]: {
       async sendArtistSaleEmail(payload) {
         calls.sendArtistSaleEmail.push(payload);
-      },
-    },
+      }
+    }
   });
 
   return {
     service,
     calls,
-    restore,
+    restore
   };
 }
 
@@ -115,7 +113,7 @@ test("createCheckout notifies artists in-app and by email after a sale", async (
     userId: buyer.id,
     items: [{ artworkId: artwork.id, quantity: 1 }],
     paymentMethod: "card",
-    billingEmail: buyer.email,
+    billingEmail: buyer.email
   });
 
   assert.equal(result.order.id, 77);
@@ -128,60 +126,55 @@ test("createCheckout notifies artists in-app and by email after a sale", async (
   assert.equal(calls.sendArtistSaleEmail[0].orderReference, "#ORD-0077");
   assert.deepEqual(calls.sendArtistSaleEmail[0].artworkTitles, ["Neon Garden"]);
   assert.equal(calls.sendArtistSaleEmail[0].grossAmount, 120);
-  assert.ok(
-    Math.abs(calls.sendArtistSaleEmail[0].netAmount - 111.6) < 0.001,
-  );
+  assert.ok(Math.abs(calls.sendArtistSaleEmail[0].netAmount - 111.6) < 0.001);
   assert.equal(calls.sendArtistSaleEmail[0].buyerLabel, buyer.username);
-  assert.equal(
-    calls.sendArtistSaleEmail[0].salesUrl,
-    "http://localhost:3000/artist/sales",
-  );
+  assert.equal(calls.sendArtistSaleEmail[0].salesUrl, "http://localhost:3000/artist/sales");
 });
 
 test("createCheckout still succeeds when artist sale email fails", async (t) => {
   const { moduleExports: service, restore } = loadModuleWithMocks(servicePath, {
     [envPath]: {
-      appBaseUrl: "http://localhost:3000",
+      appBaseUrl: "http://localhost:3000"
     },
     [prismaPath]: {
       artwork: {
         async findMany() {
           return [artwork];
-        },
+        }
       },
       user: {
         async findUnique() {
           return buyer;
-        },
-      },
+        }
+      }
     },
     [orderRepositoryPath]: {
       async createCheckoutOrder() {
         return {
           order: {
             id: 78,
-            status: "Paid",
+            status: "Paid"
           },
           payment: {
             id: 2,
-            status: "Succeeded",
-          },
+            status: "Succeeded"
+          }
         };
-      },
+      }
     },
     [notificationRepositoryPath]: {
       async createNotification(payload) {
         return {
           id: 2,
-          ...payload,
+          ...payload
         };
-      },
+      }
     },
     [mailServicePath]: {
       async sendArtistSaleEmail() {
         throw new Error("SMTP unavailable");
-      },
-    },
+      }
+    }
   });
 
   t.after(() => {
@@ -190,7 +183,7 @@ test("createCheckout still succeeds when artist sale email fails", async (t) => 
 
   const result = await service.createCheckout({
     userId: buyer.id,
-    items: [{ artworkId: artwork.id, quantity: 1 }],
+    items: [{ artworkId: artwork.id, quantity: 1 }]
   });
 
   assert.equal(result.order.id, 78);
@@ -198,7 +191,7 @@ test("createCheckout still succeeds when artist sale email fails", async (t) => 
 
 test("createCheckout rejects artworks that are already sold", async (t) => {
   const { service, restore } = loadCheckoutService({
-    artworks: [{ ...artwork, isSold: true }],
+    artworks: [{ ...artwork, isSold: true }]
   });
 
   t.after(() => {
@@ -209,8 +202,8 @@ test("createCheckout rejects artworks that are already sold", async (t) => {
     () =>
       service.createCheckout({
         userId: buyer.id,
-        items: [{ artworkId: artwork.id, quantity: 1 }],
+        items: [{ artworkId: artwork.id, quantity: 1 }]
       }),
-    (error) => error.message === "ARTWORK_ALREADY_SOLD",
+    (error) => error.message === "ARTWORK_ALREADY_SOLD"
   );
 });

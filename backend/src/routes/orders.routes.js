@@ -28,27 +28,27 @@ function mapCheckoutError(error) {
     case "CHECKOUT_EMPTY":
       return {
         status: 400,
-        message: "Votre panier est vide.",
+        message: "Votre panier est vide."
       };
     case "ARTWORK_NOT_FOUND":
       return {
         status: 404,
-        message: "Une ou plusieurs oeuvres sont introuvables.",
+        message: "Une ou plusieurs oeuvres sont introuvables."
       };
     case "CANNOT_BUY_OWN_ARTWORK":
       return {
         status: 400,
-        message: "Vous ne pouvez pas acheter vos propres oeuvres.",
+        message: "Vous ne pouvez pas acheter vos propres oeuvres."
       };
     case "INVALID_ARTWORK_PRICE":
       return {
         status: 400,
-        message: "Le prix d'une oeuvre est invalide.",
+        message: "Le prix d'une oeuvre est invalide."
       };
     case "ARTWORK_ALREADY_SOLD":
       return {
         status: 409,
-        message: "Une ou plusieurs oeuvres ne sont plus disponibles a l'achat.",
+        message: "Une ou plusieurs oeuvres ne sont plus disponibles a l'achat."
       };
     default:
       return null;
@@ -58,7 +58,7 @@ function mapCheckoutError(error) {
 router.post("/orders/checkout", authRequired, async (req, res) => {
   if (isAdminUser(req.user)) {
     return res.status(403).json({
-      message: "Les comptes admin ne peuvent pas passer commande.",
+      message: "Les comptes admin ne peuvent pas passer commande."
     });
   }
 
@@ -67,7 +67,7 @@ router.post("/orders/checkout", authRequired, async (req, res) => {
       userId: req.user.id,
       items: req.body?.items,
       paymentMethod: req.body?.paymentMethod,
-      billingEmail: req.body?.billingEmail,
+      billingEmail: req.body?.billingEmail
     });
 
     return res.status(201).json({
@@ -78,27 +78,27 @@ router.post("/orders/checkout", authRequired, async (req, res) => {
         status: result.order.status,
         totalAmount: result.totalAmount,
         billingEmail: result.billingEmail,
-        createdAt: result.order.createdAt,
+        createdAt: result.order.createdAt
       },
       payment: {
         id: result.payment.id,
         method: result.payment.method,
         status: result.payment.status,
-        price: result.payment.price,
-      },
+        price: result.payment.price
+      }
     });
   } catch (error) {
     const mappedError = mapCheckoutError(error);
 
     if (mappedError) {
       return res.status(mappedError.status).json({
-        message: mappedError.message,
+        message: mappedError.message
       });
     }
 
     console.error("Checkout error:", error);
     return res.status(500).json({
-      message: "Impossible de finaliser la commande.",
+      message: "Impossible de finaliser la commande."
     });
   }
 });

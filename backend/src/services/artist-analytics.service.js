@@ -6,7 +6,7 @@ const {
   isPaidOrder,
   computeNetRevenue,
   formatOrderReference,
-  ARTIST_NET_REVENUE_RATE,
+  ARTIST_NET_REVENUE_RATE
 } = require("../utils/commerce");
 
 function startOfDay(date) {
@@ -32,7 +32,7 @@ function monthLabel(key) {
   const date = new Date(Number(year), Number(month) - 1, 1);
   return date.toLocaleDateString("fr-FR", {
     month: "short",
-    year: "numeric",
+    year: "numeric"
   });
 }
 
@@ -66,7 +66,7 @@ function serializeSaleRow(orderItem) {
     amount: formatCurrencyAmount(amountValue),
     netAmountValue: computeNetRevenue(amountValue),
     netAmount: formatCurrencyAmount(computeNetRevenue(amountValue)),
-    createdAt: order.createdAt,
+    createdAt: order.createdAt
   };
 }
 
@@ -74,10 +74,7 @@ async function buildArtistSalesPayload(artistId) {
   const orderItems = await orderRepository.listOrderItemsForArtist(artistId);
   const sales = orderItems.map(serializeSaleRow);
   const paidSales = sales.filter((sale) => sale.status === "Paid");
-  const grossRevenue = paidSales.reduce(
-    (sum, sale) => sum + sale.amountValue,
-    0,
-  );
+  const grossRevenue = paidSales.reduce((sum, sale) => sum + sale.amountValue, 0);
 
   return {
     summary: {
@@ -87,9 +84,9 @@ async function buildArtistSalesPayload(artistId) {
       netRevenue: formatCurrencyAmount(computeNetRevenue(grossRevenue)),
       netRevenueValue: computeNetRevenue(grossRevenue),
       pendingSales: sales.filter((sale) => sale.status === "Pending").length,
-      commissionRate: `${Math.round((1 - ARTIST_NET_REVENUE_RATE) * 100)}%`,
+      commissionRate: `${Math.round((1 - ARTIST_NET_REVENUE_RATE) * 100)}%`
     },
-    sales,
+    sales
   };
 }
 
@@ -101,15 +98,13 @@ async function buildArtistDashboardPayload(artistId, artistStats = {}) {
   const now = new Date();
   const todayStart = startOfDay(now);
   const monthStart = startOfMonth(now);
-  const previousMonthStart = startOfMonth(
-    new Date(now.getFullYear(), now.getMonth() - 1, 1),
-  );
+  const previousMonthStart = startOfMonth(new Date(now.getFullYear(), now.getMonth() - 1, 1));
 
   const salesToday = paidSales.filter(
-    (sale) => sale.createdAt && new Date(sale.createdAt) >= todayStart,
+    (sale) => sale.createdAt && new Date(sale.createdAt) >= todayStart
   );
   const salesThisMonth = paidSales.filter(
-    (sale) => sale.createdAt && new Date(sale.createdAt) >= monthStart,
+    (sale) => sale.createdAt && new Date(sale.createdAt) >= monthStart
   );
   const salesPreviousMonth = paidSales.filter((sale) => {
     if (!sale.createdAt) {
@@ -120,45 +115,34 @@ async function buildArtistDashboardPayload(artistId, artistStats = {}) {
     return createdAt >= previousMonthStart && createdAt < monthStart;
   });
 
-  const grossRevenue = paidSales.reduce(
-    (sum, sale) => sum + sale.amountValue,
-    0,
-  );
-  const grossRevenueThisMonth = salesThisMonth.reduce(
-    (sum, sale) => sum + sale.amountValue,
-    0,
-  );
+  const grossRevenue = paidSales.reduce((sum, sale) => sum + sale.amountValue, 0);
+  const grossRevenueThisMonth = salesThisMonth.reduce((sum, sale) => sum + sale.amountValue, 0);
   const grossRevenuePreviousMonth = salesPreviousMonth.reduce(
     (sum, sale) => sum + sale.amountValue,
-    0,
+    0
   );
 
   const revenueGrowthPercent =
     grossRevenuePreviousMonth > 0
       ? Math.round(
-          ((grossRevenueThisMonth - grossRevenuePreviousMonth) /
-            grossRevenuePreviousMonth) *
-            100,
+          ((grossRevenueThisMonth - grossRevenuePreviousMonth) / grossRevenuePreviousMonth) * 100
         )
       : grossRevenueThisMonth > 0
         ? 100
         : 0;
 
-  const avgSaleValue =
-    paidSales.length > 0 ? grossRevenue / paidSales.length : 0;
+  const avgSaleValue = paidSales.length > 0 ? grossRevenue / paidSales.length : 0;
 
   const favoritesTotal = Number(artistStats.favorites || 0);
   const conversionRate =
-    favoritesTotal > 0
-      ? Math.round((paidSales.length / favoritesTotal) * 1000) / 10
-      : 0;
+    favoritesTotal > 0 ? Math.round((paidSales.length / favoritesTotal) * 1000) / 10 : 0;
 
   const monthBuckets = buildLastMonths(6).map((key) => ({
     key,
     label: monthLabel(key),
     salesCount: 0,
     grossRevenue: 0,
-    netRevenue: 0,
+    netRevenue: 0
   }));
   const monthIndex = new Map(monthBuckets.map((bucket, index) => [bucket.key, index]));
 
@@ -191,7 +175,7 @@ async function buildArtistDashboardPayload(artistId, artistStats = {}) {
       artworkId,
       title: orderItem.artwork?.title || "Oeuvre",
       salesCount: 0,
-      grossRevenue: 0,
+      grossRevenue: 0
     };
 
     const amountValue = parseAmount(orderItem.priceTokens);
@@ -214,7 +198,7 @@ async function buildArtistDashboardPayload(artistId, artistStats = {}) {
       title: entry.title,
       salesCount: entry.salesCount,
       grossRevenue: formatCurrencyAmount(entry.grossRevenue),
-      grossRevenueValue: entry.grossRevenue,
+      grossRevenueValue: entry.grossRevenue
     }));
 
   return {
@@ -222,23 +206,23 @@ async function buildArtistDashboardPayload(artistId, artistStats = {}) {
       {
         label: "Ventes",
         value: paidSales.length,
-        description: "Nombre total de ventes confirmees.",
+        description: "Nombre total de ventes confirmees."
       },
       {
         label: "Revenus bruts",
         value: formatCurrencyAmount(grossRevenue),
-        description: "Montant total des ventes avant commission.",
+        description: "Montant total des ventes avant commission."
       },
       {
         label: "Revenus nets",
         value: formatCurrencyAmount(computeNetRevenue(grossRevenue)),
-        description: `Part artiste apres commission plateforme (${Math.round((1 - ARTIST_NET_REVENUE_RATE) * 100)}%).`,
+        description: `Part artiste apres commission plateforme (${Math.round((1 - ARTIST_NET_REVENUE_RATE) * 100)}%).`
       },
       {
         label: "Ventes du jour",
         value: salesToday.length,
-        description: "Transactions payees aujourd'hui.",
-      },
+        description: "Transactions payees aujourd'hui."
+      }
     ],
     performance: {
       salesThisMonth: salesThisMonth.length,
@@ -249,7 +233,7 @@ async function buildArtistDashboardPayload(artistId, artistStats = {}) {
       conversionRate,
       favoritesTotal,
       followersTotal: Number(artistStats.followers || 0),
-      artworksTotal: Number(artistStats.artworks || 0),
+      artworksTotal: Number(artistStats.artworks || 0)
     },
     analytics: {
       salesByMonth: monthBuckets.map((bucket) => ({
@@ -258,15 +242,15 @@ async function buildArtistDashboardPayload(artistId, artistStats = {}) {
         grossRevenue: formatCurrencyAmount(bucket.grossRevenue),
         grossRevenueValue: bucket.grossRevenue,
         netRevenue: formatCurrencyAmount(bucket.netRevenue),
-        netRevenueValue: bucket.netRevenue,
+        netRevenueValue: bucket.netRevenue
       })),
-      topArtworks,
+      topArtworks
     },
-    recentSales: paidSales.slice(0, 8),
+    recentSales: paidSales.slice(0, 8)
   };
 }
 
 module.exports = {
   buildArtistDashboardPayload,
-  buildArtistSalesPayload,
+  buildArtistSalesPayload
 };

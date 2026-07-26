@@ -217,12 +217,8 @@
           <div class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-7">
             <div class="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-                  Portfolio
-                </p>
-                <h2 class="mt-4 text-2xl font-semibold text-white">
-                  Mes oeuvres publiees
-                </h2>
+                <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Portfolio</p>
+                <h2 class="mt-4 text-2xl font-semibold text-white">Mes oeuvres publiees</h2>
               </div>
               <NuxtLink
                 v-if="artist.verified"
@@ -233,10 +229,7 @@
               </NuxtLink>
             </div>
 
-            <div
-              v-if="artworksLoading"
-              class="mt-6 text-sm text-[#A0ADB4]"
-            >
+            <div v-if="artworksLoading" class="mt-6 text-sm text-[#A0ADB4]">
               Chargement de vos oeuvres...
             </div>
             <div
@@ -244,12 +237,11 @@
               class="mt-6 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 text-sm leading-6 text-[#A0ADB4]"
             >
               <span v-if="artist.verified">
-                Vous n'avez pas encore publie d'oeuvre. Lancez votre premiere
-                publication pour apparaitre dans le catalogue.
+                Vous n'avez pas encore publie d'oeuvre. Lancez votre premiere publication pour
+                apparaitre dans le catalogue.
               </span>
               <span v-else>
-                Votre profil artiste doit etre valide avant de publier des
-                oeuvres.
+                Votre profil artiste doit etre valide avant de publier des oeuvres.
               </span>
             </div>
             <div v-else class="mt-6 grid gap-4">

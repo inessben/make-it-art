@@ -65,5 +65,5 @@ module.exports = {
   buildOrderStatus,
   isPaidOrder,
   computeNetRevenue,
-  formatOrderReference,
+  formatOrderReference
 };
