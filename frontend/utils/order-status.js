@@ -36,7 +36,7 @@ const ORDER_STATUS_PRESENTATION = Object.freeze({
     badgeLabel: "En cours d’examen",
     title: "Payment under review",
     message: "We detected an inconsistency and are checking it before granting access.",
-    action: { label: "View my account", to: "/profile" },
+    action: { label: "View my account", to: "/account-settings" },
     poll: false
   },
   CANCELED: {

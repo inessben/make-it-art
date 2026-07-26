@@ -258,11 +258,19 @@ const successMessage = ref("");
 const errorMessage = ref("");
 const showArtistWorkspaceSection = computed(() => !auth.isAdmin);
 const artistWorkspaceRoute = computed(() =>
-  auth.isArtist || auth.hasArtistApplication ? "/artist-profile" : "/become-artist"
+  auth.isVerifiedArtist
+    ? "/artist"
+    : auth.isArtist || auth.hasArtistApplication
+      ? "/artist-profile"
+      : "/become-artist"
 );
 const artistWorkspaceTitle = computed(() => {
+  if (auth.isVerifiedArtist) {
+    return "Artist dashboard";
+  }
+
   if (auth.isArtist) {
-    return "Artist workspace";
+    return "Artist profile";
   }
 
   if (auth.artistApplicationStatus === "pending") {
@@ -280,6 +288,10 @@ const artistWorkspaceTitle = computed(() => {
   return "Become an artist";
 });
 const artistWorkspaceDescription = computed(() => {
+  if (auth.isVerifiedArtist) {
+    return "Open your artist dashboard, review sales analytics, commissions, gains and recent alerts from one place.";
+  }
+
   if (auth.isArtist) {
     return "Manage your artist profile, review your public information and keep access to your signed agreement.";
   }
@@ -299,6 +311,10 @@ const artistWorkspaceDescription = computed(() => {
   return "Apply to sell your artworks on Make It Art and unlock your artist profile once the administration approves your request.";
 });
 const artistWorkspaceActionLabel = computed(() => {
+  if (auth.isVerifiedArtist) {
+    return "Open artist dashboard";
+  }
+
   if (auth.isArtist) {
     return "Open artist profile";
   }

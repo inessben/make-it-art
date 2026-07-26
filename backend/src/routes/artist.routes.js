@@ -355,6 +355,7 @@ router.get("/artists/me/dashboard", ensureVerifiedArtist, async (req, res) => {
     const favoritesTotal = artworks.reduce((sum, artwork) => sum + (artwork.favoriteCount || 0), 0);
 
     const dashboard = await buildArtistDashboardPayload(req.artist.id, {
+      userId: req.user.id,
       artworks: req.artist._count?.artworks || artworks.length,
       followers: req.artist._count?.followers || 0,
       favorites: favoritesTotal

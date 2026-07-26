@@ -22,6 +22,15 @@ test("buildOrderStatus derives paid status from payments", () => {
   );
 });
 
+test("buildOrderStatus maps enum order statuses to user-facing labels", () => {
+  assert.equal(
+    buildOrderStatus({
+      status: "PAYMENT_REVIEW"
+    }),
+    "Under review"
+  );
+});
+
 test("computeNetRevenue applies artist share", () => {
   assert.equal(computeNetRevenue(100), 93);
   assert.equal(formatCurrencyAmount(93), "EUR 93.00");
