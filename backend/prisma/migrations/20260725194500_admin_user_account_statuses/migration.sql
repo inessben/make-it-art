@@ -1,0 +1,2 @@
+ALTER TABLE "user"
+ADD COLUMN "blocked_at" TIMESTAMP(6);

@@ -12,6 +12,8 @@ env:
 jobs:
   frontend:
     runs-on: ubuntu-latest
+    env:
+      NPM_CONFIG_WORKSPACES: "false"
     defaults:
       run:
         working-directory: frontend
@@ -35,6 +37,8 @@ jobs:
 
   backend:
     runs-on: ubuntu-latest
+    env:
+      NPM_CONFIG_WORKSPACES: "false"
     services:
       postgres:
         image: postgres:16-alpine
@@ -56,8 +60,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Pin npm
+        run: npm install -g npm@12.0.1
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Install backend deps
-        run: npm install --include=optional --workspaces=false --ignore-scripts --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund --workspaces=false
+      - name: Install backend PDF dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements.txt
       - name: Enforce Stripe sandbox and scan committed secrets
         run: npm run payments:validate-sandbox --workspaces=false
       - name: Backend lint
@@ -67,14 +79,14 @@ jobs:
       - name: Migrate test database
         env:
           DATABASE_URL: postgresql://mia_test:test_only_password@localhost:5432/makeitart_test
-        run: npx prisma migrate deploy && npx prisma generate
+        run: ./node_modules/.bin/prisma migrate deploy && ./node_modules/.bin/prisma generate
       - name: Backend tests
         env:
           DATABASE_URL: postgresql://mia_test:test_only_password@localhost:5432/makeitart_test
           JWT_SECRET: ci_test_secret_not_for_production
         run: npm test --workspaces=false
       - name: Backend production dependency audit
-        run: npm audit --omit=dev --audit-level=high --workspaces=false
+        run: npm audit --omit=dev --omit=optional --audit-level=high --workspaces=false
 
   compose_config:
     runs-on: ubuntu-latest

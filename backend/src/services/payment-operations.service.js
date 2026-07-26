@@ -71,6 +71,25 @@ function serializeOrder(order) {
   };
 }
 
+function serializeRefund(refund) {
+  return {
+    id: refund.publicId,
+    paymentId: refund.paymentId,
+    paymentStatus: refund.payment?.status || null,
+    orderId: refund.order.publicId,
+    status: refund.status,
+    providerStatus: refund.providerStatus,
+    amount: refund.amount,
+    currency: refund.currency,
+    reasonCode: refund.reasonCode,
+    requestedBy:
+      refund.requestedBy?.username ||
+      (refund.requestedBy ? `user #${refund.requestedBy.id}` : null),
+    createdAt: refund.createdAt,
+    updatedAt: refund.updatedAt
+  };
+}
+
 function serializeOperatorAlert(alert) {
   return {
     id: alert.id,
@@ -130,6 +149,7 @@ async function listPaymentAnomalies({
       { status: "PAYMENT_PROCESSING", updatedAt: { lte: staleBefore } }
     ]
   };
+  const refundWhere = { status: "PENDING" };
   const alertWhere = { status: "OPEN" };
   const disputeWhere = { status: { in: ["NEEDS_RESPONSE", "UNDER_REVIEW"] } };
 
@@ -137,11 +157,13 @@ async function listPaymentAnomalies({
     webhooks,
     tasks,
     orders,
+    refunds,
     alerts,
     disputes,
     webhookCount,
     taskCount,
     orderCount,
+    refundCount,
     alertCount,
     disputeCount
   ] = await Promise.all([
@@ -173,6 +195,16 @@ async function listPaymentAnomalies({
       orderBy: { updatedAt: "asc" },
       take: limit
     }),
+    prismaClient.refund.findMany({
+      where: refundWhere,
+      include: {
+        order: { select: { publicId: true } },
+        payment: { select: { status: true } },
+        requestedBy: { select: { id: true, username: true, email: true } }
+      },
+      orderBy: { createdAt: "asc" },
+      take: limit
+    }),
     prismaClient.paymentOperatorAlert.findMany({
       where: alertWhere,
       include: {
@@ -194,6 +226,7 @@ async function listPaymentAnomalies({
     prismaClient.stripeWebhookEvent.count({ where: webhookWhere }),
     prismaClient.fulfillmentTask.count({ where: taskWhere }),
     prismaClient.order.count({ where: orderWhere }),
+    prismaClient.refund.count({ where: refundWhere }),
     prismaClient.paymentOperatorAlert.count({ where: alertWhere }),
     prismaClient.dispute.count({ where: disputeWhere })
   ]);
@@ -204,13 +237,15 @@ async function listPaymentAnomalies({
       webhooks: webhookCount,
       tasks: taskCount,
       orders: orderCount,
+      refunds: refundCount,
       alerts: alertCount,
       disputes: disputeCount,
-      total: webhookCount + taskCount + orderCount + alertCount + disputeCount
+      total: webhookCount + taskCount + orderCount + refundCount + alertCount + disputeCount
     },
     webhooks: webhooks.map(serializeWebhook),
     tasks: tasks.map(serializeTask),
     orders: orders.map(serializeOrder),
+    refunds: refunds.map(serializeRefund),
     alerts: alerts.map(serializeOperatorAlert),
     disputes: disputes.map(serializeDispute)
   };
@@ -557,6 +592,14 @@ async function notifyPaymentAnomalies({
       reference: anomalies.orders[0]?.id,
       occurredAt: anomalies.orders[0]?.updatedAt,
       recommendedAction: "Reconcile the order from Stripe; never force it to paid"
+    },
+    {
+      code: "PAYMENT_REFUNDS_PENDING",
+      count: anomalies.summary.refunds,
+      reference: anomalies.refunds[0]?.id,
+      occurredAt: anomalies.refunds[0]?.createdAt,
+      recommendedAction:
+        "Review the pending refund in payment supervision and wait for webhook confirmation"
     },
     {
       code: "PAYMENT_DISPUTES_OPEN",

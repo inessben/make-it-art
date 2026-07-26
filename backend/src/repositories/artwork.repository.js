@@ -203,8 +203,14 @@ async function deleteArtwork({ artworkId, artistId }) {
   return existing;
 }
 
-async function updateArtworkModeration({ artworkId, status, moderationNote, moderatedByAdminId }) {
-  return prisma.artwork.update({
+async function updateArtworkModeration({
+  artworkId,
+  status,
+  moderationNote,
+  moderatedByAdminId,
+  prismaClient = prisma
+}) {
+  return prismaClient.artwork.update({
     where: {
       id: artworkId
     },

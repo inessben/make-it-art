@@ -1,7 +1,7 @@
 <template>
   <AdminShell
     title="Payments"
-    description="Vue finance branchee au backend pour suivre les transactions et le revenu observe en base."
+    description="Finance view connected to the backend to track transactions and revenue recorded in the database."
   >
     <template #actions>
       <button
@@ -36,10 +36,10 @@
       <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p class="text-xs uppercase tracking-[0.18em] text-[#F2C97D]">Supervision</p>
-          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Anomalies de paiement</h2>
+          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Payment anomalies</h2>
           <p class="mt-2 max-w-3xl text-sm leading-6 text-[#A0ADB4]">
-            Les actions relisent Stripe ou rejouent un traitement idempotent. Aucun paiement ne peut
-            etre force manuellement en succes.
+            These actions replay Stripe data or rerun an idempotent process. No payment can be
+            manually forced to succeed.
           </p>
         </div>
         <span
@@ -50,11 +50,11 @@
               : 'bg-[#4A6CF7]/10 text-[#4A6CF7]'
           "
         >
-          {{ anomalySummary.total }} anomalie(s)
+          {{ anomalySummary.total }} open issue(s)
         </span>
       </div>
 
-      <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
         <div
           v-for="item in anomalyCounters"
           :key="item.label"
@@ -85,7 +85,7 @@
         v-if="!loading && anomalyRows.length === 0"
         class="mt-5 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4 text-sm text-[#A0ADB4]"
       >
-        Aucune anomalie ouverte.
+        No open payment issues.
       </div>
 
       <div v-else-if="anomalyRows.length > 0" class="mt-5 grid gap-3">
@@ -97,28 +97,37 @@
           <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div class="min-w-0">
               <p class="text-xs uppercase tracking-[0.14em] text-[#F2C97D]">
-                {{ row.category }} · {{ row.status }}
+                {{ row.category }} - {{ row.status }}
               </p>
               <p class="mt-2 break-all font-semibold text-[#E6EDF7]">
                 {{ row.title }}
               </p>
               <p class="mt-2 break-all text-sm text-[#A0ADB4]">
                 {{ row.reference }}
-                <template v-if="row.orderId"> · Commande {{ row.orderId }}</template>
+                <template v-if="row.orderId"> - Order {{ row.orderId }}</template>
               </p>
               <p class="mt-1 text-sm text-[#8E9AA7]">
-                {{ row.detail }} · {{ formatDateTime(row.occurredAt) }}
+                {{ row.detail }} - {{ formatDateTime(row.occurredAt) }}
               </p>
             </div>
-            <button
-              v-if="row.action"
-              type="button"
-              class="inline-flex shrink-0 items-center justify-center rounded-2xl border border-[#F2C97D]/50 bg-[#F2C97D]/10 px-4 py-2 text-sm font-semibold text-[#F2C97D] transition hover:bg-[#F2C97D]/20 disabled:cursor-wait disabled:opacity-60"
-              :disabled="Boolean(activeOperation)"
-              @click="runPaymentOperation(row.action)"
-            >
-              {{ activeOperation === row.key ? "Traitement..." : row.action.label }}
-            </button>
+            <div class="flex shrink-0 flex-wrap gap-3">
+              <NuxtLink
+                v-if="row.link"
+                :to="row.link.route"
+                class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] px-4 py-2 text-sm font-semibold text-[#E6EDF7] transition hover:border-[#4A6CF7] hover:text-[#9DB4FF]"
+              >
+                {{ row.link.label }}
+              </NuxtLink>
+              <button
+                v-if="row.action"
+                type="button"
+                class="inline-flex items-center justify-center rounded-2xl border border-[#F2C97D]/50 bg-[#F2C97D]/10 px-4 py-2 text-sm font-semibold text-[#F2C97D] transition hover:bg-[#F2C97D]/20 disabled:cursor-wait disabled:opacity-60"
+                :disabled="Boolean(activeOperation)"
+                @click="runPaymentOperation(row.action)"
+              >
+                {{ activeOperation === row.key ? "Processing..." : row.action.label }}
+              </button>
+            </div>
           </div>
         </article>
       </div>
@@ -128,7 +137,7 @@
       <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Transactions</p>
-          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Paiements recents</h2>
+          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Recent payments</h2>
         </div>
         <div class="grid gap-3 sm:grid-cols-2">
           <label class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3">
@@ -166,14 +175,14 @@
         v-else-if="loading"
         class="mt-6 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4 text-sm text-[#A0ADB4]"
       >
-        Chargement des paiements...
+        Loading payments...
       </div>
 
       <div
         v-else-if="filteredPayments.length === 0"
         class="mt-6 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4 text-sm text-[#A0ADB4]"
       >
-        Aucun paiement ne correspond aux filtres actuels.
+        No payments match the current filters.
       </div>
 
       <div v-else class="mt-6 grid gap-4">
@@ -203,6 +212,12 @@
                 {{ payment.status }}
               </span>
               <span class="text-sm text-[#8E9AA7]">{{ formatDate(payment.createdAt) }}</span>
+              <NuxtLink
+                :to="`/admin/payments/${payment.id}`"
+                class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#E6EDF7] transition hover:border-[#4A6CF7] hover:text-[#9DB4FF]"
+              >
+                Details
+              </NuxtLink>
             </div>
           </div>
         </div>
@@ -244,22 +259,22 @@ const summaries = computed(() => [
   {
     label: "Total payments",
     value: summary.value.totalPayments,
-    description: "Nombre total de paiements en base."
+    description: "Total number of payments stored in the database."
   },
   {
     label: "Succeeded",
     value: summary.value.succeededPayments,
-    description: "Paiements marques comme reussis."
+    description: "Payments marked as successful."
   },
   {
     label: "Pending",
     value: summary.value.pendingPayments,
-    description: "Paiements encore en attente."
+    description: "Payments still waiting for completion."
   },
   {
     label: "Gross revenue",
     value: summary.value.grossRevenue,
-    description: "Somme actuelle des paiements reussis."
+    description: "Current total from successful payments."
   }
 ]);
 
@@ -267,6 +282,7 @@ const anomalySummary = computed(() => ({
   webhooks: anomalies.value.summary?.webhooks || 0,
   tasks: anomalies.value.summary?.tasks || 0,
   orders: anomalies.value.summary?.orders || 0,
+  refunds: anomalies.value.summary?.refunds || 0,
   alerts: anomalies.value.summary?.alerts || 0,
   disputes: anomalies.value.summary?.disputes || 0,
   total: anomalies.value.summary?.total || 0
@@ -274,10 +290,11 @@ const anomalySummary = computed(() => ({
 
 const anomalyCounters = computed(() => [
   { label: "Webhooks", value: anomalySummary.value.webhooks },
-  { label: "Finalisations", value: anomalySummary.value.tasks },
-  { label: "Commandes", value: anomalySummary.value.orders },
-  { label: "Litiges", value: anomalySummary.value.disputes },
-  { label: "Alertes", value: anomalySummary.value.alerts }
+  { label: "Finalizations", value: anomalySummary.value.tasks },
+  { label: "Orders", value: anomalySummary.value.orders },
+  { label: "Refunds", value: anomalySummary.value.refunds },
+  { label: "Disputes", value: anomalySummary.value.disputes },
+  { label: "Alerts", value: anomalySummary.value.alerts }
 ]);
 const anomalyRows = computed(() => buildPaymentAnomalyRows(anomalies.value));
 
@@ -351,7 +368,7 @@ async function runPaymentOperation(operation) {
       body: request.body
     });
     operationMessage.value =
-      "Action acceptee. La supervision a ete actualisee depuis l'etat serveur.";
+      "Action accepted. Payment supervision was refreshed from the latest server state.";
     await loadPaymentDashboard();
   } catch (error) {
     operationFailed.value = true;
@@ -375,20 +392,20 @@ function statusClass(status) {
 
 function formatDate(value) {
   if (!value) {
-    return "Date inconnue";
+    return "Unknown date";
   }
 
-  return new Intl.DateTimeFormat("fr-FR", {
+  return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium"
   }).format(new Date(value));
 }
 
 function formatDateTime(value) {
   if (!value) {
-    return "Date inconnue";
+    return "Unknown date";
   }
 
-  return new Intl.DateTimeFormat("fr-FR", {
+  return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
     timeStyle: "short"
   }).format(new Date(value));

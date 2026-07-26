@@ -141,9 +141,9 @@ async function submitApplication({
   });
 }
 
-async function markApproved({ applicationId, reviewedByAdminId, reviewNote }) {
-  return prisma.$transaction(async (tx) => {
-    const application = await tx.artistApplicationDraft.update({
+async function markApproved({ applicationId, reviewedByAdminId, reviewNote, prismaClient }) {
+  const approveApplication = async (client) => {
+    const application = await client.artistApplicationDraft.update({
       where: { id: applicationId },
       data: {
         status: ARTIST_APPLICATION_STATUS.APPROVED,
@@ -158,14 +158,14 @@ async function markApproved({ applicationId, reviewedByAdminId, reviewNote }) {
     const displayName = typeof payload.displayName === "string" ? payload.displayName.trim() : "";
     const bio = typeof payload.bio === "string" ? payload.bio.trim() : "";
 
-    await tx.user.update({
+    await client.user.update({
       where: { id: application.userId },
       data: {
         ...(bio ? { bio } : {})
       }
     });
 
-    await tx.artist.upsert({
+    await client.artist.upsert({
       where: { userId: application.userId },
       create: {
         userId: application.userId,
@@ -179,15 +179,26 @@ async function markApproved({ applicationId, reviewedByAdminId, reviewNote }) {
       }
     });
 
-    return tx.artistApplicationDraft.findUnique({
+    return client.artistApplicationDraft.findUnique({
       where: { id: applicationId },
       include: includeApplicationRelations()
     });
-  });
+  };
+
+  if (prismaClient) {
+    return approveApplication(prismaClient);
+  }
+
+  return prisma.$transaction(approveApplication);
 }
 
-async function markRejected({ applicationId, reviewedByAdminId, reviewNote }) {
-  return prisma.artistApplicationDraft.update({
+async function markRejected({
+  applicationId,
+  reviewedByAdminId,
+  reviewNote,
+  prismaClient = prisma
+}) {
+  return prismaClient.artistApplicationDraft.update({
     where: { id: applicationId },
     data: {
       status: ARTIST_APPLICATION_STATUS.REJECTED,

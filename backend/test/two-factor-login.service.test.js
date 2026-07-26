@@ -48,6 +48,7 @@ function loadService(overrides = {}) {
     createDevice: [],
     createSession: [],
     findByEmail: [],
+    findById: [],
     findValidCodeByHash: [],
     findValidDeviceByHash: [],
     markCodeAsUsed: [],
@@ -72,6 +73,10 @@ function loadService(overrides = {}) {
       async findByEmail(email) {
         calls.findByEmail.push(email);
         return user;
+      },
+      async findById(id) {
+        calls.findById.push(id);
+        return overrides.currentUser || user;
       }
     },
     [loginCodeRepositoryPath]: {

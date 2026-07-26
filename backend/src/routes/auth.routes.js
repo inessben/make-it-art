@@ -24,6 +24,7 @@ const {
 } = require("../utils/password-validation");
 const { serializeAuthUser } = require("../utils/serialize-auth-user");
 const { isAdminUser } = require("../middlewares/admin-required.middleware");
+const { AccountAccessError, USER_ACCOUNT_ERROR_CODES } = require("../utils/user-account-status");
 
 const env = require("../config/env");
 
@@ -109,9 +110,24 @@ router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
       requiresCode: true
     });
   } catch (error) {
-    if (error.message === "Email not verified") {
+    if (error instanceof AccountAccessError) {
+      if (error.code === USER_ACCOUNT_ERROR_CODES.EMAIL_NOT_VERIFIED) {
+        return res.status(403).json({
+          code: error.code,
+          message: "Please verify your email before logging in."
+        });
+      }
+
+      if (error.code === USER_ACCOUNT_ERROR_CODES.ACCOUNT_SUSPENDED) {
+        return res.status(403).json({
+          code: error.code,
+          message: "This account is suspended. Please contact support."
+        });
+      }
+
       return res.status(403).json({
-        message: "Please verify your email before logging in."
+        code: error.code,
+        message: "This account is blocked. Please contact support."
       });
     }
 

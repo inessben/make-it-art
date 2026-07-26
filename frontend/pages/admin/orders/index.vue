@@ -149,23 +149,33 @@
                   {{ formatDate(order.createdAt) }}
                 </td>
                 <td class="px-5 py-4">
-                  <button
-                    v-if="canRequestRefund(order)"
-                    type="button"
-                    class="inline-flex min-h-10 items-center justify-center border border-violet-700 bg-violet-950/40 px-4 text-sm font-semibold text-violet-200 transition hover:bg-violet-900/50"
-                    @click="openRefundDialog(order, $event)"
-                  >
-                    Rembourser
-                  </button>
-                  <button
-                    v-else-if="order.refunds.length > 0"
-                    type="button"
-                    class="inline-flex min-h-10 items-center justify-center border border-slate-700 bg-slate-950 px-4 text-sm font-semibold text-slate-200 transition hover:border-slate-500"
-                    @click="openRefundDialog(order, $event)"
-                  >
-                    Voir les remboursements
-                  </button>
-                  <span v-else class="text-sm text-slate-500">Non remboursable</span>
+                  <div class="flex flex-wrap gap-2">
+                    <NuxtLink
+                      :to="`/admin/orders/${order.publicId}`"
+                      class="inline-flex min-h-10 items-center justify-center border border-slate-700 bg-black px-4 text-sm font-semibold text-slate-100 transition hover:border-violet-600 hover:text-violet-300"
+                    >
+                      Details
+                    </NuxtLink>
+                    <button
+                      v-if="canRequestRefund(order)"
+                      type="button"
+                      class="inline-flex min-h-10 items-center justify-center border border-violet-700 bg-violet-950/40 px-4 text-sm font-semibold text-violet-200 transition hover:bg-violet-900/50"
+                      @click="openRefundDialog(order, $event)"
+                    >
+                      Rembourser
+                    </button>
+                    <button
+                      v-else-if="order.refunds.length > 0"
+                      type="button"
+                      class="inline-flex min-h-10 items-center justify-center border border-slate-700 bg-slate-950 px-4 text-sm font-semibold text-slate-200 transition hover:border-slate-500"
+                      @click="openRefundDialog(order, $event)"
+                    >
+                      Voir les remboursements
+                    </button>
+                    <span v-else class="inline-flex min-h-10 items-center text-sm text-slate-500">
+                      Non remboursable
+                    </span>
+                  </div>
                 </td>
               </tr>
             </tbody>

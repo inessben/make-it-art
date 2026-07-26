@@ -13,8 +13,11 @@ RUN apk add --no-cache \
     jpeg-dev \
     freetype-dev \
     zlib-dev \
-    ttf-dejavu \
- && python3 -m pip install --no-cache-dir --break-system-packages pillow reportlab
+    ttf-dejavu
+
+COPY requirements.txt ./
+
+RUN python3 -m pip install --no-cache-dir --break-system-packages -r requirements.txt
 
 COPY package*.json ./
 
