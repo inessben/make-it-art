@@ -10,8 +10,13 @@ const {
   serializeArtistSummary,
   serializeCollection
 } = require("../utils/serialize-marketplace");
+const { artworkCatalogRateLimit } = require("../middlewares/rate-limit.middleware");
+const { blockAiTrainingBots } = require("../middlewares/artwork-media-guard.middleware");
 
 const router = express.Router();
+
+router.use(blockAiTrainingBots);
+router.use(artworkCatalogRateLimit);
 
 async function attachViewer(req, _res, next) {
   req.viewer = await getUserFromRequest(req);

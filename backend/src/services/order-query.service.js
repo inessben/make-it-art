@@ -46,7 +46,13 @@ function serializeOrder(order) {
     items: order.items.map((item) => {
       const entitlement = entitlements.get(item.id) || null;
       const certificate = certificates.get(item.id) || null;
+      const downloadLimit =
+        entitlement && Number.isSafeInteger(entitlement.downloadLimit) && entitlement.downloadLimit > 0
+          ? entitlement.downloadLimit
+          : 5;
+      const downloadCount = entitlement?.downloadCount ?? 0;
       return {
+        id: item.id,
         artworkId: item.artworkId,
         title: item.artworkTitle,
         artistName: item.artistName,
@@ -59,7 +65,11 @@ function serializeOrder(order) {
                 status: entitlement.status,
                 grantedAt: entitlement.grantedAt,
                 suspendedAt: entitlement.suspendedAt,
-                revokedAt: entitlement.revokedAt
+                revokedAt: entitlement.revokedAt,
+                downloadCount,
+                downloadLimit,
+                remainingDownloads: Math.max(0, downloadLimit - downloadCount),
+                lastDownloadedAt: entitlement.lastDownloadedAt || null
               }
             : null,
           certificate: certificate

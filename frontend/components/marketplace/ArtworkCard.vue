@@ -10,7 +10,10 @@
     v-if="artwork.imageUrl"
     :src="artwork.imageUrl"
     :alt="artwork.title"
-    class="aspect-[4/5] w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+    class="aspect-[4/5] w-full object-cover transition duration-300 group-hover:scale-[1.02] select-none"
+    draggable="false"
+    @dragstart.prevent
+    @contextmenu.prevent
   />
   <div
     v-else

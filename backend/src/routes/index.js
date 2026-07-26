@@ -1,5 +1,4 @@
 const express = require("express");
-const path = require("path");
 const healthRoutes = require("./health.routes");
 const authRoutes = require("./auth.routes");
 const ordersRoutes = require("./orders.routes");
@@ -13,16 +12,15 @@ const securityRoutes = require("./security.routes");
 const orderRoutes = require("./order.routes");
 const refundRoutes = require("./refund.routes");
 const paymentOperationsRoutes = require("./payment-operations.routes");
+const artworkMediaRoutes = require("./artwork-media.routes");
+const {
+  blockAiTrainingBots
+} = require("../middlewares/artwork-media-guard.middleware");
 
 const router = express.Router();
 
-router.use(
-  "/uploads",
-  express.static(path.resolve(__dirname, "../../uploads"), {
-    fallthrough: false,
-    maxAge: "7d",
-  }),
-);
+router.use(blockAiTrainingBots);
+router.use("/uploads", artworkMediaRoutes);
 
 router.use(healthRoutes);
 router.use(authRoutes);

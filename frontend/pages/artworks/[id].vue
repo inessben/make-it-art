@@ -55,7 +55,10 @@
                 v-if="artwork.imageUrl"
                 :src="artwork.imageUrl"
                 :alt="artwork.title"
-                class="max-h-[720px] w-full object-cover"
+                class="max-h-[720px] w-full object-cover select-none"
+                draggable="false"
+                @dragstart.prevent
+                @contextmenu.prevent
               />
               <div
                 v-else

@@ -32,6 +32,7 @@ module.exports = {
   appBaseUrl: process.env.APP_BASE_URL || "http://localhost",
   paymentAlertEmail: process.env.PAYMENT_ALERT_EMAIL || "",
   checkoutEnabled: process.env.CHECKOUT_ENABLED !== "false",
+  artworkDownloadLimit: Number(process.env.ARTWORK_DOWNLOAD_LIMIT || 5),
   jwtSecret: process.env.JWT_SECRET || "dev_secret_change_me",
   sessionCookieName: process.env.SESSION_COOKIE_NAME || "mia_session",
   refreshCookieName: process.env.REFRESH_COOKIE_NAME || "mia_refresh",

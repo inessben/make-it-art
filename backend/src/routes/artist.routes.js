@@ -20,7 +20,11 @@ const { parsePriceValue, serializeArtwork } = require("../utils/serialize-market
 const { ensureBuffer } = require("../utils/ensure-buffer");
 const prisma = require("../lib/prisma");
 const { handleArtworkUpload } = require("../middlewares/upload-artwork.middleware");
-const { buildArtworkImagePath } = require("../services/artwork-media.service");
+const {
+  buildArtworkImagePath,
+  generateArtworkPreview,
+  removeArtworkImageFile
+} = require("../services/artwork-media.service");
 const {
   buildArtistDashboardPayload,
   buildArtistSalesPayload,
@@ -673,6 +677,24 @@ router.post(
     }
 
     const categoryId = await resolveCategoryId(input);
+    const imagePath = buildArtworkImagePath(req.file.filename);
+    let previewPath = null;
+
+    try {
+      previewPath = await generateArtworkPreview({
+        imagePath,
+        title: input.title,
+        artistName: req.artist.displayName || req.user?.username || "Artist",
+        copyrightHolder: req.artist.displayName || req.user?.username || "Artist"
+      });
+    } catch (previewError) {
+      console.error("Artwork preview generation failed:", previewError);
+      await removeArtworkImageFile(imagePath);
+      return res.status(500).json({
+        message: "Impossible de generer la version protegee de l'oeuvre."
+      });
+    }
+
     const artwork = await artworkRepository.createArtwork({
       artistId: req.artist.id,
       title: input.title,
@@ -680,7 +702,8 @@ router.post(
       categoryId,
       price: input.price,
       protection: input.protection,
-      imagePath: buildArtworkImagePath(req.file.filename),
+      imagePath,
+      previewPath,
     });
 
     return res.status(201).json({
@@ -751,10 +774,15 @@ router.delete("/artists/me/artworks/:id(\\d+)", ensureVerifiedArtist, async (req
   try {
     const artworkId = Number.parseInt(req.params.id, 10);
 
-    await artworkRepository.deleteArtwork({
+    const deleted = await artworkRepository.deleteArtwork({
       artworkId,
       artistId: req.artist.id
     });
+
+    await Promise.all([
+      removeArtworkImageFile(deleted.imagePath),
+      removeArtworkImageFile(deleted.previewPath)
+    ]);
 
     return res.status(200).json({
       message: "Oeuvre supprimee."

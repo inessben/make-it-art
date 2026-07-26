@@ -1,10 +1,6 @@
 const express = require("express");
 const { authRequired } = require("../middlewares/auth-required.middleware");
 const { csrfProtection } = require("../middlewares/csrf.middleware");
-const {
-  checkoutIpRateLimit,
-  checkoutUserRateLimit
-} = require("../middlewares/rate-limit.middleware");
 const { CartError } = require("../services/cart.service");
 const { CheckoutError, initializeCheckout } = require("../services/checkout.service");
 const { getOwnedOrder, listOwnedOrders } = require("../services/order-query.service");
@@ -12,6 +8,17 @@ const { CheckoutRecoveryError, resumeCheckout } = require("../services/checkout-
 const { assertCheckoutEnabled } = require("../services/checkout-availability.service");
 const { CommercePolicyError } = require("../domain/commerce-policy");
 const { getOwnedSaleInvoicePdf } = require("../services/invoice.service");
+const {
+  checkoutIpRateLimit,
+  checkoutUserRateLimit,
+  artworkDownloadRateLimit
+} = require("../middlewares/rate-limit.middleware");
+const {
+  ArtworkDownloadError,
+  consumeArtworkDownload,
+  sendArtworkFile
+} = require("../services/artwork-download.service");
+const { blockAiTrainingBots } = require("../middlewares/artwork-media-guard.middleware");
 
 const router = express.Router();
 const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -248,5 +255,51 @@ router.get("/orders/:publicId/invoices/:invoicePublicId.pdf", authRequired, asyn
     return res.status(500).json({ message: "Invoice is temporarily unavailable" });
   }
 });
+
+router.get(
+  "/orders/:publicId/download/:itemId(\\d+)",
+  authRequired,
+  blockAiTrainingBots,
+  artworkDownloadRateLimit,
+  async (req, res) => {
+    res.set("Cache-Control", "private, no-store");
+
+    if (!UUID_V4_PATTERN.test(req.params.publicId)) {
+      return res.status(404).json({ message: "Order not found", code: "ORDER_NOT_FOUND" });
+    }
+
+    const orderItemId = Number.parseInt(req.params.itemId, 10);
+
+    try {
+      const download = await consumeArtworkDownload({
+        userId: req.user.id,
+        orderPublicId: req.params.publicId,
+        orderItemId
+      });
+
+      return sendArtworkFile(res, download);
+    } catch (error) {
+      if (error instanceof ArtworkDownloadError) {
+        return res.status(error.status).json({
+          message: error.message,
+          code: error.code
+        });
+      }
+
+      if (error.message === "INVALID_UPLOAD_PATH") {
+        return res.status(404).json({
+          message: "The original artwork file is unavailable",
+          code: "ARTWORK_FILE_MISSING"
+        });
+      }
+
+      console.error("Artwork download failed", { name: error.name, code: error.code });
+      return res.status(500).json({
+        message: "Artwork download is temporarily unavailable",
+        code: "ARTWORK_DOWNLOAD_UNAVAILABLE"
+      });
+    }
+  }
+);
 
 module.exports = router;

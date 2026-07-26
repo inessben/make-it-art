@@ -118,6 +118,7 @@ async function createArtwork({
   price,
   protection,
   imagePath,
+  previewPath,
 }) {
   const priceAmount = parsePriceAmount(price);
   return prisma.artwork.create({
@@ -136,6 +137,7 @@ async function createArtwork({
       favoriteCount: 0,
       protection: Boolean(protection),
       imagePath: imagePath || null,
+      previewPath: previewPath || null,
       moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED,
       moderationNote: null,
       moderatedAt: null,
