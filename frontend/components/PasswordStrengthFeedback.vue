@@ -36,6 +36,12 @@
         </span>
       </li>
     </ul>
+
+    <p v-if="strength.feedback" class="strength-feedback">
+      {{ strength.feedback }}
+    </p>
+
+    <p class="breach-check-note">Known breach exposure is checked securely when you submit.</p>
   </section>
 </template>
 
@@ -47,11 +53,15 @@ const props = defineProps({
   password: {
     type: String,
     default: ""
+  },
+  userInputs: {
+    type: Array,
+    default: () => []
   }
 });
 
-const requirements = computed(() => getPasswordRequirementStates(props.password));
-const strength = computed(() => getPasswordStrength(props.password));
+const requirements = computed(() => getPasswordRequirementStates(props.password, props.userInputs));
+const strength = computed(() => getPasswordStrength(props.password, props.userInputs));
 </script>
 
 <style scoped>
@@ -143,5 +153,15 @@ const strength = computed(() => getPasswordStrength(props.password));
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
+}
+
+.strength-feedback,
+.breach-check-note {
+  @apply text-subtitle-2 leading-relaxed text-slate-500;
+  margin: 0;
+}
+
+.strength-feedback {
+  @apply text-amber-700;
 }
 </style>

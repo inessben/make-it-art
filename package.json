@@ -41,7 +41,6 @@
   },
   "dependencies": {
     "@prisma/client": "^7.9.0",
-    "dotenv": "^17.4.2",
-    "tailwind": "^4.0.0"
+    "dotenv": "^17.4.2"
   }
 }

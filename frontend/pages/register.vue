@@ -22,15 +22,20 @@
         v-model="form.password"
         label="Password"
         autocomplete="new-password"
+        :minlength="MIN_PASSWORD_LENGTH"
       />
 
-      <PasswordStrengthFeedback :password="form.password" />
+      <PasswordStrengthFeedback
+        :password="form.password"
+        :user-inputs="[form.username, form.email]"
+      />
 
       <PasswordField
         id="confirm-password"
         v-model="form.confirmPassword"
         label="Confirm password"
         autocomplete="new-password"
+        :minlength="MIN_PASSWORD_LENGTH"
       />
 
       <SubmitButton label="Create account" loading-label="Creating account..." :loading="loading" />
@@ -51,7 +56,8 @@
 import { reactive, ref } from "vue";
 import {
   getPasswordConfirmationError,
-  getPasswordValidationError
+  getPasswordValidationError,
+  MIN_PASSWORD_LENGTH
 } from "~/utils/password-validation";
 
 definePageMeta({
@@ -78,7 +84,7 @@ async function handleRegister() {
   message.value = "";
 
   const passwordError =
-    getPasswordValidationError(form.password) ||
+    getPasswordValidationError(form.password, [form.username, form.email]) ||
     getPasswordConfirmationError(form.password, form.confirmPassword);
 
   if (passwordError) {

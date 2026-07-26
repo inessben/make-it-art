@@ -5,6 +5,7 @@ const userRepository = require("../repositories/user.repository");
 const loginCodeRepository = require("../repositories/login-verification-code.repository");
 const rememberedDeviceRepository = require("../repositories/remembered-device.repository");
 const { sendLoginCodeEmail } = require("./mail.service");
+const { isExistingPasswordCompromised } = require("./password-security.service");
 const { createSession } = require("./session.service");
 const {
   assertUserCanAuthenticate,
@@ -36,6 +37,14 @@ function createChallengeToken() {
 
 function createRememberDeviceToken() {
   return crypto.randomBytes(32).toString("hex");
+}
+
+async function getCompromisedPasswordStatus(password) {
+  try {
+    return await isExistingPasswordCompromised(password);
+  } catch (_error) {
+    return false;
+  }
 }
 
 function getLoginChallengeCookieOptions() {
@@ -96,9 +105,12 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
     throw new Error("Invalid credentials");
   }
 
+  const passwordCompromised = await getCompromisedPasswordStatus(password);
+
   if (isDefaultAdminBypassUser(normalizedEmail)) {
     return {
       bypassCode: true,
+      passwordCompromised,
       user,
       ...(await createSession(user))
     };
@@ -121,6 +133,7 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
 
       return {
         bypassCode: true,
+        passwordCompromised,
         rememberDeviceToken,
         user,
         ...(await createSession(user))
@@ -147,7 +160,8 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
 
   return {
     bypassCode: false,
-    challengeToken
+    challengeToken,
+    passwordCompromised
   };
 }
 
