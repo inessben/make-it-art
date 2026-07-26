@@ -48,17 +48,14 @@ export const useCartStore = defineStore("cart", {
       );
     },
 
-async setItem(artworkId, quantity) {
-  return this.runCartRequest(async () => {
-    const headers = await this.csrfHeaders();
-    return $fetch("/api/v1/cart/items", {
-      method: "POST",
-      credentials: "include",
-      headers,
-      body: { artworkId, quantity }
-    });
-  }, "Impossible de mettre à jour cet article.");
-}
+    async setItem(artworkId, quantity) {
+      return this.runCartRequest(async () => {
+        const headers = await this.csrfHeaders();
+        return $fetch("/api/v1/cart/items", {
+          method: "POST",
+          credentials: "include",
+          headers,
+          body: { artworkId, quantity }
         });
       }, "Impossible de mettre à jour cet article.");
     },
@@ -108,7 +105,6 @@ async setItem(artworkId, quantity) {
         return true;
       } catch {
         return false;
-      }
       }
     }
   }

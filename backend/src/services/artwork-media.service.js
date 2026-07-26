@@ -1,4 +1,3 @@
-const fs = require("node:fs");
 const fsp = require("node:fs/promises");
 const path = require("node:path");
 
@@ -45,5 +44,5 @@ module.exports = {
   ensureArtworkUploadDirectory,
   buildArtworkImagePath,
   buildArtworkImageUrl,
-  removeArtworkImageFile,
+  removeArtworkImageFile
 };

@@ -1,6 +1,4 @@
-const {
-  extractArtistApplicationPayload,
-} = require("../services/artist-contract.service");
+const { extractArtistApplicationPayload } = require("../services/artist-contract.service");
 const { buildArtworkImageUrl } = require("../services/artwork-media.service");
 
 function normalizeText(value) {

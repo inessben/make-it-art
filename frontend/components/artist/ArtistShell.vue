@@ -7,11 +7,7 @@
         <ArtistSidebar />
 
         <div class="grid gap-6">
-          <AdminHeader
-            :eyebrow="eyebrow"
-            :title="title"
-            :description="description"
-          >
+          <AdminHeader :eyebrow="eyebrow" :title="title" :description="description">
             <template v-if="$slots.actions" #actions>
               <slot name="actions" />
             </template>
@@ -28,15 +24,15 @@
 defineProps({
   eyebrow: {
     type: String,
-    default: "Espace artiste",
+    default: "Espace artiste"
   },
   title: {
     type: String,
-    required: true,
+    required: true
   },
   description: {
     type: String,
-    required: true,
-  },
+    required: true
+  }
 });
 </script>

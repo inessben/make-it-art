@@ -325,7 +325,7 @@ async function sendArtistSaleEmail({
   grossAmount,
   netAmount,
   buyerLabel,
-  salesUrl,
+  salesUrl
 }) {
   const transporter = createTransporter();
   const displayName = artistName || "Artiste";
@@ -350,7 +350,7 @@ async function sendArtistSaleEmail({
       "Consultez le detail de vos ventes :",
       dashboardUrl,
       "",
-      "Merci de faire vivre Make It Art.",
+      "Merci de faire vivre Make It Art."
     ].join("\n"),
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #172033;">
@@ -372,7 +372,7 @@ async function sendArtistSaleEmail({
         </p>
         <p>Merci de faire vivre Make It Art.</p>
       </div>
-    `,
+    `
   });
 }
 
@@ -386,5 +386,5 @@ module.exports = {
   buildRefundStatusMessage,
   sendRefundStatusEmail,
   sendPaymentOperationsAlert,
-  sendArtistSaleEmail,
+  sendArtistSaleEmail
 };

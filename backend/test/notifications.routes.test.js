@@ -5,15 +5,12 @@ const express = require("express");
 const { loadModuleWithMocks } = require("./helpers/mock-require");
 
 const routesPath = require.resolve("../src/routes/notifications.routes");
-const authRequiredPath =
-  require.resolve("../src/middlewares/auth-required.middleware");
-const notificationRepositoryPath = require.resolve(
-  "../src/repositories/notification.repository",
-);
+const authRequiredPath = require.resolve("../src/middlewares/auth-required.middleware");
+const notificationRepositoryPath = require.resolve("../src/repositories/notification.repository");
 
 const authUser = {
   id: 12,
-  email: "artist@example.com",
+  email: "artist@example.com"
 };
 
 function buildAuthMiddleware(user) {
@@ -21,7 +18,7 @@ function buildAuthMiddleware(user) {
     authRequired(req, _res, next) {
       req.user = user;
       next();
-    },
+    }
   };
 }
 
@@ -30,7 +27,7 @@ async function startNotificationsApp(t, overrides = {}) {
     listNotificationsForUser: [],
     countUnreadForUser: [],
     markNotificationRead: [],
-    markAllNotificationsRead: [],
+    markAllNotificationsRead: []
   };
 
   const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
@@ -38,18 +35,20 @@ async function startNotificationsApp(t, overrides = {}) {
     [notificationRepositoryPath]: {
       async listNotificationsForUser(userId, options) {
         calls.listNotificationsForUser.push({ userId, options });
-        return overrides.notifications || [
-          {
-            id: 1,
-            userId,
-            type: "sale",
-            title: "Nouvelle vente",
-            message: "Test",
-            payload: { orderId: 5 },
-            readAt: null,
-            createdAt: new Date("2026-07-14T10:00:00.000Z"),
-          },
-        ];
+        return (
+          overrides.notifications || [
+            {
+              id: 1,
+              userId,
+              type: "sale",
+              title: "Nouvelle vente",
+              message: "Test",
+              payload: { orderId: 5 },
+              readAt: null,
+              createdAt: new Date("2026-07-14T10:00:00.000Z")
+            }
+          ]
+        );
       },
       async countUnreadForUser(userId) {
         calls.countUnreadForUser.push(userId);
@@ -57,22 +56,24 @@ async function startNotificationsApp(t, overrides = {}) {
       },
       async markNotificationRead({ notificationId, userId }) {
         calls.markNotificationRead.push({ notificationId, userId });
-        return overrides.markReadResult || {
-          id: notificationId,
-          userId,
-          type: "sale",
-          title: "Nouvelle vente",
-          message: "Test",
-          payload: null,
-          readAt: new Date(),
-          createdAt: new Date(),
-        };
+        return (
+          overrides.markReadResult || {
+            id: notificationId,
+            userId,
+            type: "sale",
+            title: "Nouvelle vente",
+            message: "Test",
+            payload: null,
+            readAt: new Date(),
+            createdAt: new Date()
+          }
+        );
       },
       async markAllNotificationsRead(userId) {
         calls.markAllNotificationsRead.push(userId);
         return overrides.markAllCount ?? 2;
-      },
-    },
+      }
+    }
   });
 
   const app = express();
@@ -108,7 +109,7 @@ test("PATCH /notifications/:id/read marks one notification", async (t) => {
   const { port, calls } = await startNotificationsApp(t);
 
   const response = await fetch(`http://127.0.0.1:${port}/notifications/1/read`, {
-    method: "PATCH",
+    method: "PATCH"
   });
   const body = await response.json();
 
@@ -116,6 +117,6 @@ test("PATCH /notifications/:id/read marks one notification", async (t) => {
   assert.equal(body.notification.id, 1);
   assert.deepEqual(calls.markNotificationRead[0], {
     notificationId: 1,
-    userId: authUser.id,
+    userId: authUser.id
   });
 });

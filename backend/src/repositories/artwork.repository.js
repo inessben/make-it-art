@@ -117,7 +117,7 @@ async function createArtwork({
   categoryId,
   price,
   protection,
-  imagePath,
+  imagePath
 }) {
   const priceAmount = parsePriceAmount(price);
   return prisma.artwork.create({
@@ -154,7 +154,7 @@ async function updateArtwork({
   categoryId,
   price,
   protection,
-  imagePath,
+  imagePath
 }) {
   const existing = await findOwnedArtwork({ artworkId, artistId });
 
@@ -187,7 +187,7 @@ async function updateArtwork({
           }
         : {}),
       protection: Boolean(protection),
-      ...(imagePath ? { imagePath } : {}),
+      ...(imagePath ? { imagePath } : {})
     },
     include: artworkInclude
   });

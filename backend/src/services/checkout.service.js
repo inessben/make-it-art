@@ -17,10 +17,7 @@ const orderRepository = require("../repositories/order.repository");
 const notificationRepository = require("../repositories/notification.repository");
 const { sendArtistSaleEmail } = require("./mail.service");
 const { parsePriceValue } = require("../utils/serialize-marketplace");
-const {
-  computeNetRevenue,
-  formatOrderReference,
-} = require("../utils/commerce");
+const { computeNetRevenue, formatOrderReference } = require("../utils/commerce");
 
 /**
  * Stripe-based checkout flow and alternative "simple" checkout flow are merged here due to conflict.
@@ -486,7 +483,7 @@ function normalizeCheckoutItems(items) {
   return items
     .map((item) => ({
       artworkId: Number.parseInt(item.artworkId, 10),
-      quantity: Math.max(1, Math.floor(Number(item.quantity || 1))),
+      quantity: Math.max(1, Math.floor(Number(item.quantity || 1)))
     }))
     .filter((item) => Number.isInteger(item.artworkId) && item.artworkId > 0);
 }
@@ -502,16 +499,16 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
   const artworks = await prisma.artwork.findMany({
     where: {
       id: {
-        in: artworkIds,
-      },
+        in: artworkIds
+      }
     },
     include: {
       artist: {
         include: {
-          user: true,
-        },
-      },
-    },
+          user: true
+        }
+      }
+    }
   });
 
   if (artworks.length !== artworkIds.length) {
@@ -552,7 +549,7 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
         artwork,
         quantity: 1,
         unitPrice,
-        lineTotal: unitPrice,
+        lineTotal: unitPrice
       });
     }
   }
@@ -561,21 +558,21 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
     userId,
     lineItems: lineItems.map((lineItem) => ({
       artworkId: lineItem.artworkId,
-      unitPrice: lineItem.unitPrice,
+      unitPrice: lineItem.unitPrice
     })),
     paymentMethod: paymentMethod || "card",
-    totalAmount,
+    totalAmount
   });
 
   const buyer = await prisma.user.findUnique({
     where: {
-      id: userId,
+      id: userId
     },
     select: {
       id: true,
       username: true,
-      email: true,
-    },
+      email: true
+    }
   });
 
   const buyerLabel = buyer?.username || buyer?.email || "Un collectionneur";
@@ -596,7 +593,7 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
         lineItem.artwork.artist?.user?.username ||
         "Artiste",
       artworks: [],
-      grossAmount: 0,
+      grossAmount: 0
     };
 
     existing.artworks.push(lineItem.artwork.title || "Oeuvre");
@@ -623,10 +620,10 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
         buyer: {
           id: buyer?.id || userId,
           username: buyer?.username || null,
-          email: billingEmail || buyer?.email || null,
+          email: billingEmail || buyer?.email || null
         },
-        artworkTitles: notificationData.artworks,
-      },
+        artworkTitles: notificationData.artworks
+      }
     });
 
     if (notificationData.artistEmail) {
@@ -639,7 +636,7 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
           grossAmount: notificationData.grossAmount,
           netAmount: computeNetRevenue(notificationData.grossAmount),
           buyerLabel,
-          salesUrl: `${env.appBaseUrl}/artist/sales`,
+          salesUrl: `${env.appBaseUrl}/artist/sales`
         });
       } catch (error) {
         console.error("Artist sale email error:", error);
@@ -651,7 +648,7 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
     order: checkoutResult.order,
     payment: checkoutResult.payment,
     totalAmount,
-    billingEmail: billingEmail || buyer?.email || null,
+    billingEmail: billingEmail || buyer?.email || null
   };
 }
 
@@ -660,5 +657,5 @@ module.exports = {
   RESERVATION_DURATION_MS,
   deriveIdempotencyKey,
   initializeCheckout,
-  createCheckout,
+  createCheckout
 };
