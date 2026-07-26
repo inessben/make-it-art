@@ -18,7 +18,6 @@
           <p class="mt-4 max-w-3xl text-sm leading-6 text-[#A0ADB4]">
             Paiement simulé : la commande est enregistrée en base et les artistes concernés reçoivent une notification de vente.
           </p>
-          </p>
         </div>
 
         <NuxtLink
@@ -577,98 +576,7 @@ async function confirmPayment() {
     submitting.value = false;
   }
 }
-    return;
-  }
 
-  submitting.value = true;
-  errorMessage.value = "";
-// Remove merge conflict markers and resolve consistently depending on payment method (Stripe or API checkout)
-if (paymentMethod.value === "stripe") {
-  try {
-    const { error: submitError } = await elements.submit();
-
-    if (submitError) {
-      errorMessage.value = getSafePaymentError(submitError);
-      return;
-    }
-
-    const returnUrl = buildPaymentReturnUrl({
-      configuredBaseUrl: config.public.appBaseUrl,
-      currentOrigin: window.location.origin,
-      nodeEnv: import.meta.env.PROD ? "production" : "development"
-    });
-
-    const { error } = await stripeClient.confirmPayment({
-      elements,
-      clientSecret,
-      confirmParams: {
-        return_url: returnUrl,
-        payment_method_data: {
-          billing_details: {
-            name: billingDetails.name || undefined,
-            address: {
-              line1: billingDetails.addressLine1 || undefined,
-              line2: billingDetails.addressLine2 || undefined,
-              postal_code: billingDetails.postalCode || undefined,
-              city: billingDetails.city || undefined,
-              country: "FR"
-            }
-          }
-        }
-      },
-      redirect: "if_required"
-    });
-
-    if (error) {
-      errorMessage.value = getSafePaymentError(error);
-      return;
-    }
-
-    clientSecret = "";
-    await navigateTo("/payment/return");
-  } catch (error) {
-    errorMessage.value = getSafePaymentError({
-      message: error?.data?.message || error?.message,
-      supportReference: error?.data?.supportReference
-    });
-  }
-} else {
-  successMessage.value = "";
-
-  try {
-    const response = await $fetch("/api/orders/checkout", {
-      method: "POST",
-      credentials: "include",
-      body: {
-        billingEmail: billingEmail.value,
-        paymentMethod: paymentMethod.value,
-        items: cart.items.map((item) => ({
-          artworkId: item.artwork.id,
-          quantity: item.quantity,
-        })),
-      },
-    });
-
-    cart.clear();
-    successMessage.value = `Commande ${response.order.reference} confirmee.`;
-
-    setTimeout(async () => {
-      await navigateTo("/profile");
-    }, 1200);
-  } catch (error) {
-    if (error?.statusCode === 401) {
-      await navigateTo("/login");
-      return;
-    }
-
-    errorMessage.value =
-      error?.data?.message || "Impossible de finaliser la commande.";
-  }
-}
-  } finally {
-    submitting.value = false;
-  }
-}
 function formatMoney(amount, currency = "EUR") {
   return new Intl.NumberFormat("fr-FR", {
     style: "currency",

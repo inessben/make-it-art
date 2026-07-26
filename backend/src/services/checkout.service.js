@@ -654,8 +654,6 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
     billingEmail: billingEmail || buyer?.email || null,
   };
 }
-  };
-}
 
 module.exports = {
   CheckoutError,

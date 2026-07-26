@@ -294,8 +294,6 @@
               </article>
             </div>
           </div>
-          </div>
-
           <div class="rounded-[24px] border border-slate-800 bg-violet-950 p-7">
             <p class="text-xs uppercase tracking-widest text-violet-700">MVP</p>
             <h2 class="mt-4 text-2xl font-semibold text-white">Next steps</h2>
