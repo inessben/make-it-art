@@ -79,7 +79,7 @@ jobs:
       - name: Migrate test database
         env:
           DATABASE_URL: postgresql://mia_test:test_only_password@localhost:5432/makeitart_test
-        run: npx prisma migrate deploy && npx prisma generate
+        run: ./node_modules/.bin/prisma migrate deploy && ./node_modules/.bin/prisma generate
       - name: Backend tests
         env:
           DATABASE_URL: postgresql://mia_test:test_only_password@localhost:5432/makeitart_test
