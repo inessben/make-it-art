@@ -6,39 +6,127 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Currency {
+  EUR
+}
+
+enum ArtworkSaleStatus {
+  DRAFT
+  AVAILABLE
+  SOLD_OUT
+  UNLISTED
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAYMENT_PROCESSING
+  PAYMENT_FAILED
+  PAYMENT_REVIEW
+  PAID
+  CANCELED
+  PARTIALLY_REFUNDED
+  REFUNDED
+}
+
+enum PaymentProvider {
+  STRIPE
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELED
+  PARTIALLY_REFUNDED
+  REFUNDED
+}
+
+enum WebhookEventStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+enum InventoryReservationStatus {
+  ACTIVE
+  CONSUMED
+  RELEASED
+  EXPIRED
+}
+
+enum FulfillmentTaskStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELED
+}
+
+enum RefundStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+enum DisputeStatus {
+  NEEDS_RESPONSE
+  UNDER_REVIEW
+  WON
+  LOST
+  CLOSED
+}
+
+enum DigitalDeliveryStatus {
+  ACTIVE
+  SUSPENDED
+  REVOKED
+}
+
+enum InvoiceType {
+  SALE
+  COMMISSION
+}
+
 model User {
-  id                      Int                      @id @default(autoincrement())
-  username                String?
-  email                   String?                  @unique
-  passwordHash            String?                  @map("password_hash")
-  oauthProvider           String?                  @map("oauth_provider")
-  oauthSubject            String?                  @map("oauth_subject")
-  oauthLinkedAt           DateTime?                @map("oauth_linked_at")
-  role                    String?
-  createdAt               DateTime?                @map("created_at")
-  bio                     String?
-  isActive                Boolean?                 @map("is_active")
-  walletAddress           String?                  @map("wallet_addresse")
-  verified                Boolean?
-  phone                   String?
-  admin                   Admin?
-  artistApplicationDraft  ArtistApplicationDraft?
-  artist                  Artist?
-  moderatedArtworks       Artwork[]                @relation("artwork_moderated_by")
+  id                         Int                      @id @default(autoincrement())
+  username                   String?
+  email                      String?                  @unique
+  passwordHash               String?                  @map("password_hash")
+  oauthProvider              String?                  @map("oauth_provider")
+  oauthSubject               String?                  @map("oauth_subject")
+  oauthLinkedAt              DateTime?                @map("oauth_linked_at")
+  role                       String?
+  createdAt                  DateTime?                @map("created_at")
+  bio                        String?
+  isActive                   Boolean?                 @map("is_active")
+  blockedAt                  DateTime?                @map("blocked_at")
+  walletAddress              String?                  @map("wallet_addresse")
+  verified                   Boolean?
+  phone                      String?
+  admin                      Admin?
+  artistApplicationDraft     ArtistApplicationDraft?
+  artist                     Artist?
+  moderatedArtworks          Artwork[]                @relation("artwork_moderated_by")
   reviewedArtistApplications ArtistApplicationDraft[] @relation("artist_application_reviewed_by")
-  auditLogs               AuditLog[]
-  consents                ConsentRGPD[]
-  emailVerificationTokens EmailVerificationToken[] @relation("emailVerificationTokens")
-  favorites               Favorite[]
-  follows                 Follow[]
-  loginVerificationCodes  LoginVerificationCode[]  @relation("loginVerificationCodes")
-  orders                  Order[]
-  ownershipTokens         OwnershipToken[]
-  passwordResetTokens     PasswordResetToken[]     @relation("passwordResetTokens")
-  personalCollections     Collection[]             @relation("user_collections")
-  refreshTokens           RefreshToken[]
-  rememberedDevices       RememberedDevice[]       @relation("rememberedDevices")
-  galleries               UserGallery[]
+  auditLogs                  AuditLog[]
+  consents                   ConsentRGPD[]
+  emailVerificationTokens    EmailVerificationToken[] @relation("emailVerificationTokens")
+  favorites                  Favorite[]
+  follows                    Follow[]
+  loginVerificationCodes     LoginVerificationCode[]  @relation("loginVerificationCodes")
+  orders                     Order[]
+  ownershipTokens            OwnershipToken[]
+  passwordResetTokens        PasswordResetToken[]     @relation("passwordResetTokens")
+  personalCollections        Collection[]             @relation("user_collections")
+  refreshTokens              RefreshToken[]
+  rememberedDevices          RememberedDevice[]       @relation("rememberedDevices")
+  galleries                  UserGallery[]
+  cart                       Cart?
+  refundsRequested           Refund[]                 @relation("refundRequestedBy")
+  disputeEvidenceAudits      DisputeEvidenceAudit[]   @relation("disputeEvidenceAuditCapturedBy")
+  digitalEntitlements        DigitalEntitlement[]
+  ownershipCertificates      OwnershipCertificate[]
 
   @@unique([oauthProvider, oauthSubject])
   @@map("user")
@@ -93,29 +181,40 @@ model Admin {
 }
 
 model Artwork {
-  id              Int              @id @default(autoincrement())
-  artistId        Int              @map("artist_id")
-  title           String?
-  description     String?
-  categoryId      Int?             @map("category_id")
-  priceTokens     String?          @map("price_tokens")
-  favoriteCount   Int?             @map("favorite_count")
-  createdAt       DateTime?        @map("created_at")
-  protection      Boolean?
-  protectionId    Int?             @map("protection_id")
-  price           String?
-  moderationStatus String          @default("approved") @map("moderation_status")
-  moderationNote   String?         @map("moderation_note")
-  moderatedAt      DateTime?       @map("moderated_at")
-  moderatedByAdminId Int?          @map("moderated_by_admin_id")
-  artist          Artist           @relation(fields: [artistId], references: [id])
-  category        Category?        @relation(fields: [categoryId], references: [id])
-  collections     CollectionItem[]
-  favorites       Favorite[]
-  moderatedByAdmin User?           @relation("artwork_moderated_by", fields: [moderatedByAdminId], references: [id])
-  orderItems      OrderItem[]
-  ownershipTokens OwnershipToken[]
-  galleries       UserGallery[]
+  id                    Int                    @id @default(autoincrement())
+  artistId              Int                    @map("artist_id")
+  title                 String?
+  description           String?
+  categoryId            Int?                   @map("category_id")
+  // Temporary read compatibility for develop. Stripe checkout never reads
+  // these free-form legacy values; priceAmount is the only payable amount.
+  priceTokens           String?                @map("price_tokens")
+  price                 String?
+  priceAmount           Int?                   @map("price_amount")
+  currency              Currency               @default(EUR)
+  favoriteCount         Int?                   @map("favorite_count")
+  createdAt             DateTime?              @map("created_at")
+  protection            Boolean?
+  protectionId          Int?                   @map("protection_id")
+  artist                Artist                 @relation(fields: [artistId], references: [id])
+  category              Category?              @relation(fields: [categoryId], references: [id])
+  collections           CollectionItem[]
+  favorites             Favorite[]
+  moderationStatus      String                 @default("approved") @map("moderation_status")
+  moderationNote        String?                @map("moderation_note")
+  moderatedAt           DateTime?              @map("moderated_at")
+  moderatedByAdminId    Int?                   @map("moderated_by_admin_id")
+  moderatedByAdmin      User?                  @relation("artwork_moderated_by", fields: [moderatedByAdminId], references: [id])
+  orderItems            OrderItem[]
+  ownershipTokens       OwnershipToken[]
+  galleries             UserGallery[]
+  cartItems             CartItem[]
+  reservations          InventoryReservation[]
+  digitalEntitlements   DigitalEntitlement[]
+  ownershipCertificates OwnershipCertificate[]
+  saleStatus            ArtworkSaleStatus      @default(DRAFT) @map("sale_status")
+  stockQuantity         Int                    @default(0) @map("stock_quantity")
+  reservedQuantity      Int                    @default(0) @map("reserved_quantity")
 
   @@map("artwork")
 }
@@ -164,9 +263,9 @@ model Collection {
   isPrivate          Boolean          @default(false) @map("is_private")
   isDefaultFavorites Boolean          @default(false) @map("is_default_favorites")
   createdAt          DateTime?        @map("created_at")
-  artist      Artist?          @relation(fields: [artistId], references: [id])
-  user        User?            @relation("user_collections", fields: [userId], references: [id])
-  items       CollectionItem[]
+  artist             Artist?          @relation(fields: [artistId], references: [id])
+  user               User?            @relation("user_collections", fields: [userId], references: [id])
+  items              CollectionItem[]
 
   @@map("collection")
 }
@@ -181,41 +280,392 @@ model CollectionItem {
   @@map("collection_item")
 }
 
-model Order {
-  id         Int         @id @default(autoincrement())
-  userId     Int         @map("user_id")
-  status     String?
-  totalToken Int?        @map("total_token")
-  createdAt  DateTime?   @map("created_at")
-  user       User        @relation(fields: [userId], references: [id])
-  items      OrderItem[]
-  payments   Payment[]
+model Cart {
+  id        Int        @id @default(autoincrement())
+  userId    Int        @unique @map("user_id")
+  version   Int        @default(1)
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  orders    Order[]
 
+  @@map("cart")
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  cartId    Int      @map("cart_id")
+  artworkId Int      @map("artwork_id")
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  artwork   Artwork  @relation(fields: [artworkId], references: [id])
+
+  @@unique([cartId, artworkId])
+  @@index([artworkId])
+  @@map("cart_item")
+}
+
+model Order {
+  id                         Int                    @id @default(autoincrement())
+  publicId                   String                 @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  userId                     Int                    @map("user_id")
+  cartId                     Int                    @map("cart_id")
+  cartVersion                Int                    @map("cart_version")
+  pricingFingerprint         String                 @map("pricing_fingerprint")
+  status                     OrderStatus            @default(PENDING_PAYMENT)
+  checkoutVersion            Int                    @default(1) @map("checkout_version")
+  customerType               String                 @default("B2C") @map("customer_type")
+  marketCountry              String                 @default("FR") @map("market_country")
+  billingSnapshot            Json?                  @map("billing_snapshot")
+  subtotalAmount             Int                    @map("subtotal_amount")
+  discountAmount             Int                    @default(0) @map("discount_amount")
+  subtotalExcludingTaxAmount Int                    @default(0) @map("subtotal_excluding_tax_amount")
+  taxAmount                  Int                    @default(0) @map("tax_amount")
+  taxRateBps                 Int                    @default(0) @map("tax_rate_bps")
+  taxBehavior                String                 @default("INCLUSIVE") @map("tax_behavior")
+  feeAmount                  Int                    @default(0) @map("fee_amount")
+  commissionAmount           Int                    @default(0) @map("commission_amount")
+  commissionRateBps          Int                    @default(700) @map("commission_rate_bps")
+  totalAmount                Int                    @map("total_amount")
+  // Legacy display field kept during the develop-to-fiat transition only.
+  totalToken                 Int?                   @map("total_token")
+  currency                   Currency               @default(EUR)
+  createdAt                  DateTime               @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt                  DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  paidAt                     DateTime?              @map("paid_at") @db.Timestamp(6)
+  canceledAt                 DateTime?              @map("canceled_at") @db.Timestamp(6)
+  expiresAt                  DateTime               @map("expires_at") @db.Timestamp(6)
+  user                       User                   @relation(fields: [userId], references: [id])
+  cart                       Cart                   @relation(fields: [cartId], references: [id])
+  items                      OrderItem[]
+  payments                   Payment[]
+  reservations               InventoryReservation[]
+  financialTransitions       FinancialTransition[]
+  fulfillmentTasks           FulfillmentTask[]
+  operatorAlerts             PaymentOperatorAlert[]
+  refunds                    Refund[]
+  disputes                   Dispute[]
+  invoices                   Invoice[]
+  digitalEntitlements        DigitalEntitlement[]
+  ownershipCertificates      OwnershipCertificate[]
+
+  @@unique([cartId, cartVersion])
+  @@index([userId, status])
   @@map("order")
 }
 
 model OrderItem {
-  id          Int     @id @default(autoincrement())
-  orderId     Int     @map("order_id")
-  artworkId   Int     @map("artwork_id")
-  priceTokens String? @map("price_tokens")
-  artwork     Artwork @relation(fields: [artworkId], references: [id])
-  order       Order   @relation(fields: [orderId], references: [id])
+  id                   Int                   @id @default(autoincrement())
+  orderId              Int                   @map("order_id")
+  artworkId            Int                   @map("artwork_id")
+  // Legacy display field; Stripe totals are unitAmount/subtotalAmount.
+  priceTokens          String?               @map("price_tokens")
+  artworkTitle         String                @map("artwork_title")
+  artistName           String                @map("artist_name")
+  quantity             Int                   @default(1)
+  unitAmount           Int                   @map("unit_amount")
+  subtotalAmount       Int                   @map("subtotal_amount")
+  discountAmount       Int                   @default(0) @map("discount_amount")
+  netAmount            Int                   @default(0) @map("net_amount")
+  taxAmount            Int                   @default(0) @map("tax_amount")
+  taxRateBps           Int                   @default(0) @map("tax_rate_bps")
+  commissionAmount     Int                   @default(0) @map("commission_amount")
+  commissionRateBps    Int                   @default(700) @map("commission_rate_bps")
+  currency             Currency              @default(EUR)
+  createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamp(6)
+  artwork              Artwork               @relation(fields: [artworkId], references: [id])
+  order                Order                 @relation(fields: [orderId], references: [id])
+  digitalEntitlement   DigitalEntitlement?
+  ownershipCertificate OwnershipCertificate?
 
+  @@unique([orderId, artworkId])
   @@map("order_item")
 }
 
-model Payment {
-  id            Int       @id @default(autoincrement())
-  orderId       Int       @map("order_id")
-  method        String?
-  transactionId Int?      @map("transaction_id")
-  price         String?
-  status        String?
-  createdAt     DateTime? @map("created_at")
-  order         Order     @relation(fields: [orderId], references: [id])
+model Invoice {
+  id                 Int         @id @default(autoincrement())
+  publicId           String      @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  number             String      @unique
+  type               InvoiceType
+  orderId            Int         @map("order_id")
+  recipientReference String      @map("recipient_reference")
+  issuerSnapshot     Json        @map("issuer_snapshot")
+  recipientSnapshot  Json        @map("recipient_snapshot")
+  lineItems          Json        @map("line_items")
+  subtotalAmount     Int         @map("subtotal_amount")
+  discountAmount     Int         @default(0) @map("discount_amount")
+  netAmount          Int         @map("net_amount")
+  taxAmount          Int         @default(0) @map("tax_amount")
+  totalAmount        Int         @map("total_amount")
+  currency           Currency    @default(EUR)
+  fingerprint        String
+  issuedAt           DateTime    @default(now()) @map("issued_at") @db.Timestamp(6)
+  pdf                Bytes?
+  order              Order       @relation(fields: [orderId], references: [id], onDelete: Restrict)
 
+  @@unique([orderId, type, recipientReference])
+  @@index([orderId, type])
+  @@map("invoice")
+}
+
+model InvoiceSequence {
+  key          String   @id
+  currentValue Int      @default(0) @map("current_value")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  @@map("invoice_sequence")
+}
+
+model DigitalEntitlement {
+  id            Int                   @id @default(autoincrement())
+  orderId       Int                   @map("order_id")
+  orderItemId   Int                   @unique @map("order_item_id")
+  userId        Int                   @map("user_id")
+  artworkId     Int                   @map("artwork_id")
+  status        DigitalDeliveryStatus @default(ACTIVE)
+  sourceTaskKey String                @map("source_task_key")
+  grantedAt     DateTime              @default(now()) @map("granted_at") @db.Timestamp(6)
+  suspendedAt   DateTime?             @map("suspended_at") @db.Timestamp(6)
+  revokedAt     DateTime?             @map("revoked_at") @db.Timestamp(6)
+  updatedAt     DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  order         Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem     OrderItem             @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  artwork       Artwork               @relation(fields: [artworkId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status])
+  @@index([orderId, status])
+  @@map("digital_entitlement")
+}
+
+model OwnershipCertificate {
+  id                Int                   @id @default(autoincrement())
+  publicId          String                @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  certificateNumber String                @unique @map("certificate_number")
+  orderId           Int                   @map("order_id")
+  orderItemId       Int                   @unique @map("order_item_id")
+  userId            Int                   @map("user_id")
+  artworkId         Int                   @map("artwork_id")
+  status            DigitalDeliveryStatus @default(ACTIVE)
+  snapshot          Json
+  fingerprint       String
+  issuedAt          DateTime              @default(now()) @map("issued_at") @db.Timestamp(6)
+  suspendedAt       DateTime?             @map("suspended_at") @db.Timestamp(6)
+  revokedAt         DateTime?             @map("revoked_at") @db.Timestamp(6)
+  updatedAt         DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  order             Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem         OrderItem             @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  user              User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  artwork           Artwork               @relation(fields: [artworkId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status])
+  @@index([orderId, status])
+  @@map("ownership_certificate")
+}
+
+model Payment {
+  id                   Int                    @id @default(autoincrement())
+  orderId              Int                    @map("order_id")
+  checkoutVersion      Int                    @default(1) @map("checkout_version")
+  provider             PaymentProvider        @default(STRIPE)
+  providerPaymentId    String?                @unique @map("provider_payment_id")
+  providerChargeId     String?                @unique @map("provider_charge_id")
+  providerStatus       String?                @map("provider_status")
+  idempotencyKey       String?                @unique @map("idempotency_key")
+  method               String?
+  // Temporary legacy references. Stripe reconciliation uses providerPaymentId
+  // and amount exclusively.
+  transactionId        Int?                   @map("transaction_id")
+  price                String?
+  amount               Int
+  refundedAmount       Int                    @default(0) @map("refunded_amount")
+  currency             Currency               @default(EUR)
+  status               PaymentStatus          @default(PENDING)
+  failureCode          String?                @map("failure_code")
+  createdAt            DateTime               @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt            DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  succeededAt          DateTime?              @map("succeeded_at") @db.Timestamp(6)
+  failedAt             DateTime?              @map("failed_at") @db.Timestamp(6)
+  canceledAt           DateTime?              @map("canceled_at") @db.Timestamp(6)
+  order                Order                  @relation(fields: [orderId], references: [id])
+  webhookEvents        StripeWebhookEvent[]
+  financialTransitions FinancialTransition[]
+  operatorAlerts       PaymentOperatorAlert[]
+  refunds              Refund[]
+  disputes             Dispute[]
+
+  @@unique([orderId, checkoutVersion])
   @@map("payment")
+}
+
+model StripeWebhookEvent {
+  id             Int                @id @default(autoincrement())
+  eventId        String             @unique @map("event_id")
+  eventType      String             @map("event_type")
+  stripeObjectId String?            @map("stripe_object_id")
+  paymentId      Int?               @map("payment_id")
+  refundId       Int?               @map("refund_id")
+  disputeId      Int?               @map("dispute_id")
+  status         WebhookEventStatus @default(PENDING)
+  attemptCount   Int                @default(0) @map("attempt_count")
+  lastErrorCode  String?            @map("last_error_code")
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamp(6)
+  processedAt    DateTime?          @map("processed_at") @db.Timestamp(6)
+  payment        Payment?           @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  refund         Refund?            @relation(fields: [refundId], references: [id], onDelete: SetNull)
+  dispute        Dispute?           @relation(fields: [disputeId], references: [id], onDelete: SetNull)
+
+  @@index([stripeObjectId, eventType])
+  @@map("stripe_webhook_event")
+}
+
+model Refund {
+  id                Int                  @id @default(autoincrement())
+  publicId          String               @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  orderId           Int                  @map("order_id")
+  paymentId         Int                  @map("payment_id")
+  requestedByUserId Int                  @map("requested_by_user_id")
+  providerRefundId  String?              @unique @map("provider_refund_id")
+  providerStatus    String?              @map("provider_status")
+  providerReference String?              @map("provider_reference")
+  idempotencyKey    String               @unique @map("idempotency_key")
+  amount            Int
+  currency          Currency             @default(EUR)
+  status            RefundStatus         @default(PENDING)
+  reasonCode        String               @map("reason_code")
+  failureCode       String?              @map("failure_code")
+  createdAt         DateTime             @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt         DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  succeededAt       DateTime?            @map("succeeded_at") @db.Timestamp(6)
+  failedAt          DateTime?            @map("failed_at") @db.Timestamp(6)
+  order             Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  payment           Payment              @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  requestedBy       User                 @relation("refundRequestedBy", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  webhookEvents     StripeWebhookEvent[]
+
+  @@index([orderId, createdAt])
+  @@index([paymentId, status])
+  @@map("refund")
+}
+
+model InventoryReservation {
+  id        Int                        @id @default(autoincrement())
+  orderId   Int                        @map("order_id")
+  artworkId Int                        @map("artwork_id")
+  quantity  Int
+  status    InventoryReservationStatus @default(ACTIVE)
+  expiresAt DateTime                   @map("expires_at") @db.Timestamp(6)
+  createdAt DateTime                   @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime                   @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  order     Order                      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  artwork   Artwork                    @relation(fields: [artworkId], references: [id])
+
+  @@unique([orderId, artworkId])
+  @@index([artworkId, status, expiresAt])
+  @@map("inventory_reservation")
+}
+
+model FinancialTransition {
+  id             Int      @id @default(autoincrement())
+  orderId        Int      @map("order_id")
+  paymentId      Int?     @map("payment_id")
+  stripeEventId  String   @map("stripe_event_id")
+  stripeObjectId String   @map("stripe_object_id")
+  entityType     String   @map("entity_type")
+  previousStatus String   @map("previous_status")
+  nextStatus     String   @map("next_status")
+  reasonCode     String   @map("reason_code")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  payment        Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@unique([stripeEventId, entityType, previousStatus, nextStatus])
+  @@index([orderId, createdAt])
+  @@map("financial_transition")
+}
+
+model FulfillmentTask {
+  id              Int                   @id @default(autoincrement())
+  orderId         Int                   @map("order_id")
+  taskType        String                @map("task_type")
+  taskKey         String                @unique @map("task_key")
+  status          FulfillmentTaskStatus @default(PENDING)
+  attemptCount    Int                   @default(0) @map("attempt_count")
+  availableAt     DateTime              @default(now()) @map("available_at") @db.Timestamp(6)
+  lockedAt        DateTime?             @map("locked_at") @db.Timestamp(6)
+  leaseToken      String?               @map("lease_token")
+  lastErrorCode   String?               @map("last_error_code")
+  effectReference String?               @map("effect_reference")
+  createdAt       DateTime              @default(now()) @map("created_at") @db.Timestamp(6)
+  processedAt     DateTime?             @map("processed_at") @db.Timestamp(6)
+  order           Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([status, availableAt])
+  @@map("fulfillment_task")
+}
+
+model Dispute {
+  id                Int                    @id @default(autoincrement())
+  providerDisputeId String                 @unique @map("provider_dispute_id")
+  providerChargeId  String                 @map("provider_charge_id")
+  orderId           Int                    @map("order_id")
+  paymentId         Int                    @map("payment_id")
+  status            DisputeStatus
+  providerStatus    String                 @map("provider_status")
+  reason            String
+  amount            Int
+  currency          String                 @db.VarChar(3)
+  evidenceDueAt     DateTime?              @map("evidence_due_at") @db.Timestamp(6)
+  createdAt         DateTime               @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt         DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  closedAt          DateTime?              @map("closed_at") @db.Timestamp(6)
+  order             Order                  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  payment           Payment                @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  webhookEvents     StripeWebhookEvent[]
+  evidenceAudits    DisputeEvidenceAudit[]
+
+  @@index([status, evidenceDueAt])
+  @@index([orderId, createdAt])
+  @@index([paymentId, status])
+  @@map("dispute")
+}
+
+model DisputeEvidenceAudit {
+  id               Int      @id @default(autoincrement())
+  disputeId        Int      @map("dispute_id")
+  capturedByUserId Int      @map("captured_by_user_id")
+  providerStatus   String   @map("provider_status")
+  submissionCount  Int      @default(0) @map("submission_count")
+  hasEvidence      Boolean  @default(false) @map("has_evidence")
+  fileReferences   String[] @default([]) @map("file_references")
+  capturedAt       DateTime @default(now()) @map("captured_at") @db.Timestamp(6)
+  dispute          Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  capturedBy       User     @relation("disputeEvidenceAuditCapturedBy", fields: [capturedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([disputeId, capturedAt])
+  @@map("dispute_evidence_audit")
+}
+
+model PaymentOperatorAlert {
+  id             Int       @id @default(autoincrement())
+  orderId        Int       @map("order_id")
+  paymentId      Int?      @map("payment_id")
+  stripeEventId  String    @map("stripe_event_id")
+  stripeObjectId String    @map("stripe_object_id")
+  code           String
+  status         String    @default("OPEN")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  resolvedAt     DateTime? @map("resolved_at") @db.Timestamp(6)
+  order          Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  payment        Payment?  @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@unique([stripeEventId, code])
+  @@index([status, createdAt])
+  @@map("payment_operator_alert")
 }
 
 model Favorite {

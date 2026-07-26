@@ -14,7 +14,12 @@ const artistRepositoryPath = require.resolve("../src/repositories/artist.reposit
 const artworkRepositoryPath = require.resolve("../src/repositories/artwork.repository");
 const orderRepositoryPath = require.resolve("../src/repositories/order.repository");
 const paymentRepositoryPath = require.resolve("../src/repositories/payment.repository");
+const auditLogRepositoryPath = require.resolve("../src/repositories/audit-log.repository");
+const prismaPath = require.resolve("../src/lib/prisma");
 const authServicePath = require.resolve("../src/services/auth.service");
+const adminAuditServicePath = require.resolve("../src/services/admin-audit.service");
+const adminUserManagementServicePath =
+  require.resolve("../src/services/admin-user-management.service");
 
 const adminUser = {
   id: 1,
@@ -67,10 +72,16 @@ function buildArtwork(id, overrides = {}) {
 
 async function startAdminArtworksApp(t, overrides = {}) {
   const calls = {
-    updateArtworkModeration: []
+    updateArtworkModeration: [],
+    auditLogs: []
   };
 
   const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
+    [prismaPath]: {
+      async $transaction(callback) {
+        return callback({});
+      }
+    },
     [authRequiredPath]: {
       authRequired: authMiddleware
     },
@@ -148,7 +159,7 @@ async function startAdminArtworksApp(t, overrides = {}) {
     },
     [orderRepositoryPath]: {
       async listOrdersForAdmin() {
-        return [];
+        return overrides.listOrdersForAdminResult || [];
       }
     },
     [paymentRepositoryPath]: {
@@ -156,8 +167,74 @@ async function startAdminArtworksApp(t, overrides = {}) {
         return [];
       }
     },
+    [auditLogRepositoryPath]: {
+      ADMIN_AUDIT_ENTITY_LABELS: {
+        USER: "Users",
+        ARTIST: "Artists",
+        ARTIST_APPLICATION: "Artist applications",
+        ARTWORK: "Artworks",
+        ORDER: "Orders",
+        PAYMENT: "Payments"
+      },
+      ADMIN_AUDIT_ENTITY_TYPES: [
+        "USER",
+        "ARTIST",
+        "ARTIST_APPLICATION",
+        "ARTWORK",
+        "ORDER",
+        "PAYMENT"
+      ],
+      isAdminAuditEntityType(value) {
+        return ["USER", "ARTIST", "ARTIST_APPLICATION", "ARTWORK", "ORDER", "PAYMENT"].includes(
+          String(value || "")
+            .trim()
+            .toUpperCase()
+        );
+      },
+      async listAdminAuditLogs() {
+        return {
+          entries: [],
+          totalEntries: 0,
+          groupedEntries: [],
+          filters: {
+            entityType: "",
+            entityId: "",
+            actorUserId: null,
+            actionQuery: "",
+            limit: 120
+          }
+        };
+      },
+      parseAuditLimit(value, fallbackValue = 120) {
+        const parsedValue = Number.parseInt(String(value), 10);
+
+        if (!Number.isSafeInteger(parsedValue) || parsedValue < 1) {
+          return fallbackValue;
+        }
+
+        return Math.min(parsedValue, 200);
+      }
+    },
     [authServicePath]: {
       async inviteAdminUser() {
+        return null;
+      }
+    },
+    [adminAuditServicePath]: {
+      async writeAdminAuditLog(_prismaClient, payload) {
+        calls.auditLogs.push(payload);
+        return null;
+      }
+    },
+    [adminUserManagementServicePath]: {
+      AdminUserManagementError: class AdminUserManagementError extends Error {},
+      async updateUserAccountStatus() {
+        return null;
+      },
+      async removeAdminAccess() {
+        return null;
+      },
+      async removeSuperAdminAccess() {
         return null;
       }
     }
@@ -230,10 +307,88 @@ test("PATCH /admin/artworks/:id/moderation updates the artwork moderation status
   assert.equal(response.body.artwork.statusLabel, "Rejected");
   assert.equal(response.body.artwork.moderationNote, "Le visuel doit etre retravaille.");
   assert.equal(calls.updateArtworkModeration.length, 1);
-  assert.deepEqual(calls.updateArtworkModeration[0], {
-    artworkId: 12,
-    status: "rejected",
-    moderationNote: "Le visuel doit etre retravaille.",
-    moderatedByAdminId: adminUser.id
+  assert.equal(calls.updateArtworkModeration[0].artworkId, 12);
+  assert.equal(calls.updateArtworkModeration[0].status, "rejected");
+  assert.equal(calls.updateArtworkModeration[0].moderationNote, "Le visuel doit etre retravaille.");
+  assert.equal(calls.updateArtworkModeration[0].moderatedByAdminId, adminUser.id);
+  assert.deepEqual(calls.updateArtworkModeration[0].prismaClient, {});
+  assert.equal(calls.auditLogs.length, 1);
+  assert.equal(calls.auditLogs[0].action, "ARTWORK_MODERATION_REJECTED");
+  assert.equal(calls.auditLogs[0].entityType, "ARTWORK");
+  assert.equal(calls.auditLogs[0].entityId, 12);
+});
+
+test("GET /admin/orders exposes only the safe refund balance and history", async (t) => {
+  const orderPublicId = "b5cb23ef-d417-4ad4-af3f-0e8f3394262e";
+  const { baseUrl } = await startAdminArtworksApp(t, {
+    listOrdersForAdminResult: [
+      {
+        id: 42,
+        publicId: orderPublicId,
+        status: "PARTIALLY_REFUNDED",
+        totalAmount: 1990,
+        currency: "EUR",
+        createdAt: new Date("2026-07-25T10:00:00.000Z"),
+        user: {
+          username: "Refund Buyer",
+          email: "buyer@example.test"
+        },
+        items: [{ id: 1 }],
+        payments: [
+          {
+            id: 7,
+            checkoutVersion: 1,
+            providerPaymentId: "pi_must_not_be_exposed",
+            status: "PARTIALLY_REFUNDED",
+            amount: 1990,
+            currency: "EUR",
+            refunds: [
+              {
+                publicId: "2b8294f5-dab0-40db-a22f-d1ec119045b4",
+                providerRefundId: "re_must_not_be_exposed",
+                idempotencyKey: "d78ff548-6138-46d9-8f55-f8a819e4a8af",
+                status: "SUCCEEDED",
+                amount: 500,
+                currency: "EUR",
+                reasonCode: "CUSTOMER_REQUEST",
+                createdAt: new Date("2026-07-25T10:10:00.000Z"),
+                updatedAt: new Date("2026-07-25T10:11:00.000Z")
+              },
+              {
+                publicId: "3c0d5bc9-58eb-487d-a30a-ccdd86bbbc9c",
+                status: "PENDING",
+                amount: 300,
+                currency: "EUR",
+                reasonCode: "DUPLICATE",
+                createdAt: new Date("2026-07-25T10:12:00.000Z"),
+                updatedAt: new Date("2026-07-25T10:12:00.000Z")
+              }
+            ]
+          }
+        ]
+      }
+    ]
   });
+
+  const response = await requestJson(baseUrl, "/admin/orders");
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.orders[0].publicId, orderPublicId);
+  assert.equal(response.body.orders[0].status, "Partially refunded");
+  assert.equal(response.body.orders[0].refundedAmount, 500);
+  assert.equal(response.body.orders[0].pendingRefundAmount, 300);
+  assert.equal(response.body.orders[0].refundableAmount, 1190);
+  assert.equal(response.body.orders[0].canRefund, true);
+  assert.deepEqual(response.body.orders[0].refunds[0], {
+    id: "2b8294f5-dab0-40db-a22f-d1ec119045b4",
+    status: "SUCCEEDED",
+    amount: 500,
+    currency: "EUR",
+    reason: "CUSTOMER_REQUEST",
+    createdAt: "2026-07-25T10:10:00.000Z",
+    updatedAt: "2026-07-25T10:11:00.000Z"
+  });
+  assert.equal(JSON.stringify(response.body).includes("pi_must_not_be_exposed"), false);
+  assert.equal(JSON.stringify(response.body).includes("re_must_not_be_exposed"), false);
+  assert.equal(JSON.stringify(response.body).includes("d78ff548"), false);
 });

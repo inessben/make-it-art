@@ -106,7 +106,7 @@ async function startArtistRoutesApp(t, overrides = {}) {
       }
     },
     [contractServicePath]: {
-      CONTRACT_VERSION: "make-it-art-artist-contract-v2",
+      CONTRACT_VERSION: "make-it-art-artist-contract-v3",
       extractArtistApplicationPayload(application) {
         return application?.payload || {};
       },
@@ -121,12 +121,12 @@ async function startArtistRoutesApp(t, overrides = {}) {
       renderArtistContract() {
         return {
           contractText: "CONTRAT TEST",
-          contractVersion: "make-it-art-artist-contract-v2"
+          contractVersion: "make-it-art-artist-contract-v3"
         };
       },
       async generateArtistContractPdf() {
         return {
-          contractVersion: "make-it-art-artist-contract-v2",
+          contractVersion: "make-it-art-artist-contract-v3",
           contractText: "CONTRAT TEST",
           pdfBuffer: Buffer.from("pdf"),
           signedAt: new Date("2026-07-04T12:34:00.000Z")
@@ -241,7 +241,7 @@ test("POST /artists/me submits a pending artist application with a signed contra
   assert.equal(response.body.user.artistApplication.status, "pending");
   assert.equal(calls.submitApplication.length, 1);
   assert.equal(calls.submitApplication[0].currentStep, 4);
-  assert.equal(calls.submitApplication[0].contractVersion, "make-it-art-artist-contract-v2");
+  assert.equal(calls.submitApplication[0].contractVersion, "make-it-art-artist-contract-v3");
   assert.equal(calls.submitApplication[0].submittedAt.toISOString(), "2026-07-04T12:34:00.000Z");
   assert.ok(Buffer.isBuffer(calls.submitApplication[0].contractPdf));
 });
@@ -376,6 +376,80 @@ test("artist router does not intercept unrelated admin routes", async (t) => {
   assert.equal(response.body.ok, true);
 });
 
+test("artist router does not intercept public marketplace artist routes", async (t) => {
+  const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
+    [authRequiredPath]: buildAuthMiddleware({
+      id: 1,
+      email: "admin@example.com",
+      username: "Admin",
+      role: "admin"
+    }),
+    [applicationRepositoryPath]: {
+      async findByUserId() {
+        return null;
+      }
+    },
+    [artistRepositoryPath]: {
+      async findByUserId() {
+        return null;
+      }
+    },
+    [userRepositoryPath]: {
+      async findById() {
+        return null;
+      }
+    },
+    [contractServicePath]: {
+      renderArtistContract() {
+        return {
+          contractText: "CONTRAT TEST",
+          contractVersion: "make-it-art-artist-contract-v1"
+        };
+      },
+      async generateArtistContractPdf() {
+        return {
+          contractVersion: "make-it-art-artist-contract-v1",
+          contractText: "CONTRAT TEST",
+          pdfBuffer: Buffer.from("pdf"),
+          signedAt: new Date("2026-07-04T12:34:00.000Z")
+        };
+      }
+    },
+    [serializeAuthUserPath]: {
+      serializeAuthUser(user) {
+        return user;
+      }
+    }
+  });
+
+  const app = express();
+  app.use(express.json({ limit: "2mb" }));
+  app.use(router);
+  app.get("/artists", (_req, res) => {
+    res.status(200).json({
+      artists: [{ id: 1, displayName: "Ada Art" }]
+    });
+  });
+
+  const server = http.createServer(app);
+
+  await new Promise((resolve) => {
+    server.listen(0, "127.0.0.1", resolve);
+  });
+
+  t.after(async () => {
+    await new Promise((resolve) => {
+      server.close(resolve);
+    });
+    restore();
+  });
+
+  const response = await requestJson(`http://127.0.0.1:${server.address().port}`, "/artists");
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.artists.length, 1);
+});
+
 test("GET /artists/me/contract.pdf returns a valid PDF response for Uint8Array data", async (t) => {
   const pdfBytes = new Uint8Array(Buffer.from("%PDF-1.4\nartist-contract"));
   const { baseUrl } = await startArtistRoutesApp(t, {
@@ -426,7 +500,7 @@ test("GET /artists/me/contract.pdf supports forced download mode", async (t) => 
   assert.deepEqual(response.body, Buffer.from(pdfBytes));
 });
 
-test("GET /artists/me/contract.pdf regenerates legacy contracts with the stored signature timestamp", async (t) => {
+test("GET /artists/me/contract.pdf preserves the exact legacy contract that was signed", async (t) => {
   const { baseUrl, calls } = await startArtistRoutesApp(t, {
     findByUserIdResult: {
       id: 10,
@@ -450,11 +524,6 @@ test("GET /artists/me/contract.pdf regenerates legacy contracts with the stored 
   const response = await requestBinary(baseUrl, "/artists/me/contract.pdf");
 
   assert.equal(response.status, 200);
-  assert.deepEqual(response.body, Buffer.from("pdf"));
-  assert.equal(calls.updateStoredContract.applicationId, 10);
-  assert.equal(calls.updateStoredContract.contractVersion, "make-it-art-artist-contract-v2");
-  assert.equal(
-    calls.updateStoredContract.contractSignedAt.toISOString(),
-    "2026-07-04T12:34:00.000Z"
-  );
+  assert.deepEqual(response.body, Buffer.from("legacy-pdf"));
+  assert.equal(calls.updateStoredContract, undefined);
 });

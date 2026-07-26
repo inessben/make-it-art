@@ -3,16 +3,18 @@ const jwt = require("jsonwebtoken");
 const env = require("../config/env");
 const { redis } = require("../lib/redis");
 const userRepository = require("../repositories/user.repository");
+const { isUserAllowedToAuthenticate } = require("../utils/user-account-status");
 
 const ACCESS_TOKEN_MAX_AGE_MS = 1000 * 60 * 15;
 const REFRESH_TOKEN_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7;
 const REFRESH_TOKEN_TTL_SECONDS = Math.floor(REFRESH_TOKEN_MAX_AGE_MS / 1000);
 
-function createAccessToken(user) {
+function createAccessToken(user, authenticatedAt) {
   return jwt.sign(
     {
       sub: String(user.id),
-      email: user.email
+      email: user.email,
+      auth_time: Math.floor(authenticatedAt.getTime() / 1000)
     },
     env.jwtSecret,
     {
@@ -33,17 +35,21 @@ function getRefreshTokenKey(token) {
   return `refresh_token:${hashToken(token)}`;
 }
 
-async function storeRefreshToken(userId, refreshToken) {
-  await redis.set(getRefreshTokenKey(refreshToken), String(userId), {
-    EX: REFRESH_TOKEN_TTL_SECONDS
-  });
+async function storeRefreshToken(userId, refreshToken, authenticatedAt) {
+  await redis.set(
+    getRefreshTokenKey(refreshToken),
+    JSON.stringify({ userId, authTime: authenticatedAt.toISOString() }),
+    {
+      EX: REFRESH_TOKEN_TTL_SECONDS
+    }
+  );
 }
 
-async function createSession(user) {
-  const accessToken = createAccessToken(user);
+async function createSession(user, { authenticatedAt = new Date() } = {}) {
+  const accessToken = createAccessToken(user, authenticatedAt);
   const refreshToken = createRefreshToken();
 
-  await storeRefreshToken(user.id, refreshToken);
+  await storeRefreshToken(user.id, refreshToken, authenticatedAt);
 
   return {
     accessToken,
@@ -53,21 +59,28 @@ async function createSession(user) {
 
 async function rotateRefreshToken(refreshToken) {
   const refreshTokenKey = getRefreshTokenKey(refreshToken);
-  const userId = await redis.get(refreshTokenKey);
+  const storedSession = await redis.get(refreshTokenKey);
 
-  if (!userId) {
+  if (!storedSession) {
     return null;
   }
 
   await redis.del(refreshTokenKey);
 
-  const user = await userRepository.findById(Number(userId));
+  let session;
+  try {
+    session = JSON.parse(storedSession);
+  } catch (_error) {
+    session = { userId: Number(storedSession), authTime: null };
+  }
+  const user = await userRepository.findById(Number(session.userId));
 
-  if (!user || !user.verified || !user.isActive) {
+  if (!isUserAllowedToAuthenticate(user)) {
     return null;
   }
 
-  return createSession(user);
+  const authenticatedAt = session.authTime ? new Date(session.authTime) : new Date(0);
+  return createSession(user, { authenticatedAt });
 }
 
 async function revokeRefreshToken(refreshToken) {
@@ -127,10 +140,14 @@ async function getUserFromRequest(req) {
     const payload = jwt.verify(token, env.jwtSecret);
     const user = await userRepository.findById(Number(payload.sub));
 
-    if (!user || !user.verified || !user.isActive) {
+    if (!isUserAllowedToAuthenticate(user)) {
       return null;
     }
 
+    Object.defineProperty(user, "sessionAuthenticatedAt", {
+      value: new Date(payload.auth_time * 1000),
+      enumerable: false
+    });
     return user;
   } catch (_error) {
     return null;

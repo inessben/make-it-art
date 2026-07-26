@@ -190,6 +190,156 @@ async function listUsersForAdmin() {
   });
 }
 
+async function findUserDetailForAdmin(userId) {
+  return prisma.$transaction(async (transaction) => {
+    const user = await transaction.user.findUnique({
+      where: { id: userId },
+      include: {
+        admin: true,
+        artist: {
+          include: {
+            artworks: {
+              take: 8,
+              orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+              include: {
+                category: true,
+                _count: {
+                  select: {
+                    favorites: true,
+                    orderItems: true
+                  }
+                }
+              }
+            },
+            collections: {
+              take: 8,
+              orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+              include: {
+                _count: {
+                  select: {
+                    items: true
+                  }
+                }
+              }
+            },
+            _count: {
+              select: {
+                artworks: true,
+                followers: true,
+                collections: true
+              }
+            }
+          }
+        },
+        artistApplicationDraft: {
+          include: {
+            reviewedByAdmin: {
+              include: {
+                admin: true
+              }
+            }
+          }
+        },
+        orders: {
+          take: 8,
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          include: {
+            items: true,
+            payments: {
+              orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+              include: {
+                refunds: {
+                  orderBy: [{ createdAt: "desc" }, { id: "desc" }]
+                }
+              }
+            }
+          }
+        },
+        personalCollections: {
+          take: 8,
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          include: {
+            _count: {
+              select: {
+                items: true
+              }
+            }
+          }
+        },
+        favorites: {
+          take: 8,
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          include: {
+            artwork: {
+              include: {
+                artist: {
+                  include: {
+                    user: true
+                  }
+                },
+                category: true
+              }
+            }
+          }
+        },
+        follows: {
+          take: 8,
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          include: {
+            artist: {
+              include: {
+                user: true,
+                _count: {
+                  select: {
+                    artworks: true,
+                    followers: true,
+                    collections: true
+                  }
+                }
+              }
+            }
+          }
+        },
+        auditLogs: {
+          take: 20,
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }]
+        },
+        _count: {
+          select: {
+            orders: true,
+            personalCollections: true,
+            favorites: true,
+            follows: true,
+            auditLogs: true,
+            refundsRequested: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    const accountAuditLogs = await transaction.auditLog.findMany({
+      where: {
+        entityType: "USER",
+        entityId: String(userId)
+      },
+      take: 20,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      include: {
+        user: true
+      }
+    });
+
+    return {
+      ...user,
+      accountAuditLogs
+    };
+  });
+}
+
 module.exports = {
   findByEmail,
   findByOAuthProvider,
@@ -203,5 +353,6 @@ module.exports = {
   activateUser,
   updateUser,
   linkOAuthProvider,
-  listUsersForAdmin
+  listUsersForAdmin,
+  findUserDetailForAdmin
 };

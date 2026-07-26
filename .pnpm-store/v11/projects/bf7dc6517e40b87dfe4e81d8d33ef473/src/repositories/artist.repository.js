@@ -1,4 +1,5 @@
 const prisma = require("../lib/prisma");
+const { syncArtistCollectionsOwnership } = require("./collector.repository");
 
 function includeArtistProfile() {
   return {
@@ -19,6 +20,8 @@ function includeArtistProfile() {
 }
 
 async function findByUserId(userId) {
+  await syncArtistCollectionsOwnership(userId);
+
   return prisma.artist.findUnique({
     where: { userId },
     include: includeArtistProfile()

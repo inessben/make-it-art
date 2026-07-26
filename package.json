@@ -25,16 +25,22 @@
     "format:check": "npm --prefix backend run format:check && npm --prefix frontend run format:check",
     "quality": "npm run lint && npm run format:check",
     "quality:fix": "npm run lint:fix && npm run format",
-    "ci": "npm run quality",
-    "precommit": "npm run quality",
+    "ci": "npm run quality && npm run test",
+    "security:audit": "npm --prefix backend run security:audit && npm --prefix frontend run security:audit",
+    "payments:validate-sandbox": "npm --prefix backend run payments:validate-sandbox",
+    "payments:validate-go-live": "npm --prefix backend run payments:validate-go-live",
+    "payments:scan-secrets": "npm --prefix backend run payments:scan-secrets",
+    "payments:reconcile": "npm --prefix backend run payments:reconcile --",
+    "payments:test-alert": "npm --prefix backend run payments:test-alert --",
+    "precommit": "npm run payments:scan-secrets && npm run quality",
     "prepush": "npm run ci"
   },
   "devDependencies": {
     "husky": "^8.0.3",
-    "prisma": "^7.8.0"
+    "prisma": "^7.9.0"
   },
   "dependencies": {
-    "@prisma/client": "^7.7.0",
+    "@prisma/client": "^7.9.0",
     "dotenv": "^17.4.2",
     "tailwind": "^4.0.0"
   }

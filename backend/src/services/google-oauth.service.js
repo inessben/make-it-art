@@ -4,6 +4,10 @@ const jwt = require("jsonwebtoken");
 const env = require("../config/env");
 const userRepository = require("../repositories/user.repository");
 const { createSession } = require("./session.service");
+const {
+  assertUserCanAuthenticate,
+  isUserAllowedToAuthenticate
+} = require("../utils/user-account-status");
 
 const GOOGLE_PROVIDER = "google";
 const GOOGLE_AUTH_SCOPE = "openid email profile";
@@ -198,7 +202,7 @@ async function authenticateGoogleProfile(profile) {
   const linkedUser = await userRepository.findByOAuthProvider(GOOGLE_PROVIDER, profile.subject);
 
   if (linkedUser) {
-    if (!linkedUser.verified || !linkedUser.isActive) {
+    if (!isUserAllowedToAuthenticate(linkedUser)) {
       throw new GoogleOAuthError("Google account cannot be used", "GOOGLE_ACCOUNT_DISABLED");
     }
 
@@ -208,6 +212,10 @@ async function authenticateGoogleProfile(profile) {
   const existingUser = await userRepository.findByEmail(profile.email);
 
   if (existingUser) {
+    if (!isUserAllowedToAuthenticate(existingUser)) {
+      throw new GoogleOAuthError("Google account cannot be used", "GOOGLE_ACCOUNT_DISABLED");
+    }
+
     if (existingUser.oauthProvider || existingUser.oauthSubject) {
       throw new GoogleOAuthError(
         "Email is already linked to another OAuth account",
@@ -262,6 +270,12 @@ async function linkGoogleAccountWithPassword({ linkToken, password }) {
 
   if (!user || normalizeEmail(user.email) !== payload.email) {
     throw new GoogleOAuthError("Google link session is invalid or expired", "GOOGLE_LINK_INVALID");
+  }
+
+  try {
+    assertUserCanAuthenticate(user);
+  } catch (_error) {
+    throw new GoogleOAuthError("Google account cannot be used", "GOOGLE_ACCOUNT_DISABLED");
   }
 
   if (user.oauthProvider === GOOGLE_PROVIDER && user.oauthSubject === payload.subject) {

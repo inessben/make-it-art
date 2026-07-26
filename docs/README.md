@@ -7,6 +7,7 @@ Ce dossier centralise tout ce qui a ete mis en place sur le projet.
 - `docs/TEAM_LOG.md`: journal des changements (obligatoire apres chaque session)
 - `docs/TEAM_LOG_TEMPLATE.md`: template d'entree a copier
 - `docs/DECISIONS.md`: decisions techniques et conventions
+- `docs/USER_STORIES_PAIEMENT_STRIPE.md`: epic, US et criteres d'acceptation du paiement Stripe
 
 ## Regle simple
 

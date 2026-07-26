@@ -47,6 +47,49 @@ services:
     networks:
       - app_net
 
+  umami-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${UMAMI_DB_NAME:-umami}
+      POSTGRES_USER: ${UMAMI_DB_USER:-umami}
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD:-umami_dev_password}
+    volumes:
+      - umami_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${UMAMI_DB_USER:-umami} -d ${UMAMI_DB_NAME:-umami}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app_net
+
+  # Self-hosted analytics collector. Deliberately has no `ports:` mapping: it is
+  # reached only through nginx's narrow /stats/ proxy and by the backend over app_net.
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${UMAMI_DB_USER:-umami}:${UMAMI_DB_PASSWORD:-umami_dev_password}@umami-db:5432/${UMAMI_DB_NAME:-umami}
+      APP_SECRET: ${UMAMI_APP_SECRET:-dev_umami_secret_change_me}
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:3000/api/heartbeat',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    networks:
+      - app_net
+
   backend:
     build:
       context: ../backend
@@ -63,7 +106,41 @@ services:
       CORS_ORIGIN: http://localhost
       APP_BASE_URL: http://localhost
       JWT_SECRET: ${JWT_SECRET:-dev_secret_change_me}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PAYMENT_METHOD_CONFIGURATION_ID: ${STRIPE_PAYMENT_METHOD_CONFIGURATION_ID:-}
+      PAYMENT_MARKET_COUNTRY: ${PAYMENT_MARKET_COUNTRY:-FR}
+      PAYMENT_CUSTOMER_SCOPE: ${PAYMENT_CUSTOMER_SCOPE:-B2C}
+      STRIPE_TAX_ENABLED: ${STRIPE_TAX_ENABLED:-false}
+      FRANCE_B2C_VAT_RATE_BPS: ${FRANCE_B2C_VAT_RATE_BPS:-2000}
+      PLATFORM_COMMISSION_RATE_BPS: ${PLATFORM_COMMISSION_RATE_BPS:-700}
+      COMMISSION_INVOICING_ENABLED: ${COMMISSION_INVOICING_ENABLED:-false}
+      COMMISSION_VAT_RATE_BPS: ${COMMISSION_VAT_RATE_BPS:-0}
+      INVOICE_ISSUER_LEGAL_NAME: ${INVOICE_ISSUER_LEGAL_NAME:-Make It Art Sandbox}
+      INVOICE_ISSUER_ADDRESS_LINE1: ${INVOICE_ISSUER_ADDRESS_LINE1:-Adresse de test}
+      INVOICE_ISSUER_ADDRESS_LINE2: ${INVOICE_ISSUER_ADDRESS_LINE2:-}
+      INVOICE_ISSUER_POSTAL_CODE: ${INVOICE_ISSUER_POSTAL_CODE:-75000}
+      INVOICE_ISSUER_CITY: ${INVOICE_ISSUER_CITY:-Paris}
+      INVOICE_ISSUER_COUNTRY: ${INVOICE_ISSUER_COUNTRY:-FR}
+      INVOICE_ISSUER_REGISTRATION_ID: ${INVOICE_ISSUER_REGISTRATION_ID:-SANDBOX}
+      INVOICE_ISSUER_VAT_ID: ${INVOICE_ISSUER_VAT_ID:-FR-SANDBOX}
+      INVOICE_ISSUER_EMAIL: ${INVOICE_ISSUER_EMAIL:-billing@make-it-art.local}
+      CHECKOUT_EXPIRATION_SWEEP_MS: ${CHECKOUT_EXPIRATION_SWEEP_MS:-60000}
+      PAYMENT_RECONCILIATION_SWEEP_MS: ${PAYMENT_RECONCILIATION_SWEEP_MS:-300000}
+      FULFILLMENT_SWEEP_MS: ${FULFILLMENT_SWEEP_MS:-5000}
+      FULFILLMENT_BATCH_SIZE: ${FULFILLMENT_BATCH_SIZE:-20}
+      FULFILLMENT_LEASE_MS: ${FULFILLMENT_LEASE_MS:-300000}
+      FULFILLMENT_MAX_ATTEMPTS: ${FULFILLMENT_MAX_ATTEMPTS:-5}
+      FULFILLMENT_RETRY_BASE_MS: ${FULFILLMENT_RETRY_BASE_MS:-5000}
+      PAYMENT_ANOMALY_SWEEP_MS: ${PAYMENT_ANOMALY_SWEEP_MS:-300000}
+      PAYMENT_ANOMALY_STALE_MS: ${PAYMENT_ANOMALY_STALE_MS:-300000}
+      PAYMENT_ALERT_COOLDOWN_SECONDS: ${PAYMENT_ALERT_COOLDOWN_SECONDS:-3600}
+      DISPUTE_RIGHTS_POLICY: ${DISPUTE_RIGHTS_POLICY:-SUSPEND_ON_OPEN}
+      DISPUTE_RIGHTS_POLICY_CONFIRMED: ${DISPUTE_RIGHTS_POLICY_CONFIRMED:-true}
+      PAYMENT_ALERT_EMAIL: ${PAYMENT_ALERT_EMAIL:-}
+      CHECKOUT_ENABLED: ${CHECKOUT_ENABLED:-true}
       SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-mia_session}
+      CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-mia_csrf}
       LOGIN_CODE_COOKIE_NAME: ${LOGIN_CODE_COOKIE_NAME:-mia_login_challenge}
       REMEMBER_DEVICE_COOKIE_NAME: ${REMEMBER_DEVICE_COOKIE_NAME:-mia_remember_device}
       DATABASE_URL: postgresql://${POSTGRES_USER:-mia}:${POSTGRES_PASSWORD:-mia_dev_password}@db:5432/${POSTGRES_DB:-makeitart}
@@ -72,6 +149,10 @@ services:
       SMTP_PORT: 1025
       SMTP_SECURE: "false"
       SMTP_FROM: Make It Art <no-reply@make-it-art.local>
+      UMAMI_INTERNAL_URL: http://umami:3000
+      UMAMI_API_USERNAME: ${UMAMI_API_USERNAME:-admin}
+      UMAMI_API_PASSWORD: ${UMAMI_API_PASSWORD:-umami}
+      UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
     ports:
       - "4000:4000"
     depends_on:
@@ -80,6 +161,8 @@ services:
       redis:
         condition: service_healthy
       mailpit:
+        condition: service_started
+      umami:
         condition: service_started
     healthcheck:
       test:
@@ -112,6 +195,8 @@ services:
       NUXT_PORT: 3000
       NUXT_PUBLIC_API_BASE: /api
       NUXT_API_PROXY_TARGET: http://backend:4000/api/**
+      NUXT_PUBLIC_APP_BASE_URL: ${NUXT_PUBLIC_APP_BASE_URL:-http://localhost}
+      NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
     ports:
       - "3000:3000"
     depends_on:
@@ -144,12 +229,15 @@ services:
         condition: service_healthy
       frontend:
         condition: service_healthy
+      umami:
+        condition: service_started
     networks:
       - app_net
 
 volumes:
   db_data:
   redis_data:
+  umami_db_data:
 
 networks:
   app_net:

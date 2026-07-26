@@ -6,6 +6,10 @@ const loginCodeRepository = require("../repositories/login-verification-code.rep
 const rememberedDeviceRepository = require("../repositories/remembered-device.repository");
 const { sendLoginCodeEmail } = require("./mail.service");
 const { createSession } = require("./session.service");
+const {
+  assertUserCanAuthenticate,
+  isUserAllowedToAuthenticate
+} = require("../utils/user-account-status");
 
 const LOGIN_CODE_EXPIRES_MS = 1000 * 60 * 10;
 const REMEMBER_DEVICE_EXPIRES_MS = 1000 * 60 * 60 * 24 * 30;
@@ -80,9 +84,7 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
     throw new Error("Invalid credentials");
   }
 
-  if (!user.verified || !user.isActive) {
-    throw new Error("Email not verified");
-  }
+  assertUserCanAuthenticate(user);
 
   if (!user.passwordHash) {
     throw new Error("Invalid credentials");
@@ -110,8 +112,7 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
     if (
       rememberedDevice &&
       rememberedDevice.userId === user.id &&
-      rememberedDevice.user.verified &&
-      rememberedDevice.user.isActive
+      isUserAllowedToAuthenticate(rememberedDevice.user)
     ) {
       await rememberedDeviceRepository.updateDeviceExpiry({
         deviceId: rememberedDevice.id,
@@ -164,21 +165,29 @@ async function verifyLoginCode({ challengeToken, code, rememberDevice, _userAgen
 
   await loginCodeRepository.markCodeAsUsed(loginCode.id);
 
-  const session = await createSession(loginCode.user);
+  const currentUser = await userRepository.findById(loginCode.user.id);
+
+  if (!currentUser) {
+    throw new Error("Invalid or expired login code");
+  }
+
+  assertUserCanAuthenticate(currentUser);
+
+  const session = await createSession(currentUser);
   let rememberDeviceToken = null;
 
   if (rememberDevice) {
     rememberDeviceToken = createRememberDeviceToken();
 
     await rememberedDeviceRepository.createDevice({
-      userId: loginCode.user.id,
+      userId: currentUser.id,
       tokenHash: hashValue(rememberDeviceToken),
       expiresAt: new Date(Date.now() + REMEMBER_DEVICE_EXPIRES_MS)
     });
   }
 
   return {
-    user: loginCode.user,
+    user: currentUser,
     accessToken: session.accessToken,
     refreshToken: session.refreshToken,
     rememberDeviceToken

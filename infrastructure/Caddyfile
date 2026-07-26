@@ -12,11 +12,26 @@ www.makeitart.io {
   header {
     X-Content-Type-Options nosniff
     X-Frame-Options SAMEORIGIN
-    Referrer-Policy strict-origin-when-cross-origin
+    Referrer-Policy no-referrer
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' https://js.stripe.com https://*.js.stripe.com; connect-src 'self' https://api.stripe.com https://maps.googleapis.com; frame-src https://js.stripe.com https://*.js.stripe.com https://hooks.stripe.com; img-src 'self' data: https://*.stripe.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:"
   }
 
   handle /api/* {
     reverse_proxy backend:4000
+  }
+
+  # First-party tracker: only the script and the event-collection endpoint are
+  # exposed. Umami's dashboard/API stay internal-only (backend talks to Umami
+  # directly over app_net for the admin Analytics tab).
+  handle /stats/script.js {
+    rewrite * /script.js
+    reverse_proxy umami:3000
+  }
+
+  handle /stats/api/send {
+    rewrite * /api/send
+    reverse_proxy umami:3000
   }
 
   handle {
