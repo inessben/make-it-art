@@ -48,14 +48,17 @@ export const useCartStore = defineStore("cart", {
       );
     },
 
-    async setItem(artworkId, quantity) {
-      return this.runCartRequest(async () => {
-        const headers = await this.csrfHeaders();
-        return $fetch("/api/v1/cart/items", {
-          method: "POST",
-          credentials: "include",
-          headers,
-          body: { artworkId, quantity }
+async setItem(artworkId, quantity) {
+  return this.runCartRequest(async () => {
+    const headers = await this.csrfHeaders();
+    return $fetch("/api/v1/cart/items", {
+      method: "POST",
+      credentials: "include",
+      headers,
+      body: { artworkId, quantity }
+    });
+  }, "Impossible de mettre à jour cet article.");
+}
         });
       }, "Impossible de mettre à jour cet article.");
     },
@@ -101,9 +104,11 @@ export const useCartStore = defineStore("cart", {
           });
         }, "Votre panier doit être vérifié avant le paiement.");
         this.validationMessage = "Prix et disponibilité confirmés.";
+        this.persist();
         return true;
       } catch {
         return false;
+      }
       }
     }
   }

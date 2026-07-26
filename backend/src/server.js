@@ -4,14 +4,33 @@ require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
 const app = require("./app");
 const env = require("./config/env");
 const { connectRedis } = require("./lib/redis");
-const { ensureDefaultAdminAccount } = require("./services/default-admin.service");
-const { ensurePredefinedCategories } = require("./repositories/category.repository");
-const { startCheckoutExpirationScheduler } = require("./jobs/checkout-expiration.scheduler");
-const { startPaymentReconciliationScheduler } = require("./jobs/payment-reconciliation.scheduler");
-const { startFulfillmentScheduler } = require("./jobs/fulfillment.scheduler");
-const { startPaymentAnomalyScheduler } = require("./jobs/payment-anomaly.scheduler");
-const { validateProductionConfig } = require("./config/validate-production");
-const { validatePaymentGoLive } = require("./config/validate-payment-go-live");
+const { 
+  ensureDefaultAdminAccount 
+} = require("./services/default-admin.service");
+const { 
+  ensurePredefinedCategories 
+} = require("./repositories/category.repository");
+const { 
+  ensureArtworkUploadDirectory 
+} = require("./services/artwork-media.service");
+const { 
+  startCheckoutExpirationScheduler 
+} = require("./jobs/checkout-expiration.scheduler");
+const { 
+  startPaymentReconciliationScheduler 
+} = require("./jobs/payment-reconciliation.scheduler");
+const { 
+  startFulfillmentScheduler 
+} = require("./jobs/fulfillment.scheduler");
+const { 
+  startPaymentAnomalyScheduler 
+} = require("./jobs/payment-anomaly.scheduler");
+const { 
+  validateProductionConfig 
+} = require("./config/validate-production");
+const { 
+  validatePaymentGoLive 
+} = require("./config/validate-payment-go-live");
 
 async function startServer() {
   validateProductionConfig(env);
@@ -21,6 +40,7 @@ async function startServer() {
   await connectRedis();
   await ensureDefaultAdminAccount();
   await ensurePredefinedCategories();
+  await ensureArtworkUploadDirectory();
 
   if (env.stripe.secretKey) {
     startCheckoutExpirationScheduler();

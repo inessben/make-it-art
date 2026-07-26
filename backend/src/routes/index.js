@@ -1,7 +1,9 @@
 const express = require("express");
+const path = require("path");
 const healthRoutes = require("./health.routes");
 const authRoutes = require("./auth.routes");
 const ordersRoutes = require("./orders.routes");
+const notificationsRoutes = require("./notifications.routes");
 const adminRoutes = require("./admin.routes");
 const adminAnalyticsRoutes = require("./admin-analytics.routes");
 const artistRoutes = require("./artist.routes");
@@ -14,11 +16,20 @@ const paymentOperationsRoutes = require("./payment-operations.routes");
 
 const router = express.Router();
 
+router.use(
+  "/uploads",
+  express.static(path.resolve(__dirname, "../../uploads"), {
+    fallthrough: false,
+    maxAge: "7d",
+  }),
+);
+
 router.use(healthRoutes);
 router.use(authRoutes);
 router.use(artistRoutes);
 router.use(marketplaceRoutes);
 router.use(ordersRoutes);
+router.use(notificationsRoutes);
 router.use(adminRoutes);
 router.use(adminAnalyticsRoutes);
 router.use("/v1", cartRoutes);

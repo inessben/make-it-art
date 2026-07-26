@@ -119,6 +119,7 @@ model User {
   ownershipTokens            OwnershipToken[]
   passwordResetTokens        PasswordResetToken[]     @relation("passwordResetTokens")
   personalCollections        Collection[]             @relation("user_collections")
+  notifications              Notification[]
   refreshTokens              RefreshToken[]
   rememberedDevices          RememberedDevice[]       @relation("rememberedDevices")
   galleries                  UserGallery[]
@@ -186,8 +187,6 @@ model Artwork {
   title                 String?
   description           String?
   categoryId            Int?                   @map("category_id")
-  // Temporary read compatibility for develop. Stripe checkout never reads
-  // these free-form legacy values; priceAmount is the only payable amount.
   priceTokens           String?                @map("price_tokens")
   price                 String?
   priceAmount           Int?                   @map("price_amount")
@@ -196,6 +195,8 @@ model Artwork {
   createdAt             DateTime?              @map("created_at")
   protection            Boolean?
   protectionId          Int?                   @map("protection_id")
+  imagePath             String?                @map("image_path")
+  isSold                Boolean                @default(false) @map("is_sold")
   artist                Artist                 @relation(fields: [artistId], references: [id])
   category              Category?              @relation(fields: [categoryId], references: [id])
   collections           CollectionItem[]
@@ -774,4 +775,19 @@ model RememberedDevice {
   user      User      @relation("rememberedDevices", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("remembered_device")
+}
+
+model Notification {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  type      String?
+  title     String?
+  message   String?
+  payload   Json?
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime? @default(now()) @map("created_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("notification")
 }

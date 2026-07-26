@@ -9,12 +9,22 @@ const authRequiredPath = require.resolve("../src/middlewares/auth-required.middl
 const artistRequiredPath = require.resolve("../src/middlewares/artist-required.middleware");
 const applicationRepositoryPath =
   require.resolve("../src/repositories/artist-application-draft.repository");
-const artistRepositoryPath = require.resolve("../src/repositories/artist.repository");
-const artworkRepositoryPath = require.resolve("../src/repositories/artwork.repository");
-const categoryRepositoryPath = require.resolve("../src/repositories/category.repository");
-const userRepositoryPath = require.resolve("../src/repositories/user.repository");
-const contractServicePath = require.resolve("../src/services/artist-contract.service");
-const serializeAuthUserPath = require.resolve("../src/utils/serialize-auth-user");
+const artistRepositoryPath =
+  require.resolve("../src/repositories/artist.repository");
+const artworkRepositoryPath =
+  require.resolve("../src/repositories/artwork.repository");
+const categoryRepositoryPath =
+  require.resolve("../src/repositories/category.repository");
+const userRepositoryPath =
+  require.resolve("../src/repositories/user.repository");
+const contractServicePath =
+  require.resolve("../src/services/artist-contract.service");
+const serializeAuthUserPath =
+  require.resolve("../src/utils/serialize-auth-user");
+const uploadArtworkMiddlewarePath =
+  require.resolve("../src/middlewares/upload-artwork.middleware");
+const artistRequiredMiddlewarePath =
+  require.resolve("../src/middlewares/artist-required.middleware");
 
 const authUser = {
   id: 7,
@@ -55,13 +65,32 @@ function buildAuthMiddleware(user) {
 
 async function startArtistArtworkRoutesApp(t, overrides = {}) {
   const currentAuthUser = overrides.authUser || authUser;
+  const currentArtist =
+    "artistResult" in overrides ? overrides.artistResult : verifiedArtist;
   const calls = {
     createArtwork: [],
     listArtworksByArtistId: []
   };
   const originalArtistRequired = require.cache[artistRequiredPath];
 
-  delete require.cache[artistRequiredPath];
+  const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
+    [authRequiredPath]: buildAuthMiddleware(currentAuthUser),
+    [applicationRepositoryPath]: {
+      async findByUserId() {
+        return overrides.findByUserIdResult || null;
+      },
+    },
+    [artistRepositoryPath]: {
+      async findByUserId() {
+        return hasOverride(overrides, "artistResult") ? overrides.artistResult : verifiedArtist;
+      },
+    },
+    [artworkRepositoryPath]: {
+      async listArtworksByArtistId(artistId) {
+        calls.listArtworksByArtistId.push(artistId);
+      },
+    },
+  });
 
   const { moduleExports: router, restore } = loadModuleWithMocks(
     routesPath,
@@ -96,6 +125,7 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
               priceTokens: payload.price,
               favoriteCount: 0,
               protection: payload.protection,
+              imagePath: payload.imagePath || null,
               moderationStatus: "approved",
               moderationNote: null,
               moderatedAt: null,
@@ -171,10 +201,89 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
         }
       }
     },
-    {
-      invalidate: [artistRequiredPath]
-    }
-  );
+    [categoryRepositoryPath]: {
+      async ensurePredefinedCategories() {
+        return [
+          { id: 9, name: "Illustration" },
+        ];
+      },
+      async listCategories() {
+        return [{ id: 9, name: "Illustration" }];
+      },
+      async findById(categoryId) {
+        return {
+          id: categoryId,
+          name: "Illustration",
+        };
+      },
+      async isPredefinedCategory(categoryId) {
+        return categoryId === 9;
+      },
+    },
+    [userRepositoryPath]: {
+      async findById() {
+        return currentAuthUser;
+      },
+    },
+    [contractServicePath]: {
+      CONTRACT_VERSION: "make-it-art-artist-contract-v2",
+      extractArtistApplicationPayload() {
+        return {};
+      },
+      resolveContractSignedAt() {
+        return new Date("2026-07-04T12:34:00.000Z");
+      },
+      renderArtistContract() {
+        return {
+          contractText: "CONTRAT TEST",
+          contractVersion: "make-it-art-artist-contract-v2",
+        };
+      },
+      async generateArtistContractPdf() {
+        return {
+          contractVersion: "make-it-art-artist-contract-v2",
+          contractText: "CONTRAT TEST",
+          pdfBuffer: Buffer.from("pdf"),
+          signedAt: new Date("2026-07-04T12:34:00.000Z"),
+        };
+      },
+    },
+    [serializeAuthUserPath]: {
+      serializeAuthUser(user) {
+        return {
+          id: user.id,
+          email: user.email,
+        };
+      },
+    },
+    [uploadArtworkMiddlewarePath]: {
+      handleArtworkUpload(req, _res, next) {
+        req.file = {
+          filename: "test-artwork.jpg",
+        };
+        next();
+      },
+    },
+    [artistRequiredMiddlewarePath]: {
+      ensureVerifiedArtist(req, res, next) {
+        if (!currentArtist) {
+          return res.status(403).json({
+            message: "Seuls les artistes peuvent publier des oeuvres.",
+          });
+        }
+
+        if (!currentArtist.verified) {
+          return res.status(403).json({
+            message:
+              "Votre profil artiste doit etre valide avant de publier des oeuvres.",
+          });
+        }
+
+        req.artist = currentArtist;
+        return next();
+      },
+    },
+  });
 
   const app = express();
   app.use(express.json({ limit: "2mb" }));
@@ -243,7 +352,8 @@ test("POST /artists/me/artworks creates an artwork for a verified artist", async
     description: "A luminous digital landscape.",
     categoryId: 9,
     price: "120 tokens",
-    protection: true
+    protection: true,
+    imagePath: "artworks/test-artwork.jpg",
   });
 });
 
