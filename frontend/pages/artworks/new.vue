@@ -9,8 +9,9 @@
           Publier une oeuvre
         </h1>
         <p class="mt-4 max-w-2xl text-sm leading-7 text-[#96A4B8]">
-          Renseigne les informations de ton oeuvre pour la rendre visible dans le catalogue public.
-          Seuls les artistes verifies peuvent publier.
+          Dépose le visuel HD de ton œuvre. Le serveur génère automatiquement un aperçu public
+          filigrané pour le catalogue. Le fichier HD reste séparé et n'est téléchargeable que par
+          toi et tes acheteurs. JPG, PNG, WEBP ou GIF · 25 Mo max.
         </p>
       </header>
 
@@ -18,6 +19,67 @@
         class="grid gap-6 rounded-[28px] border border-[#151E30] bg-[#070B14] p-8"
         @submit.prevent="submitArtwork"
       >
+        <div class="grid gap-4">
+          <span class="text-sm font-medium text-[#E6EDF7]">Visuel de l'oeuvre *</span>
+          <label
+            class="grid cursor-pointer gap-4 rounded-[24px] border border-dashed border-[#24314F] bg-[#03060D] p-6 transition hover:border-[#4A6CF7]"
+          >
+            <input
+              ref="fileInput"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              class="sr-only"
+              @change="handleFileChange"
+            />
+
+            <div
+              v-if="previewUrl"
+              class="overflow-hidden rounded-[20px] border border-[#1A2336] bg-[#050912]"
+            >
+              <img
+                :src="previewUrl"
+                alt="Aperçu de l'oeuvre"
+                class="max-h-[420px] w-full object-contain"
+              />
+              <p class="border-t border-[#1A2336] px-4 py-3 text-sm text-[#96A4B8]">
+                Aperçu · {{ selectedFile?.name || "image sélectionnée" }}
+              </p>
+            </div>
+
+            <div
+              v-else
+              class="grid min-h-[220px] place-items-center rounded-[20px] border border-[#1A2336] bg-[#050912] px-6 text-center"
+            >
+              <div>
+                <p class="text-sm font-semibold text-white">
+                  Glisse une image ou clique pour parcourir
+                </p>
+                <p class="mt-2 text-sm text-[#96A4B8]">
+                  JPG, PNG, WEBP ou GIF · 25 Mo max · HD conservé
+                </p>
+              </div>
+            </div>
+          </label>
+
+          <div class="flex flex-wrap gap-3">
+            <button
+              type="button"
+              class="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#4A6CF7] px-5 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
+              @click="openFilePicker"
+            >
+              Choisir une image
+            </button>
+            <button
+              v-if="selectedFile"
+              type="button"
+              class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#24314F] bg-[#0C111D] px-5 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#141C2E]"
+              @click="clearSelectedFile"
+            >
+              Retirer
+            </button>
+          </div>
+        </div>
+
         <label class="grid gap-2 text-sm text-[#9EABBE]">
           <span class="font-medium text-[#E6EDF7]">Titre *</span>
           <input
@@ -106,7 +168,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from "vue";
+import { onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { navigateTo } from "#app";
 
 definePageMeta({
@@ -118,6 +180,9 @@ const categoriesLoading = ref(true);
 const submitting = ref(false);
 const formMessage = ref("");
 const formError = ref(false);
+const fileInput = ref(null);
+const selectedFile = ref(null);
+const previewUrl = ref("");
 
 const form = reactive({
   title: "",
@@ -126,6 +191,40 @@ const form = reactive({
   price: "",
   protection: false
 });
+
+function openFilePicker() {
+  fileInput.value?.click();
+}
+
+function revokePreviewUrl() {
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value);
+    previewUrl.value = "";
+  }
+}
+
+function clearSelectedFile() {
+  revokePreviewUrl();
+  selectedFile.value = null;
+
+  if (fileInput.value) {
+    fileInput.value.value = "";
+  }
+}
+
+function handleFileChange(event) {
+  const file = event.target.files?.[0];
+
+  if (!file) {
+    clearSelectedFile();
+    return;
+  }
+
+  // Ne pas vider l'input ici: ça peut relancer un change vide et effacer l'aperçu.
+  revokePreviewUrl();
+  selectedFile.value = file;
+  previewUrl.value = URL.createObjectURL(file);
+}
 
 onMounted(async () => {
   try {
@@ -143,22 +242,38 @@ onMounted(async () => {
   }
 });
 
+onBeforeUnmount(() => {
+  revokePreviewUrl();
+});
+
 async function submitArtwork() {
   formMessage.value = "";
   formError.value = false;
+
+  if (!selectedFile.value) {
+    formError.value = true;
+    formMessage.value = "Ajoute une image pour publier ton oeuvre.";
+    return;
+  }
+
   submitting.value = true;
 
   try {
+    const formData = new FormData();
+    formData.append("image", selectedFile.value);
+    formData.append("title", form.title);
+    formData.append("categoryId", form.categoryId);
+    formData.append("price", form.price);
+    formData.append("protection", String(form.protection));
+
+    if (form.description) {
+      formData.append("description", form.description);
+    }
+
     const response = await $fetch("/api/artists/me/artworks", {
       method: "POST",
       credentials: "include",
-      body: {
-        title: form.title,
-        description: form.description || undefined,
-        categoryId: form.categoryId,
-        price: form.price,
-        protection: form.protection
-      }
+      body: formData
     });
 
     formMessage.value = response.message || "Oeuvre publiee avec succes.";
@@ -174,3 +289,17 @@ async function submitArtwork() {
   }
 }
 </script>
+
+<style scoped>
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+</style>

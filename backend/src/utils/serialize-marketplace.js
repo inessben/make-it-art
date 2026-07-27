@@ -1,4 +1,5 @@
 const { extractArtistApplicationPayload } = require("../services/artist-contract.service");
+const { buildArtworkImageUrl } = require("../services/artwork-media.service");
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -56,6 +57,14 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
   }
 
   const hasFiatPrice = Number.isSafeInteger(artwork.priceAmount) && artwork.priceAmount > 0;
+  const stockQuantity = Number.isSafeInteger(artwork.stockQuantity) ? artwork.stockQuantity : 0;
+  const reservedQuantity = Number.isSafeInteger(artwork.reservedQuantity)
+    ? artwork.reservedQuantity
+    : 0;
+  const availableQuantity = Math.max(0, stockQuantity - reservedQuantity);
+  const saleStatus = normalizeText(artwork.saleStatus) || "DRAFT";
+  const isAvailableForPurchase =
+    saleStatus === "AVAILABLE" && !artwork.isSold && hasFiatPrice && availableQuantity > 0;
   const priceValue = hasFiatPrice
     ? artwork.priceAmount / 100
     : parsePriceValue(artwork.price || artwork.priceTokens);
@@ -73,7 +82,24 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     currency: hasFiatPrice ? artwork.currency || "EUR" : null,
     protection: Boolean(artwork.protection),
     createdAt: artwork.createdAt || null,
+    imageUrl:
+      buildArtworkImageUrl(artwork.previewPath || artwork.imagePath) ||
+      (artwork.id ? `/api/artworks/${artwork.id}/media/preview` : null),
+    previewUrl:
+      buildArtworkImageUrl(artwork.previewPath || artwork.imagePath) ||
+      (artwork.id ? `/api/artworks/${artwork.id}/media/preview` : null),
+    hasHdFile: Boolean(artwork.hdPath),
+    hdDownloadUrl: artwork.hdPath ? `/api/artworks/${artwork.id}/media/hd` : null,
+    storageProvider: normalizeText(artwork.storageProvider) || "local",
+    mediaStatus: normalizeText(artwork.mediaStatus) || "ready",
+    watermarkApplied: Boolean(artwork.watermarkApplied),
     favoriteCount: artwork.favoriteCount ?? artwork._count?.favorites ?? 0,
+    isSold: Boolean(artwork.isSold),
+    saleStatus,
+    stockQuantity,
+    reservedQuantity,
+    availableQuantity,
+    isAvailableForPurchase,
     isFavorite: Array.isArray(artwork.favorites) ? artwork.favorites.length > 0 : false,
     moderationStatus: normalizeText(artwork.moderationStatus) || "pending",
     moderationNote: normalizeText(artwork.moderationNote),

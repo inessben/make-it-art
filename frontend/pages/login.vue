@@ -82,6 +82,12 @@
       <button type="button" class="text-button" @click="resetLoginStep">Back to login</button>
     </template>
   </AuthPanel>
+
+  <CompromisedPasswordDialog
+    :open="passwordWarningOpen"
+    @change-password="changeCompromisedPassword"
+    @continue="continueAfterPasswordWarning"
+  />
 </template>
 
 <script setup>
@@ -110,6 +116,9 @@ const resending = ref(false);
 const canResendVerification = ref(false);
 const requiresCode = ref(false);
 const requiresGooglePasswordLink = ref(false);
+const passwordWarningOpen = ref(false);
+const passwordWarningHasSession = ref(false);
+const passwordWarningRedirectTo = ref("");
 const route = useRoute();
 
 onMounted(() => {
@@ -202,11 +211,26 @@ async function handleLogin() {
     if (response.requiresCode) {
       requiresCode.value = true;
       message.value = response.message || "Login code sent. Please check your email.";
+      password.value = "";
+
+      if (response.passwordCompromised) {
+        showCompromisedPasswordWarning();
+      }
+
       return;
     }
 
     auth.user = response.user;
     redirectTo = response.redirectTo || auth.defaultAuthenticatedRoute;
+    password.value = "";
+
+    if (response.passwordCompromised) {
+      showCompromisedPasswordWarning({
+        hasSession: true,
+        redirectTo
+      });
+      return;
+    }
   } catch (error) {
     message.value = error?.data?.message || "Login failed";
     canResendVerification.value = error?.data?.code === "EMAIL_NOT_VERIFIED";
@@ -217,6 +241,34 @@ async function handleLogin() {
   if (redirectTo) {
     await navigateTo(redirectTo, { replace: true });
   }
+}
+
+function showCompromisedPasswordWarning({ hasSession = false, redirectTo = "" } = {}) {
+  passwordWarningHasSession.value = hasSession;
+  passwordWarningRedirectTo.value = redirectTo;
+  passwordWarningOpen.value = true;
+}
+
+async function continueAfterPasswordWarning() {
+  const redirectTo = passwordWarningRedirectTo.value;
+
+  passwordWarningOpen.value = false;
+  passwordWarningHasSession.value = false;
+  passwordWarningRedirectTo.value = "";
+
+  if (redirectTo) {
+    await navigateTo(redirectTo, { replace: true });
+  }
+}
+
+async function changeCompromisedPassword() {
+  const target = passwordWarningHasSession.value ? "/account-settings" : "/forgot-password";
+
+  passwordWarningOpen.value = false;
+  passwordWarningHasSession.value = false;
+  passwordWarningRedirectTo.value = "";
+
+  await navigateTo(target);
 }
 
 async function handleVerifyCode() {

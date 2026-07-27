@@ -12,13 +12,28 @@ RUN npm config set registry ${NPM_REGISTRY} \
  && npm config set fetch-retry-mintimeout 20000 \
  && npm config set fetch-retry-maxtimeout 120000 \
  && npm config set fetch-timeout 300000 \
- && i=1; until npm install --legacy-peer-deps --no-audit --no-fund; do \
-      if [ "$i" -ge 5 ]; then echo "npm install failed after retries"; exit 1; fi; \
-      echo "npm install failed, retry $i/5 in 10s"; \
+ && i=1; until npm ci --legacy-peer-deps --no-audit --no-fund; do \
+      if [ "$i" -ge 5 ]; then echo "npm ci failed after retries"; exit 1; fi; \
+      echo "npm ci failed, retry $i/5 in 10s"; \
       i=$((i+1)); \
       sleep 10; \
-    done
+    done \
+ && sha256sum package-lock.json | cut -d ' ' -f 1 > node_modules/.make-it-art-package-lock.sha256
+
+RUN printf '%s\n' \
+    '#!/bin/sh' \
+    'set -e' \
+    'lock_hash="$(sha256sum package-lock.json | cut -d " " -f 1)"' \
+    'installed_lock_hash="$(cat node_modules/.make-it-art-package-lock.sha256 2>/dev/null || true)"' \
+    'if [ "$lock_hash" != "$installed_lock_hash" ]; then' \
+    '  echo "package-lock.json changed - synchronizing dependencies..."' \
+    '  npm ci --legacy-peer-deps --no-audit --no-fund' \
+    '  printf "%s\n" "$lock_hash" > node_modules/.make-it-art-package-lock.sha256' \
+    'fi' \
+    'exec npm run dev' \
+    > /usr/local/bin/docker-entrypoint.dev.sh \
+ && chmod +x /usr/local/bin/docker-entrypoint.dev.sh
 
 EXPOSE 3000
 
-CMD ["npm", "run", "dev"]
+CMD ["/usr/local/bin/docker-entrypoint.dev.sh"]

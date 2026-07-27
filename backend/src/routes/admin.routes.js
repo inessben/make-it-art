@@ -44,6 +44,11 @@ const {
   getUserAccountStatus,
   getUserAccountStatusLabel
 } = require("../utils/user-account-status");
+const {
+  ArtistWithdrawalError,
+  listAdminArtistWithdrawals,
+  updateArtistWithdrawalStatus
+} = require("../services/artist-withdrawal.service");
 
 const router = express.Router();
 
@@ -581,6 +586,27 @@ function serializeAdminPaymentSummary(payment) {
     succeededAt: payment.succeededAt || null,
     failedAt: payment.failedAt || null,
     canceledAt: payment.canceledAt || null
+  };
+}
+
+function serializeAdminArtistWithdrawalSummary(withdrawal) {
+  return {
+    id: withdrawal.id,
+    publicId: withdrawal.publicId,
+    status: withdrawal.status,
+    amount: withdrawal.amount,
+    amountValue: withdrawal.amountValue,
+    amountLabel: withdrawal.amountLabel,
+    currency: withdrawal.currency || "EUR",
+    note: withdrawal.note || "",
+    adminNote: withdrawal.adminNote || "",
+    payoutReference: withdrawal.payoutReference || "",
+    createdAt: withdrawal.createdAt,
+    reviewedAt: withdrawal.reviewedAt || null,
+    paidAt: withdrawal.paidAt || null,
+    artist: withdrawal.artist || null,
+    requestedBy: withdrawal.requestedBy || null,
+    reviewedBy: withdrawal.reviewedBy || null
   };
 }
 
@@ -1694,6 +1720,81 @@ router.get("/admin/payments/:id", authRequired, adminRequired, async (req, res) 
     });
   }
 });
+
+router.get("/admin/artist-withdrawals", authRequired, adminRequired, async (_req, res) => {
+  try {
+    const payload = await listAdminArtistWithdrawals();
+
+    return res.status(200).json({
+      summary: payload.summary,
+      withdrawals: payload.withdrawals.map(serializeAdminArtistWithdrawalSummary)
+    });
+  } catch (error) {
+    console.error("Admin artist withdrawals fetch error:", error);
+
+    return res.status(500).json({
+      message: "Unable to load artist withdrawals"
+    });
+  }
+});
+
+router.patch(
+  "/admin/artist-withdrawals/:publicId",
+  authRequired,
+  adminRequired,
+  async (req, res) => {
+    try {
+      const publicId = normalizeText(req.params.publicId);
+      const action = normalizeText(req.body?.action).toLowerCase();
+
+      if (!publicId) {
+        return res.status(400).json({
+          message: "Invalid withdrawal id"
+        });
+      }
+
+      if (!["approve", "reject", "mark_paid"].includes(action)) {
+        return res.status(400).json({
+          message: "Action must be approve, reject or mark_paid"
+        });
+      }
+
+      const withdrawal = await updateArtistWithdrawalStatus({
+        publicId,
+        action,
+        actorUserId: req.user.id,
+        adminNote: req.body?.adminNote,
+        payoutReference: req.body?.payoutReference
+      });
+
+      await writeAdminAuditLog(prisma, {
+        actorUser: req.user,
+        action: `ARTIST_WITHDRAWAL_${action.toUpperCase()}`,
+        entityType: "ARTIST_WITHDRAWAL",
+        entityId: publicId,
+        ipAddress: req.ip
+      });
+
+      return res.status(200).json({
+        message: "Artist withdrawal updated.",
+        withdrawal: serializeAdminArtistWithdrawalSummary(withdrawal)
+      });
+    } catch (error) {
+      if (error instanceof ArtistWithdrawalError) {
+        return res.status(error.statusCode).json({
+          code: error.code,
+          message: error.message
+        });
+      }
+
+      console.error("Admin artist withdrawal update error:", error);
+
+      return res.status(500).json({
+        message: "Unable to update this artist withdrawal"
+      });
+    }
+  }
+);
 
 router.get("/admin/audit-log", authRequired, adminRequired, async (req, res) => {
   const entityType = normalizeText(req.query.entityType).toUpperCase();

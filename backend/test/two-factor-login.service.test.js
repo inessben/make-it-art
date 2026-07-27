@@ -11,6 +11,7 @@ const loginCodeRepositoryPath =
 const rememberedDeviceRepositoryPath =
   require.resolve("../src/repositories/remembered-device.repository");
 const mailServicePath = require.resolve("../src/services/mail.service");
+const passwordSecurityServicePath = require.resolve("../src/services/password-security.service");
 const sessionServicePath = require.resolve("../src/services/session.service");
 const argon2Path = require.resolve("argon2");
 
@@ -44,6 +45,7 @@ function buildEnv(overrides = {}) {
 
 function loadService(overrides = {}) {
   const calls = {
+    checkExistingPassword: [],
     createCode: [],
     createDevice: [],
     createSession: [],
@@ -114,6 +116,17 @@ function loadService(overrides = {}) {
     [mailServicePath]: {
       async sendLoginCodeEmail(payload) {
         calls.sendLoginCodeEmail.push(payload);
+      }
+    },
+    [passwordSecurityServicePath]: {
+      async isExistingPasswordCompromised(password) {
+        calls.checkExistingPassword.push(password);
+
+        if (overrides.passwordCompromisedError) {
+          throw new Error("Pwned Passwords unavailable");
+        }
+
+        return overrides.passwordCompromised ?? false;
       }
     },
     [sessionServicePath]: {
@@ -199,6 +212,7 @@ test("startLoginWithCode rejects invalid passwords", async (t) => {
     }
   ]);
   assert.deepEqual(calls.createCode, []);
+  assert.deepEqual(calls.checkExistingPassword, []);
   assert.deepEqual(calls.sendLoginCodeEmail, []);
 });
 
@@ -221,8 +235,10 @@ test("startLoginWithCode creates and emails a login code for valid credentials",
 
   assert.deepEqual(result, {
     bypassCode: false,
-    challengeToken
+    challengeToken,
+    passwordCompromised: false
   });
+  assert.deepEqual(calls.checkExistingPassword, ["valid-password"]);
   assert.deepEqual(calls.markUnusedCodesAsUsed, [activeUser.id]);
   assert.equal(calls.createCode[0].userId, activeUser.id);
   assert.equal(calls.createCode[0].codeHash, codeHash);
@@ -261,6 +277,7 @@ test("startLoginWithCode bypasses email code for the configured default admin", 
   assert.deepEqual(result, {
     accessToken: "access-token",
     bypassCode: true,
+    passwordCompromised: false,
     refreshToken: "refresh-token",
     user: {
       ...activeUser,
@@ -330,11 +347,49 @@ test("startLoginWithCode falls back to email code when remembered device is not 
 
   assert.deepEqual(result, {
     bypassCode: false,
-    challengeToken: "04".repeat(32)
+    challengeToken: "04".repeat(32),
+    passwordCompromised: false
   });
   assert.equal(calls.createCode.length, 1);
   assert.equal(calls.sendLoginCodeEmail.length, 1);
   assert.deepEqual(calls.createSession, []);
+});
+
+test("startLoginWithCode reports a compromised password without blocking login", async (t) => {
+  t.mock.method(crypto, "randomInt", () => 345678);
+  t.mock.method(crypto, "randomBytes", (size) => Buffer.alloc(size, 5));
+
+  const { calls, restore, service } = loadService({ passwordCompromised: true });
+  t.after(restore);
+
+  const result = await service.startLoginWithCode({
+    email: activeUser.email,
+    password: "known-breached-password"
+  });
+
+  assert.equal(result.passwordCompromised, true);
+  assert.equal(result.bypassCode, false);
+  assert.deepEqual(calls.checkExistingPassword, ["known-breached-password"]);
+  assert.equal(calls.createCode.length, 1);
+  assert.equal(calls.sendLoginCodeEmail.length, 1);
+});
+
+test("startLoginWithCode keeps working when the compromised-password check fails", async (t) => {
+  t.mock.method(crypto, "randomInt", () => 456789);
+  t.mock.method(crypto, "randomBytes", (size) => Buffer.alloc(size, 6));
+
+  const { calls, restore, service } = loadService({ passwordCompromisedError: true });
+  t.after(restore);
+
+  const result = await service.startLoginWithCode({
+    email: activeUser.email,
+    password: "valid-password"
+  });
+
+  assert.equal(result.passwordCompromised, false);
+  assert.deepEqual(calls.checkExistingPassword, ["valid-password"]);
+  assert.equal(calls.createCode.length, 1);
+  assert.equal(calls.sendLoginCodeEmail.length, 1);
 });
 
 test("verifyLoginCode rejects invalid or expired login codes", async (t) => {

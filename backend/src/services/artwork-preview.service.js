@@ -1,0 +1,79 @@
+const { spawn } = require("node:child_process");
+const fsp = require("node:fs/promises");
+const os = require("node:os");
+const path = require("node:path");
+const env = require("../config/env");
+
+function runPython(args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(env.artworkMedia.pythonPath, args, {
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk.toString();
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+    child.on("error", reject);
+    child.on("close", (code) => {
+      if (code === 0) {
+        resolve(stdout.trim());
+        return;
+      }
+
+      reject(new Error(stderr.trim() || `PREVIEW_GENERATION_FAILED:${code}`));
+    });
+  });
+}
+
+async function generateArtworkPreview({
+  sourcePath,
+  applyWatermark = true,
+  watermarkText = env.artworkMedia.watermarkText
+}) {
+  const outputPath = path.join(
+    os.tmpdir(),
+    `mia-preview-${Date.now()}-${Math.random().toString(16).slice(2)}.jpg`
+  );
+  const scriptPath = path.resolve(__dirname, "../../scripts/generate_artwork_preview.py");
+  const args = [
+    scriptPath,
+    "--input",
+    sourcePath,
+    "--output",
+    outputPath,
+    "--max-width",
+    String(env.artworkMedia.previewMaxWidth),
+    "--quality",
+    String(env.artworkMedia.previewQuality),
+    "--watermark",
+    watermarkText
+  ];
+
+  if (applyWatermark) {
+    args.push("--apply-watermark");
+  }
+
+  await runPython(args);
+
+  try {
+    await fsp.access(outputPath);
+  } catch (_error) {
+    throw new Error("PREVIEW_FILE_MISSING");
+  }
+
+  return {
+    path: outputPath,
+    contentType: "image/jpeg",
+    watermarkApplied: Boolean(applyWatermark)
+  };
+}
+
+module.exports = {
+  generateArtworkPreview
+};

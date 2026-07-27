@@ -254,7 +254,7 @@ databaseTest(
         await prisma.cartItem.count({ where: { cart: { userId: fixture.buyer.id } } }),
         0
       );
-      assert.equal(await prisma.fulfillmentTask.count({ where: { orderId: storedOrder.id } }), 4);
+      assert.equal(await prisma.fulfillmentTask.count({ where: { orderId: storedOrder.id } }), 5);
 
       await processStripePaymentEvent({
         prismaClient: prisma,
@@ -268,7 +268,7 @@ databaseTest(
       const artwork = await prisma.artwork.findUnique({ where: { id: fixture.artwork.id } });
       assert.equal(artwork.stockQuantity, 0);
       assert.equal(artwork.reservedQuantity, 0);
-      assert.equal(await prisma.fulfillmentTask.count({ where: { orderId: storedOrder.id } }), 4);
+      assert.equal(await prisma.fulfillmentTask.count({ where: { orderId: storedOrder.id } }), 5);
     } finally {
       await cleanup(prisma, marker, fixture.userIds);
       await prisma.$disconnect();

@@ -13,11 +13,11 @@
             id="checkout-title"
             class="mt-4 text-[clamp(2rem,2.6vw,3rem)] font-semibold leading-[1.05] text-white"
           >
-            Finaliser la commande
+            Finaliser l'achat
           </h1>
           <p class="mt-4 max-w-3xl text-sm leading-6 text-[#A0ADB4]">
-            Vos coordonnées bancaires sont directement traitées par Stripe et ne transitent jamais
-            par Make It Art.
+            Paiement simulé : la commande est enregistrée en base et les artistes concernés
+            reçoivent une notification de vente.
           </p>
         </div>
 
@@ -172,7 +172,6 @@
         <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
           <h2 class="text-xl font-semibold text-white">Récapitulatif</h2>
           <p class="mt-2 break-all text-xs text-[#71809A]">Commande {{ order.id }}</p>
-
           <div v-if="cartSummary?.items?.length" class="mt-5 grid gap-3">
             <div
               v-for="item in cartSummary.items"
@@ -210,6 +209,20 @@
 
         <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
           <h2 class="text-xl font-semibold text-white">Paiement</h2>
+          <div
+            v-if="successMessage"
+            class="mt-4 rounded-2xl border border-[#12301F] bg-[#081912] px-5 py-4 text-sm text-[#86EFAC]"
+          >
+            {{ successMessage }}
+          </div>
+
+          <div
+            v-if="errorMessage"
+            class="mt-4 rounded-2xl border border-[#7f1d1d] bg-[#2b1014] px-5 py-4 text-sm text-[#FECACA]"
+          >
+            {{ errorMessage }}
+          </div>
+
           <p class="mt-4 text-sm leading-6 text-[#A0ADB4]">
             Saisissez votre carte dans le formulaire Stripe ci-dessous.
           </p>
@@ -284,6 +297,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { storeToRefs } from "pinia";
 import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useCartStore } from "~/stores/cart";
+import { useAuthStore } from "~/stores/auth";
 import {
   buildPaymentReturnUrl,
   canMountPaymentElement,
@@ -293,6 +307,7 @@ import {
   getSafePaymentError,
   isPublishableStripeKey
 } from "~/utils/checkout-security";
+import { navigateTo, useRoute, useRuntimeConfig } from "#app";
 
 definePageMeta({
   middleware: "auth"
@@ -301,7 +316,9 @@ definePageMeta({
 const config = useRuntimeConfig();
 const route = useRoute();
 const cartStore = useCartStore();
+const auth = useAuthStore();
 const { cart: cartSummary } = storeToRefs(cartStore);
+const { user } = storeToRefs(auth);
 const initializing = ref(true);
 const submitting = ref(false);
 const paymentElementReady = ref(false);
@@ -329,7 +346,6 @@ let clientSecret = "";
 onMounted(async () => {
   try {
     const publishableKey = config.public.stripePublishableKey;
-
     if (!isPublishableStripeKey(publishableKey)) {
       throw new Error("Le paiement sécurisé n’est pas encore configuré.");
     }
@@ -351,10 +367,16 @@ onMounted(async () => {
       await mountPaymentForm(checkoutResponse, publishableKey);
     } else {
       await cartStore.fetchCart();
-
       if (!cartSummary.value?.items?.length || !cartSummary.value.payable) {
         throw new Error("Votre panier doit être vérifié avant le paiement.");
       }
+    }
+    // Optionally hydrate auth
+    try {
+      await auth.fetchCurrentUser();
+      billingDetails.name = user.value?.name || "";
+    } catch {
+      // handled by middleware
     }
   } catch (error) {
     errorMessage.value = getSafePaymentError({

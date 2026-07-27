@@ -5,7 +5,6 @@ node_modules/
 **/.pnpm-store/
 .pnp
 .pnp.js
-.pnpm-store
 
 # Testing
 coverage/
@@ -17,6 +16,9 @@ build/
 output/
 .nuxt/
 .next/
+backend/uploads/*
+!backend/uploads/artworks/
+!backend/uploads/artworks/.gitkeep
 
 # Environment variables
 .env

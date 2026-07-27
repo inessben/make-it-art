@@ -305,6 +305,162 @@ async function sendPaymentOperationsAlert({
   });
 }
 
+function formatArtworkList(artworkTitles = []) {
+  if (!artworkTitles.length) {
+    return "une de vos oeuvres";
+  }
+
+  if (artworkTitles.length === 1) {
+    return `"${artworkTitles[0]}"`;
+  }
+
+  return artworkTitles.map((title) => `"${title}"`).join(", ");
+}
+
+async function sendArtistSaleEmail({
+  to,
+  artistName,
+  orderReference,
+  artworkTitles,
+  grossAmount,
+  netAmount,
+  buyerLabel,
+  salesUrl
+}) {
+  const transporter = createTransporter();
+  const displayName = artistName || "Artiste";
+  const artworkLabel = formatArtworkList(artworkTitles);
+  const grossLabel = `EUR ${Number(grossAmount || 0).toFixed(2)}`;
+  const netLabel = `EUR ${Number(netAmount || 0).toFixed(2)}`;
+  const dashboardUrl = salesUrl || `${env.appBaseUrl}/artist/sales`;
+
+  await transporter.sendMail({
+    from: env.smtp.from,
+    to,
+    subject: `Nouvelle vente sur Make It Art - ${orderReference}`,
+    text: [
+      `Bonjour ${displayName},`,
+      "",
+      `Bonne nouvelle : ${buyerLabel} vient d'acheter ${artworkLabel}.`,
+      "",
+      `Reference commande : ${orderReference}`,
+      `Montant brut : ${grossLabel}`,
+      `Revenu artiste estime : ${netLabel}`,
+      "",
+      "Consultez le detail de vos ventes :",
+      dashboardUrl,
+      "",
+      "Merci de faire vivre Make It Art."
+    ].join("\n"),
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #172033;">
+        <h1 style="font-size: 22px;">Nouvelle vente</h1>
+        <p>Bonjour ${displayName},</p>
+        <p>
+          Bonne nouvelle : <strong>${buyerLabel}</strong> vient d'acheter
+          ${artworkLabel}.
+        </p>
+        <div style="margin: 24px 0; padding: 16px 18px; border-radius: 10px; background: #f4f7ff;">
+          <p style="margin: 0 0 8px;"><strong>Reference :</strong> ${orderReference}</p>
+          <p style="margin: 0 0 8px;"><strong>Montant brut :</strong> ${grossLabel}</p>
+          <p style="margin: 0;"><strong>Revenu artiste estime :</strong> ${netLabel}</p>
+        </div>
+        <p>
+          <a href="${dashboardUrl}" style="display: inline-block; padding: 10px 14px; background: #4A6CF7; color: #ffffff; text-decoration: none; border-radius: 6px;">
+            Voir mes ventes
+          </a>
+        </p>
+        <p>Merci de faire vivre Make It Art.</p>
+      </div>
+    `
+  });
+}
+
+async function sendArtistWithdrawalRequestAlert({
+  artistName,
+  artistEmail,
+  amount,
+  note,
+  withdrawalPublicId
+}) {
+  if (!env.artistWithdrawals?.alertEmail) {
+    return null;
+  }
+
+  const requester = artistName || artistEmail || "Artist";
+  const formattedAmount = `${(amount / 100).toFixed(2)} EUR`;
+  const dashboardUrl = `${env.appBaseUrl}/admin/payments`;
+
+  return createTransporter().sendMail({
+    from: env.smtp.from,
+    to: env.artistWithdrawals.alertEmail,
+    subject: `[Make It Art] New artist withdrawal request ${withdrawalPublicId}`,
+    text: [
+      "A new artist withdrawal request requires review.",
+      `Artist: ${requester}`,
+      `Artist email: ${artistEmail || "not provided"}`,
+      `Withdrawal request: ${withdrawalPublicId}`,
+      `Amount: ${formattedAmount}`,
+      `Note: ${note || "none"}`,
+      `Review in admin payments: ${dashboardUrl}`
+    ].join("\n")
+  });
+}
+
+async function sendArtistWithdrawalStatusEmail({
+  to,
+  artistName,
+  amount,
+  status,
+  withdrawalPublicId,
+  payoutReference,
+  adminNote
+}) {
+  const transporter = createTransporter();
+  const displayName = artistName || "Artist";
+  const statusLabel = String(status || "REQUESTED")
+    .replaceAll("_", " ")
+    .toLowerCase();
+  const formattedAmount = `${(amount / 100).toFixed(2)} EUR`;
+  const dashboardUrl = `${env.appBaseUrl}/artist/withdrawals`;
+
+  return transporter.sendMail({
+    from: env.smtp.from,
+    to,
+    subject: `Withdrawal request update - ${withdrawalPublicId}`,
+    text: [
+      `Hello ${displayName},`,
+      "",
+      `Your withdrawal request ${withdrawalPublicId} for ${formattedAmount} is now ${statusLabel}.`,
+      payoutReference ? `Payout reference: ${payoutReference}` : "",
+      adminNote ? `Admin note: ${adminNote}` : "",
+      "",
+      "Review the latest payout status in your artist workspace:",
+      dashboardUrl
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #172033;">
+        <h1 style="font-size: 22px;">Withdrawal request update</h1>
+        <p>Hello ${escapeHtml(displayName)},</p>
+        <p>
+          Your withdrawal request <strong>${escapeHtml(withdrawalPublicId)}</strong> for
+          <strong>${escapeHtml(formattedAmount)}</strong> is now
+          <strong>${escapeHtml(statusLabel)}</strong>.
+        </p>
+        ${payoutReference ? `<p><strong>Payout reference:</strong> ${escapeHtml(payoutReference)}</p>` : ""}
+        ${adminNote ? `<p><strong>Admin note:</strong> ${escapeHtml(adminNote)}</p>` : ""}
+        <p>
+          <a href="${dashboardUrl}" style="display: inline-block; padding: 10px 14px; background: #4A6CF7; color: #ffffff; text-decoration: none; border-radius: 6px;">
+            Open artist withdrawals
+          </a>
+        </p>
+      </div>
+    `
+  });
+}
+
 module.exports = {
   sendVerificationEmail,
   sendPasswordResetEmail,
@@ -314,5 +470,8 @@ module.exports = {
   sendPaymentConfirmationEmail,
   buildRefundStatusMessage,
   sendRefundStatusEmail,
-  sendPaymentOperationsAlert
+  sendPaymentOperationsAlert,
+  sendArtistSaleEmail,
+  sendArtistWithdrawalRequestAlert,
+  sendArtistWithdrawalStatusEmail
 };

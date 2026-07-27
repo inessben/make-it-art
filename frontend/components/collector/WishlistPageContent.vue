@@ -38,7 +38,7 @@
               to="/account-settings"
               class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-750 bg-transparent px-6 text-sm font-semibold text-violet-200 transition hover:border-violet-700"
             >
-              Back to profile
+              Back to account
             </NuxtLink>
           </div>
         </header>

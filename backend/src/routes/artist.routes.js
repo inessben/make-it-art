@@ -19,8 +19,25 @@ const { serializeAuthUser } = require("../utils/serialize-auth-user");
 const { parsePriceValue, serializeArtwork } = require("../utils/serialize-marketplace");
 const { ensureBuffer } = require("../utils/ensure-buffer");
 const prisma = require("../lib/prisma");
+const { handleArtworkUpload } = require("../middlewares/upload-artwork.middleware");
+const {
+  processArtworkUpload,
+  deleteArtworkMediaAssets
+} = require("../services/artwork-media-pipeline.service");
+const env = require("../config/env");
+const {
+  buildArtistDashboardPayload,
+  buildArtistSalesPayload
+} = require("../services/artist-analytics.service");
+const {
+  ArtistWithdrawalError,
+  buildArtistWithdrawalWorkspace,
+  createArtistWithdrawalRequest,
+  cancelArtistWithdrawal
+} = require("../services/artist-withdrawal.service");
 
 const router = express.Router();
+const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function ensureNonAdminArtistAccess(req, res, next) {
   if (isAdminUser(req.user)) {
@@ -187,7 +204,7 @@ function normalizeArtworkInput(input = {}) {
     description: normalizeText(input.description),
     categoryId: Number.isInteger(categoryId) && categoryId > 0 ? categoryId : null,
     price: normalizeText(input.price) || normalizeText(input.priceTokens),
-    protection: Boolean(input.protection)
+    protection: input.protection === true || input.protection === "true" || input.protection === "1"
   };
 }
 
@@ -339,6 +356,129 @@ router.get("/artists/me", async (req, res) => {
     console.error("Artist profile fetch error:", error);
     return res.status(500).json({
       message: "Unable to load artist profile"
+    });
+  }
+});
+
+router.get("/artists/me/dashboard", ensureVerifiedArtist, async (req, res) => {
+  try {
+    const artworks = await artworkRepository.listArtworksByArtistId(req.artist.id);
+    const favoritesTotal = artworks.reduce((sum, artwork) => sum + (artwork.favoriteCount || 0), 0);
+
+    const [dashboard, withdrawalWorkspace] = await Promise.all([
+      buildArtistDashboardPayload(req.artist.id, {
+        userId: req.user.id,
+        artworks: req.artist._count?.artworks || artworks.length,
+        followers: req.artist._count?.followers || 0,
+        favorites: favoritesTotal
+      }),
+      buildArtistWithdrawalWorkspace(req.artist.id, {
+        limit: 5
+      })
+    ]);
+
+    return res.status(200).json({
+      ...dashboard,
+      withdrawals: withdrawalWorkspace.finance,
+      withdrawalSummary: withdrawalWorkspace.summary,
+      recentWithdrawals: withdrawalWorkspace.requests
+    });
+  } catch (error) {
+    console.error("Artist dashboard fetch error:", error);
+    return res.status(500).json({
+      message: "Impossible de charger le dashboard artiste."
+    });
+  }
+});
+
+router.get("/artists/me/sales", ensureVerifiedArtist, async (req, res) => {
+  try {
+    const payload = await buildArtistSalesPayload(req.artist.id);
+    return res.status(200).json(payload);
+  } catch (error) {
+    console.error("Artist sales fetch error:", error);
+    return res.status(500).json({
+      message: "Impossible de charger vos ventes."
+    });
+  }
+});
+
+router.get("/artists/me/withdrawals", ensureVerifiedArtist, async (req, res) => {
+  try {
+    const payload = await buildArtistWithdrawalWorkspace(req.artist.id);
+    return res.status(200).json(payload);
+  } catch (error) {
+    if (error instanceof ArtistWithdrawalError) {
+      return res.status(error.statusCode).json({
+        code: error.code,
+        message: error.message
+      });
+    }
+
+    console.error("Artist withdrawals fetch error:", error);
+    return res.status(500).json({
+      message: "Impossible de charger vos retraits."
+    });
+  }
+});
+
+router.post("/artists/me/withdrawals", ensureVerifiedArtist, async (req, res) => {
+  try {
+    const withdrawal = await createArtistWithdrawalRequest({
+      artist: req.artist,
+      user: req.user,
+      amount: req.body?.amount,
+      note: req.body?.note
+    });
+
+    return res.status(201).json({
+      message: "Withdrawal request submitted and pending admin review.",
+      withdrawal
+    });
+  } catch (error) {
+    if (error instanceof ArtistWithdrawalError) {
+      return res.status(error.statusCode).json({
+        code: error.code,
+        message: error.message
+      });
+    }
+
+    console.error("Artist withdrawal submit error:", error);
+    return res.status(500).json({
+      message: "Impossible de soumettre cette demande de retrait."
+    });
+  }
+});
+
+router.patch("/artists/me/withdrawals/:publicId/cancel", ensureVerifiedArtist, async (req, res) => {
+  try {
+    if (!UUID_V4_PATTERN.test(req.params.publicId)) {
+      return res.status(400).json({
+        message: "Invalid withdrawal request id"
+      });
+    }
+
+    const withdrawal = await cancelArtistWithdrawal({
+      artistId: req.artist.id,
+      publicId: req.params.publicId,
+      actorUserId: req.user.id
+    });
+
+    return res.status(200).json({
+      message: "Withdrawal request canceled.",
+      withdrawal
+    });
+  } catch (error) {
+    if (error instanceof ArtistWithdrawalError) {
+      return res.status(error.statusCode).json({
+        code: error.code,
+        message: error.message
+      });
+    }
+
+    console.error("Artist withdrawal cancel error:", error);
+    return res.status(500).json({
+      message: "Impossible d'annuler cette demande de retrait."
     });
   }
 });
@@ -607,8 +747,14 @@ router.get("/artists/me/artworks", ensureVerifiedArtist, async (req, res) => {
   }
 });
 
-router.post("/artists/me/artworks", ensureVerifiedArtist, async (req, res) => {
+router.post("/artists/me/artworks", ensureVerifiedArtist, handleArtworkUpload, async (req, res) => {
   try {
+    if (!req.file) {
+      return res.status(400).json({
+        message: "Le fichier visuel de l'oeuvre est requis."
+      });
+    }
+
     const input = normalizeArtworkInput(req.body);
     const validationError = validateArtworkInput(input);
 
@@ -619,13 +765,24 @@ router.post("/artists/me/artworks", ensureVerifiedArtist, async (req, res) => {
     }
 
     const categoryId = await resolveCategoryId(input);
+    const media = await processArtworkUpload({
+      uploadedFile: req.file,
+      applyWatermark: env.artworkMedia.watermarkPublicPreviews || input.protection,
+      storageProviderName: env.artworkMedia.storageProvider
+    });
     const artwork = await artworkRepository.createArtwork({
       artistId: req.artist.id,
       title: input.title,
       description: input.description,
       categoryId,
       price: input.price,
-      protection: input.protection
+      protection: input.protection,
+      imagePath: media.imagePath,
+      hdPath: media.hdPath,
+      previewPath: media.previewPath,
+      storageProvider: media.storageProvider,
+      mediaStatus: media.mediaStatus,
+      watermarkApplied: media.watermarkApplied
     });
 
     return res.status(201).json({
@@ -638,6 +795,21 @@ router.post("/artists/me/artworks", ensureVerifiedArtist, async (req, res) => {
     if (mappedError) {
       return res.status(mappedError.status).json({
         message: mappedError.message
+      });
+    }
+
+    if (String(error.message || "").includes("PREVIEW_GENERATION_FAILED")) {
+      return res.status(500).json({
+        message: "Impossible de generer l'apercu de l'oeuvre."
+      });
+    }
+
+    if (
+      error.message === "S3_ARTWORK_STORAGE_NOT_CONFIGURED" ||
+      error.message === "CLOUDINARY_ARTWORK_STORAGE_NOT_CONFIGURED"
+    ) {
+      return res.status(503).json({
+        message: "Le stockage distant des medias n'est pas configure."
       });
     }
 
@@ -695,10 +867,11 @@ router.delete("/artists/me/artworks/:id(\\d+)", ensureVerifiedArtist, async (req
   try {
     const artworkId = Number.parseInt(req.params.id, 10);
 
-    await artworkRepository.deleteArtwork({
+    const deleted = await artworkRepository.deleteArtwork({
       artworkId,
       artistId: req.artist.id
     });
+    await deleteArtworkMediaAssets(deleted);
 
     return res.status(200).json({
       message: "Oeuvre supprimee."

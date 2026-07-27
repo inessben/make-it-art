@@ -27,20 +27,28 @@ RUN npm config set registry ${NPM_REGISTRY} \
  && npm config set fetch-retry-mintimeout 20000 \
  && npm config set fetch-retry-maxtimeout 120000 \
  && npm config set fetch-timeout 300000 \
- && i=1; until npm install --no-audit --no-fund; do \
-      if [ "$i" -ge 5 ]; then echo "npm install failed after retries"; exit 1; fi; \
-      echo "npm install failed, retry $i/5 in 10s"; \
+ && i=1; until npm ci --no-audit --no-fund; do \
+      if [ "$i" -ge 5 ]; then echo "npm ci failed after retries"; exit 1; fi; \
+      echo "npm ci failed, retry $i/5 in 10s"; \
       i=$((i+1)); \
       sleep 10; \
-    done
+    done \
+ && sha256sum package-lock.json | cut -d ' ' -f 1 > node_modules/.make-it-art-package-lock.sha256
 
 RUN printf '%s\n' \
     '#!/bin/sh' \
     'set -e' \
+    'lock_hash="$(sha256sum package-lock.json | cut -d " " -f 1)"' \
+    'installed_lock_hash="$(cat node_modules/.make-it-art-package-lock.sha256 2>/dev/null || true)"' \
+    'if [ "$lock_hash" != "$installed_lock_hash" ]; then' \
+    '  echo "package-lock.json changed - synchronizing dependencies..."' \
+    '  npm ci --no-audit --no-fund' \
+    '  printf "%s\n" "$lock_hash" > node_modules/.make-it-art-package-lock.sha256' \
+    'fi' \
     'npx prisma generate --config prisma.config.ts' \
     'if ! npx prisma migrate deploy --config prisma.config.ts 2>/tmp/migrate.err; then' \
-    '  if grep -q P3005 /tmp/migrate.err; then' \
-    '    echo "Base existante sans historique Prisma — reinitialisation (dev uniquement)..."' \
+    '  if grep -qE "P3005|P3009" /tmp/migrate.err; then' \
+    '    echo "Historique Prisma invalide ou migration en echec — reinitialisation (dev uniquement)..."' \
     '    npx prisma migrate reset --force --config prisma.config.ts' \
     '  else' \
     '    cat /tmp/migrate.err >&2' \

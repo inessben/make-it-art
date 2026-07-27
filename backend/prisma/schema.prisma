@@ -88,6 +88,14 @@ enum InvoiceType {
   COMMISSION
 }
 
+enum ArtistWithdrawalStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  PAID
+  CANCELED
+}
+
 model User {
   id                         Int                      @id @default(autoincrement())
   username                   String?
@@ -119,11 +127,14 @@ model User {
   ownershipTokens            OwnershipToken[]
   passwordResetTokens        PasswordResetToken[]     @relation("passwordResetTokens")
   personalCollections        Collection[]             @relation("user_collections")
+  notifications              Notification[]
   refreshTokens              RefreshToken[]
   rememberedDevices          RememberedDevice[]       @relation("rememberedDevices")
   galleries                  UserGallery[]
   cart                       Cart?
   refundsRequested           Refund[]                 @relation("refundRequestedBy")
+  requestedArtistWithdrawals ArtistWithdrawal[]       @relation("artistWithdrawalRequestedBy")
+  reviewedArtistWithdrawals  ArtistWithdrawal[]       @relation("artistWithdrawalReviewedBy")
   disputeEvidenceAudits      DisputeEvidenceAudit[]   @relation("disputeEvidenceAuditCapturedBy")
   digitalEntitlements        DigitalEntitlement[]
   ownershipCertificates      OwnershipCertificate[]
@@ -167,6 +178,7 @@ model Artist {
   artworks    Artwork[]
   collections Collection[]
   followers   Follow[]
+  withdrawals ArtistWithdrawal[]
 
   @@map("artist")
 }
@@ -186,8 +198,6 @@ model Artwork {
   title                 String?
   description           String?
   categoryId            Int?                   @map("category_id")
-  // Temporary read compatibility for develop. Stripe checkout never reads
-  // these free-form legacy values; priceAmount is the only payable amount.
   priceTokens           String?                @map("price_tokens")
   price                 String?
   priceAmount           Int?                   @map("price_amount")
@@ -196,6 +206,13 @@ model Artwork {
   createdAt             DateTime?              @map("created_at")
   protection            Boolean?
   protectionId          Int?                   @map("protection_id")
+  imagePath             String?                @map("image_path")
+  hdPath                String?                @map("hd_path")
+  previewPath           String?                @map("preview_path")
+  storageProvider       String                 @default("local") @map("storage_provider")
+  mediaStatus           String                 @default("ready") @map("media_status")
+  watermarkApplied      Boolean                @default(false) @map("watermark_applied")
+  isSold                Boolean                @default(false) @map("is_sold")
   artist                Artist                 @relation(fields: [artistId], references: [id])
   category              Category?              @relation(fields: [categoryId], references: [id])
   collections           CollectionItem[]
@@ -608,6 +625,31 @@ model FulfillmentTask {
   @@map("fulfillment_task")
 }
 
+model ArtistWithdrawal {
+  id                Int                   @id @default(autoincrement())
+  publicId          String                @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  artistId          Int                   @map("artist_id")
+  requestedByUserId Int                   @map("requested_by_user_id")
+  reviewedByUserId  Int?                  @map("reviewed_by_user_id")
+  amount            Int
+  currency          Currency              @default(EUR)
+  status            ArtistWithdrawalStatus @default(REQUESTED)
+  note              String?
+  adminNote         String?               @map("admin_note")
+  payoutReference   String?               @map("payout_reference")
+  createdAt         DateTime              @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt         DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  reviewedAt        DateTime?             @map("reviewed_at") @db.Timestamp(6)
+  paidAt            DateTime?             @map("paid_at") @db.Timestamp(6)
+  artist            Artist                @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  requestedBy       User                  @relation("artistWithdrawalRequestedBy", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  reviewedBy        User?                 @relation("artistWithdrawalReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([artistId, status, createdAt])
+  @@index([status, createdAt])
+  @@map("artist_withdrawal")
+}
+
 model Dispute {
   id                Int                    @id @default(autoincrement())
   providerDisputeId String                 @unique @map("provider_dispute_id")
@@ -774,4 +816,19 @@ model RememberedDevice {
   user      User      @relation("rememberedDevices", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("remembered_device")
+}
+
+model Notification {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  type      String?
+  title     String?
+  message   String?
+  payload   Json?
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime? @default(now()) @map("created_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("notification")
 }
