@@ -62,6 +62,8 @@ module.exports = {
     secretKey: process.env.STRIPE_SECRET_KEY || "",
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
     paymentMethodConfigurationId: process.env.STRIPE_PAYMENT_METHOD_CONFIGURATION_ID || "",
+    savedPaymentMethodConsentVersion:
+      process.env.SAVED_PAYMENT_METHOD_CONSENT_VERSION || "2026-07-26",
     checkoutExpirationSweepMs: Number(process.env.CHECKOUT_EXPIRATION_SWEEP_MS || 60000),
     reconciliationSweepMs: Number(process.env.PAYMENT_RECONCILIATION_SWEEP_MS || 300000)
   },
