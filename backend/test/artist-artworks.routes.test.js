@@ -70,6 +70,7 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
     deleteArtwork: [],
     hideArtwork: [],
     publishArtwork: [],
+    archiveArtwork: [],
     deleteArtworkMediaAssets: []
   };
   const originalArtistRequired = require.cache[artistRequiredPath];
@@ -157,6 +158,11 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
         calls.publishArtwork.push(payload);
         if (overrides.publishArtworkError) throw overrides.publishArtworkError;
         return overrides.publishArtworkResult || overrides.findOwnedArtworkResult;
+      },
+      async archiveArtwork(payload) {
+        calls.archiveArtwork.push(payload);
+        if (overrides.archiveArtworkError) throw overrides.archiveArtworkError;
+        return overrides.archiveArtworkResult || overrides.findOwnedArtworkResult;
       }
     },
     [categoryRepositoryPath]: {
@@ -778,4 +784,57 @@ test("POST /artists/me/artworks/:id/publish preserves moderation blocks", async 
 
   assert.equal(response.status, 409);
   assert.equal(response.body.code, "ARTWORK_MODERATION_BLOCKED");
+});
+
+test("POST /artists/me/artworks/:id/archive preserves purchased artwork history", async (t) => {
+  const archivedAt = new Date("2026-07-27T23:30:00.000Z");
+  const archivedArtwork = {
+    id: 42,
+    artistId: verifiedArtist.id,
+    title: "Archived sale",
+    version: 6,
+    visibility: "ARCHIVED",
+    archivedAt,
+    priceAmount: 12000,
+    currency: "EUR",
+    licenseType: "COMMERCIAL",
+    saleStatus: "AVAILABLE",
+    moderationStatus: "approved",
+    stockQuantity: 0,
+    reservedQuantity: 0,
+    orderItems: [{ order: { status: "PAID" } }],
+    reservations: [],
+    artist: verifiedArtist,
+    category: { id: 9, name: "Illustration" }
+  };
+  const { baseUrl, calls } = await startArtistArtworkRoutesApp(t, {
+    archiveArtworkResult: archivedArtwork
+  });
+
+  const response = await requestJson(baseUrl, "/artists/me/artworks/42/archive", {
+    method: "POST",
+    body: { expectedVersion: 5 }
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.artwork.visibility, "ARCHIVED");
+  assert.equal(response.body.artwork.management.lifecycle.hasConfirmedPurchase, true);
+  assert.equal(response.body.artwork.management.capabilities.canRestore, true);
+  assert.deepEqual(calls.archiveArtwork, [
+    { artworkId: 42, artistId: verifiedArtist.id, expectedVersion: 5 }
+  ]);
+});
+
+test("POST /artists/me/artworks/:id/archive rejects an active transaction", async (t) => {
+  const { baseUrl } = await startArtistArtworkRoutesApp(t, {
+    archiveArtworkError: new Error("ARTWORK_TRANSACTION_IN_PROGRESS")
+  });
+
+  const response = await requestJson(baseUrl, "/artists/me/artworks/42/archive", {
+    method: "POST",
+    body: { expectedVersion: 5 }
+  });
+
+  assert.equal(response.status, 409);
+  assert.equal(response.body.code, "ARTWORK_TRANSACTION_IN_PROGRESS");
 });

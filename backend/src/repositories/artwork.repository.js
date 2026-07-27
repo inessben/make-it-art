@@ -454,6 +454,62 @@ async function publishArtwork({ artworkId, artistId, expectedVersion }) {
   );
 }
 
+async function archiveArtwork({ artworkId, artistId, expectedVersion, archivedAt = new Date() }) {
+  return prisma.$transaction(
+    async (transaction) => {
+      const existing = await findOwnedArtwork({
+        artworkId,
+        artistId,
+        prismaClient: transaction
+      });
+
+      if (!existing) {
+        throw new Error("ARTWORK_NOT_FOUND");
+      }
+
+      if (existing.visibility === "ARCHIVED") {
+        return existing;
+      }
+
+      const management = buildArtworkManagement(existing);
+      if (!management.capabilities.canArchive) {
+        throw new Error(management.capabilities.reasons.archive);
+      }
+
+      if (!Number.isSafeInteger(expectedVersion) || existing.version !== expectedVersion) {
+        throw new Error("ARTWORK_VERSION_CONFLICT");
+      }
+
+      const result = await transaction.artwork.updateMany({
+        where: {
+          id: artworkId,
+          artistId,
+          visibility: {
+            in: ["PUBLISHED", "HIDDEN"]
+          },
+          version: expectedVersion
+        },
+        data: {
+          visibility: "ARCHIVED",
+          archivedAt,
+          version: {
+            increment: 1
+          }
+        }
+      });
+
+      if (result.count !== 1) {
+        throw new Error("ARTWORK_VERSION_CONFLICT");
+      }
+
+      return findOwnedArtwork({ artworkId, artistId, prismaClient: transaction });
+    },
+    {
+      isolationLevel: "Serializable"
+    }
+  );
+}
+
 async function updateArtworkModeration({
   artworkId,
   status,
@@ -504,5 +560,6 @@ module.exports = {
   deleteArtwork,
   hideArtwork,
   publishArtwork,
+  archiveArtwork,
   updateArtworkModeration
 };

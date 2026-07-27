@@ -337,3 +337,67 @@ test("artwork republication rejects moderation states other than approved", asyn
     loaded.restore();
   }
 });
+
+test("artwork archival preserves commercial fields for purchased artworks", async () => {
+  const archivedAt = new Date("2026-07-27T23:30:00.000Z");
+  const loaded = loadRepository({
+    existing: existingArtwork({
+      visibility: "PUBLISHED",
+      version: 5,
+      priceAmount: 14500,
+      licenseType: "COMMERCIAL",
+      orderItems: [{ order: { status: "PARTIALLY_REFUNDED" } }]
+    })
+  });
+
+  await loaded.repository.archiveArtwork({
+    artworkId: 42,
+    artistId: 3,
+    expectedVersion: 5,
+    archivedAt
+  });
+
+  assert.deepEqual(loaded.calls.updateMany, [
+    {
+      where: {
+        id: 42,
+        artistId: 3,
+        visibility: { in: ["PUBLISHED", "HIDDEN"] },
+        version: 5
+      },
+      data: {
+        visibility: "ARCHIVED",
+        archivedAt,
+        version: { increment: 1 }
+      }
+    }
+  ]);
+  loaded.restore();
+});
+
+test("artwork archival rejects open payments and is idempotent once archived", async () => {
+  const active = loadRepository({
+    existing: existingArtwork({
+      orderItems: [{ order: { status: "PAYMENT_PROCESSING" } }]
+    })
+  });
+
+  await assert.rejects(
+    () => active.repository.archiveArtwork({ artworkId: 42, artistId: 3, expectedVersion: 2 }),
+    /ARTWORK_TRANSACTION_IN_PROGRESS/
+  );
+  assert.equal(active.calls.updateMany.length, 0);
+  active.restore();
+
+  const archived = loadRepository({
+    existing: existingArtwork({ visibility: "ARCHIVED", version: 6 })
+  });
+  const result = await archived.repository.archiveArtwork({
+    artworkId: 42,
+    artistId: 3,
+    expectedVersion: 5
+  });
+  assert.equal(result.visibility, "ARCHIVED");
+  assert.equal(archived.calls.updateMany.length, 0);
+  archived.restore();
+});

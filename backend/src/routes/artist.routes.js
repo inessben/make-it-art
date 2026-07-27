@@ -1375,4 +1375,49 @@ router.post(
   }
 );
 
+router.post(
+  "/artists/me/artworks/:id(\\d+)/archive",
+  ensureVerifiedArtist,
+  artworkManagementRateLimit,
+  csrfProtection,
+  async (req, res) => {
+    try {
+      const artworkId = Number.parseInt(req.params.id, 10);
+      const expectedVersion = Number.parseInt(req.body?.expectedVersion, 10);
+
+      if (!Number.isSafeInteger(expectedVersion) || expectedVersion <= 0) {
+        return res.status(400).json({
+          message: "La version de l'oeuvre est requise.",
+          code: "ARTWORK_VERSION_REQUIRED"
+        });
+      }
+
+      const artwork = await artworkRepository.archiveArtwork({
+        artworkId,
+        artistId: req.artist.id,
+        expectedVersion
+      });
+
+      return res.status(200).json({
+        message: "Oeuvre archivee. Son historique et les droits acquis sont conserves.",
+        artwork: serializeArtwork(artwork, { includeManagement: true })
+      });
+    } catch (error) {
+      const mappedError = mapArtworkRouteError(error);
+
+      if (mappedError) {
+        return res.status(mappedError.status).json({
+          message: mappedError.message,
+          ...(mappedError.code ? { code: mappedError.code } : {})
+        });
+      }
+
+      console.error("Artist artwork archive error:", error);
+      return res.status(500).json({
+        message: "Impossible d'archiver cette oeuvre."
+      });
+    }
+  }
+);
+
 module.exports = router;

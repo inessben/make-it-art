@@ -293,6 +293,15 @@
                   >
                     {{ publishingArtwork ? "Republication…" : "Republier" }}
                   </button>
+                  <button
+                    v-if="artwork.management.capabilities.canArchive"
+                    ref="archiveTrigger"
+                    type="button"
+                    class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#43516B] bg-[#1A2336] px-6 text-sm font-semibold text-[#C8D4E8] transition hover:border-[#61708E]"
+                    @click="openArchiveDialog"
+                  >
+                    Archiver
+                  </button>
                   <NuxtLink
                     v-if="artwork.management.capabilities.canEdit"
                     :to="`/artworks/${artwork.id}/edit`"
@@ -549,6 +558,54 @@
       </section>
     </div>
   </Teleport>
+
+  <Teleport to="body">
+    <div
+      v-if="archiveDialogOpen"
+      class="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4"
+    >
+      <section
+        class="w-full max-w-lg rounded-[28px] border border-[#43516B] bg-[#090D18] p-6 shadow-2xl sm:p-8"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="archive-artwork-title"
+        aria-describedby="archive-artwork-description"
+        @keydown.esc.prevent.stop="closeArchiveDialog"
+        @keydown.tab="trapArchiveDialogFocus"
+      >
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#AFC0DA]">
+          Conservation de l’historique
+        </p>
+        <h2 id="archive-artwork-title" class="mt-3 text-2xl font-semibold text-white">
+          Archiver « {{ artwork?.title }} » ?
+        </h2>
+        <p id="archive-artwork-description" class="mt-4 text-sm leading-6 text-[#B7C5DD]">
+          L’œuvre sera retirée du portfolio actif et des espaces publics. Ses ventes, droits,
+          fichiers nécessaires et autres données commerciales seront conservés.
+        </p>
+        <div class="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            ref="archiveCancelButton"
+            type="button"
+            class="min-h-12 rounded-2xl border border-[#34415A] px-5 text-sm font-semibold text-white transition hover:border-[#61708E] disabled:opacity-50"
+            :disabled="archivingArtwork"
+            @click="closeArchiveDialog"
+          >
+            Annuler
+          </button>
+          <button
+            ref="archiveConfirmButton"
+            type="button"
+            class="min-h-12 rounded-2xl bg-[#687A9B] px-5 text-sm font-semibold text-white transition hover:bg-[#7D91B5] disabled:cursor-wait disabled:opacity-50"
+            :disabled="archivingArtwork"
+            @click="confirmArtworkArchive"
+          >
+            {{ archivingArtwork ? "Archivage…" : "Archiver l’œuvre" }}
+          </button>
+        </div>
+      </section>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
@@ -590,6 +647,11 @@ const hideTrigger = ref(null);
 const hideCancelButton = ref(null);
 const hideConfirmButton = ref(null);
 const publishingArtwork = ref(false);
+const archiveDialogOpen = ref(false);
+const archivingArtwork = ref(false);
+const archiveTrigger = ref(null);
+const archiveCancelButton = ref(null);
+const archiveConfirmButton = ref(null);
 
 function schemaAvailability(status) {
   const values = {
@@ -887,6 +949,66 @@ async function confirmArtworkPublish() {
     await refresh();
   } finally {
     publishingArtwork.value = false;
+  }
+}
+
+async function openArchiveDialog() {
+  managementMessage.value = "";
+  managementMessageTone.value = "error";
+  archiveDialogOpen.value = true;
+  await nextTick();
+  archiveCancelButton.value?.focus();
+}
+
+async function closeArchiveDialog() {
+  if (archivingArtwork.value) return;
+  archiveDialogOpen.value = false;
+  await nextTick();
+  archiveTrigger.value?.focus();
+}
+
+function trapArchiveDialogFocus(event) {
+  const firstButton = archiveCancelButton.value;
+  const lastButton = archiveConfirmButton.value;
+  if (!firstButton || !lastButton) return;
+
+  if (event.shiftKey && document.activeElement === firstButton) {
+    event.preventDefault();
+    lastButton.focus();
+  } else if (!event.shiftKey && document.activeElement === lastButton) {
+    event.preventDefault();
+    firstButton.focus();
+  }
+}
+
+async function confirmArtworkArchive() {
+  const expectedVersion = artwork.value?.management?.lifecycle?.version;
+  if (!artwork.value?.id || !expectedVersion || archivingArtwork.value) return;
+
+  archivingArtwork.value = true;
+  managementMessage.value = "";
+
+  try {
+    const csrf = await $fetch("/api/v1/security/csrf-token", { credentials: "include" });
+    const response = await $fetch(`/api/artists/me/artworks/${artwork.value.id}/archive`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "x-csrf-token": csrf.csrfToken },
+      body: { expectedVersion }
+    });
+    data.value = { ...data.value, artwork: response.artwork };
+    cart.removeArtwork(response.artwork.id);
+    archiveDialogOpen.value = false;
+    managementMessageTone.value = "success";
+    managementMessage.value = response.message;
+  } catch (archiveError) {
+    archiveDialogOpen.value = false;
+    managementMessageTone.value = "error";
+    managementMessage.value =
+      archiveError?.data?.message || "Impossible d’archiver cette œuvre pour le moment.";
+    await refresh();
+  } finally {
+    archivingArtwork.value = false;
   }
 }
 
