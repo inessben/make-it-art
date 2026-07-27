@@ -16,7 +16,7 @@
           class="inline-flex items-center justify-center rounded-2xl border border-violet-700 bg-transparent px-6 py-3 text-sm font-semibold text-slate-100 transition hover:border-violet-600 hover:text-white"
           @click="navigateBack"
         >
-          Back to profile
+          Back to account
         </button>
       </div>
 

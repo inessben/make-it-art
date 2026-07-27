@@ -54,7 +54,7 @@ const primaryLabel = computed(() => {
   }
 
   if (auth.isAuthenticated) {
-    return "Back to profile";
+    return "Back to account";
   }
 
   return "Go to sign in";

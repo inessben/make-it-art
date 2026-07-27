@@ -264,7 +264,14 @@ async function listOrderItemsForArtist(artistId) {
       order: {
         include: {
           user: true,
-          payments: true
+          payments: {
+            orderBy: [{ checkoutVersion: "desc" }, { id: "desc" }],
+            include: {
+              refunds: {
+                orderBy: [{ createdAt: "desc" }, { id: "desc" }]
+              }
+            }
+          }
         }
       }
     }

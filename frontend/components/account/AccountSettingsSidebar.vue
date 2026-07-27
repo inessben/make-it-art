@@ -47,53 +47,81 @@ defineProps({ compact: { type: Boolean, default: false } });
 const auth = useAuthStore();
 const route = useRoute();
 const userInitials = computed(() => getArtistInitials(auth.user?.username || "User"));
-const artistNavigationItem = computed(() => {
+const artistNavigationItems = computed(() => {
   if (auth.isAdmin) {
-    return null;
+    return [];
   }
 
-  if (auth.isArtist) {
-    return {
-      label: "Artist profile",
-      to: "/artist-profile",
-      matches: ["/artist-profile", "/become-artist"],
-      icon: "M12 3l7 4v10l-7 4-7-4V7l7-4zM9 11.5l2 2 4-4"
-    };
+  if (auth.isVerifiedArtist) {
+    return [
+      {
+        label: "Artist dashboard",
+        to: "/artist",
+        matches: ["/artist"],
+        icon: "M4 5h7v6H4zM13 5h7v10h-7zM4 13h7v6H4zM13 17h7v2h-7z"
+      },
+      {
+        label: "Artist sales",
+        to: "/artist/sales",
+        matches: ["/artist/sales"],
+        icon: "M4 19h16M7 16l3-3 3 2 5-6"
+      },
+      {
+        label: "Artist public profile",
+        to: "/artist-profile",
+        matches: ["/artist-profile", "/become-artist"],
+        icon: "M12 3l7 4v10l-7 4-7-4V7l7-4zM9 11.5l2 2 4-4"
+      },
+      {
+        label: "Artist alerts",
+        to: "/notifications",
+        matches: ["/notifications"],
+        icon: "M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M10.5 21h3"
+      }
+    ];
   }
 
   if (auth.artistApplicationStatus === "pending") {
-    return {
-      label: "Artist application",
-      to: "/artist-profile",
-      matches: ["/artist-profile", "/become-artist"],
-      icon: "M12 3l7 4v10l-7 4-7-4V7l7-4zM12 8v4m0 3h.01"
-    };
+    return [
+      {
+        label: "Artist application",
+        to: "/artist-profile",
+        matches: ["/artist-profile", "/become-artist"],
+        icon: "M12 3l7 4v10l-7 4-7-4V7l7-4zM12 8v4m0 3h.01"
+      }
+    ];
   }
 
   if (auth.artistApplicationStatus === "rejected") {
-    return {
-      label: "Update artist application",
-      to: "/artist-profile",
-      matches: ["/artist-profile", "/become-artist"],
-      icon: "M12 3l7 4v10l-7 4-7-4V7l7-4zM8 12h8M12 8v8"
-    };
+    return [
+      {
+        label: "Update artist application",
+        to: "/artist-profile",
+        matches: ["/artist-profile", "/become-artist"],
+        icon: "M12 3l7 4v10l-7 4-7-4V7l7-4zM8 12h8M12 8v8"
+      }
+    ];
   }
 
   if (auth.hasArtistApplication) {
-    return {
-      label: "Artist application",
-      to: "/artist-profile",
-      matches: ["/artist-profile", "/become-artist"],
-      icon: "M12 3l7 4v10l-7 4-7-4V7l7-4zM8 12h8"
-    };
+    return [
+      {
+        label: "Artist application",
+        to: "/artist-profile",
+        matches: ["/artist-profile", "/become-artist"],
+        icon: "M12 3l7 4v10l-7 4-7-4V7l7-4zM8 12h8"
+      }
+    ];
   }
 
-  return {
-    label: "Become an artist",
-    to: "/become-artist",
-    matches: ["/become-artist", "/artist-profile"],
-    icon: "M12 3l7 4v10l-7 4-7-4V7l7-4zM12 8v8M8 12h8"
-  };
+  return [
+    {
+      label: "Become an artist",
+      to: "/become-artist",
+      matches: ["/become-artist", "/artist-profile"],
+      icon: "M12 3l7 4v10l-7 4-7-4V7l7-4zM12 8v8M8 12h8"
+    }
+  ];
 });
 
 const baseNavigation = [
@@ -130,9 +158,11 @@ const baseNavigation = [
 ];
 
 const accountNavigation = computed(() => {
-  return artistNavigationItem.value
-    ? [...baseNavigation.slice(0, 1), artistNavigationItem.value, ...baseNavigation.slice(1)]
-    : baseNavigation;
+  return [
+    ...baseNavigation.slice(0, 1),
+    ...artistNavigationItems.value,
+    ...baseNavigation.slice(1)
+  ];
 });
 function isActive(item) {
   return item.matches.some(

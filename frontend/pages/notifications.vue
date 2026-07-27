@@ -28,7 +28,7 @@
             class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-6 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
             @click="navigateBack"
           >
-            Retour au profil
+            Retour au compte
           </button>
         </div>
       </div>
@@ -184,7 +184,7 @@ function formatDate(value) {
 }
 
 function navigateBack() {
-  return navigateTo("/profile");
+  return navigateTo("/account-settings");
 }
 
 async function loadNotifications() {
