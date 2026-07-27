@@ -700,7 +700,8 @@ function scrollHomeArtists(direction) {
 }
 
 .homepage__section-heading--compact {
-  max-width: 690px;
+  width: 100%;
+  max-width: none;
 }
 
 .homepage__section-title {
@@ -1087,6 +1088,7 @@ function scrollHomeArtists(direction) {
 .homepage__section-link {
   display: inline-flex;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 8px;
   padding: 24px 0;
   font-family: "Geist", "Hanken Grotesk", sans-serif;
@@ -1094,6 +1096,7 @@ function scrollHomeArtists(direction) {
   font-weight: 500;
   text-decoration: underline;
   text-underline-offset: 3px;
+  white-space: nowrap;
   color: rgba(230, 237, 247, 0.72);
   transition: color 0.2s ease;
 }
