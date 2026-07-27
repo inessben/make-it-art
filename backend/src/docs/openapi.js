@@ -636,6 +636,16 @@ const marketplacePaths = {
               items: {
                 $ref: "#/components/schemas/ArtworkSummary"
               }
+            },
+            counts: {
+              type: "object",
+              required: ["total", "PUBLISHED", "HIDDEN", "ARCHIVED"],
+              properties: {
+                total: { type: "integer", minimum: 0 },
+                PUBLISHED: { type: "integer", minimum: 0 },
+                HIDDEN: { type: "integer", minimum: 0 },
+                ARCHIVED: { type: "integer", minimum: 0 }
+              }
             }
           }
         }),

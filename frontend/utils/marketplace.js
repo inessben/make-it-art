@@ -76,6 +76,36 @@ const ARTWORK_VISIBILITY = Object.freeze({
   ARCHIVED: { label: "Archivée", tone: "archived" }
 });
 
+export const ARTIST_ARTWORK_VISIBILITY_FILTERS = Object.freeze([
+  Object.freeze({ value: "PUBLISHED", label: "Actives" }),
+  Object.freeze({ value: "HIDDEN", label: "Masquées" }),
+  Object.freeze({ value: "ARCHIVED", label: "Archivées" })
+]);
+
+export function filterArtistArtworksByVisibility(artworks, visibility) {
+  const normalizedVisibility = String(visibility || "PUBLISHED").toUpperCase();
+  return (Array.isArray(artworks) ? artworks : []).filter(
+    (artwork) => String(artwork?.visibility || "PUBLISHED").toUpperCase() === normalizedVisibility
+  );
+}
+
+export function normalizeArtistArtworkCounts(source) {
+  const counts = source && typeof source === "object" ? source : {};
+  const normalizeCount = (value) => (Number.isSafeInteger(value) && value >= 0 ? value : 0);
+  const normalized = {
+    PUBLISHED: normalizeCount(counts.PUBLISHED),
+    HIDDEN: normalizeCount(counts.HIDDEN),
+    ARCHIVED: normalizeCount(counts.ARCHIVED)
+  };
+
+  return {
+    ...normalized,
+    total: Number.isSafeInteger(counts.total)
+      ? Math.max(0, counts.total)
+      : normalized.PUBLISHED + normalized.HIDDEN + normalized.ARCHIVED
+  };
+}
+
 const ARTWORK_MANAGEMENT_REASON_LABELS = Object.freeze({
   ARTWORK_ARCHIVED: "Restaurez d'abord cette œuvre.",
   ARTWORK_HAS_PURCHASES: "Cette œuvre a déjà été achetée.",

@@ -1046,9 +1046,21 @@ router.get("/artists/me/contract.pdf", async (req, res) => {
 router.get("/artists/me/artworks", ensureVerifiedArtist, async (req, res) => {
   try {
     const artworks = await artworkRepository.listArtworksByArtistId(req.artist.id);
+    const serializedArtworks = artworks.map((artwork) =>
+      serializeArtwork(artwork, { includeManagement: true })
+    );
+    const counts = serializedArtworks.reduce(
+      (summary, artwork) => {
+        summary.total += 1;
+        summary[artwork.visibility] += 1;
+        return summary;
+      },
+      { total: 0, PUBLISHED: 0, HIDDEN: 0, ARCHIVED: 0 }
+    );
 
     return res.status(200).json({
-      artworks: artworks.map((artwork) => serializeArtwork(artwork, { includeManagement: true }))
+      artworks: serializedArtworks,
+      counts
     });
   } catch (error) {
     console.error("Artist artworks fetch error:", error);

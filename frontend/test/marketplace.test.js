@@ -2,13 +2,16 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  ARTIST_ARTWORK_VISIBILITY_FILTERS,
   ARTWORK_LICENSE_OPTIONS,
+  filterArtistArtworksByVisibility,
   formatArtworkLicenseType,
   formatArtworkManagementReason,
   getArtworkAvailabilityPresentation,
   getArtworkVisibilityPresentation,
   isArtworkDescriptionRequired,
-  isArtworkOwnedByArtist
+  isArtworkOwnedByArtist,
+  normalizeArtistArtworkCounts
 } from "../utils/marketplace.js";
 
 test("artwork licence labels expose every publication choice", () => {
@@ -35,6 +38,36 @@ test("artwork management states have accessible labels and refusal explanations"
   assert.equal(getArtworkVisibilityPresentation("ARCHIVED").label, "Archivée");
   assert.match(formatArtworkManagementReason("ARTWORK_HAS_PURCHASES"), /déjà été achetée/i);
   assert.match(formatArtworkManagementReason("ARTWORK_TRANSACTION_IN_PROGRESS"), /paiement/i);
+});
+
+test("artist artwork workspace separates lifecycle states and trusts server counts", () => {
+  assert.deepEqual(
+    ARTIST_ARTWORK_VISIBILITY_FILTERS.map(({ value }) => value),
+    ["PUBLISHED", "HIDDEN", "ARCHIVED"]
+  );
+
+  const artworks = [
+    { id: 1, visibility: "PUBLISHED" },
+    { id: 2, visibility: "HIDDEN" },
+    { id: 3, visibility: "ARCHIVED" },
+    { id: 4 }
+  ];
+
+  assert.deepEqual(
+    filterArtistArtworksByVisibility(artworks, "PUBLISHED").map(({ id }) => id),
+    [1, 4]
+  );
+  assert.deepEqual(filterArtistArtworksByVisibility(artworks, "HIDDEN"), [artworks[1]]);
+  assert.deepEqual(
+    normalizeArtistArtworkCounts({ total: 8, PUBLISHED: 3, HIDDEN: 2, ARCHIVED: 3 }),
+    { total: 8, PUBLISHED: 3, HIDDEN: 2, ARCHIVED: 3 }
+  );
+  assert.deepEqual(normalizeArtistArtworkCounts(null), {
+    total: 0,
+    PUBLISHED: 0,
+    HIDDEN: 0,
+    ARCHIVED: 0
+  });
 });
 
 test("exclusive availability has explicit customer-facing labels", () => {

@@ -482,6 +482,36 @@ test("GET /artists/me/artworks lists artworks for the current artist", async (t)
         },
         artist: verifiedArtist,
         favorites: []
+      },
+      {
+        id: 43,
+        title: "Private Study",
+        priceAmount: 8000,
+        currency: "EUR",
+        licenseType: "PERSONAL",
+        saleStatus: "AVAILABLE",
+        visibility: "HIDDEN",
+        moderationStatus: "approved",
+        stockQuantity: 0,
+        reservedQuantity: 0,
+        orderItems: [{ order: { status: "PAID" } }],
+        reservations: [],
+        artist: verifiedArtist
+      },
+      {
+        id: 44,
+        title: "Past Collection",
+        priceAmount: 15000,
+        currency: "EUR",
+        licenseType: "EXCLUSIVE",
+        saleStatus: "SOLD",
+        visibility: "ARCHIVED",
+        moderationStatus: "approved",
+        stockQuantity: 0,
+        reservedQuantity: 0,
+        orderItems: [],
+        reservations: [],
+        artist: verifiedArtist
       }
     ]
   });
@@ -489,10 +519,18 @@ test("GET /artists/me/artworks lists artworks for the current artist", async (t)
   const response = await requestJson(baseUrl, "/artists/me/artworks");
 
   assert.equal(response.status, 200);
-  assert.equal(response.body.artworks.length, 1);
+  assert.equal(response.body.artworks.length, 3);
   assert.equal(response.body.artworks[0].title, "Neon Garden");
   assert.equal(response.body.artworks[0].moderationStatus, "pending");
   assert.equal(response.body.artworks[0].moderationReviewer, "Admin");
+  assert.deepEqual(response.body.counts, {
+    total: 3,
+    PUBLISHED: 1,
+    HIDDEN: 1,
+    ARCHIVED: 1
+  });
+  assert.equal(response.body.artworks[1].management.lifecycle.hasConfirmedPurchase, true);
+  assert.equal(response.body.artworks[2].management.capabilities.canRestore, true);
   assert.deepEqual(calls.listArtworksByArtistId, [verifiedArtist.id]);
 });
 
