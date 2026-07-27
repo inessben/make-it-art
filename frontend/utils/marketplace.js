@@ -153,3 +153,9 @@ export function isArtworkOwnedByArtist(artwork, user) {
     artworkArtistId === userArtistId
   );
 }
+
+export function shouldSynchronizeArtworkManagement(artwork, user) {
+  if (!user) return true;
+
+  return isArtworkOwnedByArtist(artwork, user) && !artwork?.management;
+}

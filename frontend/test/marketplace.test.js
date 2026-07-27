@@ -11,7 +11,8 @@ import {
   getArtworkVisibilityPresentation,
   isArtworkDescriptionRequired,
   isArtworkOwnedByArtist,
-  normalizeArtistArtworkCounts
+  normalizeArtistArtworkCounts,
+  shouldSynchronizeArtworkManagement
 } from "../utils/marketplace.js";
 
 test("artwork licence labels expose every publication choice", () => {
@@ -89,4 +90,14 @@ test("an artist is recognized as the owner of their own artwork", () => {
   assert.equal(isArtworkOwnedByArtist(artwork, { artist: { id: 43 } }), false);
   assert.equal(isArtworkOwnedByArtist(artwork, { artist: null }), false);
   assert.equal(isArtworkOwnedByArtist(null, { artist: { id: 42 } }), false);
+});
+
+test("a stale owner session triggers a management capability refresh", () => {
+  const artwork = { artist: { id: 42 } };
+  const owner = { artist: { id: 42 } };
+
+  assert.equal(shouldSynchronizeArtworkManagement(artwork, owner), true);
+  assert.equal(shouldSynchronizeArtworkManagement({ ...artwork, management: {} }, owner), false);
+  assert.equal(shouldSynchronizeArtworkManagement(artwork, { artist: { id: 43 } }), false);
+  assert.equal(shouldSynchronizeArtworkManagement(artwork, null), true);
 });

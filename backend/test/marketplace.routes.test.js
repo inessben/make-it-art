@@ -248,7 +248,8 @@ async function requestJson(baseUrl, path, { method = "GET", body } = {}) {
 
   return {
     status: response.status,
-    body: payload
+    body: payload,
+    headers: response.headers
   };
 }
 
@@ -290,6 +291,8 @@ test("GET /artworks/:id only exposes management capabilities to the owner", asyn
   const ownerResponse = await requestJson(ownerApp.baseUrl, "/artworks/12");
 
   assert.equal(ownerResponse.status, 200);
+  assert.equal(ownerResponse.headers.get("cache-control"), "private, no-store");
+  assert.match(ownerResponse.headers.get("vary"), /cookie/i);
   assert.equal(ownerResponse.body.artwork.management.capabilities.canEdit, true);
 });
 

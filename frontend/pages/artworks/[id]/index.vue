@@ -692,7 +692,8 @@ import {
   getArtistInitials,
   getArtworkAvailabilityPresentation,
   getArtworkVisibilityPresentation,
-  isArtworkOwnedByArtist
+  isArtworkOwnedByArtist,
+  shouldSynchronizeArtworkManagement
 } from "~/utils/marketplace";
 
 const route = useRoute();
@@ -1276,7 +1277,7 @@ onMounted(async () => {
     cart.removeArtwork(artwork.value.id);
   }
 
-  if (!auth.user) {
+  if (shouldSynchronizeArtworkManagement(artwork.value, auth.user)) {
     try {
       await auth.fetchCurrentUser();
       await refresh();

@@ -199,6 +199,9 @@ router.get("/artworks", attachViewer, async (req, res) => {
 });
 
 router.get("/artworks/:id(\\d+)", attachViewer, async (req, res) => {
+  res.set("Cache-Control", "private, no-store");
+  res.vary("Cookie");
+
   try {
     const artworkId = normalizeResourceId(req.params.id);
 
