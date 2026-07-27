@@ -9,7 +9,10 @@ const artworkRepository = require("../repositories/artwork.repository");
 const categoryRepository = require("../repositories/category.repository");
 const userRepository = require("../repositories/user.repository");
 const { ARTIST_APPLICATION_STATUS } = require("../constants/artist-application-status");
-const { normalizeArtworkLicenseType } = require("../constants/artwork-license-types");
+const {
+  ARTWORK_LICENSE_TYPE,
+  normalizeArtworkLicenseType
+} = require("../constants/artwork-license-types");
 const {
   CONTRACT_VERSION,
   extractArtistApplicationPayload,
@@ -122,7 +125,11 @@ function normalizeText(value) {
 }
 
 function parseBooleanFlag(value) {
-  return ["1", "true", "yes", "on"].includes(String(value || "").trim().toLowerCase());
+  return ["1", "true", "yes", "on"].includes(
+    String(value || "")
+      .trim()
+      .toLowerCase()
+  );
 }
 
 function normalizeStyles(value) {
@@ -249,6 +256,10 @@ function validateArtworkInput(input) {
 
   if (!input.licenseType) {
     return "Le type de licence de l'oeuvre est requis.";
+  }
+
+  if (input.licenseType === ARTWORK_LICENSE_TYPE.COMMERCIAL && !input.description) {
+    return "La description est requise pour preciser les conditions d'utilisation commerciale.";
   }
 
   if (parsePriceValue(input.price) === null) {
@@ -462,7 +473,11 @@ router.patch(
         avatarPath: nextAvatarPath
       });
 
-      if (uploadedImagePath && currentArtist.avatarPath && currentArtist.avatarPath !== uploadedImagePath) {
+      if (
+        uploadedImagePath &&
+        currentArtist.avatarPath &&
+        currentArtist.avatarPath !== uploadedImagePath
+      ) {
         await removeUploadedImage(currentArtist.avatarPath);
       }
 

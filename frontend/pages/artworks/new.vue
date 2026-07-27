@@ -107,14 +107,26 @@
         </label>
 
         <label class="grid gap-2 text-sm text-[#9EABBE]">
-          <span class="font-medium text-[#E6EDF7]">Description</span>
+          <span class="font-medium text-[#E6EDF7]">
+            Description{{ descriptionRequired ? " *" : "" }}
+          </span>
           <textarea
             v-model.trim="form.description"
             rows="5"
             maxlength="4000"
-            placeholder="Decris ton univers, ta technique ou l'histoire de cette oeuvre..."
+            :placeholder="
+              descriptionRequired
+                ? `Décris l'oeuvre et précise ses conditions d'utilisation commerciale...`
+                : `Décris ton univers, ta technique ou l'histoire de cette oeuvre...`
+            "
             class="rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7]"
+            :required="descriptionRequired"
+            :aria-required="descriptionRequired"
           />
+          <span v-if="descriptionRequired" class="leading-6 text-[#8AA2FF]">
+            Indique ici les conditions d'utilisation commerciale : usages autorisés, restrictions,
+            supports, durée ou territoire applicables.
+          </span>
         </label>
 
         <label class="grid gap-2 text-sm text-[#9EABBE]">
@@ -188,8 +200,9 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, reactive, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { navigateTo } from "#app";
+import { ARTWORK_LICENSE_OPTIONS, isArtworkDescriptionRequired } from "~/utils/marketplace";
 
 definePageMeta({
   middleware: ["auth", "artist"]
@@ -203,23 +216,7 @@ const formError = ref(false);
 const fileInput = ref(null);
 const selectedFile = ref(null);
 const previewUrl = ref("");
-const licenseOptions = [
-  {
-    value: "PERSONAL",
-    label: "Personnelle",
-    description: "L'acheteur peut utiliser l'oeuvre dans un cadre personnel."
-  },
-  {
-    value: "COMMERCIAL",
-    label: "Commerciale",
-    description: "L'acheteur peut utiliser l'oeuvre dans un cadre commercial."
-  },
-  {
-    value: "EXCLUSIVE",
-    label: "Exclusive",
-    description: "Une seule personne pourra acheter cette oeuvre."
-  }
-];
+const licenseOptions = ARTWORK_LICENSE_OPTIONS;
 
 const form = reactive({
   title: "",
@@ -229,6 +226,7 @@ const form = reactive({
   licenseType: "",
   protection: false
 });
+const descriptionRequired = computed(() => isArtworkDescriptionRequired(form.licenseType));
 
 function openFilePicker() {
   fileInput.value?.click();
@@ -291,6 +289,13 @@ async function submitArtwork() {
   if (!selectedFile.value) {
     formError.value = true;
     formMessage.value = "Ajoute une image pour publier ton oeuvre.";
+    return;
+  }
+
+  if (descriptionRequired.value && !form.description) {
+    formError.value = true;
+    formMessage.value =
+      "Ajoute les conditions d'utilisation commerciale dans la description de l'oeuvre.";
     return;
   }
 

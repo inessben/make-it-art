@@ -1317,7 +1317,11 @@ const artistWorkspacePaths = {
               required: ["title", "categoryId", "price", "licenseType", "image"],
               properties: {
                 title: { type: "string" },
-                description: { type: "string" },
+                description: {
+                  type: "string",
+                  description:
+                    "Required for COMMERCIAL licences and must specify the commercial usage terms."
+                },
                 categoryId: { type: "integer", minimum: 1 },
                 price: { type: "string" },
                 licenseType: {
@@ -3422,7 +3426,11 @@ const openApiSpec = {
         required: ["title", "categoryId", "price", "licenseType"],
         properties: {
           title: { type: "string" },
-          description: { type: "string" },
+          description: {
+            type: "string",
+            description:
+              "Required for COMMERCIAL licences and must specify the commercial usage terms."
+          },
           categoryId: { type: "integer", minimum: 1 },
           price: { type: "string" },
           licenseType: {

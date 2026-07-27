@@ -36,6 +36,29 @@ const ARTWORK_LICENSE_LABELS = Object.freeze({
   EXCLUSIVE: "Licence exclusive"
 });
 
+export const ARTWORK_LICENSE_OPTIONS = Object.freeze([
+  Object.freeze({
+    value: "PERSONAL",
+    label: "Personnelle",
+    description: "L'acheteur peut utiliser l'oeuvre dans un cadre personnel."
+  }),
+  Object.freeze({
+    value: "COMMERCIAL",
+    label: "Commerciale",
+    description:
+      "L'acheteur peut utiliser l'oeuvre dans un cadre commercial. Précise les conditions d'utilisation commerciale dans la description de l'oeuvre."
+  }),
+  Object.freeze({
+    value: "EXCLUSIVE",
+    label: "Exclusive",
+    description: "Une seule personne pourra acheter cette oeuvre."
+  })
+]);
+
+export function isArtworkDescriptionRequired(licenseType) {
+  return String(licenseType || "").toUpperCase() === "COMMERCIAL";
+}
+
 export function formatArtworkLicenseType(value) {
   return ARTWORK_LICENSE_LABELS[String(value || "").toUpperCase()] || "Licence personnelle";
 }

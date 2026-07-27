@@ -300,19 +300,70 @@ test("POST /artists/me/artworks creates an artwork for a verified artist", async
   });
 });
 
-test("POST /artists/me/artworks requires a supported licence type", async (t) => {
+test("POST /artists/me/artworks accepts every supported licence type", async (t) => {
+  const { baseUrl, calls } = await startArtistArtworkRoutesApp(t);
+
+  for (const licenseType of ["PERSONAL", "COMMERCIAL", "EXCLUSIVE"]) {
+    const response = await requestJson(baseUrl, "/artists/me/artworks", {
+      method: "POST",
+      body: {
+        title: `Licence ${licenseType}`,
+        categoryId: 9,
+        price: "120 tokens",
+        licenseType,
+        ...(licenseType === "COMMERCIAL"
+          ? { description: "Utilisation autorisee sur les supports numeriques pendant un an." }
+          : {})
+      }
+    });
+
+    assert.equal(response.status, 201);
+    assert.equal(response.body.artwork.licenseType, licenseType);
+  }
+
+  assert.deepEqual(
+    calls.createArtwork.map(({ licenseType }) => licenseType),
+    ["PERSONAL", "COMMERCIAL", "EXCLUSIVE"]
+  );
+});
+
+test("POST /artists/me/artworks requires commercial usage terms in the description", async (t) => {
   const { baseUrl, calls } = await startArtistArtworkRoutesApp(t);
   const response = await requestJson(baseUrl, "/artists/me/artworks", {
     method: "POST",
     body: {
-      title: "Licence missing",
+      title: "Commercial without terms",
       categoryId: 9,
-      price: "80 tokens"
+      price: "120 tokens",
+      licenseType: "COMMERCIAL",
+      description: "   "
     }
   });
 
   assert.equal(response.status, 400);
-  assert.match(response.body.message, /type de licence/i);
+  assert.match(response.body.message, /description.*conditions d'utilisation commerciale/i);
+  assert.equal(calls.createArtwork.length, 0);
+});
+
+test("POST /artists/me/artworks requires a supported licence type", async (t) => {
+  const { baseUrl, calls } = await startArtistArtworkRoutesApp(t);
+  for (const [title, licenseType] of [
+    ["Licence missing", undefined],
+    ["Licence invalid", "RENTAL"]
+  ]) {
+    const response = await requestJson(baseUrl, "/artists/me/artworks", {
+      method: "POST",
+      body: {
+        title,
+        categoryId: 9,
+        price: "80 tokens",
+        ...(licenseType ? { licenseType } : {})
+      }
+    });
+
+    assert.equal(response.status, 400);
+    assert.match(response.body.message, /type de licence/i);
+  }
   assert.equal(calls.createArtwork.length, 0);
 });
 
