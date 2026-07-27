@@ -284,6 +284,7 @@ async function createFixture(prisma) {
       title: `Finalization ${marker}`,
       priceAmount: 4200,
       currency: "EUR",
+      licenseType: "EXCLUSIVE",
       saleStatus: "AVAILABLE",
       stockQuantity: 1,
       reservedQuantity: 1

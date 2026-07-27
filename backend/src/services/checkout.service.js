@@ -162,6 +162,7 @@ async function createPendingCheckout({
       assertAmountSupported(cartSummary.totalAmount);
 
       const expiresAt = new Date(Date.now() + RESERVATION_DURATION_MS);
+      const reservableItems = cartSummary.items.filter((item) => !item.isUnlimited);
       const order = await transaction.order.create({
         data: {
           userId,
@@ -188,6 +189,7 @@ async function createPendingCheckout({
               artworkId: item.artworkId,
               artworkTitle: item.title,
               artistName: item.artistName,
+              licenseType: item.licenseType,
               quantity: item.quantity,
               unitAmount: item.unitAmount,
               subtotalAmount: item.subtotalAmount,
@@ -200,13 +202,17 @@ async function createPendingCheckout({
               currency: item.currency
             }))
           },
-          reservations: {
-            create: cartSummary.items.map((item) => ({
-              artworkId: item.artworkId,
-              quantity: item.quantity,
-              expiresAt
-            }))
-          },
+          ...(reservableItems.length > 0
+            ? {
+                reservations: {
+                  create: reservableItems.map((item) => ({
+                    artworkId: item.artworkId,
+                    quantity: item.quantity,
+                    expiresAt
+                  }))
+                }
+              }
+            : {}),
           payments: {
             create: {
               checkoutVersion: 1,
@@ -219,7 +225,7 @@ async function createPendingCheckout({
         include: { payments: true }
       });
 
-      for (const item of cartSummary.items) {
+      for (const item of reservableItems) {
         await transaction.artwork.update({
           where: { id: item.artworkId },
           data: {
@@ -559,7 +565,7 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
       throw new Error("CANNOT_BUY_OWN_ARTWORK");
     }
 
-    if (artwork.isSold) {
+    if (artwork.licenseType === "EXCLUSIVE" && artwork.isSold) {
       throw new Error("ARTWORK_ALREADY_SOLD");
     }
 
@@ -576,6 +582,7 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
       lineItems.push({
         artworkId: artwork.id,
         artwork,
+        licenseType: artwork.licenseType || "PERSONAL",
         quantity: 1,
         unitPrice,
         lineTotal: unitPrice
@@ -587,6 +594,7 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
     userId,
     lineItems: lineItems.map((lineItem) => ({
       artworkId: lineItem.artworkId,
+      licenseType: lineItem.licenseType,
       unitPrice: lineItem.unitPrice
     })),
     paymentMethod: paymentMethod || "card",

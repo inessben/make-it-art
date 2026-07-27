@@ -60,6 +60,7 @@ databaseTest("cart pricing is isolated per owner and revalidated server-side", a
         title: `Cart artwork ${marker}`,
         priceAmount: 2500,
         currency: "EUR",
+        licenseType: "COMMERCIAL",
         saleStatus: "AVAILABLE",
         stockQuantity: 2
       }
@@ -195,6 +196,7 @@ databaseTest("locking allows only one cart to reserve the last copy", async () =
         title: `Last copy ${marker}`,
         priceAmount: 5000,
         currency: "EUR",
+        licenseType: "EXCLUSIVE",
         saleStatus: "AVAILABLE",
         stockQuantity: 1
       }

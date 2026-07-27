@@ -15,6 +15,7 @@ function createCart(overrides = {}) {
           title: "Server-priced artwork",
           priceAmount: 1250,
           currency: "EUR",
+          licenseType: "EXCLUSIVE",
           saleStatus: "AVAILABLE",
           stockQuantity: 3,
           reservedQuantity: 0,
@@ -74,4 +75,18 @@ test("reserved stock is excluded from the available quantity", () => {
   assert.equal(cart.items[0].availableQuantity, 1);
   assert.equal(cart.payable, false);
   assert.equal(cart.items[0].issue, "INSUFFICIENT_STOCK");
+});
+
+test("personal and commercial artworks stay payable without inventory", () => {
+  for (const licenseType of ["PERSONAL", "COMMERCIAL"]) {
+    const cartData = createCart();
+    cartData.items[0].artwork.licenseType = licenseType;
+    cartData.items[0].artwork.stockQuantity = 0;
+    cartData.items[0].artwork.reservedQuantity = 0;
+    const cart = buildCartSummary(cartData);
+
+    assert.equal(cart.payable, true);
+    assert.equal(cart.items[0].availableQuantity, null);
+    assert.equal(cart.items[0].isUnlimited, true);
+  }
 });

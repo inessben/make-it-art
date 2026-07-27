@@ -846,6 +846,7 @@ function serializeAdminOrderItem(item) {
     artworkId: item.artworkId,
     artworkTitle: item.artworkTitle,
     artistName: item.artistName,
+    licenseType: item.licenseType,
     quantity: item.quantity,
     unitAmount: item.unitAmount,
     subtotalAmount: item.subtotalAmount,

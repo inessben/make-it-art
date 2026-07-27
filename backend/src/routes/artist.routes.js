@@ -291,6 +291,14 @@ function mapArtworkRouteError(error) {
     };
   }
 
+  if (error?.message === "ARTWORK_LICENSE_LOCKED") {
+    return {
+      status: 409,
+      message:
+        "Le type de licence ne peut plus etre modifie pendant une reservation ou apres la vente."
+    };
+  }
+
   if (error?.message === "CATEGORY_NOT_FOUND") {
     return {
       status: 400,

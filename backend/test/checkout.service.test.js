@@ -26,6 +26,7 @@ const artwork = {
   title: "Neon Garden",
   price: "120 tokens",
   priceTokens: "120 tokens",
+  licenseType: "EXCLUSIVE",
   artist: {
     id: 3,
     userId: artistUser.id,
@@ -206,4 +207,22 @@ test("createCheckout rejects artworks that are already sold", async (t) => {
       }),
     (error) => error.message === "ARTWORK_ALREADY_SOLD"
   );
+});
+
+test("createCheckout keeps a personal artwork purchasable after previous sales", async (t) => {
+  const { service, calls, restore } = loadCheckoutService({
+    artworks: [{ ...artwork, licenseType: "PERSONAL", isSold: true }]
+  });
+
+  t.after(() => {
+    restore();
+  });
+
+  await service.createCheckout({
+    userId: buyer.id,
+    items: [{ artworkId: artwork.id, quantity: 1 }]
+  });
+
+  assert.equal(calls.createCheckoutOrder.length, 1);
+  assert.equal(calls.createCheckoutOrder[0].lineItems[0].licenseType, "PERSONAL");
 });

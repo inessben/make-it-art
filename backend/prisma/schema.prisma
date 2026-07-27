@@ -393,6 +393,7 @@ model OrderItem {
   priceTokens          String?               @map("price_tokens")
   artworkTitle         String                @map("artwork_title")
   artistName           String                @map("artist_name")
+  licenseType          ArtworkLicenseType    @default(PERSONAL) @map("license_type")
   quantity             Int                   @default(1)
   unitAmount           Int                   @map("unit_amount")
   subtotalAmount       Int                   @map("subtotal_amount")

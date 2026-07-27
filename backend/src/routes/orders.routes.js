@@ -131,6 +131,7 @@ router.get("/orders", authRequired, async (req, res) => {
         artworks: order.items.map((item) => ({
           id: item.artwork.id,
           title: item.artwork.title,
+          licenseType: item.licenseType,
           priceTokens: item.priceTokens || formatAmount(item.unitAmount, item.currency),
           unitAmount: item.unitAmount,
           currency: item.currency
@@ -184,6 +185,7 @@ router.get("/orders/:id", authRequired, async (req, res) => {
           id: item.id,
           artworkId: item.artworkId,
           artworkTitle: item.artwork.title,
+          licenseType: item.licenseType,
           priceTokens: item.priceTokens || formatAmount(item.unitAmount, item.currency),
           unitAmount: item.unitAmount,
           currency: item.currency

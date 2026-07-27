@@ -1,5 +1,6 @@
 const prisma = require("../lib/prisma");
 const { ARTWORK_MODERATION_STATUS } = require("../constants/artwork-moderation-status");
+const { isExclusiveArtworkLicenseType } = require("../constants/artwork-license-types");
 
 const MAX_ARTWORK_PRICE_AMOUNT = 99_999_999;
 const LEGACY_PRICE_PATTERN = /^(\d{1,6})(?:[.,](\d{1,2}))?\s*(?:€|eur|tokens?)?$/i;
@@ -138,7 +139,7 @@ async function createArtwork({
       currency: "EUR",
       licenseType,
       saleStatus: "AVAILABLE",
-      stockQuantity: 1,
+      stockQuantity: isExclusiveArtworkLicenseType(licenseType) ? 1 : 0,
       reservedQuantity: 0,
       favoriteCount: 0,
       protection: Boolean(protection),
@@ -175,6 +176,11 @@ async function updateArtwork({
     throw new Error("ARTWORK_NOT_FOUND");
   }
 
+  const licenseChanged = existing.licenseType !== licenseType;
+  if (licenseChanged && (existing.reservedQuantity > 0 || existing.isSold)) {
+    throw new Error("ARTWORK_LICENSE_LOCKED");
+  }
+
   const priceAmount = parsePriceAmount(price);
   const shouldPublishDraft =
     existing.saleStatus === "DRAFT" &&
@@ -194,10 +200,16 @@ async function updateArtwork({
       priceAmount,
       currency: "EUR",
       licenseType,
+      ...(licenseChanged
+        ? {
+            saleStatus: "AVAILABLE",
+            stockQuantity: isExclusiveArtworkLicenseType(licenseType) ? 1 : 0
+          }
+        : {}),
       ...(shouldPublishDraft
         ? {
             saleStatus: "AVAILABLE",
-            stockQuantity: 1
+            stockQuantity: isExclusiveArtworkLicenseType(licenseType) ? 1 : 0
           }
         : {}),
       protection: Boolean(protection),
