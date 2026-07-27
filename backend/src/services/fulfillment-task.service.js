@@ -7,6 +7,7 @@ const {
   sendPaymentOperationsAlert,
   sendRefundStatusEmail
 } = require("./mail.service");
+const { notifyArtistsForOrderSale } = require("./artist-sale-notification.service");
 const {
   generateCertificates,
   grantDownloadRights,
@@ -17,6 +18,7 @@ const {
 const { issueCommissionInvoices, issueSaleInvoice } = require("./invoice.service");
 
 const KNOWN_TASK_TYPES = Object.freeze([
+  "NOTIFY_ARTIST_SALE",
   "SEND_PAYMENT_CONFIRMATION",
   "SEND_REFUND_STATUS",
   "GRANT_DOWNLOAD_RIGHTS",
@@ -107,6 +109,14 @@ function createDefaultHandlers({
   disputeRightsPolicy
 } = {}) {
   return {
+    NOTIFY_ARTIST_SALE: async ({ task }) => {
+      const result = await notifyArtistsForOrderSale({
+        orderId: task.orderId,
+        prismaClient
+      });
+
+      return { effectReference: `artist-sale:${result.orderId}:${result.notifiedArtists}` };
+    },
     SEND_PAYMENT_CONFIRMATION: async ({ task }) => {
       assertRecipient(task);
       assertPaymentConfirmationAllowed(task);

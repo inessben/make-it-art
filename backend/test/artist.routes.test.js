@@ -12,6 +12,7 @@ const artistRepositoryPath = require.resolve("../src/repositories/artist.reposit
 const userRepositoryPath = require.resolve("../src/repositories/user.repository");
 const contractServicePath = require.resolve("../src/services/artist-contract.service");
 const serializeAuthUserPath = require.resolve("../src/utils/serialize-auth-user");
+const artistWithdrawalServicePath = require.resolve("../src/services/artist-withdrawal.service");
 
 const authUser = {
   id: 7,
@@ -144,6 +145,28 @@ async function startArtistRoutesApp(t, overrides = {}) {
                 status: user.artistApplicationDraft.status
               }
             : null
+        };
+      }
+    },
+    [artistWithdrawalServicePath]: {
+      ArtistWithdrawalError: class ArtistWithdrawalError extends Error {},
+      async buildArtistWithdrawalWorkspace() {
+        return {
+          finance: {},
+          summary: {},
+          requests: []
+        };
+      },
+      async createArtistWithdrawalRequest() {
+        return {
+          publicId: "22222222-2222-4222-8222-222222222222",
+          status: "REQUESTED"
+        };
+      },
+      async cancelArtistWithdrawal() {
+        return {
+          publicId: "22222222-2222-4222-8222-222222222222",
+          status: "CANCELED"
         };
       }
     }
@@ -342,6 +365,22 @@ test("artist router does not intercept unrelated admin routes", async (t) => {
       serializeAuthUser(user) {
         return user;
       }
+    },
+    [artistWithdrawalServicePath]: {
+      ArtistWithdrawalError: class ArtistWithdrawalError extends Error {},
+      async buildArtistWithdrawalWorkspace() {
+        return {
+          finance: {},
+          summary: {},
+          requests: []
+        };
+      },
+      async createArtistWithdrawalRequest() {
+        return null;
+      },
+      async cancelArtistWithdrawal() {
+        return null;
+      }
     }
   });
 
@@ -418,6 +457,22 @@ test("artist router does not intercept public marketplace artist routes", async 
     [serializeAuthUserPath]: {
       serializeAuthUser(user) {
         return user;
+      }
+    },
+    [artistWithdrawalServicePath]: {
+      ArtistWithdrawalError: class ArtistWithdrawalError extends Error {},
+      async buildArtistWithdrawalWorkspace() {
+        return {
+          finance: {},
+          summary: {},
+          requests: []
+        };
+      },
+      async createArtistWithdrawalRequest() {
+        return null;
+      },
+      async cancelArtistWithdrawal() {
+        return null;
       }
     }
   });

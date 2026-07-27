@@ -169,6 +169,88 @@
               {{ finance.withdrawalNote || defaultWithdrawalNote }}
             </p>
           </div>
+
+          <div class="mt-6 rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-4">
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+                  Withdrawal workspace
+                </p>
+                <p class="mt-2 text-lg font-semibold text-[#E6EDF7]">Manual payout pipeline</p>
+                <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
+                  Suivez le solde retirable, les demandes en attente et les versements deja executes
+                  par l'administration.
+                </p>
+              </div>
+              <NuxtLink
+                to="/artist/withdrawals"
+                class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-4 py-2 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+              >
+                Gérer les retraits
+              </NuxtLink>
+            </div>
+
+            <div class="mt-5 grid gap-3 md:grid-cols-2">
+              <div
+                v-for="card in withdrawalCards"
+                :key="card.label"
+                class="rounded-[18px] border border-[#1A1F2A] bg-[#090017] p-4"
+              >
+                <p class="text-xs uppercase tracking-[0.16em] text-[#4A6CF7]">
+                  {{ card.label }}
+                </p>
+                <p class="mt-3 text-2xl font-semibold text-white">
+                  {{ card.value }}
+                </p>
+                <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">
+                  {{ card.description }}
+                </p>
+              </div>
+            </div>
+
+            <div
+              v-if="recentWithdrawalItems.length === 0"
+              class="mt-5 rounded-[18px] border border-[#1A1F2A] bg-[#090017] px-4 py-4 text-sm text-[#A0ADB4]"
+            >
+              Aucune demande de retrait pour le moment.
+            </div>
+
+            <div v-else class="mt-5 grid gap-3">
+              <div
+                v-for="request in recentWithdrawalItems"
+                :key="request.publicId"
+                class="rounded-[18px] border border-[#1A1F2A] bg-[#090017] p-4"
+              >
+                <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-3">
+                      <span
+                        class="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em]"
+                        :class="withdrawalStatusClass(request.status)"
+                      >
+                        {{ request.status }}
+                      </span>
+                      <span class="text-xs uppercase tracking-[0.12em] text-[#7F8A99]">
+                        {{ formatDate(request.createdAt) }}
+                      </span>
+                    </div>
+                    <p class="mt-3 text-base font-semibold text-[#E6EDF7]">
+                      {{ request.amountLabel }}
+                    </p>
+                    <p v-if="request.adminNote" class="mt-2 text-sm leading-6 text-[#BFDBFE]">
+                      Note admin : {{ request.adminNote }}
+                    </p>
+                  </div>
+                  <NuxtLink
+                    to="/artist/withdrawals"
+                    class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#E6EDF7] transition hover:border-[#4A6CF7] hover:text-[#9DB4FF]"
+                  >
+                    Ouvrir
+                  </NuxtLink>
+                </div>
+              </div>
+            </div>
+          </div>
         </article>
 
         <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
@@ -351,6 +433,8 @@ const errorMessage = ref("");
 const stats = ref([]);
 const performance = ref({});
 const finance = ref({});
+const withdrawalFinance = ref({});
+const withdrawalSummary = ref({});
 const analytics = ref({
   salesByMonth: [],
   topArtworks: [],
@@ -361,6 +445,7 @@ const notifications = ref({
   items: []
 });
 const recentSales = ref([]);
+const recentWithdrawals = ref([]);
 
 const performanceCards = computed(() => {
   const data = performance.value || {};
@@ -424,8 +509,37 @@ const financeCards = computed(() => {
   ];
 });
 
+const withdrawalCards = computed(() => {
+  const data = withdrawalFinance.value || {};
+  const counts = withdrawalSummary.value || {};
+
+  return [
+    {
+      label: "Disponible a demander",
+      value: data.availableToWithdraw || "EUR 0.00",
+      description: "Solde net restant apres demandes en attente et versements deja effectues."
+    },
+    {
+      label: "Demandes en attente",
+      value: data.pendingWithdrawalAmount || "EUR 0.00",
+      description: `${counts.requestedCount ?? 0} demande(s) encore en revue admin.`
+    },
+    {
+      label: "Deja verse",
+      value: data.paidOutAmount || "EUR 0.00",
+      description: `${counts.paidCount ?? 0} demande(s) deja marquees comme payees.`
+    },
+    {
+      label: "Minimum",
+      value: data.minimumRequestAmount || "EUR 25.00",
+      description: `${counts.totalRequests ?? 0} demande(s) de retrait au total.`
+    }
+  ];
+});
+
 const statusBreakdown = computed(() => analytics.value.statusBreakdown || []);
 const notificationItems = computed(() => notifications.value.items || []);
+const recentWithdrawalItems = computed(() => recentWithdrawals.value || []);
 
 const maxMonthlyRevenue = computed(() =>
   Math.max(
@@ -478,11 +592,43 @@ function settlementClass(status) {
 }
 
 function notificationLabel(type) {
-  return type === "sale" ? "Vente" : "Systeme";
+  if (type === "sale") {
+    return "Vente";
+  }
+
+  if (type === "withdrawal") {
+    return "Retrait";
+  }
+
+  return "Systeme";
 }
 
 function notificationClass(type) {
-  return type === "sale" ? "bg-[#12301F] text-[#86EFAC]" : "bg-[#1E2540] text-[#9DB2FF]";
+  if (type === "sale") {
+    return "bg-[#12301F] text-[#86EFAC]";
+  }
+
+  if (type === "withdrawal") {
+    return "bg-[#2A2410] text-[#FDE68A]";
+  }
+
+  return "bg-[#1E2540] text-[#9DB2FF]";
+}
+
+function withdrawalStatusClass(status) {
+  if (status === "PAID") {
+    return "bg-[#12301F] text-[#86EFAC]";
+  }
+
+  if (status === "APPROVED") {
+    return "bg-[#1E2540] text-[#9DB2FF]";
+  }
+
+  if (status === "REJECTED" || status === "CANCELED") {
+    return "bg-[#3A1620] text-[#FECACA]";
+  }
+
+  return "bg-[#2A2410] text-[#FDE68A]";
 }
 
 async function loadDashboard() {
@@ -497,6 +643,8 @@ async function loadDashboard() {
     stats.value = response.stats || [];
     performance.value = response.performance || {};
     finance.value = response.finance || {};
+    withdrawalFinance.value = response.withdrawals || {};
+    withdrawalSummary.value = response.withdrawalSummary || {};
     analytics.value = response.analytics || {
       salesByMonth: [],
       topArtworks: [],
@@ -507,6 +655,7 @@ async function loadDashboard() {
       items: []
     };
     recentSales.value = response.recentSales || [];
+    recentWithdrawals.value = response.recentWithdrawals || [];
   } catch (error) {
     if (error?.statusCode === 401) {
       await navigateTo("/login");

@@ -1,7 +1,7 @@
 <template>
   <AdminShell
     title="Payments"
-    description="Finance view connected to the backend to track transactions and revenue recorded in the database."
+    description="Finance view connected to the backend to track transactions, payment anomalies and artist payout requests."
   >
     <template #actions>
       <button
@@ -136,6 +136,172 @@
     <section class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Artist payouts</p>
+          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Withdrawal requests</h2>
+          <p class="mt-2 max-w-3xl text-sm leading-6 text-[#A0ADB4]">
+            Review manual payout requests sent by verified artists. Approve requests before the
+            transfer, then mark them as paid once the payout is actually sent.
+          </p>
+        </div>
+        <span
+          class="inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold"
+          :class="
+            withdrawalSummary.requestedCount > 0 || withdrawalSummary.approvedCount > 0
+              ? 'bg-[#3F2A11] text-[#F2C97D]'
+              : 'bg-[#4A6CF7]/10 text-[#4A6CF7]'
+          "
+        >
+          {{ withdrawalSummary.totalRequests || 0 }} request(s)
+        </span>
+      </div>
+
+      <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div
+          v-for="card in withdrawalSummaryCards"
+          :key="card.label"
+          class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3"
+        >
+          <p class="text-xs uppercase tracking-[0.14em] text-[#8E9AA7]">
+            {{ card.label }}
+          </p>
+          <p class="mt-2 text-xl font-semibold text-[#E6EDF7]">
+            {{ card.value }}
+          </p>
+          <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">
+            {{ card.description }}
+          </p>
+        </div>
+      </div>
+
+      <div
+        v-if="withdrawalMessage"
+        class="mt-5 rounded-2xl border px-5 py-4 text-sm"
+        :class="
+          withdrawalFailed
+            ? 'border-[#7f1d1d] bg-[#2b1014] text-[#FECACA]'
+            : 'border-[#24467A] bg-[#07152D] text-[#BFDBFE]'
+        "
+      >
+        {{ withdrawalMessage }}
+      </div>
+
+      <div
+        v-if="!loading && artistWithdrawals.length === 0"
+        class="mt-5 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4 text-sm text-[#A0ADB4]"
+      >
+        No artist withdrawal request has been submitted yet.
+      </div>
+
+      <div v-else-if="artistWithdrawals.length > 0" class="mt-5 grid gap-3">
+        <article
+          v-for="withdrawal in artistWithdrawals"
+          :key="withdrawal.publicId"
+          class="rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-5"
+        >
+          <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-3">
+                <span
+                  class="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em]"
+                  :class="withdrawalStatusClass(withdrawal.status)"
+                >
+                  {{ withdrawal.status }}
+                </span>
+                <span class="text-xs uppercase tracking-[0.12em] text-[#7F8A99]">
+                  {{ formatDateTime(withdrawal.createdAt) }}
+                </span>
+              </div>
+              <p class="mt-3 text-lg font-semibold text-[#E6EDF7]">
+                {{ withdrawal.amountLabel }}
+              </p>
+              <p class="mt-2 text-sm text-[#A0ADB4]">
+                {{ withdrawal.artist?.displayName || "Artist" }}
+                <span v-if="withdrawal.artist?.email"> - {{ withdrawal.artist.email }}</span>
+              </p>
+              <p class="mt-2 break-all text-sm text-[#8E9AA7]">
+                {{ withdrawal.publicId }}
+              </p>
+              <p v-if="withdrawal.note" class="mt-3 text-sm leading-6 text-[#A0ADB4]">
+                Artist note: {{ withdrawal.note }}
+              </p>
+              <p v-if="withdrawal.adminNote" class="mt-3 text-sm leading-6 text-[#BFDBFE]">
+                Admin note: {{ withdrawal.adminNote }}
+              </p>
+              <p v-if="withdrawal.payoutReference" class="mt-2 text-sm text-[#9DB2FF]">
+                Payout reference: {{ withdrawal.payoutReference }}
+              </p>
+            </div>
+
+            <div class="grid w-full gap-3 xl:max-w-[360px]">
+              <label class="grid gap-2">
+                <span class="text-xs uppercase tracking-[0.14em] text-[#8E9AA7]">Admin note</span>
+                <textarea
+                  v-model="withdrawalDraft(withdrawal.publicId).adminNote"
+                  rows="3"
+                  maxlength="1000"
+                  class="rounded-2xl border border-[#1A1F2A] bg-[#090017] px-4 py-3 text-sm text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7]"
+                  placeholder="Optional context for the artist."
+                />
+              </label>
+
+              <label class="grid gap-2">
+                <span class="text-xs uppercase tracking-[0.14em] text-[#8E9AA7]">
+                  Payout reference
+                </span>
+                <input
+                  v-model="withdrawalDraft(withdrawal.publicId).payoutReference"
+                  type="text"
+                  class="rounded-2xl border border-[#1A1F2A] bg-[#090017] px-4 py-3 text-sm text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7]"
+                  placeholder="Bank transfer or provider reference"
+                />
+              </label>
+
+              <div class="flex flex-wrap gap-3">
+                <button
+                  v-if="withdrawal.status === 'REQUESTED'"
+                  type="button"
+                  class="inline-flex items-center justify-center rounded-2xl border border-[#4A6CF7] bg-[#4A6CF7]/10 px-4 py-2 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#4A6CF7]/20 disabled:opacity-60"
+                  :disabled="activeWithdrawalOperation === withdrawal.publicId"
+                  @click="runWithdrawalOperation(withdrawal.publicId, 'approve')"
+                >
+                  {{
+                    activeWithdrawalOperation === withdrawal.publicId ? "Processing..." : "Approve"
+                  }}
+                </button>
+                <button
+                  v-if="withdrawal.status === 'REQUESTED'"
+                  type="button"
+                  class="inline-flex items-center justify-center rounded-2xl border border-[#7f1d1d] bg-[#2b1014] px-4 py-2 text-sm font-semibold text-[#FECACA] transition hover:bg-[#3b151b] disabled:opacity-60"
+                  :disabled="activeWithdrawalOperation === withdrawal.publicId"
+                  @click="runWithdrawalOperation(withdrawal.publicId, 'reject')"
+                >
+                  {{
+                    activeWithdrawalOperation === withdrawal.publicId ? "Processing..." : "Reject"
+                  }}
+                </button>
+                <button
+                  v-if="withdrawal.status === 'APPROVED'"
+                  type="button"
+                  class="inline-flex items-center justify-center rounded-2xl border border-[#12301F] bg-[#12301F]/20 px-4 py-2 text-sm font-semibold text-[#86EFAC] transition hover:bg-[#12301F]/30 disabled:opacity-60"
+                  :disabled="activeWithdrawalOperation === withdrawal.publicId"
+                  @click="runWithdrawalOperation(withdrawal.publicId, 'mark_paid')"
+                >
+                  {{
+                    activeWithdrawalOperation === withdrawal.publicId
+                      ? "Processing..."
+                      : "Mark as paid"
+                  }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
           <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Transactions</p>
           <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Recent payments</h2>
         </div>
@@ -227,7 +393,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { navigateTo } from "#app";
 import {
   buildPaymentAnomalyRows,
@@ -245,14 +411,28 @@ const searchTerm = ref("");
 const statusFilter = ref("all");
 const payments = ref([]);
 const anomalies = ref({});
+const artistWithdrawals = ref([]);
 const activeOperation = ref("");
+const activeWithdrawalOperation = ref("");
 const operationMessage = ref("");
 const operationFailed = ref(false);
+const withdrawalMessage = ref("");
+const withdrawalFailed = ref(false);
+const withdrawalDrafts = reactive({});
 const summary = ref({
   totalPayments: 0,
   succeededPayments: 0,
   pendingPayments: 0,
   grossRevenue: "EUR 0.00"
+});
+const withdrawalSummary = ref({
+  totalRequests: 0,
+  requestedCount: 0,
+  approvedCount: 0,
+  rejectedCount: 0,
+  paidCount: 0,
+  canceledCount: 0,
+  totalAmount: "EUR 0.00"
 });
 
 const summaries = computed(() => [
@@ -278,6 +458,34 @@ const summaries = computed(() => [
   }
 ]);
 
+const withdrawalSummaryCards = computed(() => [
+  {
+    label: "Requested",
+    value: withdrawalSummary.value.requestedCount || 0,
+    description: "Waiting for an admin decision."
+  },
+  {
+    label: "Approved",
+    value: withdrawalSummary.value.approvedCount || 0,
+    description: "Validated and waiting for the actual transfer."
+  },
+  {
+    label: "Paid",
+    value: withdrawalSummary.value.paidCount || 0,
+    description: "Requests already settled."
+  },
+  {
+    label: "Rejected",
+    value: withdrawalSummary.value.rejectedCount || 0,
+    description: "Requests that were refused."
+  },
+  {
+    label: "Tracked volume",
+    value: withdrawalSummary.value.totalAmount || "EUR 0.00",
+    description: "Total amount covered by the loaded request list."
+  }
+]);
+
 const anomalySummary = computed(() => ({
   webhooks: anomalies.value.summary?.webhooks || 0,
   tasks: anomalies.value.summary?.tasks || 0,
@@ -296,6 +504,7 @@ const anomalyCounters = computed(() => [
   { label: "Disputes", value: anomalySummary.value.disputes },
   { label: "Alerts", value: anomalySummary.value.alerts }
 ]);
+
 const anomalyRows = computed(() => buildPaymentAnomalyRows(anomalies.value));
 
 const filteredPayments = computed(() => {
@@ -318,14 +527,36 @@ onMounted(async () => {
   await loadPaymentDashboard();
 });
 
+function withdrawalDraft(publicId) {
+  if (!withdrawalDrafts[publicId]) {
+    withdrawalDrafts[publicId] = {
+      adminNote: "",
+      payoutReference: ""
+    };
+  }
+
+  return withdrawalDrafts[publicId];
+}
+
+function syncWithdrawalDrafts(items) {
+  for (const item of items) {
+    const draft = withdrawalDraft(item.publicId);
+    draft.adminNote = item.adminNote || draft.adminNote || "";
+    draft.payoutReference = item.payoutReference || draft.payoutReference || "";
+  }
+}
+
 async function loadPaymentDashboard() {
   loading.value = true;
   errorMessage.value = "";
 
   try {
-    const [response, anomalyResponse] = await Promise.all([
+    const [response, anomalyResponse, payoutResponse] = await Promise.all([
       $fetch("/api/admin/payments", { credentials: "include" }),
       $fetch("/api/v1/admin/payments/anomalies", {
+        credentials: "include"
+      }),
+      $fetch("/api/admin/artist-withdrawals", {
         credentials: "include"
       })
     ]);
@@ -333,6 +564,9 @@ async function loadPaymentDashboard() {
     payments.value = response.payments || [];
     summary.value = response.summary || summary.value;
     anomalies.value = anomalyResponse || {};
+    artistWithdrawals.value = payoutResponse.withdrawals || [];
+    withdrawalSummary.value = payoutResponse.summary || withdrawalSummary.value;
+    syncWithdrawalDrafts(artistWithdrawals.value);
   } catch (error) {
     if (error?.statusCode === 401) {
       await navigateTo("/login");
@@ -350,6 +584,14 @@ async function loadPaymentDashboard() {
   }
 }
 
+async function fetchCsrfToken() {
+  const response = await $fetch("/api/v1/security/csrf-token", {
+    credentials: "include"
+  });
+
+  return response.csrfToken;
+}
+
 async function runPaymentOperation(operation) {
   const row = anomalyRows.value.find((item) => item.action === operation);
   activeOperation.value = row?.key || `${operation.type}:${operation.id}`;
@@ -357,14 +599,12 @@ async function runPaymentOperation(operation) {
   operationFailed.value = false;
 
   try {
-    const csrfResponse = await $fetch("/api/v1/security/csrf-token", {
-      credentials: "include"
-    });
+    const csrfToken = await fetchCsrfToken();
     const request = buildPaymentOperationRequest(operation);
     await $fetch(request.url, {
       method: "POST",
       credentials: "include",
-      headers: { "x-csrf-token": csrfResponse.csrfToken },
+      headers: { "x-csrf-token": csrfToken },
       body: request.body
     });
     operationMessage.value =
@@ -378,6 +618,42 @@ async function runPaymentOperation(operation) {
   }
 }
 
+async function runWithdrawalOperation(publicId, action) {
+  activeWithdrawalOperation.value = publicId;
+  withdrawalMessage.value = "";
+  withdrawalFailed.value = false;
+
+  try {
+    const csrfToken = await fetchCsrfToken();
+    const draft = withdrawalDraft(publicId);
+
+    await $fetch(`/api/admin/artist-withdrawals/${publicId}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "x-csrf-token": csrfToken },
+      body: {
+        action,
+        adminNote: draft.adminNote,
+        payoutReference: draft.payoutReference
+      }
+    });
+
+    withdrawalMessage.value =
+      action === "approve"
+        ? "Withdrawal request approved."
+        : action === "reject"
+          ? "Withdrawal request rejected."
+          : "Withdrawal request marked as paid.";
+    await loadPaymentDashboard();
+  } catch (error) {
+    withdrawalFailed.value = true;
+    withdrawalMessage.value =
+      error?.data?.message || "Unable to update this artist withdrawal request.";
+  } finally {
+    activeWithdrawalOperation.value = "";
+  }
+}
+
 function statusClass(status) {
   if (status === "Succeeded") {
     return "bg-[#4A6CF7]/10 text-[#4A6CF7]";
@@ -388,6 +664,22 @@ function statusClass(status) {
   }
 
   return "bg-[#3F2A11] text-[#F2C97D]";
+}
+
+function withdrawalStatusClass(status) {
+  if (status === "PAID") {
+    return "bg-[#12301F] text-[#86EFAC]";
+  }
+
+  if (status === "APPROVED") {
+    return "bg-[#1E2540] text-[#9DB2FF]";
+  }
+
+  if (status === "REJECTED" || status === "CANCELED") {
+    return "bg-[#3A1620] text-[#FECACA]";
+  }
+
+  return "bg-[#2A2410] text-[#FDE68A]";
 }
 
 function formatDate(value) {

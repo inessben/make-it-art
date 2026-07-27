@@ -88,6 +88,14 @@ enum InvoiceType {
   COMMISSION
 }
 
+enum ArtistWithdrawalStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  PAID
+  CANCELED
+}
+
 model User {
   id                         Int                      @id @default(autoincrement())
   username                   String?
@@ -125,6 +133,8 @@ model User {
   galleries                  UserGallery[]
   cart                       Cart?
   refundsRequested           Refund[]                 @relation("refundRequestedBy")
+  requestedArtistWithdrawals ArtistWithdrawal[]       @relation("artistWithdrawalRequestedBy")
+  reviewedArtistWithdrawals  ArtistWithdrawal[]       @relation("artistWithdrawalReviewedBy")
   disputeEvidenceAudits      DisputeEvidenceAudit[]   @relation("disputeEvidenceAuditCapturedBy")
   digitalEntitlements        DigitalEntitlement[]
   ownershipCertificates      OwnershipCertificate[]
@@ -168,6 +178,7 @@ model Artist {
   artworks    Artwork[]
   collections Collection[]
   followers   Follow[]
+  withdrawals ArtistWithdrawal[]
 
   @@map("artist")
 }
@@ -612,6 +623,31 @@ model FulfillmentTask {
   @@index([status, createdAt])
   @@index([status, availableAt])
   @@map("fulfillment_task")
+}
+
+model ArtistWithdrawal {
+  id                Int                   @id @default(autoincrement())
+  publicId          String                @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  artistId          Int                   @map("artist_id")
+  requestedByUserId Int                   @map("requested_by_user_id")
+  reviewedByUserId  Int?                  @map("reviewed_by_user_id")
+  amount            Int
+  currency          Currency              @default(EUR)
+  status            ArtistWithdrawalStatus @default(REQUESTED)
+  note              String?
+  adminNote         String?               @map("admin_note")
+  payoutReference   String?               @map("payout_reference")
+  createdAt         DateTime              @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt         DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  reviewedAt        DateTime?             @map("reviewed_at") @db.Timestamp(6)
+  paidAt            DateTime?             @map("paid_at") @db.Timestamp(6)
+  artist            Artist                @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  requestedBy       User                  @relation("artistWithdrawalRequestedBy", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  reviewedBy        User?                 @relation("artistWithdrawalReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([artistId, status, createdAt])
+  @@index([status, createdAt])
+  @@map("artist_withdrawal")
 }
 
 model Dispute {

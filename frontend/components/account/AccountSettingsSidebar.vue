@@ -67,6 +67,12 @@ const artistNavigationItems = computed(() => {
         icon: "M4 19h16M7 16l3-3 3 2 5-6"
       },
       {
+        label: "Artist withdrawals",
+        to: "/artist/withdrawals",
+        matches: ["/artist/withdrawals"],
+        icon: "M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"
+      },
+      {
         label: "Artist public profile",
         to: "/artist-profile",
         matches: ["/artist-profile", "/become-artist"],

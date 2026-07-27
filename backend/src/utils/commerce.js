@@ -220,6 +220,7 @@ module.exports = {
   isPaidOrder,
   computeNetRevenue,
   formatOrderReference,
+  roundCurrency,
   getPaymentAmountValue,
   getOrderAmountValue,
   getOrderItemGrossAmountValue,

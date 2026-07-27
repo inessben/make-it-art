@@ -102,6 +102,10 @@ module.exports = {
     disputeRightsPolicy: process.env.DISPUTE_RIGHTS_POLICY || "SUSPEND_ON_OPEN",
     disputeRightsPolicyConfirmed: process.env.DISPUTE_RIGHTS_POLICY_CONFIRMED === "true"
   },
+  artistWithdrawals: {
+    minimumAmount: Number(process.env.ARTIST_WITHDRAWAL_MIN_AMOUNT || 2500),
+    alertEmail: process.env.ARTIST_WITHDRAWAL_ALERT_EMAIL || process.env.PAYMENT_ALERT_EMAIL || ""
+  },
   smtp: {
     host: process.env.SMTP_HOST || "",
     port: Number(process.env.SMTP_PORT || 587),

@@ -42,6 +42,7 @@
           <select v-model="typeFilter" class="bg-transparent text-sm text-[#E6EDF7] outline-none">
             <option value="all">Toutes</option>
             <option value="sale">Ventes</option>
+            <option value="withdrawal">Retraits</option>
             <option value="system">Systeme</option>
           </select>
         </label>
@@ -103,11 +104,11 @@
 
             <div class="flex shrink-0 flex-wrap gap-3">
               <NuxtLink
-                v-if="notification.type === 'sale' && auth.isVerifiedArtist"
-                to="/artist/sales"
+                v-if="notificationRoute(notification)"
+                :to="notificationRoute(notification)"
                 class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-4 py-2 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
               >
-                Voir la vente
+                {{ notificationActionLabel(notification.type) }}
               </NuxtLink>
               <button
                 v-if="!notification.read"
@@ -158,6 +159,10 @@ function typeLabel(type) {
     return "Vente";
   }
 
+  if (type === "withdrawal") {
+    return "Retrait";
+  }
+
   return "Systeme";
 }
 
@@ -166,7 +171,35 @@ function typeClass(type) {
     return "bg-[#12301F] text-[#86EFAC]";
   }
 
+  if (type === "withdrawal") {
+    return "bg-[#2A2410] text-[#FDE68A]";
+  }
+
   return "bg-[#1E2540] text-[#9DB2FF]";
+}
+
+function notificationRoute(notification) {
+  if (notification?.type === "sale" && auth.isVerifiedArtist) {
+    return "/artist/sales";
+  }
+
+  if (notification?.type === "withdrawal" && auth.isVerifiedArtist) {
+    return "/artist/withdrawals";
+  }
+
+  return "";
+}
+
+function notificationActionLabel(type) {
+  if (type === "sale") {
+    return "Voir la vente";
+  }
+
+  if (type === "withdrawal") {
+    return "Voir le retrait";
+  }
+
+  return "Ouvrir";
 }
 
 function formatDate(value) {

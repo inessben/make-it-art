@@ -18,6 +18,7 @@ const uploadArtworkMiddlewarePath = require.resolve("../src/middlewares/upload-a
 const artistRequiredMiddlewarePath =
   require.resolve("../src/middlewares/artist-required.middleware");
 const analyticsServicePath = require.resolve("../src/services/artist-analytics.service");
+const artistWithdrawalServicePath = require.resolve("../src/services/artist-withdrawal.service");
 
 const authUser = {
   id: 7,
@@ -50,6 +51,9 @@ async function startArtistDashboardApp(t, overrides = {}) {
   const calls = {
     buildArtistDashboardPayload: [],
     buildArtistSalesPayload: [],
+    buildArtistWithdrawalWorkspace: [],
+    createArtistWithdrawalRequest: [],
+    cancelArtistWithdrawal: [],
     listArtworksByArtistId: []
   };
 
@@ -112,6 +116,73 @@ async function startArtistDashboardApp(t, overrides = {}) {
           }
         );
       }
+    },
+    [artistWithdrawalServicePath]: {
+      ArtistWithdrawalError: class ArtistWithdrawalError extends Error {
+        constructor(code, message, statusCode = 400) {
+          super(message);
+          this.code = code;
+          this.statusCode = statusCode;
+        }
+      },
+      async buildArtistWithdrawalWorkspace(artistId) {
+        calls.buildArtistWithdrawalWorkspace.push(artistId);
+        return (
+          overrides.withdrawals || {
+            finance: {
+              availableToWithdraw: "EUR 150.00",
+              availableToWithdrawValue: 150,
+              pendingWithdrawalAmount: "EUR 40.00",
+              pendingWithdrawalAmountValue: 40,
+              paidOutAmount: "EUR 60.00",
+              paidOutAmountValue: 60,
+              lifetimeAvailableBalance: "EUR 250.00",
+              lifetimeAvailableBalanceValue: 250,
+              minimumRequestAmount: "EUR 25.00",
+              minimumRequestAmountValue: 25
+            },
+            summary: {
+              totalRequests: 2,
+              requestedCount: 1,
+              approvedCount: 1,
+              rejectedCount: 0,
+              paidCount: 0,
+              canceledCount: 0
+            },
+            requests: [
+              {
+                publicId: "11111111-1111-4111-8111-111111111111",
+                status: "REQUESTED",
+                amountLabel: "EUR 40.00",
+                amountValue: 40,
+                createdAt: "2026-07-25T10:00:00.000Z"
+              }
+            ]
+          }
+        );
+      },
+      async createArtistWithdrawalRequest(payload) {
+        calls.createArtistWithdrawalRequest.push(payload);
+        return (
+          overrides.createdWithdrawal || {
+            publicId: "22222222-2222-4222-8222-222222222222",
+            status: "REQUESTED",
+            amountLabel: "EUR 80.00",
+            amountValue: 80
+          }
+        );
+      },
+      async cancelArtistWithdrawal(payload) {
+        calls.cancelArtistWithdrawal.push(payload);
+        return (
+          overrides.canceledWithdrawal || {
+            publicId: payload.publicId,
+            status: "CANCELED",
+            amountLabel: "EUR 40.00",
+            amountValue: 40
+          }
+        );
+      }
     }
   });
 
@@ -140,7 +211,10 @@ test("GET /artists/me/dashboard returns analytics payload", async (t) => {
   assert.equal(response.status, 200);
   assert.equal(body.stats[0].label, "Ventes");
   assert.equal(calls.buildArtistDashboardPayload.length, 1);
+  assert.equal(calls.buildArtistWithdrawalWorkspace.length, 1);
   assert.equal(calls.buildArtistDashboardPayload[0].artistStats.favorites, 10);
+  assert.equal(body.withdrawals.availableToWithdraw, "EUR 150.00");
+  assert.equal(body.recentWithdrawals[0].status, "REQUESTED");
 });
 
 test("GET /artists/me/sales returns sales payload", async (t) => {
@@ -152,4 +226,59 @@ test("GET /artists/me/sales returns sales payload", async (t) => {
   assert.equal(response.status, 200);
   assert.equal(body.summary.totalSales, 2);
   assert.deepEqual(calls.buildArtistSalesPayload, [verifiedArtist.id]);
+});
+
+test("GET /artists/me/withdrawals returns the artist withdrawal workspace", async (t) => {
+  const { port, calls } = await startArtistDashboardApp(t);
+
+  const response = await fetch(`http://127.0.0.1:${port}/artists/me/withdrawals`);
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(calls.buildArtistWithdrawalWorkspace.length, 1);
+  assert.equal(body.finance.minimumRequestAmount, "EUR 25.00");
+  assert.equal(body.requests[0].publicId, "11111111-1111-4111-8111-111111111111");
+});
+
+test("POST /artists/me/withdrawals submits a new withdrawal request", async (t) => {
+  const { port, calls } = await startArtistDashboardApp(t);
+
+  const response = await fetch(`http://127.0.0.1:${port}/artists/me/withdrawals`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      amount: "80.00",
+      note: "Monthly payout"
+    })
+  });
+  const body = await response.json();
+
+  assert.equal(response.status, 201);
+  assert.equal(calls.createArtistWithdrawalRequest.length, 1);
+  assert.equal(calls.createArtistWithdrawalRequest[0].artist.id, verifiedArtist.id);
+  assert.equal(calls.createArtistWithdrawalRequest[0].user.id, authUser.id);
+  assert.equal(calls.createArtistWithdrawalRequest[0].amount, "80.00");
+  assert.equal(body.withdrawal.status, "REQUESTED");
+});
+
+test("PATCH /artists/me/withdrawals/:publicId/cancel cancels a pending request", async (t) => {
+  const { port, calls } = await startArtistDashboardApp(t);
+  const publicId = "11111111-1111-4111-8111-111111111111";
+
+  const response = await fetch(
+    `http://127.0.0.1:${port}/artists/me/withdrawals/${publicId}/cancel`,
+    {
+      method: "PATCH"
+    }
+  );
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(calls.cancelArtistWithdrawal.length, 1);
+  assert.equal(calls.cancelArtistWithdrawal[0].artistId, verifiedArtist.id);
+  assert.equal(calls.cancelArtistWithdrawal[0].actorUserId, authUser.id);
+  assert.equal(calls.cancelArtistWithdrawal[0].publicId, publicId);
+  assert.equal(body.withdrawal.status, "CANCELED");
 });

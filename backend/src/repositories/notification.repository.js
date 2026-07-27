@@ -1,3 +1,4 @@
+const { Prisma } = require("@prisma/client");
 const prisma = require("../lib/prisma");
 
 async function listNotificationsForUser(userId, { limit = 50 } = {}) {
@@ -37,6 +38,38 @@ async function createNotification({ userId, type, title, message, payload = null
       createdAt: new Date()
     }
   });
+}
+
+async function createNotificationOnce({
+  userId,
+  type,
+  title,
+  message,
+  payload = null,
+  eventKey,
+  prismaClient = prisma
+}) {
+  const normalizedPayload =
+    payload && typeof payload === "object" && !Array.isArray(payload)
+      ? { ...payload, eventKey }
+      : { eventKey };
+
+  const insertedRows = await prismaClient.$executeRaw(
+    Prisma.sql`
+      INSERT INTO "notification" ("user_id", "type", "title", "message", "payload", "created_at")
+      VALUES (
+        ${userId},
+        ${type},
+        ${title},
+        ${message},
+        CAST(${JSON.stringify(normalizedPayload)} AS jsonb),
+        ${new Date()}
+      )
+      ON CONFLICT DO NOTHING
+    `
+  );
+
+  return insertedRows > 0;
 }
 
 async function markNotificationRead({ notificationId, userId }) {
@@ -81,6 +114,7 @@ module.exports = {
   listNotificationsForUser,
   countUnreadForUser,
   createNotification,
+  createNotificationOnce,
   markNotificationRead,
   markAllNotificationsRead
 };

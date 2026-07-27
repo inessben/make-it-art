@@ -1059,6 +1059,85 @@ const artistWorkspacePaths = {
       }
     }
   },
+  "/artists/me/withdrawals": {
+    get: {
+      tags: ["Artist Workspace"],
+      summary: "Get the authenticated artist withdrawal workspace",
+      security: sessionOnlySecurity,
+      responses: {
+        200: jsonResponse("Artist withdrawal workspace", {
+          $ref: "#/components/schemas/ArtistWithdrawalWorkspaceResponse"
+        }),
+        401: jsonResponse("Authentication required", errorSchema),
+        403: jsonResponse("Verified artist account required", errorSchema)
+      }
+    },
+    post: {
+      tags: ["Artist Workspace"],
+      summary: "Create a new artist withdrawal request",
+      security: sessionAndCsrfSecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              $ref: "#/components/schemas/ArtistWithdrawalRequest"
+            }
+          }
+        }
+      },
+      responses: {
+        201: jsonResponse("Withdrawal request submitted", {
+          type: "object",
+          properties: {
+            message: { type: "string" },
+            withdrawal: {
+              $ref: "#/components/schemas/ArtistWithdrawalSummary"
+            }
+          }
+        }),
+        400: jsonResponse("Invalid withdrawal request", errorSchema),
+        401: jsonResponse("Authentication required", errorSchema),
+        403: jsonResponse("Verified artist account required", errorSchema),
+        409: jsonResponse("Withdrawal request not allowed in the current state", errorSchema)
+      }
+    }
+  },
+  "/artists/me/withdrawals/{publicId}/cancel": {
+    patch: {
+      tags: ["Artist Workspace"],
+      summary: "Cancel one pending artist withdrawal request",
+      security: sessionAndCsrfSecurity,
+      parameters: [
+        {
+          name: "publicId",
+          in: "path",
+          required: true,
+          description: "Withdrawal public UUID.",
+          schema: {
+            type: "string",
+            format: "uuid"
+          }
+        }
+      ],
+      responses: {
+        200: jsonResponse("Withdrawal request canceled", {
+          type: "object",
+          properties: {
+            message: { type: "string" },
+            withdrawal: {
+              $ref: "#/components/schemas/ArtistWithdrawalSummary"
+            }
+          }
+        }),
+        400: jsonResponse("Invalid withdrawal request id", errorSchema),
+        401: jsonResponse("Authentication required", errorSchema),
+        403: jsonResponse("Verified artist account required", errorSchema),
+        404: jsonResponse("Withdrawal request not found", errorSchema),
+        409: jsonResponse("Withdrawal request cannot be canceled", errorSchema)
+      }
+    }
+  },
   "/artists/me/followers": {
     get: {
       tags: ["Artist Workspace"],
@@ -2028,6 +2107,74 @@ const adminPaths = {
         401: jsonResponse("Authentication required", errorSchema),
         403: jsonResponse("Admin role required", errorSchema),
         404: jsonResponse("Payment not found", errorSchema)
+      }
+    }
+  },
+  "/admin/artist-withdrawals": {
+    get: {
+      tags: ["Admin"],
+      summary: "List artist withdrawal requests for manual payout operations",
+      security: sessionOnlySecurity,
+      responses: {
+        200: jsonResponse("Admin artist withdrawals payload", {
+          type: "object",
+          properties: {
+            summary: { type: "object", additionalProperties: true },
+            withdrawals: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/ArtistWithdrawalSummary"
+              }
+            }
+          }
+        }),
+        401: jsonResponse("Authentication required", errorSchema),
+        403: jsonResponse("Admin role required", errorSchema)
+      }
+    }
+  },
+  "/admin/artist-withdrawals/{publicId}": {
+    patch: {
+      tags: ["Admin"],
+      summary: "Approve, reject or mark one artist withdrawal as paid",
+      security: sessionAndCsrfSecurity,
+      parameters: [
+        {
+          name: "publicId",
+          in: "path",
+          required: true,
+          description: "Withdrawal public UUID.",
+          schema: {
+            type: "string",
+            format: "uuid"
+          }
+        }
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              $ref: "#/components/schemas/AdminArtistWithdrawalActionRequest"
+            }
+          }
+        }
+      },
+      responses: {
+        200: jsonResponse("Artist withdrawal updated", {
+          type: "object",
+          properties: {
+            message: { type: "string" },
+            withdrawal: {
+              $ref: "#/components/schemas/ArtistWithdrawalSummary"
+            }
+          }
+        }),
+        400: jsonResponse("Invalid withdrawal action", errorSchema),
+        401: jsonResponse("Authentication required", errorSchema),
+        403: jsonResponse("Admin role required", errorSchema),
+        404: jsonResponse("Withdrawal request not found", errorSchema),
+        409: jsonResponse("Withdrawal transition not allowed", errorSchema)
       }
     }
   },
@@ -3045,8 +3192,16 @@ const openApiSpec = {
           },
           performance: { type: "object", additionalProperties: true },
           finance: { type: "object", additionalProperties: true },
+          withdrawals: { type: "object", additionalProperties: true },
+          withdrawalSummary: { type: "object", additionalProperties: true },
           analytics: { type: "object", additionalProperties: true },
           notifications: { type: "object", additionalProperties: true },
+          recentWithdrawals: {
+            type: "array",
+            items: {
+              $ref: "#/components/schemas/ArtistWithdrawalSummary"
+            }
+          },
           recentSales: {
             type: "array",
             items: {
@@ -3069,6 +3224,59 @@ const openApiSpec = {
             }
           }
         }
+      },
+      ArtistWithdrawalSummary: {
+        type: "object",
+        additionalProperties: true,
+        properties: {
+          publicId: { type: "string", format: "uuid" },
+          status: {
+            type: "string",
+            enum: ["REQUESTED", "APPROVED", "REJECTED", "PAID", "CANCELED"]
+          },
+          amount: { type: "integer", nullable: true },
+          amountValue: { type: "number", nullable: true },
+          amountLabel: { type: "string" },
+          currency: { type: "string", example: "EUR" },
+          note: { type: "string", nullable: true },
+          adminNote: { type: "string", nullable: true },
+          payoutReference: { type: "string", nullable: true },
+          createdAt: { type: "string", format: "date-time", nullable: true },
+          reviewedAt: { type: "string", format: "date-time", nullable: true },
+          paidAt: { type: "string", format: "date-time", nullable: true },
+          artist: { type: "object", nullable: true, additionalProperties: true },
+          requestedBy: { type: "object", nullable: true, additionalProperties: true },
+          reviewedBy: { type: "object", nullable: true, additionalProperties: true }
+        }
+      },
+      ArtistWithdrawalWorkspaceResponse: {
+        type: "object",
+        additionalProperties: true,
+        properties: {
+          finance: { type: "object", additionalProperties: true },
+          summary: { type: "object", additionalProperties: true },
+          requests: {
+            type: "array",
+            items: {
+              $ref: "#/components/schemas/ArtistWithdrawalSummary"
+            }
+          }
+        }
+      },
+      ArtistWithdrawalRequest: {
+        type: "object",
+        required: ["amount"],
+        properties: {
+          amount: {
+            type: "string",
+            example: "120.00"
+          },
+          note: {
+            type: "string",
+            nullable: true
+          }
+        },
+        additionalProperties: false
       },
       ArtworkUpsertRequest: {
         type: "object",
@@ -3156,6 +3364,25 @@ const openApiSpec = {
             enum: ["pending", "approved", "rejected", "hidden"]
           },
           moderationNote: {
+            type: "string",
+            nullable: true
+          }
+        },
+        additionalProperties: false
+      },
+      AdminArtistWithdrawalActionRequest: {
+        type: "object",
+        required: ["action"],
+        properties: {
+          action: {
+            type: "string",
+            enum: ["approve", "reject", "mark_paid"]
+          },
+          adminNote: {
+            type: "string",
+            nullable: true
+          },
+          payoutReference: {
             type: "string",
             nullable: true
           }
