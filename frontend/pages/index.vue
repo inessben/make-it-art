@@ -390,11 +390,7 @@ const categoryCards = computed(() =>
     return {
       ...category,
       ...meta,
-      imageUrl:
-        category.imageUrl ||
-        categoryMatches[0]?.imageUrl ||
-        showcaseArtworks.value[index]?.imageUrl ||
-        "",
+      imageUrl: category.imageUrl || "",
       piecesLabel: `${pieceCount} ${pieceCount === 1 ? "Piece" : "Pieces"}`
     };
   })
