@@ -129,11 +129,15 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     protection: Boolean(artwork.protection),
     createdAt: artwork.createdAt || null,
     imageUrl:
-      buildArtworkImageUrl(artwork.previewPath || artwork.imagePath) ||
-      (artwork.id ? `/api/artworks/${artwork.id}/media/preview` : null),
+      (normalizeText(artwork.storageProvider) || "local") === "local" && artwork.id
+        ? `/api/artworks/${artwork.id}/media/preview`
+        : buildArtworkImageUrl(artwork.previewPath || artwork.imagePath) ||
+          (artwork.id ? `/api/artworks/${artwork.id}/media/preview` : null),
     previewUrl:
-      buildArtworkImageUrl(artwork.previewPath || artwork.imagePath) ||
-      (artwork.id ? `/api/artworks/${artwork.id}/media/preview` : null),
+      (normalizeText(artwork.storageProvider) || "local") === "local" && artwork.id
+        ? `/api/artworks/${artwork.id}/media/preview`
+        : buildArtworkImageUrl(artwork.previewPath || artwork.imagePath) ||
+          (artwork.id ? `/api/artworks/${artwork.id}/media/preview` : null),
     hasHdFile: Boolean(artwork.hdPath),
     hdDownloadUrl: artwork.hdPath ? `/api/artworks/${artwork.id}/media/hd` : null,
     storageProvider: normalizeText(artwork.storageProvider) || "local",
