@@ -1,11 +1,29 @@
 const crypto = require("node:crypto");
 const { isUnlimitedArtworkLicenseType } = require("../constants/artwork-license-types");
+const { buildArtworkImageUrl } = require("../services/artwork-media.service");
 const {
   INCLUSIVE_TAX_BEHAVIOR,
   PLATFORM_COMMISSION_RATE_BPS,
   calculateCommissionAmount,
   calculateIncludedTax
 } = require("./commerce-policy");
+
+function normalizeText(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function resolveCartArtworkImageUrl(artwork) {
+  const storageProvider = normalizeText(artwork?.storageProvider) || "local";
+
+  if (storageProvider === "local" && artwork?.id) {
+    return `/api/artworks/${artwork.id}/media/preview`;
+  }
+
+  return (
+    buildArtworkImageUrl(artwork?.previewPath || artwork?.imagePath) ||
+    (artwork?.id ? `/api/artworks/${artwork.id}/media/preview` : null)
+  );
+}
 
 function getArtworkIssue(artwork, quantity, buyerUserId = null) {
   const artistUserId = artwork.artist?.userId ?? artwork.artist?.user?.id;
@@ -95,6 +113,7 @@ function buildCartSummary(
       return {
         artworkId: artwork.id,
         title: artwork.title,
+        imageUrl: resolveCartArtworkImageUrl(artwork),
         licenseType: artwork.licenseType,
         isUnlimited,
         artistName: artwork.artist.displayName || artwork.artist.user.username || "Unknown artist",
