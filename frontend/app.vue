@@ -1,7 +1,9 @@
 <template>
-  <div class="min-h-screen bg-black font-sans">
+  <div class="flex min-h-screen flex-col bg-black font-sans">
     <TheHeader v-if="showGlobalNavigation" />
-    <NuxtPage />
+    <div class="flex-1">
+      <NuxtPage />
+    </div>
     <TheFooter v-if="showGlobalNavigation" />
     <ArtistFloatingAction v-if="showArtistFloatingAction" />
     <CookieConsentBanner />
