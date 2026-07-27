@@ -358,6 +358,22 @@ function mapArtworkRouteError(error) {
     };
   }
 
+  if (error?.message === "ARTWORK_NOT_HIDDEN") {
+    return {
+      status: 409,
+      code: "ARTWORK_NOT_HIDDEN",
+      message: "Seule une oeuvre masquee peut etre republiee."
+    };
+  }
+
+  if (error?.message === "ARTWORK_MODERATION_BLOCKED") {
+    return {
+      status: 409,
+      code: "ARTWORK_MODERATION_BLOCKED",
+      message: "La moderation actuelle ne permet pas de republier cette oeuvre."
+    };
+  }
+
   if (error?.message === "CATEGORY_NOT_FOUND") {
     return {
       status: 400,
@@ -1309,6 +1325,51 @@ router.post(
       console.error("Artist artwork hide error:", error);
       return res.status(500).json({
         message: "Impossible de masquer cette oeuvre."
+      });
+    }
+  }
+);
+
+router.post(
+  "/artists/me/artworks/:id(\\d+)/publish",
+  ensureVerifiedArtist,
+  artworkManagementRateLimit,
+  csrfProtection,
+  async (req, res) => {
+    try {
+      const artworkId = Number.parseInt(req.params.id, 10);
+      const expectedVersion = Number.parseInt(req.body?.expectedVersion, 10);
+
+      if (!Number.isSafeInteger(expectedVersion) || expectedVersion <= 0) {
+        return res.status(400).json({
+          message: "La version de l'oeuvre est requise.",
+          code: "ARTWORK_VERSION_REQUIRED"
+        });
+      }
+
+      const artwork = await artworkRepository.publishArtwork({
+        artworkId,
+        artistId: req.artist.id,
+        expectedVersion
+      });
+
+      return res.status(200).json({
+        message: "Oeuvre republiee.",
+        artwork: serializeArtwork(artwork, { includeManagement: true })
+      });
+    } catch (error) {
+      const mappedError = mapArtworkRouteError(error);
+
+      if (mappedError) {
+        return res.status(mappedError.status).json({
+          message: mappedError.message,
+          ...(mappedError.code ? { code: mappedError.code } : {})
+        });
+      }
+
+      console.error("Artist artwork publish error:", error);
+      return res.status(500).json({
+        message: "Impossible de republier cette oeuvre."
       });
     }
   }

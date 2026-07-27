@@ -69,6 +69,7 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
     updateArtwork: [],
     deleteArtwork: [],
     hideArtwork: [],
+    publishArtwork: [],
     deleteArtworkMediaAssets: []
   };
   const originalArtistRequired = require.cache[artistRequiredPath];
@@ -151,6 +152,11 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
         calls.hideArtwork.push(payload);
         if (overrides.hideArtworkError) throw overrides.hideArtworkError;
         return overrides.hideArtworkResult || overrides.findOwnedArtworkResult;
+      },
+      async publishArtwork(payload) {
+        calls.publishArtwork.push(payload);
+        if (overrides.publishArtworkError) throw overrides.publishArtworkError;
+        return overrides.publishArtworkResult || overrides.findOwnedArtworkResult;
       }
     },
     [categoryRepositoryPath]: {
@@ -720,4 +726,56 @@ test("POST /artists/me/artworks/:id/hide reports concurrent changes", async (t) 
 
   assert.equal(response.status, 409);
   assert.equal(response.body.code, "ARTWORK_VERSION_CONFLICT");
+});
+
+test("POST /artists/me/artworks/:id/publish republishes an approved hidden artwork", async (t) => {
+  const publishedArtwork = {
+    id: 42,
+    artistId: verifiedArtist.id,
+    title: "Back online",
+    version: 5,
+    visibility: "PUBLISHED",
+    priceAmount: 12000,
+    currency: "EUR",
+    licenseType: "EXCLUSIVE",
+    saleStatus: "SOLD",
+    isSold: true,
+    moderationStatus: "approved",
+    stockQuantity: 0,
+    reservedQuantity: 0,
+    orderItems: [{ order: { status: "PAID" } }],
+    reservations: [],
+    artist: verifiedArtist,
+    category: { id: 9, name: "Illustration" }
+  };
+  const { baseUrl, calls } = await startArtistArtworkRoutesApp(t, {
+    publishArtworkResult: publishedArtwork
+  });
+
+  const response = await requestJson(baseUrl, "/artists/me/artworks/42/publish", {
+    method: "POST",
+    body: { expectedVersion: 4 }
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.artwork.visibility, "PUBLISHED");
+  assert.equal(response.body.artwork.availabilityStatus, "SOLD");
+  assert.equal(response.body.artwork.isAvailableForPurchase, false);
+  assert.deepEqual(calls.publishArtwork, [
+    { artworkId: 42, artistId: verifiedArtist.id, expectedVersion: 4 }
+  ]);
+});
+
+test("POST /artists/me/artworks/:id/publish preserves moderation blocks", async (t) => {
+  const { baseUrl } = await startArtistArtworkRoutesApp(t, {
+    publishArtworkError: new Error("ARTWORK_MODERATION_BLOCKED")
+  });
+
+  const response = await requestJson(baseUrl, "/artists/me/artworks/42/publish", {
+    method: "POST",
+    body: { expectedVersion: 4 }
+  });
+
+  assert.equal(response.status, 409);
+  assert.equal(response.body.code, "ARTWORK_MODERATION_BLOCKED");
 });

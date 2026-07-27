@@ -400,6 +400,60 @@ async function hideArtwork({ artworkId, artistId, expectedVersion }) {
   );
 }
 
+async function publishArtwork({ artworkId, artistId, expectedVersion }) {
+  return prisma.$transaction(
+    async (transaction) => {
+      const existing = await findOwnedArtwork({
+        artworkId,
+        artistId,
+        prismaClient: transaction
+      });
+
+      if (!existing) {
+        throw new Error("ARTWORK_NOT_FOUND");
+      }
+
+      if (existing.visibility === "PUBLISHED") {
+        return existing;
+      }
+
+      const management = buildArtworkManagement(existing);
+      if (!management.capabilities.canPublish) {
+        throw new Error(management.capabilities.reasons.publish);
+      }
+
+      if (!Number.isSafeInteger(expectedVersion) || existing.version !== expectedVersion) {
+        throw new Error("ARTWORK_VERSION_CONFLICT");
+      }
+
+      const result = await transaction.artwork.updateMany({
+        where: {
+          id: artworkId,
+          artistId,
+          visibility: "HIDDEN",
+          moderationStatus: "approved",
+          version: expectedVersion
+        },
+        data: {
+          visibility: "PUBLISHED",
+          version: {
+            increment: 1
+          }
+        }
+      });
+
+      if (result.count !== 1) {
+        throw new Error("ARTWORK_VERSION_CONFLICT");
+      }
+
+      return findOwnedArtwork({ artworkId, artistId, prismaClient: transaction });
+    },
+    {
+      isolationLevel: "Serializable"
+    }
+  );
+}
+
 async function updateArtworkModeration({
   artworkId,
   status,
@@ -449,5 +503,6 @@ module.exports = {
   updateArtwork,
   deleteArtwork,
   hideArtwork,
+  publishArtwork,
   updateArtworkModeration
 };

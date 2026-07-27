@@ -285,3 +285,55 @@ test("artwork hiding is idempotent even when the repeated request has an old ver
   assert.equal(loaded.calls.updateMany.length, 0);
   loaded.restore();
 });
+
+test("artwork republication changes only visibility and version", async () => {
+  const loaded = loadRepository({
+    existing: existingArtwork({
+      visibility: "HIDDEN",
+      version: 4,
+      licenseType: "EXCLUSIVE",
+      saleStatus: "SOLD",
+      isSold: true,
+      stockQuantity: 0,
+      orderItems: [{ order: { status: "PAID" } }]
+    })
+  });
+
+  await loaded.repository.publishArtwork({
+    artworkId: 42,
+    artistId: 3,
+    expectedVersion: 4
+  });
+
+  assert.deepEqual(loaded.calls.updateMany, [
+    {
+      where: {
+        id: 42,
+        artistId: 3,
+        visibility: "HIDDEN",
+        moderationStatus: "approved",
+        version: 4
+      },
+      data: {
+        visibility: "PUBLISHED",
+        version: { increment: 1 }
+      }
+    }
+  ]);
+  loaded.restore();
+});
+
+test("artwork republication rejects moderation states other than approved", async () => {
+  for (const moderationStatus of ["pending", "rejected", "hidden"]) {
+    const loaded = loadRepository({
+      existing: existingArtwork({ visibility: "HIDDEN", moderationStatus })
+    });
+
+    await assert.rejects(
+      () => loaded.repository.publishArtwork({ artworkId: 42, artistId: 3, expectedVersion: 2 }),
+      /ARTWORK_MODERATION_BLOCKED/
+    );
+    assert.equal(loaded.calls.updateMany.length, 0);
+    loaded.restore();
+  }
+});

@@ -284,6 +284,15 @@
                   >
                     Masquer
                   </button>
+                  <button
+                    v-if="artwork.management.capabilities.canPublish"
+                    type="button"
+                    class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6D8BFF] disabled:cursor-wait disabled:opacity-50"
+                    :disabled="publishingArtwork"
+                    @click="confirmArtworkPublish"
+                  >
+                    {{ publishingArtwork ? "Republication…" : "Republier" }}
+                  </button>
                   <NuxtLink
                     v-if="artwork.management.capabilities.canEdit"
                     :to="`/artworks/${artwork.id}/edit`"
@@ -580,6 +589,7 @@ const hidingArtwork = ref(false);
 const hideTrigger = ref(null);
 const hideCancelButton = ref(null);
 const hideConfirmButton = ref(null);
+const publishingArtwork = ref(false);
 
 function schemaAvailability(status) {
   const values = {
@@ -849,6 +859,34 @@ async function confirmArtworkHide() {
     await refresh();
   } finally {
     hidingArtwork.value = false;
+  }
+}
+
+async function confirmArtworkPublish() {
+  const expectedVersion = artwork.value?.management?.lifecycle?.version;
+  if (!artwork.value?.id || !expectedVersion || publishingArtwork.value) return;
+
+  publishingArtwork.value = true;
+  managementMessage.value = "";
+
+  try {
+    const csrf = await $fetch("/api/v1/security/csrf-token", { credentials: "include" });
+    const response = await $fetch(`/api/artists/me/artworks/${artwork.value.id}/publish`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "x-csrf-token": csrf.csrfToken },
+      body: { expectedVersion }
+    });
+    data.value = { ...data.value, artwork: response.artwork };
+    managementMessageTone.value = "success";
+    managementMessage.value = response.message;
+  } catch (publishError) {
+    managementMessageTone.value = "error";
+    managementMessage.value =
+      publishError?.data?.message || "Impossible de republier cette œuvre pour le moment.";
+    await refresh();
+  } finally {
+    publishingArtwork.value = false;
   }
 }
 
