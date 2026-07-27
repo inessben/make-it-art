@@ -126,7 +126,11 @@ function normalizeEmail(value) {
 }
 
 function parseBooleanFlag(value) {
-  return ["1", "true", "yes", "on"].includes(String(value || "").trim().toLowerCase());
+  return ["1", "true", "yes", "on"].includes(
+    String(value || "")
+      .trim()
+      .toLowerCase()
+  );
 }
 
 function parsePositiveInteger(value) {
@@ -1116,7 +1120,11 @@ router.patch(
         imagePath: nextImagePath
       });
 
-      if (uploadedImagePath && currentCategory.imagePath && currentCategory.imagePath !== uploadedImagePath) {
+      if (
+        uploadedImagePath &&
+        currentCategory.imagePath &&
+        currentCategory.imagePath !== uploadedImagePath
+      ) {
         await removeUploadedImage(currentCategory.imagePath);
       }
 

@@ -90,13 +90,7 @@ async function updateArtistVerification({ artistId, verified, prismaClient = pri
   });
 }
 
-async function updateArtistProfile({
-  artistId,
-  userId,
-  displayName,
-  bio,
-  avatarPath
-}) {
+async function updateArtistProfile({ artistId, userId, displayName, bio, avatarPath }) {
   return prisma.$transaction(async (tx) => {
     await tx.user.update({
       where: {
