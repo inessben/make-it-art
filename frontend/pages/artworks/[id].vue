@@ -228,58 +228,45 @@
 
               <section
                 v-if="artwork.management"
-                class="mt-2 rounded-[28px] border border-[#293A66] bg-[#091121] p-6"
+                class="mt-2 border border-white/10 bg-[#111414] px-4 py-4 sm:px-5"
                 aria-labelledby="artwork-management-title"
               >
-                <div class="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
-                      Espace propriétaire
-                    </p>
-                    <h2 id="artwork-management-title" class="mt-3 text-xl font-semibold text-white">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div class="flex flex-wrap items-center gap-3">
+                    <h2
+                      id="artwork-management-title"
+                      class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300"
+                    >
                       Gérer l’œuvre
                     </h2>
+                    <span
+                      class="rounded-[4px] border px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em]"
+                      :class="visibilityClass"
+                    >
+                      {{ visibilityPresentation.label }}
+                    </span>
                   </div>
-                  <span
-                    class="rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em]"
-                    :class="visibilityClass"
-                  >
-                    {{ visibilityPresentation.label }}
-                  </span>
+                  <p class="text-xs text-slate-500">Actions réservées au propriétaire</p>
                 </div>
 
-                <p class="mt-4 text-sm leading-6 text-[#AFC0DA]">
-                  Les autorisations sont vérifiées par le serveur selon les achats et paiements en
-                  cours.
-                </p>
-
-                <ul class="mt-5 grid gap-3 sm:grid-cols-2" aria-label="Actions de gestion">
-                  <li
-                    v-for="item in managementActionSummary"
-                    :key="item.key"
-                    class="rounded-2xl border border-[#203357] bg-[#050912] p-4"
+                <div
+                  v-if="availableManagementActionCount"
+                  class="mt-4 flex flex-wrap gap-2"
+                  aria-label="Actions de gestion"
+                >
+                  <NuxtLink
+                    v-if="artwork.management.capabilities.canEdit"
+                    :to="`/artworks/${artwork.id}/edit`"
+                    class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-violet-500/60 bg-violet-500/10 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-violet-100 transition hover:border-violet-400 hover:bg-violet-500/20"
+                    aria-label="Modifier l’œuvre"
                   >
-                    <div class="flex items-center justify-between gap-3">
-                      <span class="font-semibold text-white">{{ item.label }}</span>
-                      <span
-                        class="text-xs font-semibold uppercase tracking-[0.1em]"
-                        :class="item.available ? 'text-[#9DE2B4]' : 'text-[#F7D990]'"
-                      >
-                        {{ item.available ? "Disponible" : "Indisponible" }}
-                      </span>
-                    </div>
-                    <p v-if="!item.available" class="mt-2 text-sm text-[#AFC0DA]">
-                      {{ item.reason }}
-                    </p>
-                  </li>
-                </ul>
-
-                <div class="mt-5 flex flex-wrap gap-3">
+                    Modifier
+                  </NuxtLink>
                   <button
                     v-if="artwork.management.capabilities.canHide"
                     ref="hideTrigger"
                     type="button"
-                    class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#6F5C23] bg-[#2B220E] px-6 text-sm font-semibold text-[#F7D990] transition hover:border-[#A78931]"
+                    class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-[#6F5C23] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-[#F7D990] transition hover:border-[#A78931] hover:bg-[#2B220E]"
                     @click="openHideDialog"
                   >
                     Masquer
@@ -287,7 +274,7 @@
                   <button
                     v-if="artwork.management.capabilities.canPublish"
                     type="button"
-                    class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6D8BFF] disabled:cursor-wait disabled:opacity-50"
+                    class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-violet-500/60 bg-violet-500/10 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-violet-100 transition hover:border-violet-400 hover:bg-violet-500/20 disabled:cursor-wait disabled:opacity-50"
                     :disabled="publishingArtwork"
                     @click="confirmArtworkPublish"
                   >
@@ -297,7 +284,7 @@
                     v-if="artwork.management.capabilities.canArchive"
                     ref="archiveTrigger"
                     type="button"
-                    class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#43516B] bg-[#1A2336] px-6 text-sm font-semibold text-[#C8D4E8] transition hover:border-[#61708E]"
+                    class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-white/15 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-slate-300 transition hover:border-slate-500 hover:bg-white/5 hover:text-white"
                     @click="openArchiveDialog"
                   >
                     Archiver
@@ -306,31 +293,56 @@
                     v-if="artwork.management.capabilities.canRestore"
                     ref="restoreTrigger"
                     type="button"
-                    class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
+                    class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-violet-500/60 bg-violet-500/10 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-violet-100 transition hover:border-violet-400 hover:bg-violet-500/20"
                     @click="openRestoreDialog"
                   >
                     Restaurer
                   </button>
-                  <NuxtLink
-                    v-if="artwork.management.capabilities.canEdit"
-                    :to="`/artworks/${artwork.id}/edit`"
-                    class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
-                  >
-                    Modifier l’œuvre
-                  </NuxtLink>
                   <button
                     v-if="artwork.management.capabilities.canDelete"
                     ref="deleteTrigger"
                     type="button"
-                    class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#7A3131] bg-[#2A1010] px-6 text-sm font-semibold text-[#FFB4B4] transition hover:border-[#B64747] hover:bg-[#3A1515]"
+                    class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-[#7A3131] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-[#FFB4B4] transition hover:border-[#B64747] hover:bg-[#2A1010]"
                     @click="openDeleteDialog"
                   >
                     Supprimer
                   </button>
                 </div>
+
+                <p v-else class="mt-3 text-sm text-slate-500">
+                  Aucune action n’est disponible pour le moment.
+                </p>
+
+                <details
+                  v-if="blockedManagementActions.length"
+                  class="group mt-3 border-t border-white/10 pt-3"
+                >
+                  <summary
+                    class="flex cursor-pointer list-none items-center justify-between gap-3 text-xs text-slate-500 transition hover:text-slate-300 [&::-webkit-details-marker]:hidden"
+                  >
+                    <span>Voir les actions indisponibles</span>
+                    <span
+                      class="text-base leading-none transition group-open:rotate-45"
+                      aria-hidden="true"
+                    >
+                      +
+                    </span>
+                  </summary>
+                  <ul class="mt-3 grid gap-2">
+                    <li
+                      v-for="item in blockedManagementActions"
+                      :key="item.key"
+                      class="grid gap-1 text-xs sm:grid-cols-[7rem_1fr] sm:gap-3"
+                    >
+                      <span class="font-semibold text-slate-300">{{ item.label }}</span>
+                      <span class="leading-5 text-slate-500">{{ item.reason }}</span>
+                    </li>
+                  </ul>
+                </details>
+
                 <p
                   v-if="managementMessage"
-                  class="mt-4 rounded-2xl border p-4 text-sm"
+                  class="mt-3 border px-3 py-2 text-sm"
                   :class="
                     managementMessageTone === 'success'
                       ? 'border-[#24543A] bg-[#10261A] text-[#9DE2B4]'
@@ -815,6 +827,12 @@ const managementActionSummary = computed(() => {
     reason: formatArtworkManagementReason(capabilities.reasons?.[key])
   }));
 });
+const blockedManagementActions = computed(() =>
+  managementActionSummary.value.filter((item) => !item.available)
+);
+const availableManagementActionCount = computed(
+  () => managementActionSummary.value.length - blockedManagementActions.value.length
+);
 const availabilityClass = computed(() => {
   const tones = {
     available: "bg-[#10261A] text-[#9DE2B4]",
