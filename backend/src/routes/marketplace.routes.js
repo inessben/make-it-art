@@ -10,6 +10,7 @@ const {
   serializeArtistSummary,
   serializeCollection
 } = require("../utils/serialize-marketplace");
+const { buildUploadedImageUrl } = require("../services/uploaded-image.service");
 
 const router = express.Router();
 
@@ -120,7 +121,9 @@ router.get("/categories", async (_req, res) => {
     return res.status(200).json({
       categories: categories.map((category) => ({
         id: category.id,
-        name: normalizeText(category.name) || "Sans categorie"
+        name: normalizeText(category.name) || "Sans categorie",
+        imageUrl: buildUploadedImageUrl(category.imagePath),
+        artworksCount: category._count?.artworks || 0
       }))
     });
   } catch (error) {

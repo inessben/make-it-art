@@ -95,6 +95,7 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
             description: payload.description,
             price: payload.price,
             priceTokens: payload.price,
+            licenseType: payload.licenseType,
             favoriteCount: 0,
             protection: payload.protection,
             imagePath: payload.imagePath || null,
@@ -273,6 +274,7 @@ test("POST /artists/me/artworks creates an artwork for a verified artist", async
       description: "A luminous digital landscape.",
       categoryId: 9,
       price: "120 tokens",
+      licenseType: "COMMERCIAL",
       protection: true
     }
   });
@@ -287,6 +289,7 @@ test("POST /artists/me/artworks creates an artwork for a verified artist", async
     description: "A luminous digital landscape.",
     categoryId: 9,
     price: "120 tokens",
+    licenseType: "COMMERCIAL",
     protection: true,
     imagePath: "artworks/preview/test-artwork.jpg",
     hdPath: "artworks/hd/test-artwork.jpg",
@@ -295,6 +298,73 @@ test("POST /artists/me/artworks creates an artwork for a verified artist", async
     mediaStatus: "ready",
     watermarkApplied: true
   });
+});
+
+test("POST /artists/me/artworks accepts every supported licence type", async (t) => {
+  const { baseUrl, calls } = await startArtistArtworkRoutesApp(t);
+
+  for (const licenseType of ["PERSONAL", "COMMERCIAL", "EXCLUSIVE"]) {
+    const response = await requestJson(baseUrl, "/artists/me/artworks", {
+      method: "POST",
+      body: {
+        title: `Licence ${licenseType}`,
+        categoryId: 9,
+        price: "120 tokens",
+        licenseType,
+        ...(licenseType === "COMMERCIAL"
+          ? { description: "Utilisation autorisee sur les supports numeriques pendant un an." }
+          : {})
+      }
+    });
+
+    assert.equal(response.status, 201);
+    assert.equal(response.body.artwork.licenseType, licenseType);
+  }
+
+  assert.deepEqual(
+    calls.createArtwork.map(({ licenseType }) => licenseType),
+    ["PERSONAL", "COMMERCIAL", "EXCLUSIVE"]
+  );
+});
+
+test("POST /artists/me/artworks requires commercial usage terms in the description", async (t) => {
+  const { baseUrl, calls } = await startArtistArtworkRoutesApp(t);
+  const response = await requestJson(baseUrl, "/artists/me/artworks", {
+    method: "POST",
+    body: {
+      title: "Commercial without terms",
+      categoryId: 9,
+      price: "120 tokens",
+      licenseType: "COMMERCIAL",
+      description: "   "
+    }
+  });
+
+  assert.equal(response.status, 400);
+  assert.match(response.body.message, /description.*conditions d'utilisation commerciale/i);
+  assert.equal(calls.createArtwork.length, 0);
+});
+
+test("POST /artists/me/artworks requires a supported licence type", async (t) => {
+  const { baseUrl, calls } = await startArtistArtworkRoutesApp(t);
+  for (const [title, licenseType] of [
+    ["Licence missing", undefined],
+    ["Licence invalid", "RENTAL"]
+  ]) {
+    const response = await requestJson(baseUrl, "/artists/me/artworks", {
+      method: "POST",
+      body: {
+        title,
+        categoryId: 9,
+        price: "80 tokens",
+        ...(licenseType ? { licenseType } : {})
+      }
+    });
+
+    assert.equal(response.status, 400);
+    assert.match(response.body.message, /type de licence/i);
+  }
+  assert.equal(calls.createArtwork.length, 0);
 });
 
 test("POST /artists/me/artworks blocks users without a verified artist profile", async (t) => {

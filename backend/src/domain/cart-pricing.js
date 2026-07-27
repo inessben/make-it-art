@@ -1,10 +1,29 @@
 const crypto = require("node:crypto");
+const { isUnlimitedArtworkLicenseType } = require("../constants/artwork-license-types");
+const { buildArtworkImageUrl } = require("../services/artwork-media.service");
 const {
   INCLUSIVE_TAX_BEHAVIOR,
   PLATFORM_COMMISSION_RATE_BPS,
   calculateCommissionAmount,
   calculateIncludedTax
 } = require("./commerce-policy");
+
+function normalizeText(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function resolveCartArtworkImageUrl(artwork) {
+  const storageProvider = normalizeText(artwork?.storageProvider) || "local";
+
+  if (storageProvider === "local" && artwork?.id) {
+    return `/api/artworks/${artwork.id}/media/preview`;
+  }
+
+  return (
+    buildArtworkImageUrl(artwork?.previewPath || artwork?.imagePath) ||
+    (artwork?.id ? `/api/artworks/${artwork.id}/media/preview` : null)
+  );
+}
 
 function getArtworkIssue(artwork, quantity, buyerUserId = null) {
   const artistUserId = artwork.artist?.userId ?? artwork.artist?.user?.id;
@@ -21,9 +40,12 @@ function getArtworkIssue(artwork, quantity, buyerUserId = null) {
     return "ARTWORK_PRICE_UNAVAILABLE";
   }
 
-  const availableQuantity = Math.max(artwork.stockQuantity - artwork.reservedQuantity, 0);
+  const isUnlimited = isUnlimitedArtworkLicenseType(artwork.licenseType);
+  const availableQuantity = isUnlimited
+    ? null
+    : Math.max(artwork.stockQuantity - artwork.reservedQuantity, 0);
 
-  if (quantity > availableQuantity) {
+  if (!isUnlimited && quantity > availableQuantity) {
     return "INSUFFICIENT_STOCK";
   }
 
@@ -44,6 +66,7 @@ function createPricingFingerprint(version, items, summary) {
     totalAmount: summary.totalAmount,
     items: items.map((item) => ({
       artworkId: item.artworkId,
+      licenseType: item.licenseType,
       quantity: item.quantity,
       unitAmount: item.unitAmount,
       discountAmount: item.discountAmount,
@@ -75,7 +98,10 @@ function buildCartSummary(
       const grossAfterDiscountAmount = subtotalAmount - discountAmount;
       const { netAmount, taxAmount } = calculateIncludedTax(grossAfterDiscountAmount, vatRateBps);
       const commissionAmount = calculateCommissionAmount(netAmount, commissionRateBps);
-      const availableQuantity = Math.max(artwork.stockQuantity - artwork.reservedQuantity, 0);
+      const isUnlimited = isUnlimitedArtworkLicenseType(artwork.licenseType);
+      const availableQuantity = isUnlimited
+        ? null
+        : Math.max(artwork.stockQuantity - artwork.reservedQuantity, 0);
 
       if (issue) {
         issues.push({
@@ -87,6 +113,9 @@ function buildCartSummary(
       return {
         artworkId: artwork.id,
         title: artwork.title,
+        imageUrl: resolveCartArtworkImageUrl(artwork),
+        licenseType: artwork.licenseType,
+        isUnlimited,
         artistName: artwork.artist.displayName || artwork.artist.user.username || "Unknown artist",
         quantity: cartItem.quantity,
         availableQuantity,

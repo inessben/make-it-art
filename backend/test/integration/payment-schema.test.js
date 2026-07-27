@@ -33,9 +33,27 @@ databaseTest("the payment schema enforces monetary integrity and uniqueness", as
         artistId: artist.id,
         title: `Artwork ${marker}`,
         priceAmount: 1000,
-        currency: "EUR"
+        currency: "EUR",
+        licenseType: "EXCLUSIVE",
+        stockQuantity: 1
       }
     });
+
+    await assert.rejects(
+      prisma.artwork.update({
+        where: { id: artwork.id },
+        data: { stockQuantity: 2 }
+      })
+    );
+    await assert.rejects(
+      prisma.artwork.update({
+        where: { id: artwork.id },
+        data: { reservedQuantity: 2 }
+      })
+    );
+    const guardedArtwork = await prisma.artwork.findUnique({ where: { id: artwork.id } });
+    assert.equal(guardedArtwork.stockQuantity, 1);
+    assert.equal(guardedArtwork.reservedQuantity, 0);
 
     const cart = await prisma.cart.create({
       data: { userId }

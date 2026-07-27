@@ -36,6 +36,7 @@ function paidOrder(overrides = {}) {
         artworkId: 31,
         artworkTitle: "Night Study",
         artistName: "Artist",
+        licenseType: "COMMERCIAL",
         quantity: 2,
         unitAmount: 1250,
         subtotalAmount: 2500,
@@ -65,6 +66,7 @@ test("a sale invoice is built only from the immutable order and billing snapshot
   assert.equal(invoice.taxAmount, 417);
   assert.equal(invoice.totalAmount, 2500);
   assert.equal(invoice.lineItems[0].totalAmount, 2500);
+  assert.equal(invoice.lineItems[0].licenseType, "COMMERCIAL");
 });
 
 test("inconsistent tax totals cannot produce a sale invoice", () => {

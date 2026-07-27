@@ -1,5 +1,7 @@
 const { extractArtistApplicationPayload } = require("../services/artist-contract.service");
 const { buildArtworkImageUrl } = require("../services/artwork-media.service");
+const { buildUploadedImageUrl } = require("../services/uploaded-image.service");
+const { isUnlimitedArtworkLicenseType } = require("../constants/artwork-license-types");
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -33,6 +35,8 @@ function serializeArtistSummary(artist) {
       normalizeText(artist.displayName) || normalizeText(artist.user?.username) || "Artist",
     verified: Boolean(artist.verified),
     bio: normalizeText(artist.user?.bio),
+    avatarUrl: buildUploadedImageUrl(artist.avatarPath),
+    coverUrl: buildUploadedImageUrl(artist.coverPath),
     artType: normalizeText(payload.artType),
     styles: Array.isArray(payload.styles) ? payload.styles.filter(Boolean) : [],
     portfolioUrl: normalizeText(payload.portfolioUrl),
@@ -51,6 +55,37 @@ function serializeArtistSummary(artist) {
   };
 }
 
+function resolveArtworkAvailabilityStatus({
+  isUnlimited,
+  saleStatus,
+  isSold,
+  stockQuantity,
+  reservedQuantity,
+  hasFiatPrice
+}) {
+  if (!isUnlimited && (isSold || saleStatus === "SOLD_OUT")) {
+    return "SOLD";
+  }
+
+  if (saleStatus !== "AVAILABLE" || !hasFiatPrice) {
+    return "UNAVAILABLE";
+  }
+
+  if (isUnlimited) {
+    return "AVAILABLE";
+  }
+
+  if (stockQuantity === 0 && reservedQuantity === 0) {
+    return "SOLD";
+  }
+
+  if (reservedQuantity > 0) {
+    return "RESERVED";
+  }
+
+  return stockQuantity > 0 ? "AVAILABLE" : "UNAVAILABLE";
+}
+
 function serializeArtwork(artwork, { includeArtist = true } = {}) {
   if (!artwork) {
     return null;
@@ -63,8 +98,17 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     : 0;
   const availableQuantity = Math.max(0, stockQuantity - reservedQuantity);
   const saleStatus = normalizeText(artwork.saleStatus) || "DRAFT";
-  const isAvailableForPurchase =
-    saleStatus === "AVAILABLE" && !artwork.isSold && hasFiatPrice && availableQuantity > 0;
+  const licenseType = normalizeText(artwork.licenseType) || "PERSONAL";
+  const isUnlimited = isUnlimitedArtworkLicenseType(licenseType);
+  const availabilityStatus = resolveArtworkAvailabilityStatus({
+    isUnlimited,
+    saleStatus,
+    isSold: Boolean(artwork.isSold),
+    stockQuantity,
+    reservedQuantity,
+    hasFiatPrice
+  });
+  const isAvailableForPurchase = availabilityStatus === "AVAILABLE";
   const priceValue = hasFiatPrice
     ? artwork.priceAmount / 100
     : parsePriceValue(artwork.price || artwork.priceTokens);
@@ -80,25 +124,32 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     priceValue,
     priceAmount: hasFiatPrice ? artwork.priceAmount : null,
     currency: hasFiatPrice ? artwork.currency || "EUR" : null,
+    licenseType,
+    isUnlimited,
     protection: Boolean(artwork.protection),
     createdAt: artwork.createdAt || null,
     imageUrl:
-      buildArtworkImageUrl(artwork.previewPath || artwork.imagePath) ||
-      (artwork.id ? `/api/artworks/${artwork.id}/media/preview` : null),
+      (normalizeText(artwork.storageProvider) || "local") === "local" && artwork.id
+        ? `/api/artworks/${artwork.id}/media/preview`
+        : buildArtworkImageUrl(artwork.previewPath || artwork.imagePath) ||
+          (artwork.id ? `/api/artworks/${artwork.id}/media/preview` : null),
     previewUrl:
-      buildArtworkImageUrl(artwork.previewPath || artwork.imagePath) ||
-      (artwork.id ? `/api/artworks/${artwork.id}/media/preview` : null),
+      (normalizeText(artwork.storageProvider) || "local") === "local" && artwork.id
+        ? `/api/artworks/${artwork.id}/media/preview`
+        : buildArtworkImageUrl(artwork.previewPath || artwork.imagePath) ||
+          (artwork.id ? `/api/artworks/${artwork.id}/media/preview` : null),
     hasHdFile: Boolean(artwork.hdPath),
     hdDownloadUrl: artwork.hdPath ? `/api/artworks/${artwork.id}/media/hd` : null,
     storageProvider: normalizeText(artwork.storageProvider) || "local",
     mediaStatus: normalizeText(artwork.mediaStatus) || "ready",
     watermarkApplied: Boolean(artwork.watermarkApplied),
     favoriteCount: artwork.favoriteCount ?? artwork._count?.favorites ?? 0,
-    isSold: Boolean(artwork.isSold),
+    isSold: isUnlimited ? false : Boolean(artwork.isSold),
     saleStatus,
     stockQuantity,
     reservedQuantity,
-    availableQuantity,
+    availableQuantity: isUnlimited ? null : availableQuantity,
+    availabilityStatus,
     isAvailableForPurchase,
     isFavorite: Array.isArray(artwork.favorites) ? artwork.favorites.length > 0 : false,
     moderationStatus: normalizeText(artwork.moderationStatus) || "pending",
@@ -111,7 +162,8 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     category: artwork.category
       ? {
           id: artwork.category.id,
-          name: normalizeText(artwork.category.name) || "Uncategorized"
+          name: normalizeText(artwork.category.name) || "Uncategorized",
+          imageUrl: buildUploadedImageUrl(artwork.category.imagePath)
         }
       : null,
     artist: includeArtist ? serializeArtistSummary(artwork.artist) : null

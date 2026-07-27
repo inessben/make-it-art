@@ -17,6 +17,12 @@ enum ArtworkSaleStatus {
   UNLISTED
 }
 
+enum ArtworkLicenseType {
+  PERSONAL
+  COMMERCIAL
+  EXCLUSIVE
+}
+
 enum OrderStatus {
   PENDING_PAYMENT
   PAYMENT_PROCESSING
@@ -174,6 +180,8 @@ model Artist {
   id          Int          @id @default(autoincrement())
   userId      Int          @unique @map("user_id")
   displayName String?      @map("display_name")
+  avatarPath  String?      @map("avatar_path")
+  coverPath   String?      @map("cover_path")
   verified    Boolean?
   createdAt   DateTime?    @map("created_at")
   user        User         @relation(fields: [userId], references: [id])
@@ -204,6 +212,7 @@ model Artwork {
   price                 String?
   priceAmount           Int?                   @map("price_amount")
   currency              Currency               @default(EUR)
+  licenseType           ArtworkLicenseType     @default(PERSONAL) @map("license_type")
   favoriteCount         Int?                   @map("favorite_count")
   createdAt             DateTime?              @map("created_at")
   protection            Boolean?
@@ -266,9 +275,10 @@ model UserGallery {
 }
 
 model Category {
-  id       Int       @id @default(autoincrement())
-  name     String?
-  artworks Artwork[]
+  id        Int       @id @default(autoincrement())
+  name      String?
+  imagePath String?   @map("image_path")
+  artworks  Artwork[]
 
   @@map("category")
 }
@@ -384,6 +394,7 @@ model OrderItem {
   priceTokens          String?               @map("price_tokens")
   artworkTitle         String                @map("artwork_title")
   artistName           String                @map("artist_name")
+  licenseType          ArtworkLicenseType    @default(PERSONAL) @map("license_type")
   quantity             Int                   @default(1)
   unitAmount           Int                   @map("unit_amount")
   subtotalAmount       Int                   @map("subtotal_amount")

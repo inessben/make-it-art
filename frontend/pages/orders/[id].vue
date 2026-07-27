@@ -157,6 +157,9 @@
                     {{ item.artistName || "Artiste" }} · Quantité
                     {{ item.quantity }}
                   </p>
+                  <p class="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#BFD0FF]">
+                    {{ formatArtworkLicenseType(item.licenseType) }}
+                  </p>
                 </div>
                 <span
                   class="inline-flex items-center rounded-full bg-[#1c3350] px-3 py-2 text-xs font-semibold text-[#67b7ff]"
@@ -285,6 +288,7 @@ import {
   getRefundStatusPresentation
 } from "~/utils/order-status";
 import { getDigitalDeliveryPresentation } from "~/utils/digital-delivery";
+import { formatArtworkLicenseType } from "~/utils/marketplace";
 
 definePageMeta({
   middleware: "auth"

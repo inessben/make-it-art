@@ -1,6 +1,25 @@
 const prisma = require("../lib/prisma");
 const { PREDEFINED_ARTWORK_CATEGORIES } = require("../constants/artwork-categories");
 
+function sortCategoriesByPredefinedOrder(categories) {
+  const orderMap = new Map(
+    PREDEFINED_ARTWORK_CATEGORIES.map((name, index) => [String(name).toLowerCase(), index])
+  );
+
+  return [...categories].sort((left, right) => {
+    const leftOrder =
+      orderMap.get(String(left.name || "").toLowerCase()) ?? Number.MAX_SAFE_INTEGER;
+    const rightOrder =
+      orderMap.get(String(right.name || "").toLowerCase()) ?? Number.MAX_SAFE_INTEGER;
+
+    if (leftOrder !== rightOrder) {
+      return leftOrder - rightOrder;
+    }
+
+    return String(left.name || "").localeCompare(String(right.name || ""));
+  });
+}
+
 async function ensurePredefinedCategories() {
   const categories = [];
 
@@ -29,7 +48,29 @@ async function ensurePredefinedCategories() {
 }
 
 async function listCategories() {
-  return ensurePredefinedCategories();
+  const ensuredCategories = await ensurePredefinedCategories();
+  const categoryIds = ensuredCategories.map((category) => category.id);
+
+  const categories = await prisma.category.findMany({
+    where: {
+      id: {
+        in: categoryIds
+      }
+    },
+    include: {
+      _count: {
+        select: {
+          artworks: true
+        }
+      }
+    }
+  });
+
+  return sortCategoriesByPredefinedOrder(categories);
+}
+
+async function listCategoriesForAdmin() {
+  return listCategories();
 }
 
 async function findById(categoryId) {
@@ -50,9 +91,29 @@ async function isPredefinedCategory(categoryId) {
   return categories.some((category) => category.id === categoryId);
 }
 
+async function updateCategoryImage({ categoryId, imagePath }) {
+  return prisma.category.update({
+    where: {
+      id: categoryId
+    },
+    data: {
+      imagePath: imagePath || null
+    },
+    include: {
+      _count: {
+        select: {
+          artworks: true
+        }
+      }
+    }
+  });
+}
+
 module.exports = {
   ensurePredefinedCategories,
   listCategories,
+  listCategoriesForAdmin,
   findById,
-  isPredefinedCategory
+  isPredefinedCategory,
+  updateCategoryImage
 };

@@ -1,5 +1,6 @@
 const express = require("express");
 const { authRequired } = require("../middlewares/auth-required.middleware");
+const { csrfProtection } = require("../middlewares/csrf.middleware");
 const { isAdminUser } = require("../middlewares/admin-required.middleware");
 const { ensureVerifiedArtist } = require("../middlewares/artist-required.middleware");
 const artistApplicationDraftRepository = require("../repositories/artist-application-draft.repository");
@@ -8,6 +9,10 @@ const artworkRepository = require("../repositories/artwork.repository");
 const categoryRepository = require("../repositories/category.repository");
 const userRepository = require("../repositories/user.repository");
 const { ARTIST_APPLICATION_STATUS } = require("../constants/artist-application-status");
+const {
+  ARTWORK_LICENSE_TYPE,
+  normalizeArtworkLicenseType
+} = require("../constants/artwork-license-types");
 const {
   CONTRACT_VERSION,
   extractArtistApplicationPayload,
@@ -21,9 +26,17 @@ const { ensureBuffer } = require("../utils/ensure-buffer");
 const prisma = require("../lib/prisma");
 const { handleArtworkUpload } = require("../middlewares/upload-artwork.middleware");
 const {
+  createSingleImageUpload,
+  getUploadedImagePath
+} = require("../middlewares/upload-image.middleware");
+const {
   processArtworkUpload,
   deleteArtworkMediaAssets
 } = require("../services/artwork-media-pipeline.service");
+const {
+  buildUploadedImageUrl,
+  removeUploadedImage
+} = require("../services/uploaded-image.service");
 const env = require("../config/env");
 const {
   buildArtistDashboardPayload,
@@ -38,6 +51,18 @@ const {
 
 const router = express.Router();
 const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const ARTIST_PROFILE_IMAGE_DIRECTORY = "artists/profile";
+const ARTIST_COVER_IMAGE_DIRECTORY = "artists/covers";
+const handleArtistProfileImageUpload = createSingleImageUpload({
+  fieldName: "image",
+  relativeDirectory: ARTIST_PROFILE_IMAGE_DIRECTORY,
+  maxFileSizeBytes: 8 * 1024 * 1024
+});
+const handleArtistCoverImageUpload = createSingleImageUpload({
+  fieldName: "image",
+  relativeDirectory: ARTIST_COVER_IMAGE_DIRECTORY,
+  maxFileSizeBytes: 10 * 1024 * 1024
+});
 
 function ensureNonAdminArtistAccess(req, res, next) {
   if (isAdminUser(req.user)) {
@@ -87,6 +112,8 @@ function serializeArtistProfile(artist) {
     id: artist.id,
     userId: artist.userId,
     displayName: artist.displayName,
+    avatarUrl: buildUploadedImageUrl(artist.avatarPath),
+    coverUrl: buildUploadedImageUrl(artist.coverPath),
     verified: Boolean(artist.verified),
     createdAt: artist.createdAt,
     bio: artist.user?.bio || "",
@@ -102,6 +129,14 @@ function serializeArtistProfile(artist) {
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function parseBooleanFlag(value) {
+  return ["1", "true", "yes", "on"].includes(
+    String(value || "")
+      .trim()
+      .toLowerCase()
+  );
 }
 
 function normalizeStyles(value) {
@@ -204,6 +239,7 @@ function normalizeArtworkInput(input = {}) {
     description: normalizeText(input.description),
     categoryId: Number.isInteger(categoryId) && categoryId > 0 ? categoryId : null,
     price: normalizeText(input.price) || normalizeText(input.priceTokens),
+    licenseType: normalizeArtworkLicenseType(input.licenseType),
     protection: input.protection === true || input.protection === "true" || input.protection === "1"
   };
 }
@@ -223,6 +259,14 @@ function validateArtworkInput(input) {
 
   if (!input.price) {
     return "Le prix de l'oeuvre est requis.";
+  }
+
+  if (!input.licenseType) {
+    return "Le type de licence de l'oeuvre est requis.";
+  }
+
+  if (input.licenseType === ARTWORK_LICENSE_TYPE.COMMERCIAL && !input.description) {
+    return "La description est requise pour preciser les conditions d'utilisation commerciale.";
   }
 
   if (parsePriceValue(input.price) === null) {
@@ -262,6 +306,14 @@ function mapArtworkRouteError(error) {
     return {
       status: 404,
       message: "Oeuvre introuvable."
+    };
+  }
+
+  if (error?.message === "ARTWORK_LICENSE_LOCKED") {
+    return {
+      status: 409,
+      message:
+        "Le type de licence ne peut plus etre modifie pendant une reservation ou apres la vente."
     };
   }
 
@@ -359,6 +411,175 @@ router.get("/artists/me", async (req, res) => {
     });
   }
 });
+
+router.patch(
+  "/artists/me/profile",
+  csrfProtection,
+  handleArtistProfileImageUpload,
+  async (req, res) => {
+    const uploadedImagePath = getUploadedImagePath(ARTIST_PROFILE_IMAGE_DIRECTORY, req.file);
+
+    try {
+      const currentArtist = await artistRepository.findByUserId(req.user.id);
+
+      if (!currentArtist) {
+        if (uploadedImagePath) {
+          await removeUploadedImage(uploadedImagePath);
+        }
+
+        return res.status(404).json({
+          message: "Artist profile not found"
+        });
+      }
+
+      const displayName = normalizeText(req.body.displayName || currentArtist.displayName);
+      const bio = normalizeText(req.body.bio ?? currentArtist.user?.bio ?? "");
+      const removeAvatar = parseBooleanFlag(req.body.removeAvatar);
+
+      if (!displayName) {
+        if (uploadedImagePath) {
+          await removeUploadedImage(uploadedImagePath);
+        }
+
+        return res.status(400).json({
+          message: "Artist display name is required."
+        });
+      }
+
+      if (displayName.length > 160) {
+        if (uploadedImagePath) {
+          await removeUploadedImage(uploadedImagePath);
+        }
+
+        return res.status(400).json({
+          message: "Artist display name cannot exceed 160 characters."
+        });
+      }
+
+      if (bio.length > 4000) {
+        if (uploadedImagePath) {
+          await removeUploadedImage(uploadedImagePath);
+        }
+
+        return res.status(400).json({
+          message: "Artist bio cannot exceed 4000 characters."
+        });
+      }
+
+      const nextAvatarPath = uploadedImagePath
+        ? uploadedImagePath
+        : removeAvatar
+          ? null
+          : currentArtist.avatarPath || null;
+
+      const updatedArtist = await artistRepository.updateArtistProfile({
+        artistId: currentArtist.id,
+        userId: req.user.id,
+        displayName,
+        bio,
+        avatarPath: nextAvatarPath
+      });
+
+      if (
+        uploadedImagePath &&
+        currentArtist.avatarPath &&
+        currentArtist.avatarPath !== uploadedImagePath
+      ) {
+        await removeUploadedImage(currentArtist.avatarPath);
+      }
+
+      if (removeAvatar && !uploadedImagePath && currentArtist.avatarPath) {
+        await removeUploadedImage(currentArtist.avatarPath);
+      }
+
+      return res.status(200).json({
+        message: uploadedImagePath
+          ? "Artist profile updated with the new image."
+          : removeAvatar
+            ? "Artist profile image removed."
+            : "Artist profile updated.",
+        artist: serializeArtistProfile(updatedArtist)
+      });
+    } catch (error) {
+      if (uploadedImagePath) {
+        await removeUploadedImage(uploadedImagePath);
+      }
+
+      console.error("Artist profile update error:", error);
+      return res.status(500).json({
+        message: "Unable to update the artist profile."
+      });
+    }
+  }
+);
+
+router.patch(
+  "/artists/me/cover",
+  csrfProtection,
+  handleArtistCoverImageUpload,
+  async (req, res) => {
+    const uploadedImagePath = getUploadedImagePath(ARTIST_COVER_IMAGE_DIRECTORY, req.file);
+
+    try {
+      const currentArtist = await artistRepository.findByUserId(req.user.id);
+
+      if (!currentArtist) {
+        if (uploadedImagePath) {
+          await removeUploadedImage(uploadedImagePath);
+        }
+
+        return res.status(404).json({
+          message: "Artist profile not found"
+        });
+      }
+
+      const removeCover = parseBooleanFlag(req.body.removeCover);
+
+      if (!uploadedImagePath && !removeCover) {
+        return res.status(400).json({
+          message: "Provide a cover image or request its removal."
+        });
+      }
+
+      const nextCoverPath = uploadedImagePath
+        ? uploadedImagePath
+        : removeCover
+          ? null
+          : currentArtist.coverPath || null;
+
+      const updatedArtist = await artistRepository.updateArtistCover({
+        artistId: currentArtist.id,
+        coverPath: nextCoverPath
+      });
+
+      if (
+        uploadedImagePath &&
+        currentArtist.coverPath &&
+        currentArtist.coverPath !== uploadedImagePath
+      ) {
+        await removeUploadedImage(currentArtist.coverPath);
+      }
+
+      if (removeCover && !uploadedImagePath && currentArtist.coverPath) {
+        await removeUploadedImage(currentArtist.coverPath);
+      }
+
+      return res.status(200).json({
+        message: uploadedImagePath ? "Artist cover updated." : "Artist cover removed.",
+        artist: serializeArtistProfile(updatedArtist)
+      });
+    } catch (error) {
+      if (uploadedImagePath) {
+        await removeUploadedImage(uploadedImagePath);
+      }
+
+      console.error("Artist cover update error:", error);
+      return res.status(500).json({
+        message: "Unable to update the artist cover."
+      });
+    }
+  }
+);
 
 router.get("/artists/me/dashboard", ensureVerifiedArtist, async (req, res) => {
   try {
@@ -776,6 +997,7 @@ router.post("/artists/me/artworks", ensureVerifiedArtist, handleArtworkUpload, a
       description: input.description,
       categoryId,
       price: input.price,
+      licenseType: input.licenseType,
       protection: input.protection,
       imagePath: media.imagePath,
       hdPath: media.hdPath,
@@ -840,6 +1062,7 @@ router.patch("/artists/me/artworks/:id(\\d+)", ensureVerifiedArtist, async (req,
       description: input.description,
       categoryId,
       price: input.price,
+      licenseType: input.licenseType,
       protection: input.protection
     });
 

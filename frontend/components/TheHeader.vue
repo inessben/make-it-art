@@ -1,10 +1,10 @@
 <template>
   <header
-    class="relative z-50 h-20 border-b border-slate-950 bg-black text-slate-100"
+    class="relative z-50 h-20 border-b border-white/5 bg-black text-slate-100"
     @keydown.esc="closeMenu"
   >
     <div
-      class="mx-auto grid h-full w-full grid-cols-[auto_1fr_auto] items-center px-4 sm:px-6 lg:grid-cols-3 lg:px-12"
+      class="mx-auto grid h-full w-full max-w-[1440px] grid-cols-[auto_1fr_auto] items-center px-4 sm:px-6 lg:grid-cols-3 lg:px-8"
     >
       <button
         type="button"
@@ -29,26 +29,31 @@
       </button>
 
       <nav
-        class="hidden h-full items-center gap-16 text-body-1 lg:flex"
+        class="hidden h-full items-center gap-6 font-geist text-[11px] font-medium uppercase tracking-[0.18em] lg:flex xl:gap-10"
         aria-label="Main navigation"
       >
-        <NuxtLink class="transition-colors hover:text-violet-400" to="/artworks"
+        <NuxtLink class="px-3 py-2 transition-colors hover:text-violet-400" to="/artworks"
           >Marketplace</NuxtLink
         >
-        <NuxtLink class="transition-colors hover:text-violet-400" to="/artists"
+        <NuxtLink class="px-3 py-2 transition-colors hover:text-violet-400" to="/artists"
           >Collections</NuxtLink
         >
-        <NuxtLink class="transition-colors hover:text-violet-400" to="/about-us">About Us</NuxtLink>
+        <NuxtLink class="px-3 py-2 transition-colors hover:text-violet-400" to="/about-us"
+          >About Us</NuxtLink
+        >
       </nav>
 
       <NuxtLink
         to="/"
-        class="flex items-center justify-self-center gap-3 sm:gap-5"
+        class="flex items-center justify-self-center gap-3 px-4 py-2 sm:gap-4"
         aria-label="Make It Art - Home"
         @click="closeMenu"
       >
-        <img class="h-11 w-9 object-contain sm:h-12 sm:w-10" src="/logo.png" alt="" />
-        <span class="hidden whitespace-nowrap text-title-4 sm:inline">MAKE IT ART</span>
+        <img class="h-10 w-8 object-contain sm:h-12 sm:w-10" src="/logo.png" alt="" />
+        <span
+          class="hidden whitespace-nowrap font-geist text-[13px] font-bold uppercase tracking-[0.12em] sm:inline"
+          >MAKE IT ART</span
+        >
       </NuxtLink>
 
       <div class="hidden items-center justify-self-end lg:flex">
@@ -83,7 +88,7 @@
         <NuxtLink
           v-else
           to="/register"
-          class="flex h-10 w-[92px] items-center justify-center border border-violet-600 bg-gradient-to-r from-violet-950/70 to-violet-700/20 text-footer transition-colors hover:bg-violet-950 sm:w-[150px] lg:h-[60px] lg:w-[237px]"
+          class="flex h-12 w-[120px] items-center justify-center border border-violet-600 bg-transparent font-geist text-[16px] font-medium text-slate-100 transition-colors hover:bg-violet-950/35 sm:w-[150px] lg:h-14 lg:w-[144px]"
           >Sign Up</NuxtLink
         >
       </div>
