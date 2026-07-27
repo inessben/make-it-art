@@ -123,6 +123,7 @@ databaseTest(
     const prisma = require("../../src/lib/prisma");
     const { requestRefund } = require("../../src/services/refund.service");
     const { processStripeRefundEvent } = require("../../src/services/refund-finalization.service");
+    const { revokeDownloadRights } = require("../../src/services/digital-delivery.service");
     const fixture = await createFixture(prisma);
     const stripeClient = stripeClientStub([]);
 
@@ -150,9 +151,18 @@ databaseTest(
 
       let payment = await prisma.payment.findUnique({ where: { id: fixture.payment.id } });
       let order = await prisma.order.findUnique({ where: { id: fixture.order.id } });
+      let artwork = await prisma.artwork.findUnique({ where: { id: fixture.artwork.id } });
+      let entitlement = await prisma.digitalEntitlement.findUnique({
+        where: { orderItemId: fixture.order.items[0].id }
+      });
       assert.equal(payment.status, "PARTIALLY_REFUNDED");
       assert.equal(payment.refundedAmount, 400);
       assert.equal(order.status, "PARTIALLY_REFUNDED");
+      assert.equal(entitlement.status, "ACTIVE");
+      assert.equal(artwork.licenseType, "EXCLUSIVE");
+      assert.equal(artwork.saleStatus, "SOLD_OUT");
+      assert.equal(artwork.isSold, true);
+      assert.equal(artwork.stockQuantity, 0);
 
       const totalRequest = await requestRefund({
         orderPublicId: fixture.order.publicId,
@@ -183,6 +193,18 @@ databaseTest(
       assert.equal(order.status, "REFUNDED");
       assert.equal(grantTask.status, "CANCELED");
       assert.equal(revokeTask.status, "PENDING");
+
+      await revokeDownloadRights({ task: revokeTask, prismaClient: prisma });
+      entitlement = await prisma.digitalEntitlement.findUnique({
+        where: { orderItemId: fixture.order.items[0].id }
+      });
+      artwork = await prisma.artwork.findUnique({ where: { id: fixture.artwork.id } });
+      assert.equal(entitlement.status, "REVOKED");
+      assert.equal(artwork.licenseType, "EXCLUSIVE");
+      assert.equal(artwork.saleStatus, "SOLD_OUT");
+      assert.equal(artwork.isSold, true);
+      assert.equal(artwork.stockQuantity, 0);
+      assert.equal(artwork.reservedQuantity, 0);
 
       await processStripeRefundEvent({
         event: refundEvent(fixture, total, "refund.created", "pending"),
@@ -373,8 +395,11 @@ async function createFixture(prisma) {
       artistId: artist.id,
       title: `Refund artwork ${marker}`,
       priceAmount: 1000,
+      licenseType: "EXCLUSIVE",
       saleStatus: "SOLD_OUT",
-      stockQuantity: 0
+      stockQuantity: 0,
+      reservedQuantity: 0,
+      isSold: true
     }
   });
   const cart = await prisma.cart.create({ data: { userId: buyer.id } });
@@ -395,12 +420,14 @@ async function createFixture(prisma) {
           artworkId: artwork.id,
           artworkTitle: artwork.title,
           artistName: artist.displayName,
+          licenseType: "EXCLUSIVE",
           unitAmount: 1000,
           subtotalAmount: 1000,
           ...franceB2COrderItemFields({ grossAmount: 1000 })
         }
       }
-    }
+    },
+    include: { items: true }
   });
   const payment = await prisma.payment.create({
     data: {
@@ -419,6 +446,15 @@ async function createFixture(prisma) {
       taskKey: `order:${order.publicId}:GRANT_DOWNLOAD_RIGHTS`
     }
   });
+  const entitlement = await prisma.digitalEntitlement.create({
+    data: {
+      orderId: order.id,
+      orderItemId: order.items[0].id,
+      userId: buyer.id,
+      artworkId: artwork.id,
+      sourceTaskKey: grantTask.taskKey
+    }
+  });
   return {
     marker,
     userIds: [artistUser.id, buyer.id, adminUser.id],
@@ -428,6 +464,7 @@ async function createFixture(prisma) {
     order,
     payment,
     grantTask,
+    entitlement,
     adminUser,
     buyer
   };
@@ -440,6 +477,7 @@ async function cleanup(prisma, fixture) {
   await prisma.financialTransition.deleteMany({ where: { orderId: fixture.order.id } });
   await prisma.paymentOperatorAlert.deleteMany({ where: { orderId: fixture.order.id } });
   await prisma.fulfillmentTask.deleteMany({ where: { orderId: fixture.order.id } });
+  await prisma.digitalEntitlement.deleteMany({ where: { orderId: fixture.order.id } });
   await prisma.auditLog.deleteMany({ where: { userId: fixture.adminUser.id } });
   await prisma.refund.deleteMany({ where: { orderId: fixture.order.id } });
   await prisma.payment.deleteMany({ where: { orderId: fixture.order.id } });

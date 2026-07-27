@@ -7,7 +7,8 @@ function sortCategoriesByPredefinedOrder(categories) {
   );
 
   return [...categories].sort((left, right) => {
-    const leftOrder = orderMap.get(String(left.name || "").toLowerCase()) ?? Number.MAX_SAFE_INTEGER;
+    const leftOrder =
+      orderMap.get(String(left.name || "").toLowerCase()) ?? Number.MAX_SAFE_INTEGER;
     const rightOrder =
       orderMap.get(String(right.name || "").toLowerCase()) ?? Number.MAX_SAFE_INTEGER;
 

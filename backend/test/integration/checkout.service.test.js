@@ -107,6 +107,91 @@ databaseTest("checkout creates one server-priced PaymentIntent and reuses it", a
   }
 });
 
+for (const licenseType of ["PERSONAL", "COMMERCIAL"]) {
+  databaseTest(
+    `a ${licenseType.toLowerCase()} artwork can be purchased repeatedly without inventory`,
+    async () => {
+      const prisma = require("../../src/lib/prisma");
+      const { getCartSummary, setCartItem } = require("../../src/services/cart.service");
+      const { initializeCheckout } = require("../../src/services/checkout.service");
+      const {
+        processStripePaymentEvent
+      } = require("../../src/services/payment-finalization.service");
+      const marker = randomUUID();
+      const fixture = await createFixture(prisma, marker, 3200);
+      const stripe = createFakeStripe();
+
+      try {
+        await prisma.artwork.update({
+          where: { id: fixture.artwork.id },
+          data: { licenseType, stockQuantity: 0 }
+        });
+        await setCartItem(fixture.buyer.id, { artworkId: fixture.artwork.id, quantity: 1 });
+        const firstCart = await getCartSummary(fixture.buyer.id);
+        const first = await initializeCheckout({
+          userId: fixture.buyer.id,
+          cartVersion: firstCart.version,
+          pricingFingerprint: firstCart.pricingFingerprint,
+          billingDetails,
+          clientIdempotencyKey: randomUUID(),
+          stripeClient: stripe.client
+        });
+        const firstOrder = await prisma.order.findUnique({
+          where: { publicId: first.orderId },
+          include: { reservations: true, items: true }
+        });
+        const intent = [...stripe.intents.values()][0];
+        Object.assign(intent, {
+          status: "succeeded",
+          amount_received: intent.amount,
+          latest_charge: `ch_${licenseType.toLowerCase()}_${marker.replaceAll("-", "")}`
+        });
+
+        await processStripePaymentEvent({
+          prismaClient: prisma,
+          event: {
+            id: `evt_${licenseType.toLowerCase()}_${marker}`,
+            type: "payment_intent.succeeded",
+            data: { object: intent }
+          }
+        });
+
+        const purchasedArtwork = await prisma.artwork.findUnique({
+          where: { id: fixture.artwork.id }
+        });
+        assert.equal(firstOrder.reservations.length, 0);
+        assert.equal(firstOrder.items[0].licenseType, licenseType);
+        assert.equal(purchasedArtwork.saleStatus, "AVAILABLE");
+        assert.equal(purchasedArtwork.stockQuantity, 0);
+        assert.equal(purchasedArtwork.reservedQuantity, 0);
+
+        await setCartItem(fixture.buyer.id, { artworkId: fixture.artwork.id, quantity: 1 });
+        const secondCart = await getCartSummary(fixture.buyer.id);
+        const second = await initializeCheckout({
+          userId: fixture.buyer.id,
+          cartVersion: secondCart.version,
+          pricingFingerprint: secondCart.pricingFingerprint,
+          billingDetails,
+          clientIdempotencyKey: randomUUID(),
+          stripeClient: stripe.client
+        });
+        const secondOrder = await prisma.order.findUnique({
+          where: { publicId: second.orderId },
+          include: { reservations: true, items: true }
+        });
+
+        assert.notEqual(second.orderId, first.orderId);
+        assert.equal(secondOrder.reservations.length, 0);
+        assert.equal(secondOrder.items[0].licenseType, licenseType);
+        assert.equal(stripe.intents.size, 2);
+      } finally {
+        await cleanup(prisma, marker, fixture.userIds);
+        await prisma.$disconnect();
+      }
+    }
+  );
+}
+
 databaseTest("concurrent retries return one order and one PaymentIntent", async () => {
   const prisma = require("../../src/lib/prisma");
   const { getCartSummary, setCartItem } = require("../../src/services/cart.service");
@@ -147,6 +232,81 @@ databaseTest("concurrent retries return one order and one PaymentIntent", async 
   }
 });
 
+databaseTest("eight buyers racing for an exclusive artwork create only one payment", async () => {
+  const prisma = require("../../src/lib/prisma");
+  const { getCartSummary, setCartItem } = require("../../src/services/cart.service");
+  const { initializeCheckout } = require("../../src/services/checkout.service");
+  const marker = randomUUID();
+  const fixture = await createFixture(prisma, marker, 6800);
+  const competingBuyers = await Promise.all(
+    Array.from({ length: 7 }, (_, index) =>
+      prisma.user.create({
+        data: {
+          email: `checkout-race-${index}-${marker}@make-it-art.test`,
+          username: `checkout-race-${index}-${marker}`,
+          isActive: true,
+          verified: true
+        }
+      })
+    )
+  );
+  fixture.userIds.push(...competingBuyers.map(({ id }) => id));
+  const stripe = createFakeStripe();
+  const buyers = [fixture.buyer, ...competingBuyers];
+
+  try {
+    await Promise.all(
+      buyers.map((buyer) => setCartItem(buyer.id, { artworkId: fixture.artwork.id, quantity: 1 }))
+    );
+    const carts = await Promise.all(buyers.map((buyer) => getCartSummary(buyer.id)));
+    const attempts = await Promise.allSettled(
+      buyers.map((buyer, index) =>
+        initializeCheckout({
+          userId: buyer.id,
+          cartVersion: carts[index].version,
+          pricingFingerprint: carts[index].pricingFingerprint,
+          billingDetails: { ...billingDetails, name: buyer.username },
+          clientIdempotencyKey: randomUUID(),
+          stripeClient: stripe.client
+        })
+      )
+    );
+
+    const winners = attempts.filter((attempt) => attempt.status === "fulfilled");
+    const losers = attempts.filter((attempt) => attempt.status === "rejected");
+    const storedArtwork = await prisma.artwork.findUnique({
+      where: { id: fixture.artwork.id }
+    });
+    const activeReservations = await prisma.inventoryReservation.count({
+      where: { artworkId: fixture.artwork.id, status: "ACTIVE" }
+    });
+
+    assert.equal(winners.length, 1);
+    assert.equal(losers.length, 7);
+    assert.ok(
+      losers.every(({ reason }) =>
+        ["CART_NOT_PAYABLE", "EXCLUSIVE_ARTWORK_UNAVAILABLE"].includes(reason.code)
+      )
+    );
+    assert.equal(stripe.intents.size, 1);
+    assert.equal(
+      await prisma.order.count({ where: { items: { some: { artworkId: fixture.artwork.id } } } }),
+      1
+    );
+    assert.equal(
+      await prisma.payment.count({
+        where: { order: { items: { some: { artworkId: fixture.artwork.id } } } }
+      }),
+      1
+    );
+    assert.equal(activeReservations, 1);
+    assert.equal(storedArtwork.reservedQuantity, 1);
+  } finally {
+    await cleanup(prisma, marker, fixture.userIds);
+    await prisma.$disconnect();
+  }
+});
+
 databaseTest("an idempotency key cannot be reused for another cart snapshot", async () => {
   const prisma = require("../../src/lib/prisma");
   const { getCartSummary, setCartItem } = require("../../src/services/cart.service");
@@ -174,6 +334,7 @@ databaseTest("an idempotency key cannot be reused for another cart snapshot", as
         title: `Idempotency second artwork ${marker}`,
         priceAmount: 1200,
         currency: "EUR",
+        licenseType: "EXCLUSIVE",
         saleStatus: "AVAILABLE",
         stockQuantity: 1
       }
@@ -283,6 +444,8 @@ databaseTest(
       const artwork = await prisma.artwork.findUnique({ where: { id: fixture.artwork.id } });
       assert.equal(artwork.stockQuantity, 0);
       assert.equal(artwork.reservedQuantity, 0);
+      assert.equal(artwork.saleStatus, "SOLD_OUT");
+      assert.equal(artwork.isSold, true);
       assert.equal(await prisma.fulfillmentTask.count({ where: { orderId: storedOrder.id } }), 5);
     } finally {
       await cleanup(prisma, marker, fixture.userIds);
@@ -315,10 +478,18 @@ databaseTest("checkout does not expose a processing intent to Stripe Elements", 
     intent.status = "processing";
 
     const processing = await initializeCheckout(input);
+    const reservedArtwork = await prisma.artwork.findUnique({
+      where: { id: fixture.artwork.id }
+    });
+    const reservation = await prisma.inventoryReservation.findFirst({
+      where: { order: { publicId: processing.orderId } }
+    });
 
     assert.equal(processing.orderStatus, "PAYMENT_PROCESSING");
     assert.equal(processing.requiresConfirmation, false);
     assert.equal(processing.clientSecret, null);
+    assert.equal(reservedArtwork.reservedQuantity, 1);
+    assert.equal(reservation.status, "ACTIVE");
   } finally {
     await cleanup(prisma, marker, fixture.userIds);
     await prisma.$disconnect();
@@ -368,7 +539,10 @@ databaseTest("a provider-canceled intent cannot be resumed", async () => {
     const artwork = await prisma.artwork.findUnique({ where: { id: fixture.artwork.id } });
     assert.equal(order.status, "CANCELED");
     assert.equal(order.reservations[0].status, "RELEASED");
+    assert.equal(artwork.stockQuantity, 1);
     assert.equal(artwork.reservedQuantity, 0);
+    assert.equal(artwork.saleStatus, "AVAILABLE");
+    assert.equal(artwork.isSold, false);
   } finally {
     await cleanup(prisma, marker, fixture.userIds);
     await prisma.$disconnect();
@@ -500,6 +674,7 @@ databaseTest("a changed cart cancels the old intent before creating a new checko
         title: `Checkout second artwork ${marker}`,
         priceAmount: 900,
         currency: "EUR",
+        licenseType: "EXCLUSIVE",
         saleStatus: "AVAILABLE",
         stockQuantity: 1
       }
@@ -552,6 +727,7 @@ databaseTest("a succeeded superseded checkout is reconciled instead of canceled"
         title: `Checkout preserved artwork ${marker}`,
         priceAmount: 1700,
         currency: "EUR",
+        licenseType: "EXCLUSIVE",
         saleStatus: "AVAILABLE",
         stockQuantity: 1
       }
@@ -638,7 +814,10 @@ databaseTest("expired checkout cancellation releases inventory and is idempotent
     assert.equal(firstSweep.canceled, 1);
     assert.equal(secondSweep.canceled, 0);
     assert.equal(order.status, "CANCELED");
+    assert.equal(artwork.stockQuantity, 1);
     assert.equal(artwork.reservedQuantity, 0);
+    assert.equal(artwork.saleStatus, "AVAILABLE");
+    assert.equal(artwork.isSold, false);
     assert.equal(reservation.status, "EXPIRED");
     assert.equal(stripe.cancellations, 1);
     assert.equal(retryCart.version, cart.version + 1);
@@ -765,6 +944,7 @@ async function createFixture(prisma, marker, priceAmount) {
       title: `Checkout artwork ${marker}`,
       priceAmount,
       currency: "EUR",
+      licenseType: "EXCLUSIVE",
       saleStatus: "AVAILABLE",
       stockQuantity: 1
     }

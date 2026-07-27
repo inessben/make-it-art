@@ -42,6 +42,7 @@ test("the public order serializer excludes all provider and secret fields", () =
         artworkId: 42,
         artworkTitle: "Safe artwork",
         artistName: "Artist",
+        licenseType: "COMMERCIAL",
         quantity: 1,
         unitAmount: 2500,
         currency: "EUR"
@@ -75,6 +76,7 @@ test("the public order serializer excludes all provider and secret fields", () =
   assert.equal(serialized.payment.status, "SUCCEEDED");
   assert.equal(serialized.refunds[0].reference, "safe-refund-reference");
   assert.equal(serialized.items[0].artworkId, 42);
+  assert.equal(serialized.items[0].licenseType, "COMMERCIAL");
   assert.equal(serialized.items[0].delivery.downloadRights.status, "ACTIVE");
   assert.equal(serialized.items[0].delivery.certificate.number, "MIA-0123456789ABCDEF0123");
   assert.doesNotMatch(json, /internal-task-key|sourceTaskKey/i);

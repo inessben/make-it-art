@@ -1,7 +1,10 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const { validatePaymentIntent } = require("../../src/services/payment-finalization.service");
+const {
+  consumeReservations,
+  validatePaymentIntent
+} = require("../../src/services/payment-finalization.service");
 
 function localPayment() {
   return {
@@ -90,4 +93,61 @@ test("a terminal payment rejects an unexpected replacement charge", () => {
     validatePaymentIntent(stripeIntent({ latest_charge: "ch_unexpected" }), payment),
     ["PAYMENT_CHARGE_ID_MISMATCH"]
   );
+});
+
+test("consuming an exclusive reservation marks the artwork sold atomically", async () => {
+  const artworkUpdates = [];
+  const reservationUpdates = [];
+  const transaction = {
+    artwork: {
+      async updateMany(input) {
+        artworkUpdates.push(input);
+        return { count: 1 };
+      }
+    },
+    inventoryReservation: {
+      async updateMany(input) {
+        reservationUpdates.push(input);
+        return { count: 1 };
+      }
+    }
+  };
+
+  await consumeReservations(transaction, {
+    orderId: 31,
+    order: {
+      reservations: [
+        {
+          artworkId: 42,
+          quantity: 1,
+          status: "ACTIVE"
+        }
+      ]
+    }
+  });
+
+  assert.deepEqual(artworkUpdates, [
+    {
+      where: {
+        id: 42,
+        licenseType: "EXCLUSIVE",
+        saleStatus: "AVAILABLE",
+        isSold: false,
+        stockQuantity: 1,
+        reservedQuantity: 1
+      },
+      data: {
+        stockQuantity: 0,
+        reservedQuantity: 0,
+        saleStatus: "SOLD_OUT",
+        isSold: true
+      }
+    }
+  ]);
+  assert.deepEqual(reservationUpdates, [
+    {
+      where: { orderId: 31, status: "ACTIVE" },
+      data: { status: "CONSUMED" }
+    }
+  ]);
 });

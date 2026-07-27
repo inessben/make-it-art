@@ -86,6 +86,11 @@
                   {{ artwork.category?.name || "Digital artwork" }}
                 </span>
                 <span
+                  class="rounded-full bg-[#241D3D] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#D8C8FF]"
+                >
+                  {{ formatArtworkLicenseType(artwork.licenseType) }}
+                </span>
+                <span
                   v-if="artwork.protection"
                   class="rounded-full bg-[#10261A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#9DE2B4]"
                 >
@@ -98,10 +103,11 @@
                   Aperçu filigrané
                 </span>
                 <span
-                  v-if="!artwork.isAvailableForPurchase"
-                  class="rounded-full bg-[#3A1A1A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#F5A8A8]"
+                  v-if="artwork.licenseType === 'EXCLUSIVE' || !artwork.isAvailableForPurchase"
+                  class="rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em]"
+                  :class="availabilityClass"
                 >
-                  Unavailable
+                  {{ availability.label }}
                 </span>
               </div>
 
@@ -165,6 +171,12 @@
                 </p>
               </article>
               <article class="border border-slate-800 bg-black/30 p-4">
+                <p class="text-subtitle-2 uppercase text-slate-500">Licence</p>
+                <p class="mt-3 text-body-1 text-slate-200">
+                  {{ formatArtworkLicenseType(artwork.licenseType) }}
+                </p>
+              </article>
+              <article class="border border-slate-800 bg-black/30 p-4">
                 <p class="text-subtitle-2 uppercase text-slate-500">Favorites</p>
                 <p class="mt-3 text-body-1 text-slate-200">{{ artwork.favoriteCount || 0 }}</p>
               </article>
@@ -221,7 +233,7 @@
                 v-else
                 class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#3A1A1A] bg-[#1A0A0A] px-6 text-sm font-semibold text-[#F5A8A8]"
               >
-                This artwork is no longer available for purchase
+                {{ availabilityMessage }}
               </p>
               <a
                 v-if="artwork.hasHdFile && artwork.hdDownloadUrl"
@@ -378,9 +390,11 @@ import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
 import { useAuthStore } from "~/stores/auth";
 import { useCartStore } from "~/stores/cart";
 import {
+  formatArtworkLicenseType,
   formatMarketplaceDate,
   formatMarketplacePrice,
   getArtistInitials,
+  getArtworkAvailabilityPresentation,
   isArtworkOwnedByArtist
 } from "~/utils/marketplace";
 
@@ -396,6 +410,16 @@ const collectionMessage = ref("");
 const cartMessage = ref("");
 const selectedCollectionId = ref("");
 const personalCollections = ref([]);
+
+function schemaAvailability(status) {
+  const values = {
+    AVAILABLE: "https://schema.org/InStock",
+    RESERVED: "https://schema.org/LimitedAvailability",
+    SOLD: "https://schema.org/SoldOut",
+    UNAVAILABLE: "https://schema.org/OutOfStock"
+  };
+  return values[status] || values.UNAVAILABLE;
+}
 
 const { data, pending, error, refresh } = await useFetch(`/api/artworks/${route.params.id}`, {
   headers: requestHeaders,
@@ -434,9 +458,7 @@ useHead({
             url: `${siteUrl}/artworks/${artwork.value.id}`,
             priceCurrency: "EUR",
             price: Number(artwork.value.priceValue),
-            availability: artwork.value.isAvailableForPurchase
-              ? "https://schema.org/PreOrder"
-              : "https://schema.org/SoldOut"
+            availability: schemaAvailability(artwork.value.availabilityStatus)
           };
         }
 
@@ -455,6 +477,25 @@ const formattedPrice = computed(() =>
   formatMarketplacePrice(artwork.value?.priceValue ?? artwork.value?.price)
 );
 const formattedDate = computed(() => formatMarketplaceDate(artwork.value?.createdAt));
+const availability = computed(() => getArtworkAvailabilityPresentation(artwork.value));
+const availabilityClass = computed(() => {
+  const tones = {
+    available: "bg-[#10261A] text-[#9DE2B4]",
+    reserved: "bg-[#2B220E] text-[#F7D990]",
+    sold: "bg-[#3A1A1A] text-[#F5A8A8]",
+    unavailable: "bg-[#1A2336] text-[#9FB4D9]"
+  };
+  return tones[availability.value.tone] || tones.unavailable;
+});
+const availabilityMessage = computed(() => {
+  if (availability.value.status === "RESERVED") {
+    return "Cette œuvre est temporairement réservée pendant un paiement.";
+  }
+  if (availability.value.status === "SOLD") {
+    return "Cette œuvre exclusive a déjà été vendue.";
+  }
+  return "Cette œuvre n'est pas disponible à l'achat.";
+});
 const showCollectorTools = computed(() => auth.user && !auth.isAdmin);
 const isOwnArtwork = computed(() => isArtworkOwnedByArtist(artwork.value, auth.user));
 const isInCart = computed(() =>

@@ -2,6 +2,7 @@ const { Prisma } = require("@prisma/client");
 const prisma = require("../lib/prisma");
 const env = require("../config/env");
 const { buildCartSummary } = require("../domain/cart-pricing");
+const { isUnlimitedArtworkLicenseType } = require("../constants/artwork-license-types");
 
 const cartInclude = {
   items: {
@@ -111,9 +112,10 @@ function assertArtworkCanBeAdded(artwork, quantity, userId) {
     );
   }
 
+  const isUnlimited = isUnlimitedArtworkLicenseType(artwork.licenseType);
   const availableQuantity = artwork.stockQuantity - artwork.reservedQuantity;
 
-  if (quantity > availableQuantity) {
+  if (!isUnlimited && quantity > availableQuantity) {
     throw new CartError("INSUFFICIENT_STOCK", "Requested quantity is not available", 409);
   }
 }

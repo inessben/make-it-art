@@ -1314,12 +1314,20 @@ const artistWorkspacePaths = {
           "multipart/form-data": {
             schema: {
               type: "object",
-              required: ["title", "categoryId", "price", "image"],
+              required: ["title", "categoryId", "price", "licenseType", "image"],
               properties: {
                 title: { type: "string" },
-                description: { type: "string" },
+                description: {
+                  type: "string",
+                  description:
+                    "Required for COMMERCIAL licences and must specify the commercial usage terms."
+                },
                 categoryId: { type: "integer", minimum: 1 },
                 price: { type: "string" },
+                licenseType: {
+                  type: "string",
+                  enum: ["PERSONAL", "COMMERCIAL", "EXCLUSIVE"]
+                },
                 protection: { type: "boolean" },
                 image: { type: "string", format: "binary" }
               }
@@ -3069,6 +3077,16 @@ const openApiSpec = {
           price: { type: "string", nullable: true, example: "10" },
           priceAmount: { type: "integer", nullable: true, example: 1000 },
           currency: { type: "string", example: "EUR" },
+          licenseType: {
+            type: "string",
+            enum: ["PERSONAL", "COMMERCIAL", "EXCLUSIVE"]
+          },
+          isUnlimited: { type: "boolean" },
+          availableQuantity: { type: "integer", nullable: true, minimum: 0 },
+          availabilityStatus: {
+            type: "string",
+            enum: ["AVAILABLE", "RESERVED", "SOLD", "UNAVAILABLE"]
+          },
           saleStatus: { type: "string", example: "AVAILABLE" },
           moderationStatus: { type: "string", example: "approved" },
           isFavorite: { type: "boolean", nullable: true }
@@ -3405,12 +3423,20 @@ const openApiSpec = {
       },
       ArtworkUpsertRequest: {
         type: "object",
-        required: ["title", "categoryId", "price"],
+        required: ["title", "categoryId", "price", "licenseType"],
         properties: {
           title: { type: "string" },
-          description: { type: "string" },
+          description: {
+            type: "string",
+            description:
+              "Required for COMMERCIAL licences and must specify the commercial usage terms."
+          },
           categoryId: { type: "integer", minimum: 1 },
           price: { type: "string" },
+          licenseType: {
+            type: "string",
+            enum: ["PERSONAL", "COMMERCIAL", "EXCLUSIVE"]
+          },
           protection: { type: "boolean" }
         },
         additionalProperties: false

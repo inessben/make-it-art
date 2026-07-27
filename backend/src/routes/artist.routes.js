@@ -10,6 +10,10 @@ const categoryRepository = require("../repositories/category.repository");
 const userRepository = require("../repositories/user.repository");
 const { ARTIST_APPLICATION_STATUS } = require("../constants/artist-application-status");
 const {
+  ARTWORK_LICENSE_TYPE,
+  normalizeArtworkLicenseType
+} = require("../constants/artwork-license-types");
+const {
   CONTRACT_VERSION,
   extractArtistApplicationPayload,
   resolveContractSignedAt,
@@ -121,7 +125,11 @@ function normalizeText(value) {
 }
 
 function parseBooleanFlag(value) {
-  return ["1", "true", "yes", "on"].includes(String(value || "").trim().toLowerCase());
+  return ["1", "true", "yes", "on"].includes(
+    String(value || "")
+      .trim()
+      .toLowerCase()
+  );
 }
 
 function normalizeStyles(value) {
@@ -224,6 +232,7 @@ function normalizeArtworkInput(input = {}) {
     description: normalizeText(input.description),
     categoryId: Number.isInteger(categoryId) && categoryId > 0 ? categoryId : null,
     price: normalizeText(input.price) || normalizeText(input.priceTokens),
+    licenseType: normalizeArtworkLicenseType(input.licenseType),
     protection: input.protection === true || input.protection === "true" || input.protection === "1"
   };
 }
@@ -243,6 +252,14 @@ function validateArtworkInput(input) {
 
   if (!input.price) {
     return "Le prix de l'oeuvre est requis.";
+  }
+
+  if (!input.licenseType) {
+    return "Le type de licence de l'oeuvre est requis.";
+  }
+
+  if (input.licenseType === ARTWORK_LICENSE_TYPE.COMMERCIAL && !input.description) {
+    return "La description est requise pour preciser les conditions d'utilisation commerciale.";
   }
 
   if (parsePriceValue(input.price) === null) {
@@ -282,6 +299,14 @@ function mapArtworkRouteError(error) {
     return {
       status: 404,
       message: "Oeuvre introuvable."
+    };
+  }
+
+  if (error?.message === "ARTWORK_LICENSE_LOCKED") {
+    return {
+      status: 409,
+      message:
+        "Le type de licence ne peut plus etre modifie pendant une reservation ou apres la vente."
     };
   }
 
@@ -448,7 +473,11 @@ router.patch(
         avatarPath: nextAvatarPath
       });
 
-      if (uploadedImagePath && currentArtist.avatarPath && currentArtist.avatarPath !== uploadedImagePath) {
+      if (
+        uploadedImagePath &&
+        currentArtist.avatarPath &&
+        currentArtist.avatarPath !== uploadedImagePath
+      ) {
         await removeUploadedImage(currentArtist.avatarPath);
       }
 
@@ -893,6 +922,7 @@ router.post("/artists/me/artworks", ensureVerifiedArtist, handleArtworkUpload, a
       description: input.description,
       categoryId,
       price: input.price,
+      licenseType: input.licenseType,
       protection: input.protection,
       imagePath: media.imagePath,
       hdPath: media.hdPath,
@@ -957,6 +987,7 @@ router.patch("/artists/me/artworks/:id(\\d+)", ensureVerifiedArtist, async (req,
       description: input.description,
       categoryId,
       price: input.price,
+      licenseType: input.licenseType,
       protection: input.protection
     });
 
