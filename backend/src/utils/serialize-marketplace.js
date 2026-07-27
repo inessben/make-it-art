@@ -74,7 +74,17 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     currency: hasFiatPrice ? artwork.currency || "EUR" : null,
     protection: Boolean(artwork.protection),
     createdAt: artwork.createdAt || null,
-    imageUrl: buildArtworkImageUrl(artwork.imagePath),
+    imageUrl:
+      buildArtworkImageUrl(artwork.previewPath || artwork.imagePath) ||
+      (artwork.id ? `/api/artworks/${artwork.id}/media/preview` : null),
+    previewUrl:
+      buildArtworkImageUrl(artwork.previewPath || artwork.imagePath) ||
+      (artwork.id ? `/api/artworks/${artwork.id}/media/preview` : null),
+    hasHdFile: Boolean(artwork.hdPath),
+    hdDownloadUrl: artwork.hdPath ? `/api/artworks/${artwork.id}/media/hd` : null,
+    storageProvider: normalizeText(artwork.storageProvider) || "local",
+    mediaStatus: normalizeText(artwork.mediaStatus) || "ready",
+    watermarkApplied: Boolean(artwork.watermarkApplied),
     favoriteCount: artwork.favoriteCount ?? artwork._count?.favorites ?? 0,
     isSold: Boolean(artwork.isSold),
     isFavorite: Array.isArray(artwork.favorites) ? artwork.favorites.length > 0 : false,

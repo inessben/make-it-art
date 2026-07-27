@@ -47,8 +47,8 @@ RUN printf '%s\n' \
     'fi' \
     'npx prisma generate --config prisma.config.ts' \
     'if ! npx prisma migrate deploy --config prisma.config.ts 2>/tmp/migrate.err; then' \
-    '  if grep -q P3005 /tmp/migrate.err; then' \
-    '    echo "Base existante sans historique Prisma — reinitialisation (dev uniquement)..."' \
+    '  if grep -qE "P3005|P3009" /tmp/migrate.err; then' \
+    '    echo "Historique Prisma invalide ou migration en echec — reinitialisation (dev uniquement)..."' \
     '    npx prisma migrate reset --force --config prisma.config.ts' \
     '  else' \
     '    cat /tmp/migrate.err >&2' \

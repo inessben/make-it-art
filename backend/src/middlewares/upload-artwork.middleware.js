@@ -8,13 +8,15 @@ const {
 
 const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 
 const storage = multer.diskStorage({
   destination: async (_req, _file, callback) => {
     try {
       await ensureArtworkUploadDirectory();
-      callback(null, getArtworksUploadDirectory());
+      const stagingDirectory = path.join(getArtworksUploadDirectory(), "staging");
+      await require("node:fs/promises").mkdir(stagingDirectory, { recursive: true });
+      callback(null, stagingDirectory);
     } catch (error) {
       callback(error);
     }
@@ -54,7 +56,7 @@ function handleArtworkUpload(req, res, next) {
 
     if (error.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({
-        message: "L'image ne doit pas depasser 10 Mo."
+        message: "L'image ne doit pas depasser 25 Mo."
       });
     }
 

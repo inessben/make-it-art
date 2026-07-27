@@ -311,6 +311,8 @@ definePageMeta({
 const artist = ref(null);
 const application = ref(null);
 const loading = ref(true);
+const artworksLoading = ref(false);
+const publishedArtworks = ref([]);
 const missingArtist = ref(false);
 const errorMessage = ref("");
 
@@ -335,6 +337,27 @@ const initials = computed(() => {
     .join("");
 });
 
+async function loadPublishedArtworks() {
+  if (!artist.value?.verified) {
+    publishedArtworks.value = [];
+    return;
+  }
+
+  artworksLoading.value = true;
+
+  try {
+    const response = await $fetch("/api/artists/me/artworks", {
+      credentials: "include"
+    });
+
+    publishedArtworks.value = Array.isArray(response?.artworks) ? response.artworks : [];
+  } catch {
+    publishedArtworks.value = [];
+  } finally {
+    artworksLoading.value = false;
+  }
+}
+
 onMounted(async () => {
   try {
     const response = await $fetch("/api/artists/me", {
@@ -346,6 +369,8 @@ onMounted(async () => {
 
     if (!response.artist && !response.application) {
       missingArtist.value = true;
+    } else if (response.artist) {
+      await loadPublishedArtworks();
     }
   } catch (error) {
     errorMessage.value = error?.data?.message || "Unable to load the artist profile.";
@@ -353,6 +378,14 @@ onMounted(async () => {
     loading.value = false;
   }
 });
+
+function formatArtworkPrice(artwork) {
+  if (artwork?.price) {
+    return artwork.price;
+  }
+
+  return "Prix non renseigne";
+}
 
 function formatDate(value) {
   if (!value) {

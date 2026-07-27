@@ -115,5 +115,26 @@ module.exports = {
     username: process.env.UMAMI_API_USERNAME || "",
     password: process.env.UMAMI_API_PASSWORD || "",
     websiteId: process.env.UMAMI_WEBSITE_ID || ""
+  },
+  artworkMedia: {
+    storageProvider: (process.env.ARTWORK_STORAGE_PROVIDER || "local").toLowerCase(),
+    pythonPath: process.env.PDF_PYTHON_PATH || process.env.ARTWORK_PYTHON_PATH || "python3",
+    previewMaxWidth: Number(process.env.ARTWORK_PREVIEW_MAX_WIDTH || 1600),
+    previewQuality: Number(process.env.ARTWORK_PREVIEW_QUALITY || 82),
+    watermarkText: process.env.ARTWORK_WATERMARK_TEXT || "Make It Art",
+    watermarkPublicPreviews: process.env.ARTWORK_WATERMARK_PUBLIC_PREVIEWS !== "false",
+    s3: {
+      bucket: process.env.AWS_S3_BUCKET || "",
+      region: process.env.AWS_S3_REGION || "",
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+      publicBaseUrl: process.env.AWS_S3_PUBLIC_BASE_URL || ""
+    },
+    cloudinary: {
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
+      apiKey: process.env.CLOUDINARY_API_KEY || "",
+      apiSecret: process.env.CLOUDINARY_API_SECRET || "",
+      folder: process.env.CLOUDINARY_FOLDER || "make-it-art"
+    }
   }
 };
