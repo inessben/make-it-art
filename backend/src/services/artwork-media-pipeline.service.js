@@ -76,7 +76,10 @@ async function processArtworkUpload({
   }
 }
 
-async function deleteArtworkMediaAssets(artwork) {
+async function deleteArtworkMediaAssets(
+  artwork,
+  { action = "ARTWORK_MEDIA_DELETE", correlationId = null } = {}
+) {
   if (!artwork) {
     return;
   }
@@ -100,9 +103,11 @@ async function deleteArtworkMediaAssets(artwork) {
       }
 
       console.error("Artwork media deletion failed after retries", {
+        action,
+        correlationId,
         storageProvider: storage.name,
         key,
-        error: lastError?.message || "unknown storage error"
+        reasonCode: lastError?.code || "ARTWORK_MEDIA_DELETE_FAILED"
       });
     })
   );

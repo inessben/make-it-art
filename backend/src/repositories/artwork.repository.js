@@ -2,6 +2,7 @@ const prisma = require("../lib/prisma");
 const { ARTWORK_MODERATION_STATUS } = require("../constants/artwork-moderation-status");
 const { isExclusiveArtworkLicenseType } = require("../constants/artwork-license-types");
 const { buildArtworkManagement } = require("../services/artwork-lifecycle.service");
+const { writeAdminAuditLog } = require("../services/admin-audit.service");
 
 const MAX_ARTWORK_PRICE_AMOUNT = 99_999_999;
 const LEGACY_PRICE_PATTERN = /^(\d{1,6})(?:[.,](\d{1,2}))?\s*(?:€|eur|tokens?)?$/i;
@@ -86,6 +87,51 @@ const artworkInclude = {
   },
   ...artworkLifecycleInclude
 };
+
+async function lockArtworkForManagement(transaction, artworkId) {
+  await transaction.$queryRaw`SELECT "id" FROM "artwork" WHERE "id" = ${artworkId} FOR UPDATE`;
+}
+
+function artworkAuditSnapshot(artwork) {
+  if (!artwork) {
+    return null;
+  }
+
+  return {
+    title: artwork.title || null,
+    categoryId: artwork.categoryId || artwork.category?.id || null,
+    priceAmount: Number.isSafeInteger(artwork.priceAmount) ? artwork.priceAmount : null,
+    currency: artwork.currency || null,
+    licenseType: artwork.licenseType || null,
+    protection: Boolean(artwork.protection),
+    visibility: artwork.visibility || "PUBLISHED",
+    archivedAt:
+      artwork.archivedAt instanceof Date
+        ? artwork.archivedAt.toISOString()
+        : artwork.archivedAt || null,
+    moderationStatus: artwork.moderationStatus || null,
+    version: Number.isSafeInteger(artwork.version) ? artwork.version : 1
+  };
+}
+
+async function writeArtworkAuditLog(
+  transaction,
+  { action, artworkId, before, after, audit = {}, idempotent = false }
+) {
+  return writeAdminAuditLog(transaction, {
+    actorUserId: audit.actorUserId,
+    action,
+    entityType: "ARTWORK",
+    entityId: artworkId,
+    ipAddress: audit.ipAddress,
+    correlationId: audit.correlationId,
+    metadata: {
+      before: artworkAuditSnapshot(before),
+      after: artworkAuditSnapshot(after),
+      idempotent
+    }
+  });
+}
 
 async function listArtworksForAdmin() {
   return prisma.artwork.findMany({
@@ -207,12 +253,14 @@ async function updateArtwork({
   licenseType,
   protection,
   expectedVersion,
-  media = null
+  media = null,
+  audit = {}
 }) {
   const priceAmount = parsePriceAmount(price);
 
   return prisma.$transaction(
     async (transaction) => {
+      await lockArtworkForManagement(transaction, artworkId);
       const existing = await findOwnedArtwork({
         artworkId,
         artistId,
@@ -285,7 +333,15 @@ async function updateArtwork({
         throw new Error("ARTWORK_VERSION_CONFLICT");
       }
 
-      return findOwnedArtwork({ artworkId, artistId, prismaClient: transaction });
+      const updated = await findOwnedArtwork({ artworkId, artistId, prismaClient: transaction });
+      await writeArtworkAuditLog(transaction, {
+        action: "ARTWORK_UPDATED",
+        artworkId,
+        before: existing,
+        after: updated,
+        audit
+      });
+      return updated;
     },
     {
       isolationLevel: "Serializable"
@@ -293,9 +349,10 @@ async function updateArtwork({
   );
 }
 
-async function deleteArtwork({ artworkId, artistId, expectedVersion }) {
+async function deleteArtwork({ artworkId, artistId, expectedVersion, audit = {} }) {
   return prisma.$transaction(
     async (transaction) => {
+      await lockArtworkForManagement(transaction, artworkId);
       const existing = await findOwnedArtwork({
         artworkId,
         artistId,
@@ -339,6 +396,13 @@ async function deleteArtwork({ artworkId, artistId, expectedVersion }) {
         throw new Error("ARTWORK_VERSION_CONFLICT");
       }
 
+      await writeArtworkAuditLog(transaction, {
+        action: "ARTWORK_DELETED",
+        artworkId,
+        before: existing,
+        after: null,
+        audit
+      });
       return existing;
     },
     {
@@ -347,9 +411,10 @@ async function deleteArtwork({ artworkId, artistId, expectedVersion }) {
   );
 }
 
-async function hideArtwork({ artworkId, artistId, expectedVersion }) {
+async function hideArtwork({ artworkId, artistId, expectedVersion, audit = {} }) {
   return prisma.$transaction(
     async (transaction) => {
+      await lockArtworkForManagement(transaction, artworkId);
       const existing = await findOwnedArtwork({
         artworkId,
         artistId,
@@ -361,6 +426,14 @@ async function hideArtwork({ artworkId, artistId, expectedVersion }) {
       }
 
       if (existing.visibility === "HIDDEN") {
+        await writeArtworkAuditLog(transaction, {
+          action: "ARTWORK_HIDDEN",
+          artworkId,
+          before: existing,
+          after: existing,
+          audit,
+          idempotent: true
+        });
         return existing;
       }
 
@@ -392,7 +465,15 @@ async function hideArtwork({ artworkId, artistId, expectedVersion }) {
         throw new Error("ARTWORK_VERSION_CONFLICT");
       }
 
-      return findOwnedArtwork({ artworkId, artistId, prismaClient: transaction });
+      const hidden = await findOwnedArtwork({ artworkId, artistId, prismaClient: transaction });
+      await writeArtworkAuditLog(transaction, {
+        action: "ARTWORK_HIDDEN",
+        artworkId,
+        before: existing,
+        after: hidden,
+        audit
+      });
+      return hidden;
     },
     {
       isolationLevel: "Serializable"
@@ -400,9 +481,10 @@ async function hideArtwork({ artworkId, artistId, expectedVersion }) {
   );
 }
 
-async function publishArtwork({ artworkId, artistId, expectedVersion }) {
+async function publishArtwork({ artworkId, artistId, expectedVersion, audit = {} }) {
   return prisma.$transaction(
     async (transaction) => {
+      await lockArtworkForManagement(transaction, artworkId);
       const existing = await findOwnedArtwork({
         artworkId,
         artistId,
@@ -414,6 +496,14 @@ async function publishArtwork({ artworkId, artistId, expectedVersion }) {
       }
 
       if (existing.visibility === "PUBLISHED") {
+        await writeArtworkAuditLog(transaction, {
+          action: "ARTWORK_PUBLISHED",
+          artworkId,
+          before: existing,
+          after: existing,
+          audit,
+          idempotent: true
+        });
         return existing;
       }
 
@@ -446,7 +536,15 @@ async function publishArtwork({ artworkId, artistId, expectedVersion }) {
         throw new Error("ARTWORK_VERSION_CONFLICT");
       }
 
-      return findOwnedArtwork({ artworkId, artistId, prismaClient: transaction });
+      const published = await findOwnedArtwork({ artworkId, artistId, prismaClient: transaction });
+      await writeArtworkAuditLog(transaction, {
+        action: "ARTWORK_PUBLISHED",
+        artworkId,
+        before: existing,
+        after: published,
+        audit
+      });
+      return published;
     },
     {
       isolationLevel: "Serializable"
@@ -454,9 +552,16 @@ async function publishArtwork({ artworkId, artistId, expectedVersion }) {
   );
 }
 
-async function archiveArtwork({ artworkId, artistId, expectedVersion, archivedAt = new Date() }) {
+async function archiveArtwork({
+  artworkId,
+  artistId,
+  expectedVersion,
+  archivedAt = new Date(),
+  audit = {}
+}) {
   return prisma.$transaction(
     async (transaction) => {
+      await lockArtworkForManagement(transaction, artworkId);
       const existing = await findOwnedArtwork({
         artworkId,
         artistId,
@@ -468,6 +573,14 @@ async function archiveArtwork({ artworkId, artistId, expectedVersion, archivedAt
       }
 
       if (existing.visibility === "ARCHIVED") {
+        await writeArtworkAuditLog(transaction, {
+          action: "ARTWORK_ARCHIVED",
+          artworkId,
+          before: existing,
+          after: existing,
+          audit,
+          idempotent: true
+        });
         return existing;
       }
 
@@ -502,7 +615,15 @@ async function archiveArtwork({ artworkId, artistId, expectedVersion, archivedAt
         throw new Error("ARTWORK_VERSION_CONFLICT");
       }
 
-      return findOwnedArtwork({ artworkId, artistId, prismaClient: transaction });
+      const archived = await findOwnedArtwork({ artworkId, artistId, prismaClient: transaction });
+      await writeArtworkAuditLog(transaction, {
+        action: "ARTWORK_ARCHIVED",
+        artworkId,
+        before: existing,
+        after: archived,
+        audit
+      });
+      return archived;
     },
     {
       isolationLevel: "Serializable"
@@ -510,9 +631,10 @@ async function archiveArtwork({ artworkId, artistId, expectedVersion, archivedAt
   );
 }
 
-async function restoreArtwork({ artworkId, artistId, expectedVersion }) {
+async function restoreArtwork({ artworkId, artistId, expectedVersion, audit = {} }) {
   return prisma.$transaction(
     async (transaction) => {
+      await lockArtworkForManagement(transaction, artworkId);
       const existing = await findOwnedArtwork({
         artworkId,
         artistId,
@@ -552,7 +674,15 @@ async function restoreArtwork({ artworkId, artistId, expectedVersion }) {
         throw new Error("ARTWORK_VERSION_CONFLICT");
       }
 
-      return findOwnedArtwork({ artworkId, artistId, prismaClient: transaction });
+      const restored = await findOwnedArtwork({ artworkId, artistId, prismaClient: transaction });
+      await writeArtworkAuditLog(transaction, {
+        action: "ARTWORK_RESTORED",
+        artworkId,
+        before: existing,
+        after: restored,
+        audit
+      });
+      return restored;
     },
     {
       isolationLevel: "Serializable"

@@ -21,6 +21,7 @@ const uploadArtworkMiddlewarePath = require.resolve("../src/middlewares/upload-a
 const artistRequiredMiddlewarePath =
   require.resolve("../src/middlewares/artist-required.middleware");
 const artworkMediaPipelinePath = require.resolve("../src/services/artwork-media-pipeline.service");
+const SUPPORT_REFERENCE = "019fa4e4-8646-70a3-8218-11eb680966e4";
 
 const authUser = {
   id: 7,
@@ -48,6 +49,14 @@ const verifiedArtist = {
 
 function hasOverride(overrides, key) {
   return Object.prototype.hasOwnProperty.call(overrides, key);
+}
+
+function assertArtworkMutationCall(actual, expected) {
+  const { audit, ...mutation } = actual;
+  assert.deepEqual(mutation, expected);
+  assert.equal(audit.actorUserId, authUser.id);
+  assert.equal(typeof audit.ipAddress, "string");
+  assert.equal(audit.correlationId, SUPPORT_REFERENCE);
 }
 
 function buildAuthMiddleware(user) {
@@ -275,6 +284,10 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
 
   const app = express();
   app.use(express.json({ limit: "2mb" }));
+  app.use((req, _res, next) => {
+    req.supportReference = SUPPORT_REFERENCE;
+    next();
+  });
   app.use(router);
 
   const server = http.createServer(app);
@@ -628,6 +641,7 @@ test("PATCH /artists/me/artworks/:id updates an eligible artwork with optimistic
   assert.equal(calls.updateArtwork.length, 1);
   assert.equal(calls.updateArtwork[0].expectedVersion, 3);
   assert.equal(calls.updateArtwork[0].media.hdPath, "artworks/hd/test-artwork.jpg");
+  assert.equal(calls.updateArtwork[0].audit.actorUserId, authUser.id);
   assert.deepEqual(calls.deleteArtworkMediaAssets, [previousArtwork]);
 });
 
@@ -694,9 +708,12 @@ test("DELETE /artists/me/artworks/:id removes an eligible owned artwork and its 
 
   assert.equal(response.status, 200);
   assert.equal(response.body.message, "Oeuvre supprimee definitivement.");
-  assert.deepEqual(calls.deleteArtwork, [
-    { artworkId: 42, artistId: verifiedArtist.id, expectedVersion: 3 }
-  ]);
+  assert.equal(calls.deleteArtwork.length, 1);
+  assertArtworkMutationCall(calls.deleteArtwork[0], {
+    artworkId: 42,
+    artistId: verifiedArtist.id,
+    expectedVersion: 3
+  });
   assert.deepEqual(calls.deleteArtworkMediaAssets, [deletedArtwork]);
 });
 
@@ -725,6 +742,7 @@ test("DELETE /artists/me/artworks/:id exposes purchase conflicts without deletin
 
   assert.equal(response.status, 409);
   assert.equal(response.body.code, "ARTWORK_HAS_PURCHASES");
+  assert.equal(response.body.supportReference, SUPPORT_REFERENCE);
   assert.equal(calls.deleteArtworkMediaAssets.length, 0);
 });
 
@@ -759,9 +777,12 @@ test("POST /artists/me/artworks/:id/hide hides a published artwork with version 
   assert.equal(response.status, 200);
   assert.equal(response.body.artwork.visibility, "HIDDEN");
   assert.equal(response.body.artwork.management.capabilities.canHide, false);
-  assert.deepEqual(calls.hideArtwork, [
-    { artworkId: 42, artistId: verifiedArtist.id, expectedVersion: 3 }
-  ]);
+  assert.equal(calls.hideArtwork.length, 1);
+  assertArtworkMutationCall(calls.hideArtwork[0], {
+    artworkId: 42,
+    artistId: verifiedArtist.id,
+    expectedVersion: 3
+  });
 });
 
 test("POST /artists/me/artworks/:id/hide reports concurrent changes", async (t) => {
@@ -811,9 +832,12 @@ test("POST /artists/me/artworks/:id/publish republishes an approved hidden artwo
   assert.equal(response.body.artwork.visibility, "PUBLISHED");
   assert.equal(response.body.artwork.availabilityStatus, "SOLD");
   assert.equal(response.body.artwork.isAvailableForPurchase, false);
-  assert.deepEqual(calls.publishArtwork, [
-    { artworkId: 42, artistId: verifiedArtist.id, expectedVersion: 4 }
-  ]);
+  assert.equal(calls.publishArtwork.length, 1);
+  assertArtworkMutationCall(calls.publishArtwork[0], {
+    artworkId: 42,
+    artistId: verifiedArtist.id,
+    expectedVersion: 4
+  });
 });
 
 test("POST /artists/me/artworks/:id/publish preserves moderation blocks", async (t) => {
@@ -864,9 +888,12 @@ test("POST /artists/me/artworks/:id/archive preserves purchased artwork history"
   assert.equal(response.body.artwork.visibility, "ARCHIVED");
   assert.equal(response.body.artwork.management.lifecycle.hasConfirmedPurchase, true);
   assert.equal(response.body.artwork.management.capabilities.canRestore, true);
-  assert.deepEqual(calls.archiveArtwork, [
-    { artworkId: 42, artistId: verifiedArtist.id, expectedVersion: 5 }
-  ]);
+  assert.equal(calls.archiveArtwork.length, 1);
+  assertArtworkMutationCall(calls.archiveArtwork[0], {
+    artworkId: 42,
+    artistId: verifiedArtist.id,
+    expectedVersion: 5
+  });
 });
 
 test("POST /artists/me/artworks/:id/archive rejects an active transaction", async (t) => {
@@ -917,9 +944,12 @@ test("POST /artists/me/artworks/:id/restore restores an archive as hidden", asyn
   assert.equal(response.body.artwork.isAvailableForPurchase, false);
   assert.equal(response.body.artwork.management.capabilities.canPublish, true);
   assert.equal(response.body.artwork.management.capabilities.canEdit, true);
-  assert.deepEqual(calls.restoreArtwork, [
-    { artworkId: 42, artistId: verifiedArtist.id, expectedVersion: 6 }
-  ]);
+  assert.equal(calls.restoreArtwork.length, 1);
+  assertArtworkMutationCall(calls.restoreArtwork[0], {
+    artworkId: 42,
+    artistId: verifiedArtist.id,
+    expectedVersion: 6
+  });
 });
 
 test("POST /artists/me/artworks/:id/restore rejects non-archived artworks", async (t) => {

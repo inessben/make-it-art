@@ -4,6 +4,7 @@ const { loadModuleWithMocks } = require("./helpers/mock-require");
 
 const repositoryPath = require.resolve("../src/repositories/artwork.repository");
 const prismaPath = require.resolve("../src/lib/prisma");
+const adminAuditServicePath = require.resolve("../src/services/admin-audit.service");
 
 function existingArtwork(overrides = {}) {
   return {
@@ -31,10 +32,16 @@ function loadRepository({ existing = existingArtwork(), updateCount = 1, deleteC
     favorites: [],
     collectionItems: [],
     reservations: [],
+    artworkLocks: [],
+    auditLogs: [],
     transactionOptions: null
   };
   let findCount = 0;
   const transaction = {
+    async $queryRaw(...input) {
+      calls.artworkLocks.push(input);
+      return [];
+    },
     artwork: {
       async findFirst() {
         findCount += 1;
@@ -76,7 +83,15 @@ function loadRepository({ existing = existingArtwork(), updateCount = 1, deleteC
       return callback(transaction);
     }
   };
-  const loaded = loadModuleWithMocks(repositoryPath, { [prismaPath]: prisma });
+  const loaded = loadModuleWithMocks(repositoryPath, {
+    [prismaPath]: prisma,
+    [adminAuditServicePath]: {
+      async writeAdminAuditLog(_transaction, payload) {
+        calls.auditLogs.push(payload);
+        return payload;
+      }
+    }
+  });
 
   return { repository: loaded.moduleExports, restore: loaded.restore, calls };
 }
@@ -163,6 +178,22 @@ test("artwork update is serializable and atomically increments its version", asy
   });
   assert.deepEqual(loaded.calls.updateMany[0].data.version, { increment: 1 });
   assert.equal(loaded.calls.updateMany[0].data.hdPath, "hd-new.png");
+  assert.equal(loaded.calls.artworkLocks.length, 1);
+  assert.equal(loaded.calls.auditLogs[0].action, "ARTWORK_UPDATED");
+  assert.equal(loaded.calls.auditLogs[0].entityType, "ARTWORK");
+  assert.equal(loaded.calls.auditLogs[0].entityId, 42);
+  assert.deepEqual(loaded.calls.auditLogs[0].metadata.before, {
+    title: "Before",
+    categoryId: null,
+    priceAmount: null,
+    currency: null,
+    licenseType: "PERSONAL",
+    protection: false,
+    visibility: "PUBLISHED",
+    archivedAt: null,
+    moderationStatus: "approved",
+    version: 2
+  });
   loaded.restore();
 });
 
@@ -449,4 +480,58 @@ test("artwork restoration rejects a non-archived state", async () => {
   );
   assert.equal(loaded.calls.updateMany.length, 0);
   loaded.restore();
+});
+
+test("every lifecycle mutation locks the artwork and writes its audit in the transaction", async () => {
+  const cases = [
+    {
+      method: "hideArtwork",
+      existing: existingArtwork({ visibility: "PUBLISHED" }),
+      action: "ARTWORK_HIDDEN"
+    },
+    {
+      method: "publishArtwork",
+      existing: existingArtwork({ visibility: "HIDDEN" }),
+      action: "ARTWORK_PUBLISHED"
+    },
+    {
+      method: "archiveArtwork",
+      existing: existingArtwork({ visibility: "PUBLISHED" }),
+      action: "ARTWORK_ARCHIVED"
+    },
+    {
+      method: "restoreArtwork",
+      existing: existingArtwork({ visibility: "ARCHIVED" }),
+      action: "ARTWORK_RESTORED"
+    },
+    {
+      method: "deleteArtwork",
+      existing: existingArtwork({ visibility: "PUBLISHED" }),
+      action: "ARTWORK_DELETED"
+    }
+  ];
+
+  for (const scenario of cases) {
+    const loaded = loadRepository({ existing: scenario.existing });
+    const audit = {
+      actorUserId: 7,
+      ipAddress: "127.0.0.1",
+      correlationId: "019fa4e4-8646-70a3-8218-11eb680966e4"
+    };
+
+    await loaded.repository[scenario.method]({
+      artworkId: 42,
+      artistId: 3,
+      expectedVersion: 2,
+      audit
+    });
+
+    assert.equal(loaded.calls.artworkLocks.length, 1, scenario.method);
+    assert.deepEqual(loaded.calls.transactionOptions, { isolationLevel: "Serializable" });
+    assert.equal(loaded.calls.auditLogs.length, 1, scenario.method);
+    assert.equal(loaded.calls.auditLogs[0].action, scenario.action);
+    assert.equal(loaded.calls.auditLogs[0].actorUserId, 7);
+    assert.equal(loaded.calls.auditLogs[0].correlationId, "019fa4e4-8646-70a3-8218-11eb680966e4");
+    loaded.restore();
+  }
 });

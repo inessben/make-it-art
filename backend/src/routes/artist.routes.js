@@ -342,7 +342,7 @@ function mapArtworkRouteError(error) {
     };
   }
 
-  if (error?.message === "ARTWORK_VERSION_CONFLICT") {
+  if (error?.message === "ARTWORK_VERSION_CONFLICT" || error?.code === "P2034") {
     return {
       status: 409,
       code: "ARTWORK_VERSION_CONFLICT",
@@ -397,6 +397,44 @@ function mapArtworkRouteError(error) {
   }
 
   return null;
+}
+
+function artworkAuditContext(req) {
+  return {
+    actorUserId: req.user?.id,
+    ipAddress: req.ip,
+    correlationId: req.supportReference || null
+  };
+}
+
+function sendArtworkMutationFailure(req, res, { action, error, fallbackMessage }) {
+  const mappedError = mapArtworkRouteError(error);
+  const correlationId = req.supportReference || null;
+  const logContext = {
+    action,
+    reasonCode: mappedError?.code || error?.message || "ARTWORK_MANAGEMENT_ERROR",
+    correlationId
+  };
+
+  res.set("Cache-Control", "private, no-store");
+
+  if (mappedError) {
+    console.warn("Artist artwork management rejected", logContext);
+    return res.status(mappedError.status).json({
+      message: mappedError.message,
+      ...(mappedError.code ? { code: mappedError.code } : {}),
+      ...(correlationId ? { supportReference: correlationId } : {})
+    });
+  }
+
+  console.error("Artist artwork management failed", {
+    ...logContext,
+    errorName: error?.name || "Error"
+  });
+  return res.status(500).json({
+    message: fallbackMessage,
+    ...(correlationId ? { supportReference: correlationId } : {})
+  });
 }
 
 function buildContractFilename(applicationOrArtistPayload, fallbackName = "artiste") {
@@ -1228,33 +1266,33 @@ router.patch(
         licenseType: input.licenseType,
         protection: input.protection,
         expectedVersion: input.expectedVersion,
-        media: replacementMedia
+        media: replacementMedia,
+        audit: artworkAuditContext(req)
       });
 
       if (replacementMedia) {
-        await deleteArtworkMediaAssets(previousArtwork);
+        await deleteArtworkMediaAssets(previousArtwork, {
+          action: "ARTWORK_MEDIA_REPLACED",
+          correlationId: req.supportReference
+        });
       }
 
+      res.set("Cache-Control", "private, no-store");
       return res.status(200).json({
         message: "Oeuvre mise a jour.",
         artwork: serializeArtwork(artwork, { includeManagement: true })
       });
     } catch (error) {
       if (replacementMedia) {
-        await deleteArtworkMediaAssets(replacementMedia);
-      }
-      const mappedError = mapArtworkRouteError(error);
-
-      if (mappedError) {
-        return res.status(mappedError.status).json({
-          message: mappedError.message,
-          ...(mappedError.code ? { code: mappedError.code } : {})
+        await deleteArtworkMediaAssets(replacementMedia, {
+          action: "ARTWORK_MEDIA_ROLLBACK",
+          correlationId: req.supportReference
         });
       }
-
-      console.error("Artist artwork update error:", error);
-      return res.status(500).json({
-        message: "Impossible de mettre a jour cette oeuvre."
+      return sendArtworkMutationFailure(req, res, {
+        action: "ARTWORK_UPDATED",
+        error,
+        fallbackMessage: "Impossible de mettre a jour cette oeuvre."
       });
     }
   }
@@ -1280,26 +1318,23 @@ router.delete(
       const deleted = await artworkRepository.deleteArtwork({
         artworkId,
         artistId: req.artist.id,
-        expectedVersion
+        expectedVersion,
+        audit: artworkAuditContext(req)
       });
-      await deleteArtworkMediaAssets(deleted);
+      await deleteArtworkMediaAssets(deleted, {
+        action: "ARTWORK_DELETED",
+        correlationId: req.supportReference
+      });
 
+      res.set("Cache-Control", "private, no-store");
       return res.status(200).json({
         message: "Oeuvre supprimee definitivement."
       });
     } catch (error) {
-      const mappedError = mapArtworkRouteError(error);
-
-      if (mappedError) {
-        return res.status(mappedError.status).json({
-          message: mappedError.message,
-          ...(mappedError.code ? { code: mappedError.code } : {})
-        });
-      }
-
-      console.error("Artist artwork delete error:", error);
-      return res.status(500).json({
-        message: "Impossible de supprimer cette oeuvre."
+      return sendArtworkMutationFailure(req, res, {
+        action: "ARTWORK_DELETED",
+        error,
+        fallbackMessage: "Impossible de supprimer cette oeuvre."
       });
     }
   }
@@ -1325,26 +1360,20 @@ router.post(
       const artwork = await artworkRepository.hideArtwork({
         artworkId,
         artistId: req.artist.id,
-        expectedVersion
+        expectedVersion,
+        audit: artworkAuditContext(req)
       });
 
+      res.set("Cache-Control", "private, no-store");
       return res.status(200).json({
         message: "Oeuvre masquee. Les nouveaux achats sont suspendus.",
         artwork: serializeArtwork(artwork, { includeManagement: true })
       });
     } catch (error) {
-      const mappedError = mapArtworkRouteError(error);
-
-      if (mappedError) {
-        return res.status(mappedError.status).json({
-          message: mappedError.message,
-          ...(mappedError.code ? { code: mappedError.code } : {})
-        });
-      }
-
-      console.error("Artist artwork hide error:", error);
-      return res.status(500).json({
-        message: "Impossible de masquer cette oeuvre."
+      return sendArtworkMutationFailure(req, res, {
+        action: "ARTWORK_HIDDEN",
+        error,
+        fallbackMessage: "Impossible de masquer cette oeuvre."
       });
     }
   }
@@ -1370,26 +1399,20 @@ router.post(
       const artwork = await artworkRepository.publishArtwork({
         artworkId,
         artistId: req.artist.id,
-        expectedVersion
+        expectedVersion,
+        audit: artworkAuditContext(req)
       });
 
+      res.set("Cache-Control", "private, no-store");
       return res.status(200).json({
         message: "Oeuvre republiee.",
         artwork: serializeArtwork(artwork, { includeManagement: true })
       });
     } catch (error) {
-      const mappedError = mapArtworkRouteError(error);
-
-      if (mappedError) {
-        return res.status(mappedError.status).json({
-          message: mappedError.message,
-          ...(mappedError.code ? { code: mappedError.code } : {})
-        });
-      }
-
-      console.error("Artist artwork publish error:", error);
-      return res.status(500).json({
-        message: "Impossible de republier cette oeuvre."
+      return sendArtworkMutationFailure(req, res, {
+        action: "ARTWORK_PUBLISHED",
+        error,
+        fallbackMessage: "Impossible de republier cette oeuvre."
       });
     }
   }
@@ -1415,26 +1438,20 @@ router.post(
       const artwork = await artworkRepository.archiveArtwork({
         artworkId,
         artistId: req.artist.id,
-        expectedVersion
+        expectedVersion,
+        audit: artworkAuditContext(req)
       });
 
+      res.set("Cache-Control", "private, no-store");
       return res.status(200).json({
         message: "Oeuvre archivee. Son historique et les droits acquis sont conserves.",
         artwork: serializeArtwork(artwork, { includeManagement: true })
       });
     } catch (error) {
-      const mappedError = mapArtworkRouteError(error);
-
-      if (mappedError) {
-        return res.status(mappedError.status).json({
-          message: mappedError.message,
-          ...(mappedError.code ? { code: mappedError.code } : {})
-        });
-      }
-
-      console.error("Artist artwork archive error:", error);
-      return res.status(500).json({
-        message: "Impossible d'archiver cette oeuvre."
+      return sendArtworkMutationFailure(req, res, {
+        action: "ARTWORK_ARCHIVED",
+        error,
+        fallbackMessage: "Impossible d'archiver cette oeuvre."
       });
     }
   }
@@ -1460,26 +1477,20 @@ router.post(
       const artwork = await artworkRepository.restoreArtwork({
         artworkId,
         artistId: req.artist.id,
-        expectedVersion
+        expectedVersion,
+        audit: artworkAuditContext(req)
       });
 
+      res.set("Cache-Control", "private, no-store");
       return res.status(200).json({
         message: "Oeuvre restauree dans vos oeuvres masquees.",
         artwork: serializeArtwork(artwork, { includeManagement: true })
       });
     } catch (error) {
-      const mappedError = mapArtworkRouteError(error);
-
-      if (mappedError) {
-        return res.status(mappedError.status).json({
-          message: mappedError.message,
-          ...(mappedError.code ? { code: mappedError.code } : {})
-        });
-      }
-
-      console.error("Artist artwork restore error:", error);
-      return res.status(500).json({
-        message: "Impossible de restaurer cette oeuvre."
+      return sendArtworkMutationFailure(req, res, {
+        action: "ARTWORK_RESTORED",
+        error,
+        fallbackMessage: "Impossible de restaurer cette oeuvre."
       });
     }
   }

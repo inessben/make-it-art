@@ -793,15 +793,19 @@ model RefreshToken {
 }
 
 model AuditLog {
-  id         Int       @id @default(autoincrement())
-  userId     Int?      @map("user_id")
-  action     String?
-  entityType String?   @map("entity_type")
-  entityId   String?   @map("entity_id")
-  ipAddress  String?   @map("ip_address")
-  createdAt  DateTime? @map("created_at")
-  user       User?     @relation(fields: [userId], references: [id])
+  id            Int       @id @default(autoincrement())
+  userId        Int?      @map("user_id")
+  action        String?
+  entityType    String?   @map("entity_type")
+  entityId      String?   @map("entity_id")
+  ipAddress     String?   @map("ip_address")
+  correlationId String?   @map("correlation_id") @db.VarChar(64)
+  metadata      Json?     @db.JsonB
+  createdAt     DateTime? @map("created_at")
+  user          User?     @relation(fields: [userId], references: [id])
 
+  @@index([entityType, entityId, createdAt])
+  @@index([correlationId])
   @@map("audit_logs")
 }
 
