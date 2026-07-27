@@ -54,6 +54,37 @@ function serializeArtistSummary(artist) {
   };
 }
 
+function resolveArtworkAvailabilityStatus({
+  isUnlimited,
+  saleStatus,
+  isSold,
+  stockQuantity,
+  reservedQuantity,
+  hasFiatPrice
+}) {
+  if (!isUnlimited && (isSold || saleStatus === "SOLD_OUT")) {
+    return "SOLD";
+  }
+
+  if (saleStatus !== "AVAILABLE" || !hasFiatPrice) {
+    return "UNAVAILABLE";
+  }
+
+  if (isUnlimited) {
+    return "AVAILABLE";
+  }
+
+  if (stockQuantity === 0 && reservedQuantity === 0) {
+    return "SOLD";
+  }
+
+  if (reservedQuantity > 0) {
+    return "RESERVED";
+  }
+
+  return stockQuantity > 0 ? "AVAILABLE" : "UNAVAILABLE";
+}
+
 function serializeArtwork(artwork, { includeArtist = true } = {}) {
   if (!artwork) {
     return null;
@@ -68,10 +99,15 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
   const saleStatus = normalizeText(artwork.saleStatus) || "DRAFT";
   const licenseType = normalizeText(artwork.licenseType) || "PERSONAL";
   const isUnlimited = isUnlimitedArtworkLicenseType(licenseType);
-  const isAvailableForPurchase =
-    saleStatus === "AVAILABLE" &&
-    hasFiatPrice &&
-    (isUnlimited || (!artwork.isSold && availableQuantity > 0));
+  const availabilityStatus = resolveArtworkAvailabilityStatus({
+    isUnlimited,
+    saleStatus,
+    isSold: Boolean(artwork.isSold),
+    stockQuantity,
+    reservedQuantity,
+    hasFiatPrice
+  });
+  const isAvailableForPurchase = availabilityStatus === "AVAILABLE";
   const priceValue = hasFiatPrice
     ? artwork.priceAmount / 100
     : parsePriceValue(artwork.price || artwork.priceTokens);
@@ -108,6 +144,7 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     stockQuantity,
     reservedQuantity,
     availableQuantity: isUnlimited ? null : availableQuantity,
+    availabilityStatus,
     isAvailableForPurchase,
     isFavorite: Array.isArray(artwork.favorites) ? artwork.favorites.length > 0 : false,
     moderationStatus: normalizeText(artwork.moderationStatus) || "pending",

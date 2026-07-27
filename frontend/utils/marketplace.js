@@ -40,6 +40,19 @@ export function formatArtworkLicenseType(value) {
   return ARTWORK_LICENSE_LABELS[String(value || "").toUpperCase()] || "Licence personnelle";
 }
 
+const ARTWORK_AVAILABILITY = Object.freeze({
+  AVAILABLE: { status: "AVAILABLE", label: "Disponible", tone: "available" },
+  RESERVED: { status: "RESERVED", label: "Réservée temporairement", tone: "reserved" },
+  SOLD: { status: "SOLD", label: "Vendue", tone: "sold" },
+  UNAVAILABLE: { status: "UNAVAILABLE", label: "Indisponible", tone: "unavailable" }
+});
+
+export function getArtworkAvailabilityPresentation(artwork) {
+  const fallbackStatus = artwork?.isAvailableForPurchase ? "AVAILABLE" : "UNAVAILABLE";
+  const status = String(artwork?.availabilityStatus || fallbackStatus).toUpperCase();
+  return ARTWORK_AVAILABILITY[status] || ARTWORK_AVAILABILITY.UNAVAILABLE;
+}
+
 export function getArtistInitials(name) {
   return String(name || "Artist")
     .split(" ")

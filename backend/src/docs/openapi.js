@@ -3079,6 +3079,10 @@ const openApiSpec = {
           },
           isUnlimited: { type: "boolean" },
           availableQuantity: { type: "integer", nullable: true, minimum: 0 },
+          availabilityStatus: {
+            type: "string",
+            enum: ["AVAILABLE", "RESERVED", "SOLD", "UNAVAILABLE"]
+          },
           saleStatus: { type: "string", example: "AVAILABLE" },
           moderationStatus: { type: "string", example: "approved" },
           isFavorite: { type: "boolean", nullable: true }
