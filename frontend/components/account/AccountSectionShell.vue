@@ -11,7 +11,9 @@
             <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
               {{ eyebrow }}
             </p>
-            <h1 class="mt-3 text-title-2 text-slate-100">{{ title }}</h1>
+            <h1 class="mt-3 text-title-2 text-slate-100">
+              {{ title }}
+            </h1>
             <p class="mt-2 max-w-3xl text-body-1 leading-7 text-slate-400">
               {{ description }}
             </p>
@@ -22,7 +24,7 @@
           </div>
         </header>
 
-        <div class="mt-8 grid gap-6">
+        <div :class="bodyClass">
           <slot />
         </div>
       </div>
@@ -34,7 +36,7 @@
 defineProps({
   eyebrow: {
     type: String,
-    default: "Artist workspace"
+    default: "Account"
   },
   title: {
     type: String,
@@ -43,6 +45,10 @@ defineProps({
   description: {
     type: String,
     required: true
+  },
+  bodyClass: {
+    type: String,
+    default: "mt-8 grid gap-6"
   }
 });
 </script>
