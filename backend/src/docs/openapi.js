@@ -1059,6 +1059,38 @@ const artistWorkspacePaths = {
       }
     }
   },
+  "/artists/me/cover": {
+    patch: {
+      tags: ["Artist Workspace"],
+      summary: "Update the authenticated artist hero cover image",
+      security: sessionAndCsrfSecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "multipart/form-data": {
+            schema: {
+              $ref: "#/components/schemas/ArtistCoverUpdateRequest"
+            }
+          }
+        }
+      },
+      responses: {
+        200: jsonResponse("Artist cover updated", {
+          type: "object",
+          properties: {
+            message: { type: "string" },
+            artist: {
+              $ref: "#/components/schemas/ArtistSummary"
+            }
+          }
+        }),
+        400: jsonResponse("Invalid artist cover update request", errorSchema),
+        401: jsonResponse("Authentication required", errorSchema),
+        403: jsonResponse("CSRF validation failed or admin account denied", errorSchema),
+        404: jsonResponse("Artist profile not found", errorSchema)
+      }
+    }
+  },
   "/artists/me/dashboard": {
     get: {
       tags: ["Artist Workspace"],
@@ -3101,6 +3133,7 @@ const openApiSpec = {
           verified: { type: "boolean" },
           bio: { type: "string", nullable: true },
           avatarUrl: { type: "string", nullable: true },
+          coverUrl: { type: "string", nullable: true },
           email: { type: "string", nullable: true },
           username: { type: "string", nullable: true },
           stats: {
@@ -3414,6 +3447,17 @@ const openApiSpec = {
           displayName: { type: "string" },
           bio: { type: "string" },
           removeAvatar: { type: "boolean" },
+          image: {
+            type: "string",
+            format: "binary"
+          }
+        },
+        additionalProperties: false
+      },
+      ArtistCoverUpdateRequest: {
+        type: "object",
+        properties: {
+          removeCover: { type: "boolean" },
           image: {
             type: "string",
             format: "binary"

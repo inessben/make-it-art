@@ -36,6 +36,7 @@ function serializeArtistSummary(artist) {
     verified: Boolean(artist.verified),
     bio: normalizeText(artist.user?.bio),
     avatarUrl: buildUploadedImageUrl(artist.avatarPath),
+    coverUrl: buildUploadedImageUrl(artist.coverPath),
     artType: normalizeText(payload.artType),
     styles: Array.isArray(payload.styles) ? payload.styles.filter(Boolean) : [],
     portfolioUrl: normalizeText(payload.portfolioUrl),

@@ -114,6 +114,18 @@ async function updateArtistProfile({ artistId, userId, displayName, bio, avatarP
   });
 }
 
+async function updateArtistCover({ artistId, coverPath }) {
+  return prisma.artist.update({
+    where: {
+      id: artistId
+    },
+    data: {
+      coverPath: coverPath || null
+    },
+    include: includeArtistProfile()
+  });
+}
+
 async function findArtistDetailForAdmin(artistId) {
   const artistRecord = await prisma.artist.findUnique({
     where: { id: artistId },
@@ -287,5 +299,6 @@ module.exports = {
   listArtistsForAdmin,
   updateArtistVerification,
   updateArtistProfile,
+  updateArtistCover,
   findArtistDetailForAdmin
 };

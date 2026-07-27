@@ -10,6 +10,7 @@ function serializeArtist(artist) {
     id: artist.id,
     displayName: artist.displayName,
     avatarUrl: buildUploadedImageUrl(artist.avatarPath),
+    coverUrl: buildUploadedImageUrl(artist.coverPath),
     verified: Boolean(artist.verified),
     createdAt: artist.createdAt
   };
