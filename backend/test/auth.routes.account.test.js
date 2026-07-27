@@ -12,9 +12,14 @@ const rateLimitPath = require.resolve("../src/middlewares/rate-limit.middleware"
 const authRequiredPath = require.resolve("../src/middlewares/auth-required.middleware");
 const userRepositoryPath = require.resolve("../src/repositories/user.repository");
 const twoFactorLoginServicePath = require.resolve("../src/services/two-factor-login.service");
+const passwordSecurityServicePath = require.resolve("../src/services/password-security.service");
 const serializeAuthUserPath = require.resolve("../src/utils/serialize-auth-user");
 const envPath = require.resolve("../src/config/env");
 const argon2Path = require.resolve("argon2");
+const { getPasswordValidationError } = require("../src/utils/password-validation");
+
+const VALID_PASSWORD = "violet gallery river";
+const ALTERNATE_PASSWORD = "violet gallery ocean";
 
 const env = {
   nodeEnv: "production",
@@ -65,6 +70,7 @@ async function startAuthRoutesApp(t, overrides = {}) {
     rotateRefreshToken: [],
     updatePassword: [],
     updateUser: [],
+    validateNewPassword: [],
     verifyCurrentPassword: [],
     verifyEmail: []
   };
@@ -155,6 +161,22 @@ async function startAuthRoutesApp(t, overrides = {}) {
     }
   };
 
+  const passwordSecurityService = {
+    async validateNewPassword(password, options = {}) {
+      calls.validateNewPassword.push({
+        password,
+        userInputs: options.userInputs || []
+      });
+
+      if (Object.prototype.hasOwnProperty.call(overrides, "passwordSecurityResult")) {
+        return overrides.passwordSecurityResult;
+      }
+
+      const message = getPasswordValidationError(password, options.userInputs);
+      return message ? { message, status: 400 } : null;
+    }
+  };
+
   const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
     [authServicePath]: authService,
     [sessionServicePath]: sessionService,
@@ -169,6 +191,7 @@ async function startAuthRoutesApp(t, overrides = {}) {
       }
     },
     [userRepositoryPath]: userRepository,
+    [passwordSecurityServicePath]: passwordSecurityService,
     [twoFactorLoginServicePath]: {
       startLoginWithCode: async () => undefined,
       verifyLoginCode: async () => undefined,
@@ -264,8 +287,46 @@ test("POST /auth/register rejects weak passwords", async (t) => {
   });
 
   assert.equal(response.status, 400);
-  assert.equal(response.body.message, "Password must be at least 8 characters");
+  assert.equal(response.body.message, "Password must be at least 15 characters.");
   assert.deepEqual(calls.registerUser, []);
+});
+
+test("POST /auth/register propagates Pwned Passwords rejection and outages", async (t) => {
+  const compromisedApp = await startAuthRoutesApp(t, {
+    passwordSecurityResult: {
+      message: "This password has appeared in a known data breach. Choose a different password.",
+      status: 400
+    }
+  });
+  const compromisedResponse = await requestJson(compromisedApp.baseUrl, "POST", "/auth/register", {
+    username: "Ada",
+    email: "artist@example.com",
+    phone: "0102030405",
+    password: VALID_PASSWORD,
+    confirmPassword: VALID_PASSWORD
+  });
+
+  assert.equal(compromisedResponse.status, 400);
+  assert.match(compromisedResponse.body.message, /known data breach/i);
+  assert.deepEqual(compromisedApp.calls.registerUser, []);
+
+  const unavailableApp = await startAuthRoutesApp(t, {
+    passwordSecurityResult: {
+      message: "Password security check is temporarily unavailable. Please try again.",
+      status: 503
+    }
+  });
+  const unavailableResponse = await requestJson(unavailableApp.baseUrl, "POST", "/auth/register", {
+    username: "Ada",
+    email: "artist@example.com",
+    phone: "0102030405",
+    password: VALID_PASSWORD,
+    confirmPassword: VALID_PASSWORD
+  });
+
+  assert.equal(unavailableResponse.status, 503);
+  assert.match(unavailableResponse.body.message, /temporarily unavailable/i);
+  assert.deepEqual(unavailableApp.calls.registerUser, []);
 });
 
 test("POST /auth/register rejects mismatched password confirmation", async (t) => {
@@ -275,12 +336,12 @@ test("POST /auth/register rejects mismatched password confirmation", async (t) =
     username: "Ada",
     email: "artist@example.com",
     phone: "0102030405",
-    password: "Password1!",
-    confirmPassword: "Password2!"
+    password: VALID_PASSWORD,
+    confirmPassword: ALTERNATE_PASSWORD
   });
 
   assert.equal(response.status, 400);
-  assert.equal(response.body.message, "Passwords do not match");
+  assert.equal(response.body.message, "Passwords do not match.");
   assert.deepEqual(calls.registerUser, []);
 });
 
@@ -291,8 +352,8 @@ test("POST /auth/register creates an account", async (t) => {
     username: "Ada",
     email: "artist@example.com",
     phone: "0102030405",
-    password: "Password1!",
-    confirmPassword: "Password1!"
+    password: VALID_PASSWORD,
+    confirmPassword: VALID_PASSWORD
   });
 
   assert.equal(response.status, 201);
@@ -311,7 +372,13 @@ test("POST /auth/register creates an account", async (t) => {
       username: "Ada",
       email: "artist@example.com",
       phone: "0102030405",
-      password: "Password1!"
+      password: VALID_PASSWORD
+    }
+  ]);
+  assert.deepEqual(calls.validateNewPassword, [
+    {
+      password: VALID_PASSWORD,
+      userInputs: ["Ada", "artist@example.com"]
     }
   ]);
 });
@@ -325,8 +392,8 @@ test("POST /auth/register maps duplicate emails to 409", async (t) => {
     username: "Ada",
     email: "artist@example.com",
     phone: "0102030405",
-    password: "Password1!",
-    confirmPassword: "Password1!"
+    password: VALID_PASSWORD,
+    confirmPassword: VALID_PASSWORD
   });
 
   assert.equal(response.status, 409);
@@ -344,8 +411,8 @@ test("POST /auth/register maps unexpected errors to 500", async (t) => {
     username: "Ada",
     email: "artist@example.com",
     phone: "0102030405",
-    password: "Password1!",
-    confirmPassword: "Password1!"
+    password: VALID_PASSWORD,
+    confirmPassword: VALID_PASSWORD
   });
 
   assert.equal(response.status, 500);
@@ -504,12 +571,12 @@ test("PATCH /auth/password validates fields before changing the password", async
   const mismatchApp = await startAuthRoutesApp(t);
   const mismatchResponse = await requestJson(mismatchApp.baseUrl, "PATCH", "/auth/password", {
     currentPassword: "Current1!",
-    newPassword: "Password1!",
-    confirmPassword: "Password2!"
+    newPassword: VALID_PASSWORD,
+    confirmPassword: ALTERNATE_PASSWORD
   });
 
   assert.equal(mismatchResponse.status, 400);
-  assert.equal(mismatchResponse.body.message, "Passwords do not match");
+  assert.equal(mismatchResponse.body.message, "Passwords do not match.");
 
   const weakPasswordApp = await startAuthRoutesApp(t);
   const weakPasswordResponse = await requestJson(
@@ -518,16 +585,13 @@ test("PATCH /auth/password validates fields before changing the password", async
     "/auth/password",
     {
       currentPassword: "Current1!",
-      newPassword: "password",
-      confirmPassword: "password"
+      newPassword: "abcabcabcabcabc",
+      confirmPassword: "abcabcabcabcabc"
     }
   );
 
   assert.equal(weakPasswordResponse.status, 400);
-  assert.equal(
-    weakPasswordResponse.body.message,
-    "Password must contain at least one uppercase letter"
-  );
+  assert.equal(weakPasswordResponse.body.message, "Choose a less predictable password.");
 
   const unchangedPasswordApp = await startAuthRoutesApp(t);
   const unchangedPasswordResponse = await requestJson(
@@ -535,9 +599,9 @@ test("PATCH /auth/password validates fields before changing the password", async
     "PATCH",
     "/auth/password",
     {
-      currentPassword: "Password1!",
-      newPassword: "Password1!",
-      confirmPassword: "Password1!"
+      currentPassword: VALID_PASSWORD,
+      newPassword: VALID_PASSWORD,
+      confirmPassword: VALID_PASSWORD
     }
   );
 
@@ -558,8 +622,8 @@ test("PATCH /auth/password rejects invalid current password and accepts valid ch
     "/auth/password",
     {
       currentPassword: "Wrong1!",
-      newPassword: "Password1!",
-      confirmPassword: "Password1!"
+      newPassword: VALID_PASSWORD,
+      confirmPassword: VALID_PASSWORD
     }
   );
 
@@ -569,8 +633,8 @@ test("PATCH /auth/password rejects invalid current password and accepts valid ch
   const successApp = await startAuthRoutesApp(t);
   const successResponse = await requestJson(successApp.baseUrl, "PATCH", "/auth/password", {
     currentPassword: "Current1!",
-    newPassword: "Password1!",
-    confirmPassword: "Password1!"
+    newPassword: VALID_PASSWORD,
+    confirmPassword: VALID_PASSWORD
   });
 
   assert.equal(successResponse.status, 200);
@@ -584,7 +648,13 @@ test("PATCH /auth/password rejects invalid current password and accepts valid ch
   assert.deepEqual(successApp.calls.updatePassword, [
     {
       userId: authUser.id,
-      passwordHash: "hashed:Password1!"
+      passwordHash: `hashed:${VALID_PASSWORD}`
+    }
+  ]);
+  assert.deepEqual(successApp.calls.validateNewPassword, [
+    {
+      password: VALID_PASSWORD,
+      userInputs: [authUser.username, authUser.email]
     }
   ]);
 });
@@ -668,18 +738,18 @@ test("POST /auth/reset-password validates input and resets valid passwords", asy
   const mismatchApp = await startAuthRoutesApp(t);
   const mismatchResponse = await requestJson(mismatchApp.baseUrl, "POST", "/auth/reset-password", {
     token: "reset-token",
-    password: "Password1!",
-    confirmPassword: "Password2!"
+    password: VALID_PASSWORD,
+    confirmPassword: ALTERNATE_PASSWORD
   });
 
   assert.equal(mismatchResponse.status, 400);
-  assert.equal(mismatchResponse.body.message, "Passwords do not match");
+  assert.equal(mismatchResponse.body.message, "Passwords do not match.");
 
   const successApp = await startAuthRoutesApp(t);
   const successResponse = await requestJson(successApp.baseUrl, "POST", "/auth/reset-password", {
     token: "reset-token",
-    password: "Password1!",
-    confirmPassword: "Password1!"
+    password: VALID_PASSWORD,
+    confirmPassword: VALID_PASSWORD
   });
 
   assert.equal(successResponse.status, 200);
@@ -687,7 +757,13 @@ test("POST /auth/reset-password validates input and resets valid passwords", asy
   assert.deepEqual(successApp.calls.resetPassword, [
     {
       token: "reset-token",
-      password: "Password1!"
+      password: VALID_PASSWORD
+    }
+  ]);
+  assert.deepEqual(successApp.calls.validateNewPassword, [
+    {
+      password: VALID_PASSWORD,
+      userInputs: []
     }
   ]);
 
@@ -696,8 +772,8 @@ test("POST /auth/reset-password validates input and resets valid passwords", asy
   });
   const failureResponse = await requestJson(failureApp.baseUrl, "POST", "/auth/reset-password", {
     token: "bad-token",
-    password: "Password1!",
-    confirmPassword: "Password1!"
+    password: VALID_PASSWORD,
+    confirmPassword: VALID_PASSWORD
   });
 
   assert.equal(failureResponse.status, 400);

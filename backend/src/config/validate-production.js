@@ -18,6 +18,9 @@ function validateProductionConfig(config) {
       "STRIPE_PAYMENT_METHOD_CONFIGURATION_ID must reference the reviewed card-only configuration"
     );
   }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(config.stripe.savedPaymentMethodConsentVersion || "")) {
+    errors.push("SAVED_PAYMENT_METHOD_CONSENT_VERSION must be a dated version (YYYY-MM-DD)");
+  }
   if (config.commerce?.marketCountry !== "FR") {
     errors.push("PAYMENT_MARKET_COUNTRY must be FR for the initial launch");
   }

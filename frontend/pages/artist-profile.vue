@@ -8,7 +8,7 @@
           to="/account-settings"
           class="inline-flex items-center justify-center rounded-2xl border border-slate-800 bg-slate-850 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
         >
-          Back to profile
+          Back to account
         </NuxtLink>
 
         <NuxtLink
@@ -217,12 +217,8 @@
           <div class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-7">
             <div class="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-                  Portfolio
-                </p>
-                <h2 class="mt-4 text-2xl font-semibold text-white">
-                  Mes oeuvres publiees
-                </h2>
+                <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Portfolio</p>
+                <h2 class="mt-4 text-2xl font-semibold text-white">Mes oeuvres publiees</h2>
               </div>
               <NuxtLink
                 v-if="artist.verified"
@@ -233,10 +229,7 @@
               </NuxtLink>
             </div>
 
-            <div
-              v-if="artworksLoading"
-              class="mt-6 text-sm text-[#A0ADB4]"
-            >
+            <div v-if="artworksLoading" class="mt-6 text-sm text-[#A0ADB4]">
               Chargement de vos oeuvres...
             </div>
             <div
@@ -244,12 +237,11 @@
               class="mt-6 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 text-sm leading-6 text-[#A0ADB4]"
             >
               <span v-if="artist.verified">
-                Vous n'avez pas encore publie d'oeuvre. Lancez votre premiere
-                publication pour apparaitre dans le catalogue.
+                Vous n'avez pas encore publie d'oeuvre. Lancez votre premiere publication pour
+                apparaitre dans le catalogue.
               </span>
               <span v-else>
-                Votre profil artiste doit etre valide avant de publier des
-                oeuvres.
+                Votre profil artiste doit etre valide avant de publier des oeuvres.
               </span>
             </div>
             <div v-else class="mt-6 grid gap-4">
@@ -294,8 +286,6 @@
               </article>
             </div>
           </div>
-          </div>
-
           <div class="rounded-[24px] border border-slate-800 bg-violet-950 p-7">
             <p class="text-xs uppercase tracking-widest text-violet-700">MVP</p>
             <h2 class="mt-4 text-2xl font-semibold text-white">Next steps</h2>
@@ -321,6 +311,8 @@ definePageMeta({
 const artist = ref(null);
 const application = ref(null);
 const loading = ref(true);
+const artworksLoading = ref(false);
+const publishedArtworks = ref([]);
 const missingArtist = ref(false);
 const errorMessage = ref("");
 
@@ -345,6 +337,27 @@ const initials = computed(() => {
     .join("");
 });
 
+async function loadPublishedArtworks() {
+  if (!artist.value?.verified) {
+    publishedArtworks.value = [];
+    return;
+  }
+
+  artworksLoading.value = true;
+
+  try {
+    const response = await $fetch("/api/artists/me/artworks", {
+      credentials: "include"
+    });
+
+    publishedArtworks.value = Array.isArray(response?.artworks) ? response.artworks : [];
+  } catch {
+    publishedArtworks.value = [];
+  } finally {
+    artworksLoading.value = false;
+  }
+}
+
 onMounted(async () => {
   try {
     const response = await $fetch("/api/artists/me", {
@@ -356,6 +369,8 @@ onMounted(async () => {
 
     if (!response.artist && !response.application) {
       missingArtist.value = true;
+    } else if (response.artist) {
+      await loadPublishedArtworks();
     }
   } catch (error) {
     errorMessage.value = error?.data?.message || "Unable to load the artist profile.";
@@ -363,6 +378,14 @@ onMounted(async () => {
     loading.value = false;
   }
 });
+
+function formatArtworkPrice(artwork) {
+  if (artwork?.price) {
+    return artwork.price;
+  }
+
+  return "Prix non renseigne";
+}
 
 function formatDate(value) {
   if (!value) {

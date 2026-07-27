@@ -2,28 +2,28 @@
   <article
     class="group grid min-w-0 gap-5 rounded-[24px] border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.24)] transition duration-200 hover:-translate-y-1 hover:border-slate-750 sm:rounded-[28px] sm:p-5"
   >
-<NuxtLink
-  :to="`/artworks/${artwork.id}`"
-  class="block overflow-hidden rounded-[20px] border border-[#1A2336] bg-[#050912]"
->
-  <img
-    v-if="artwork.imageUrl"
-    :src="artwork.imageUrl"
-    :alt="artwork.title"
-    class="aspect-[4/5] w-full object-cover transition duration-300 group-hover:scale-[1.02] select-none"
-    draggable="false"
-    @dragstart.prevent
-    @contextmenu.prevent
-  />
-  <div
-    v-else
-    class="flex aspect-[4/5] items-center justify-center bg-[radial-gradient(circle_at_center,_rgba(74,108,247,0.18),_transparent_50%),linear-gradient(135deg,_#0F1628,_#05070D)]"
-  >
-    <span class="text-3xl font-semibold text-[#D5E0FF]">{{ initials }}</span>
-  </div>
-</NuxtLink>
+    <NuxtLink
+      :to="`/artworks/${artwork.id}`"
+      class="block overflow-hidden rounded-[20px] border border-[#1A2336] bg-[#050912]"
+    >
+      <img
+        v-if="artwork.imageUrl"
+        :src="artwork.imageUrl"
+        :alt="artwork.title"
+        class="aspect-[4/5] w-full object-cover transition duration-300 group-hover:scale-[1.02] select-none"
+        draggable="false"
+        @dragstart.prevent
+        @contextmenu.prevent
+      />
+      <div
+        v-else
+        class="flex aspect-[4/5] items-center justify-center bg-[radial-gradient(circle_at_center,_rgba(74,108,247,0.18),_transparent_50%),linear-gradient(135deg,_#0F1628,_#05070D)]"
+      >
+        <span class="text-3xl font-semibold text-[#D5E0FF]">{{ initials }}</span>
+      </div>
+    </NuxtLink>
 
-<div class="flex items-start justify-between gap-4">
+    <div class="flex items-start justify-between gap-4">
       <div
         class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-800 text-lg font-semibold text-violet-200 ring-1 ring-violet-700/30"
       >
@@ -55,10 +55,10 @@
           {{ formattedDate }}
         </span>
         <span
-          v-if="artwork.isSold"
+          v-if="!artwork.isAvailableForPurchase"
           class="rounded-full bg-[#3A1A1A] px-3 py-1 text-[#F5A8A8]"
         >
-          Plus disponible
+          Unavailable
         </span>
       </div>
 

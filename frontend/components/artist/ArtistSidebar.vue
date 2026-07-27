@@ -1,9 +1,7 @@
 <template>
   <aside class="rounded-[28px] border border-[#1A1F2A] bg-[#090017] p-5 xl:p-6">
     <div class="rounded-[24px] border border-[#1A1F2A] bg-[#01050E] p-5">
-      <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-        Studio
-      </p>
+      <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Studio</p>
       <h2 class="mt-3 text-2xl font-semibold text-[#E6EDF7]">Dashboard artiste</h2>
       <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
         Suivez vos ventes, vos revenus et les signaux de performance en temps reel.
@@ -37,9 +35,7 @@
           <div class="min-w-0">
             <p
               class="text-sm font-semibold transition"
-              :class="
-                isActive(item.route) ? 'text-[#E6EDF7]' : 'text-[#D8E1F0]'
-              "
+              :class="isActive(item.route) ? 'text-[#E6EDF7]' : 'text-[#D8E1F0]'"
             >
               {{ item.label }}
             </p>
@@ -52,9 +48,7 @@
     </nav>
 
     <div class="mt-5 rounded-[24px] border border-[#1A1F2A] bg-[#01050E] p-5">
-      <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-        Compte artiste
-      </p>
+      <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Compte artiste</p>
       <p class="mt-3 text-sm font-semibold text-[#E6EDF7]">
         {{ user?.username || "Artiste" }}
       </p>
@@ -70,10 +64,10 @@
           Publier une oeuvre
         </NuxtLink>
         <NuxtLink
-          to="/profile"
+          to="/account-settings"
           class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-5 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
         >
-          Retour au profil
+          Retour au compte
         </NuxtLink>
       </div>
     </div>

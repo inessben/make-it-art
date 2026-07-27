@@ -2,13 +2,14 @@ const IDEMPOTENCY_KEY_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const PRICING_FINGERPRINT_PATTERN = /^[0-9a-f]{64}$/i;
 const SENSITIVE_VALUE_PATTERN =
-  /(pi_[A-Za-z0-9]+_secret_[A-Za-z0-9]+|[spr]k_(?:test|live|restricted)_[A-Za-z0-9]+)/i;
+  /(pi_[A-Za-z0-9]+_secret_[A-Za-z0-9]+|cuss_secret_[A-Za-z0-9]+|[spr]k_(?:test|live|restricted)_[A-Za-z0-9]+)/i;
 const REUSABLE_PAYMENT_STATUSES = new Set([
   "requires_payment_method",
   "requires_confirmation",
   "requires_action"
 ]);
 const PAYMENT_INTENT_CLIENT_SECRET_PATTERN = /^pi_[A-Za-z0-9_]+_secret_[A-Za-z0-9]+$/;
+const CUSTOMER_SESSION_CLIENT_SECRET_PATTERN = /^cuss_secret_[A-Za-z0-9]+$/;
 
 export const CHECKOUT_ORDER_STORAGE_KEY = "mia.checkout.order";
 
@@ -23,6 +24,18 @@ export function canMountPaymentElement(payment) {
     typeof payment.clientSecret === "string" &&
     PAYMENT_INTENT_CLIENT_SECRET_PATTERN.test(payment.clientSecret)
   );
+}
+
+export function getCustomerSessionClientSecret(payment) {
+  if (
+    payment?.savedPaymentMethodsAvailable !== true ||
+    typeof payment.customerSessionClientSecret !== "string" ||
+    !CUSTOMER_SESSION_CLIENT_SECRET_PATTERN.test(payment.customerSessionClientSecret)
+  ) {
+    return null;
+  }
+
+  return payment.customerSessionClientSecret;
 }
 
 export function getCheckoutStorageKey(cart) {

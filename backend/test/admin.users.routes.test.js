@@ -20,6 +20,7 @@ const authServicePath = require.resolve("../src/services/auth.service");
 const adminAuditServicePath = require.resolve("../src/services/admin-audit.service");
 const adminUserManagementServicePath =
   require.resolve("../src/services/admin-user-management.service");
+const artistWithdrawalServicePath = require.resolve("../src/services/artist-withdrawal.service");
 
 function buildAdminUser({ isSuperAdmin }) {
   return {
@@ -72,6 +73,8 @@ async function startAdminUsersApp(t, overrides = {}) {
     removeAdminAccess: [],
     removeSuperAdminAccess: [],
     updateUserAccountStatus: [],
+    listAdminArtistWithdrawals: [],
+    updateArtistWithdrawalStatus: [],
     auditLogs: []
   };
 
@@ -331,6 +334,96 @@ async function startAdminUsersApp(t, overrides = {}) {
           }
         );
       }
+    },
+    [artistWithdrawalServicePath]: {
+      ArtistWithdrawalError: class ArtistWithdrawalError extends Error {
+        constructor(code, message, statusCode = 400) {
+          super(message);
+          this.code = code;
+          this.statusCode = statusCode;
+        }
+      },
+      async listAdminArtistWithdrawals() {
+        calls.listAdminArtistWithdrawals.push(true);
+
+        return (
+          overrides.listAdminArtistWithdrawalsResult || {
+            summary: {
+              totalRequests: 2,
+              requestedCount: 1,
+              approvedCount: 1,
+              rejectedCount: 0,
+              paidCount: 0,
+              canceledCount: 0,
+              totalAmount: "EUR 140.00"
+            },
+            withdrawals: [
+              {
+                id: 1,
+                publicId: "11111111-1111-4111-8111-111111111111",
+                status: "REQUESTED",
+                amount: 8000,
+                amountValue: 80,
+                amountLabel: "EUR 80.00",
+                currency: "EUR",
+                note: "Monthly payout",
+                adminNote: "",
+                payoutReference: "",
+                createdAt: new Date("2026-07-24T09:00:00.000Z"),
+                reviewedAt: null,
+                paidAt: null,
+                artist: {
+                  id: 7,
+                  displayName: "Artist One",
+                  email: "artist@example.com"
+                },
+                requestedBy: {
+                  id: 10,
+                  username: "Artist One",
+                  email: "artist@example.com"
+                },
+                reviewedBy: null
+              }
+            ]
+          }
+        );
+      },
+      async updateArtistWithdrawalStatus(payload) {
+        calls.updateArtistWithdrawalStatus.push(payload);
+
+        return (
+          overrides.updateArtistWithdrawalStatusResult || {
+            id: 1,
+            publicId: payload.publicId,
+            status: payload.action === "approve" ? "APPROVED" : "PAID",
+            amount: 8000,
+            amountValue: 80,
+            amountLabel: "EUR 80.00",
+            currency: "EUR",
+            note: "Monthly payout",
+            adminNote: payload.adminNote || "",
+            payoutReference: payload.payoutReference || "",
+            createdAt: new Date("2026-07-24T09:00:00.000Z"),
+            reviewedAt: new Date("2026-07-24T10:00:00.000Z"),
+            paidAt: payload.action === "mark_paid" ? new Date("2026-07-24T11:00:00.000Z") : null,
+            artist: {
+              id: 7,
+              displayName: "Artist One",
+              email: "artist@example.com"
+            },
+            requestedBy: {
+              id: 10,
+              username: "Artist One",
+              email: "artist@example.com"
+            },
+            reviewedBy: {
+              id: adminUser.id,
+              username: adminUser.username,
+              email: adminUser.email
+            }
+          }
+        );
+      }
     }
   });
 
@@ -482,4 +575,37 @@ test("PATCH /admin/users/:id/admin-access returns service errors", async (t) => 
   assert.equal(response.status, 409);
   assert.equal(response.body.code, "SELF_MANAGEMENT_NOT_ALLOWED");
   assert.equal(response.body.message, "You cannot change your own access from this page.");
+});
+
+test("GET /admin/artist-withdrawals returns the admin payout queue", async (t) => {
+  const { baseUrl, calls } = await startAdminUsersApp(t);
+  const response = await requestJson(baseUrl, "/admin/artist-withdrawals");
+
+  assert.equal(response.status, 200);
+  assert.equal(calls.listAdminArtistWithdrawals.length, 1);
+  assert.equal(response.body.summary.totalRequests, 2);
+  assert.equal(response.body.withdrawals[0].status, "REQUESTED");
+  assert.equal(response.body.withdrawals[0].artist.displayName, "Artist One");
+});
+
+test("PATCH /admin/artist-withdrawals/:publicId updates a withdrawal status", async (t) => {
+  const { baseUrl, calls } = await startAdminUsersApp(t);
+  const publicId = "11111111-1111-4111-8111-111111111111";
+  const response = await requestJson(baseUrl, `/admin/artist-withdrawals/${publicId}`, {
+    method: "PATCH",
+    body: {
+      action: "mark_paid",
+      adminNote: "Paid by bank transfer",
+      payoutReference: "BANK-REF-2026-07"
+    }
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(calls.updateArtistWithdrawalStatus.length, 1);
+  assert.equal(calls.updateArtistWithdrawalStatus[0].publicId, publicId);
+  assert.equal(calls.updateArtistWithdrawalStatus[0].action, "mark_paid");
+  assert.equal(calls.updateArtistWithdrawalStatus[0].adminNote, "Paid by bank transfer");
+  assert.equal(calls.updateArtistWithdrawalStatus[0].payoutReference, "BANK-REF-2026-07");
+  assert.equal(response.body.withdrawal.status, "PAID");
+  assert.equal(calls.auditLogs.at(-1).action, "ARTIST_WITHDRAWAL_MARK_PAID");
 });

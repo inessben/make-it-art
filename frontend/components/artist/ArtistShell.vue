@@ -1,22 +1,28 @@
 <template>
-  <main class="min-h-screen bg-[#000000] px-6 py-10 text-[#E6EDF7]">
+  <main class="min-h-screen bg-black text-slate-100">
     <section
-      class="mx-auto w-full max-w-[1380px] rounded-[32px] border border-[#1A1F2A] bg-[#01050E] p-4 shadow-[0_32px_90px_rgba(0,0,0,0.22)] sm:p-6 xl:p-7"
+      class="mx-auto grid w-full max-w-[1440px] gap-8 px-5 py-8 lg:grid-cols-[258px_minmax(0,1fr)]"
     >
-      <div class="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
-        <ArtistSidebar />
+      <AccountSettingsSidebar />
 
-        <div class="grid gap-6">
-          <AdminHeader
-            :eyebrow="eyebrow"
-            :title="title"
-            :description="description"
-          >
-            <template v-if="$slots.actions" #actions>
-              <slot name="actions" />
-            </template>
-          </AdminHeader>
+      <div class="min-w-0 pb-16 pt-1 lg:px-4">
+        <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+              {{ eyebrow }}
+            </p>
+            <h1 class="mt-3 text-title-2 text-slate-100">{{ title }}</h1>
+            <p class="mt-2 max-w-3xl text-body-1 leading-7 text-slate-400">
+              {{ description }}
+            </p>
+          </div>
 
+          <div v-if="$slots.actions" class="flex flex-wrap gap-3">
+            <slot name="actions" />
+          </div>
+        </header>
+
+        <div class="mt-8 grid gap-6">
           <slot />
         </div>
       </div>
@@ -28,15 +34,15 @@
 defineProps({
   eyebrow: {
     type: String,
-    default: "Espace artiste",
+    default: "Espace artiste"
   },
   title: {
     type: String,
-    required: true,
+    required: true
   },
   description: {
     type: String,
-    required: true,
-  },
+    required: true
+  }
 });
 </script>

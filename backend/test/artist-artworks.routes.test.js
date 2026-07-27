@@ -9,22 +9,16 @@ const authRequiredPath = require.resolve("../src/middlewares/auth-required.middl
 const artistRequiredPath = require.resolve("../src/middlewares/artist-required.middleware");
 const applicationRepositoryPath =
   require.resolve("../src/repositories/artist-application-draft.repository");
-const artistRepositoryPath =
-  require.resolve("../src/repositories/artist.repository");
-const artworkRepositoryPath =
-  require.resolve("../src/repositories/artwork.repository");
-const categoryRepositoryPath =
-  require.resolve("../src/repositories/category.repository");
-const userRepositoryPath =
-  require.resolve("../src/repositories/user.repository");
-const contractServicePath =
-  require.resolve("../src/services/artist-contract.service");
-const serializeAuthUserPath =
-  require.resolve("../src/utils/serialize-auth-user");
-const uploadArtworkMiddlewarePath =
-  require.resolve("../src/middlewares/upload-artwork.middleware");
+const artistRepositoryPath = require.resolve("../src/repositories/artist.repository");
+const artworkRepositoryPath = require.resolve("../src/repositories/artwork.repository");
+const categoryRepositoryPath = require.resolve("../src/repositories/category.repository");
+const userRepositoryPath = require.resolve("../src/repositories/user.repository");
+const contractServicePath = require.resolve("../src/services/artist-contract.service");
+const serializeAuthUserPath = require.resolve("../src/utils/serialize-auth-user");
+const uploadArtworkMiddlewarePath = require.resolve("../src/middlewares/upload-artwork.middleware");
 const artistRequiredMiddlewarePath =
   require.resolve("../src/middlewares/artist-required.middleware");
+const artworkMediaPipelinePath = require.resolve("../src/services/artwork-media-pipeline.service");
 
 const authUser = {
   id: 7,
@@ -65,16 +59,12 @@ function buildAuthMiddleware(user) {
 
 async function startArtistArtworkRoutesApp(t, overrides = {}) {
   const currentAuthUser = overrides.authUser || authUser;
-  const currentArtist =
-    "artistResult" in overrides ? overrides.artistResult : verifiedArtist;
+  const currentArtist = "artistResult" in overrides ? overrides.artistResult : verifiedArtist;
   const calls = {
     createArtwork: [],
     listArtworksByArtistId: []
   };
   const originalArtistRequired = require.cache[artistRequiredPath];
-  const artworkMediaServicePath = require.resolve(
-    "../src/services/artwork-media.service"
-  );
 
   const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
     [authRequiredPath]: buildAuthMiddleware(currentAuthUser),
@@ -85,9 +75,7 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
     },
     [artistRepositoryPath]: {
       async findByUserId() {
-        return hasOverride(overrides, "artistResult")
-          ? overrides.artistResult
-          : verifiedArtist;
+        return hasOverride(overrides, "artistResult") ? overrides.artistResult : verifiedArtist;
       }
     },
     [artworkRepositoryPath]: {
@@ -188,19 +176,28 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
     [uploadArtworkMiddlewarePath]: {
       handleArtworkUpload(req, _res, next) {
         req.file = {
-          filename: "test-artwork.jpg"
+          filename: "test-artwork.jpg",
+          path: "/tmp/test-artwork.jpg",
+          mimetype: "image/jpeg",
+          originalname: "test-artwork.jpg"
         };
         next();
       }
     },
-    [artworkMediaServicePath]: {
-      buildArtworkImagePath(filename) {
-        return `artworks/${filename}`;
+    [artworkMediaPipelinePath]: {
+      async processArtworkUpload() {
+        return {
+          storageProvider: "local",
+          mediaStatus: "ready",
+          hdPath: "artworks/hd/test-artwork.jpg",
+          previewPath: "artworks/preview/test-artwork.jpg",
+          imagePath: "artworks/preview/test-artwork.jpg",
+          watermarkApplied: true,
+          previewUrl: "/api/uploads/artworks/preview/test-artwork.jpg",
+          hdUrl: "/api/uploads/artworks/hd/test-artwork.jpg"
+        };
       },
-      async generateArtworkPreview({ imagePath }) {
-        return imagePath.replace(/^artworks\//, "artworks/previews/");
-      },
-      async removeArtworkImageFile() {
+      async deleteArtworkMediaAssets() {
         return undefined;
       }
     },
@@ -214,8 +211,7 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
 
         if (!currentArtist.verified) {
           return res.status(403).json({
-            message:
-              "Votre profil artiste doit etre valide avant de publier des oeuvres."
+            message: "Votre profil artiste doit etre valide avant de publier des oeuvres."
           });
         }
 
@@ -293,8 +289,12 @@ test("POST /artists/me/artworks creates an artwork for a verified artist", async
     categoryId: 9,
     price: "120 tokens",
     protection: true,
-    imagePath: "artworks/test-artwork.jpg",
-    previewPath: "artworks/previews/test-artwork.jpg"
+    imagePath: "artworks/preview/test-artwork.jpg",
+    hdPath: "artworks/hd/test-artwork.jpg",
+    previewPath: "artworks/preview/test-artwork.jpg",
+    storageProvider: "local",
+    mediaStatus: "ready",
+    watermarkApplied: true
   });
 });
 

@@ -9,6 +9,27 @@ export const useCartStore = defineStore("cart", {
   }),
 
   actions: {
+    hydrate() {
+      return this.cart;
+    },
+
+    persist() {
+      return this.cart;
+    },
+
+    removeArtwork(artworkId) {
+      if (!this.cart?.items?.length) {
+        return this.cart;
+      }
+
+      this.cart = {
+        ...this.cart,
+        items: this.cart.items.filter((item) => item.artworkId !== artworkId)
+      };
+
+      return this.cart;
+    },
+
     async csrfHeaders() {
       const response = await $fetch("/api/v1/security/csrf-token", {
         credentials: "include"
@@ -48,17 +69,14 @@ export const useCartStore = defineStore("cart", {
       );
     },
 
-async setItem(artworkId, quantity) {
-  return this.runCartRequest(async () => {
-    const headers = await this.csrfHeaders();
-    return $fetch("/api/v1/cart/items", {
-      method: "POST",
-      credentials: "include",
-      headers,
-      body: { artworkId, quantity }
-    });
-  }, "Impossible de mettre à jour cet article.");
-}
+    async setItem(artworkId, quantity) {
+      return this.runCartRequest(async () => {
+        const headers = await this.csrfHeaders();
+        return $fetch("/api/v1/cart/items", {
+          method: "POST",
+          credentials: "include",
+          headers,
+          body: { artworkId, quantity }
         });
       }, "Impossible de mettre à jour cet article.");
     },
@@ -108,7 +126,6 @@ async setItem(artworkId, quantity) {
         return true;
       } catch {
         return false;
-      }
       }
     }
   }

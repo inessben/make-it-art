@@ -88,46 +88,58 @@ enum InvoiceType {
   COMMISSION
 }
 
+enum ArtistWithdrawalStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  PAID
+  CANCELED
+}
+
 model User {
-  id                         Int                      @id @default(autoincrement())
+  id                         Int                         @id @default(autoincrement())
   username                   String?
-  email                      String?                  @unique
-  passwordHash               String?                  @map("password_hash")
-  oauthProvider              String?                  @map("oauth_provider")
-  oauthSubject               String?                  @map("oauth_subject")
-  oauthLinkedAt              DateTime?                @map("oauth_linked_at")
+  email                      String?                     @unique
+  passwordHash               String?                     @map("password_hash")
+  oauthProvider              String?                     @map("oauth_provider")
+  oauthSubject               String?                     @map("oauth_subject")
+  oauthLinkedAt              DateTime?                   @map("oauth_linked_at")
   role                       String?
-  createdAt                  DateTime?                @map("created_at")
+  createdAt                  DateTime?                   @map("created_at")
   bio                        String?
-  isActive                   Boolean?                 @map("is_active")
-  blockedAt                  DateTime?                @map("blocked_at")
-  walletAddress              String?                  @map("wallet_addresse")
+  isActive                   Boolean?                    @map("is_active")
+  blockedAt                  DateTime?                   @map("blocked_at")
+  walletAddress              String?                     @map("wallet_addresse")
   verified                   Boolean?
   phone                      String?
+  stripeCustomerId           String?                     @unique @map("stripe_customer_id")
   admin                      Admin?
   artistApplicationDraft     ArtistApplicationDraft?
   artist                     Artist?
-  moderatedArtworks          Artwork[]                @relation("artwork_moderated_by")
-  reviewedArtistApplications ArtistApplicationDraft[] @relation("artist_application_reviewed_by")
+  moderatedArtworks          Artwork[]                   @relation("artwork_moderated_by")
+  reviewedArtistApplications ArtistApplicationDraft[]    @relation("artist_application_reviewed_by")
   auditLogs                  AuditLog[]
   consents                   ConsentRGPD[]
-  emailVerificationTokens    EmailVerificationToken[] @relation("emailVerificationTokens")
+  emailVerificationTokens    EmailVerificationToken[]    @relation("emailVerificationTokens")
   favorites                  Favorite[]
   follows                    Follow[]
-  loginVerificationCodes     LoginVerificationCode[]  @relation("loginVerificationCodes")
+  loginVerificationCodes     LoginVerificationCode[]     @relation("loginVerificationCodes")
   orders                     Order[]
   ownershipTokens            OwnershipToken[]
-  passwordResetTokens        PasswordResetToken[]     @relation("passwordResetTokens")
-  personalCollections        Collection[]             @relation("user_collections")
+  passwordResetTokens        PasswordResetToken[]        @relation("passwordResetTokens")
+  personalCollections        Collection[]                @relation("user_collections")
   notifications              Notification[]
   refreshTokens              RefreshToken[]
-  rememberedDevices          RememberedDevice[]       @relation("rememberedDevices")
+  rememberedDevices          RememberedDevice[]          @relation("rememberedDevices")
   galleries                  UserGallery[]
   cart                       Cart?
   refundsRequested           Refund[]                 @relation("refundRequestedBy")
+  requestedArtistWithdrawals ArtistWithdrawal[]       @relation("artistWithdrawalRequestedBy")
+  reviewedArtistWithdrawals  ArtistWithdrawal[]       @relation("artistWithdrawalReviewedBy")
   disputeEvidenceAudits      DisputeEvidenceAudit[]   @relation("disputeEvidenceAuditCapturedBy")
   digitalEntitlements        DigitalEntitlement[]
   ownershipCertificates      OwnershipCertificate[]
+  savedPaymentMethodConsents SavedPaymentMethodConsent[]
 
   @@unique([oauthProvider, oauthSubject])
   @@map("user")
@@ -168,6 +180,7 @@ model Artist {
   artworks    Artwork[]
   collections Collection[]
   followers   Follow[]
+  withdrawals ArtistWithdrawal[]
 
   @@map("artist")
 }
@@ -196,7 +209,11 @@ model Artwork {
   protection            Boolean?
   protectionId          Int?                   @map("protection_id")
   imagePath             String?                @map("image_path")
+  hdPath                String?                @map("hd_path")
   previewPath           String?                @map("preview_path")
+  storageProvider       String                 @default("local") @map("storage_provider")
+  mediaStatus           String                 @default("ready") @map("media_status")
+  watermarkApplied      Boolean                @default(false) @map("watermark_applied")
   isSold                Boolean                @default(false) @map("is_sold")
   artist                Artist                 @relation(fields: [artistId], references: [id])
   category              Category?              @relation(fields: [categoryId], references: [id])
@@ -473,38 +490,58 @@ model OwnershipCertificate {
 }
 
 model Payment {
-  id                   Int                    @id @default(autoincrement())
-  orderId              Int                    @map("order_id")
-  checkoutVersion      Int                    @default(1) @map("checkout_version")
-  provider             PaymentProvider        @default(STRIPE)
-  providerPaymentId    String?                @unique @map("provider_payment_id")
-  providerChargeId     String?                @unique @map("provider_charge_id")
-  providerStatus       String?                @map("provider_status")
-  idempotencyKey       String?                @unique @map("idempotency_key")
-  method               String?
+  id                         Int                         @id @default(autoincrement())
+  orderId                    Int                         @map("order_id")
+  checkoutVersion            Int                         @default(1) @map("checkout_version")
+  provider                   PaymentProvider             @default(STRIPE)
+  providerPaymentId          String?                     @unique @map("provider_payment_id")
+  providerChargeId           String?                     @unique @map("provider_charge_id")
+  providerStatus             String?                     @map("provider_status")
+  idempotencyKey             String?                     @unique @map("idempotency_key")
+  method                     String?
   // Temporary legacy references. Stripe reconciliation uses providerPaymentId
   // and amount exclusively.
-  transactionId        Int?                   @map("transaction_id")
-  price                String?
-  amount               Int
-  refundedAmount       Int                    @default(0) @map("refunded_amount")
-  currency             Currency               @default(EUR)
-  status               PaymentStatus          @default(PENDING)
-  failureCode          String?                @map("failure_code")
-  createdAt            DateTime               @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt            DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
-  succeededAt          DateTime?              @map("succeeded_at") @db.Timestamp(6)
-  failedAt             DateTime?              @map("failed_at") @db.Timestamp(6)
-  canceledAt           DateTime?              @map("canceled_at") @db.Timestamp(6)
-  order                Order                  @relation(fields: [orderId], references: [id])
-  webhookEvents        StripeWebhookEvent[]
-  financialTransitions FinancialTransition[]
-  operatorAlerts       PaymentOperatorAlert[]
-  refunds              Refund[]
-  disputes             Dispute[]
+  transactionId              Int?                        @map("transaction_id")
+  price                      String?
+  amount                     Int
+  refundedAmount             Int                         @default(0) @map("refunded_amount")
+  currency                   Currency                    @default(EUR)
+  status                     PaymentStatus               @default(PENDING)
+  failureCode                String?                     @map("failure_code")
+  createdAt                  DateTime                    @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt                  DateTime                    @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  succeededAt                DateTime?                   @map("succeeded_at") @db.Timestamp(6)
+  failedAt                   DateTime?                   @map("failed_at") @db.Timestamp(6)
+  canceledAt                 DateTime?                   @map("canceled_at") @db.Timestamp(6)
+  order                      Order                       @relation(fields: [orderId], references: [id])
+  webhookEvents              StripeWebhookEvent[]
+  financialTransitions       FinancialTransition[]
+  operatorAlerts             PaymentOperatorAlert[]
+  refunds                    Refund[]
+  disputes                   Dispute[]
+  savedPaymentMethodConsents SavedPaymentMethodConsent[]
 
   @@unique([orderId, checkoutVersion])
   @@map("payment")
+}
+
+model SavedPaymentMethodConsent {
+  id                      Int       @id @default(autoincrement())
+  userId                  Int       @map("user_id")
+  paymentId               Int       @map("payment_id")
+  providerPaymentMethodId String    @map("provider_payment_method_id")
+  purpose                 String    @default("FUTURE_ON_SESSION_PURCHASES")
+  termsVersion            String    @map("terms_version")
+  acceptedAt              DateTime  @default(now()) @map("accepted_at") @db.Timestamp(6)
+  revokedAt               DateTime? @map("revoked_at") @db.Timestamp(6)
+  createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt               DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payment                 Payment   @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, providerPaymentMethodId])
+  @@index([userId, revokedAt])
+  @@map("saved_payment_method_consent")
 }
 
 model StripeWebhookEvent {
@@ -612,6 +649,31 @@ model FulfillmentTask {
   @@index([status, createdAt])
   @@index([status, availableAt])
   @@map("fulfillment_task")
+}
+
+model ArtistWithdrawal {
+  id                Int                   @id @default(autoincrement())
+  publicId          String                @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  artistId          Int                   @map("artist_id")
+  requestedByUserId Int                   @map("requested_by_user_id")
+  reviewedByUserId  Int?                  @map("reviewed_by_user_id")
+  amount            Int
+  currency          Currency              @default(EUR)
+  status            ArtistWithdrawalStatus @default(REQUESTED)
+  note              String?
+  adminNote         String?               @map("admin_note")
+  payoutReference   String?               @map("payout_reference")
+  createdAt         DateTime              @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt         DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  reviewedAt        DateTime?             @map("reviewed_at") @db.Timestamp(6)
+  paidAt            DateTime?             @map("paid_at") @db.Timestamp(6)
+  artist            Artist                @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  requestedBy       User                  @relation("artistWithdrawalRequestedBy", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  reviewedBy        User?                 @relation("artistWithdrawalReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([artistId, status, createdAt])
+  @@index([status, createdAt])
+  @@map("artist_withdrawal")
 }
 
 model Dispute {

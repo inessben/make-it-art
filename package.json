@@ -30,6 +30,7 @@
     "payments:validate-sandbox": "npm --prefix backend run payments:validate-sandbox",
     "payments:validate-go-live": "npm --prefix backend run payments:validate-go-live",
     "payments:scan-secrets": "npm --prefix backend run payments:scan-secrets",
+    "payments:qa-saved-methods": "npm --prefix backend run payments:qa-saved-methods",
     "payments:reconcile": "npm --prefix backend run payments:reconcile --",
     "payments:test-alert": "npm --prefix backend run payments:test-alert --",
     "precommit": "npm run payments:scan-secrets && npm run quality",
@@ -39,9 +40,15 @@
     "husky": "^8.0.3",
     "prisma": "^7.9.0"
   },
+  "overrides": {
+    "body-parser": "1.20.6",
+    "flatted": "3.4.3",
+    "immutable": "5.1.9",
+    "js-yaml": "4.3.0",
+    "qs": "6.15.3"
+  },
   "dependencies": {
     "@prisma/client": "^7.9.0",
-    "dotenv": "^17.4.2",
-    "tailwind": "^4.0.0"
+    "dotenv": "^17.4.2"
   }
 }

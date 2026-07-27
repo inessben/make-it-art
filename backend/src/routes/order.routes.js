@@ -145,7 +145,9 @@ router.post(
         payment: {
           status: result.paymentStatus,
           requiresConfirmation: result.requiresConfirmation,
-          clientSecret: result.clientSecret
+          clientSecret: result.clientSecret,
+          customerSessionClientSecret: result.customerSessionClientSecret,
+          savedPaymentMethodsAvailable: result.savedPaymentMethodsAvailable
         }
       });
     } catch (error) {
@@ -186,7 +188,9 @@ router.post(
         payment: {
           status: result.paymentStatus,
           requiresConfirmation: result.requiresConfirmation,
-          clientSecret: result.clientSecret
+          clientSecret: result.clientSecret,
+          customerSessionClientSecret: result.customerSessionClientSecret,
+          savedPaymentMethodsAvailable: result.savedPaymentMethodsAvailable
         }
       });
     } catch (error) {

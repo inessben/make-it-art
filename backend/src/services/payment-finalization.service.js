@@ -4,6 +4,7 @@ const env = require("../config/env");
 const { isFranceB2COrder } = require("../domain/commerce-policy");
 const { isTransactionWriteConflict, waitForTransactionRetry } = require("../lib/transaction-retry");
 const { canTransitionOrder, canTransitionPayment } = require("../domain/payment-state");
+const { recordSavedPaymentMethodConsent } = require("./saved-payment-method.service");
 
 const EVENT_TARGETS = Object.freeze({
   "payment_intent.processing": {
@@ -25,6 +26,7 @@ const EVENT_TARGETS = Object.freeze({
 });
 
 const FULFILLMENT_TASK_TYPES = Object.freeze([
+  "NOTIFY_ARTIST_SALE",
   "SEND_PAYMENT_CONFIRMATION",
   "GRANT_DOWNLOAD_RIGHTS",
   "GENERATE_CERTIFICATE",
@@ -60,6 +62,8 @@ function canRotateProviderCharge(payment) {
 function validatePaymentIntent(paymentIntent, payment) {
   const errors = [];
   const expectedCurrency = payment.currency.toLowerCase();
+  const paymentIntentCustomerId = stripeId(paymentIntent.customer);
+  const expectedCustomerId = payment.order.user?.stripeCustomerId;
 
   if (paymentIntent.id !== payment.providerPaymentId) errors.push("PAYMENT_INTENT_ID_MISMATCH");
   if (
@@ -74,6 +78,16 @@ function validatePaymentIntent(paymentIntent, payment) {
   if (paymentIntent.currency !== expectedCurrency) errors.push("PAYMENT_CURRENCY_MISMATCH");
   if (paymentIntent.metadata?.order_id !== payment.order.publicId) {
     errors.push("PAYMENT_ORDER_MISMATCH");
+  }
+  if (
+    paymentIntentCustomerId &&
+    expectedCustomerId &&
+    paymentIntentCustomerId !== expectedCustomerId
+  ) {
+    errors.push("PAYMENT_CUSTOMER_MISMATCH");
+  }
+  if (paymentIntent.setup_future_usage && paymentIntent.setup_future_usage !== "on_session") {
+    errors.push("PAYMENT_SETUP_FUTURE_USAGE_UNSUPPORTED");
   }
   if (!isFranceB2COrder(payment.order)) {
     errors.push("PAYMENT_COMMERCE_POLICY_MISMATCH");
@@ -364,6 +378,9 @@ async function applyPaymentEvent(transaction, event, payment) {
   }
 
   if (nextOrderStatus === "PAID") {
+    if (event.type === "payment_intent.succeeded") {
+      await recordSavedPaymentMethodConsent(transaction, paymentIntent, payment);
+    }
     await enqueueFulfillment(transaction, payment);
   }
 
@@ -431,7 +448,11 @@ async function processStripePaymentEvent({ event, prismaClient = prisma }) {
             where: { providerPaymentId: event.data.object.id },
             include: {
               order: {
-                include: { reservations: true, items: true }
+                include: {
+                  reservations: true,
+                  items: true,
+                  user: { select: { stripeCustomerId: true } }
+                }
               }
             }
           });

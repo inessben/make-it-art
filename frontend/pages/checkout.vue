@@ -16,8 +16,8 @@
             Finaliser l'achat
           </h1>
           <p class="mt-4 max-w-3xl text-sm leading-6 text-[#A0ADB4]">
-            Paiement simulé : la commande est enregistrée en base et les artistes concernés reçoivent une notification de vente.
-          </p>
+            Paiement simulé : la commande est enregistrée en base et les artistes concernés
+            reçoivent une notification de vente.
           </p>
         </div>
 
@@ -227,6 +227,18 @@
             Saisissez votre carte dans le formulaire Stripe ci-dessous.
           </p>
 
+          <p
+            v-if="savedPaymentMethodsAvailable"
+            class="mt-3 rounded-2xl border border-[#203357] bg-[#091121] px-5 py-4 text-sm leading-6 text-[#BFD0FF]"
+          >
+            Vous pouvez demander à Stripe d’enregistrer cette carte pour vos prochains achats. Elle
+            ne sera jamais débitée automatiquement et vous confirmerez toujours chaque paiement.
+          </p>
+          <p v-else class="mt-3 text-xs leading-5 text-[#71809A]">
+            L’enregistrement et la réutilisation des cartes ne sont pas disponibles pour cette
+            tentative. Vous pouvez tout de même payer normalement avec une nouvelle carte.
+          </p>
+
           <form class="mt-6 grid gap-5" @submit.prevent="confirmPayment">
             <div
               id="payment-element"
@@ -298,12 +310,12 @@ import { storeToRefs } from "pinia";
 import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useCartStore } from "~/stores/cart";
 import { useAuthStore } from "~/stores/auth";
-import { formatMarketplacePrice } from "~/utils/marketplace";
-import { 
+import {
   buildPaymentReturnUrl,
   canMountPaymentElement,
   CHECKOUT_ORDER_STORAGE_KEY,
   createSecureUuid,
+  getCustomerSessionClientSecret,
   getOrCreateIdempotencyKey,
   getSafePaymentError,
   isPublishableStripeKey
@@ -328,6 +340,7 @@ const paymentElementContainer = ref(null);
 const errorMessage = ref("");
 const order = ref(null);
 const checkoutStarted = ref(false);
+const savedPaymentMethodsAvailable = ref(false);
 const billingDetails = reactive({
   customerType: "B2C",
   consumerConfirmed: false,
@@ -343,6 +356,7 @@ let stripeClient = null;
 let elements = null;
 let paymentElement = null;
 let clientSecret = "";
+let customerSessionClientSecret = "";
 
 onMounted(async () => {
   try {
@@ -453,6 +467,8 @@ async function mountPaymentForm(checkoutResponse, publishableKey) {
   }
 
   clientSecret = checkoutResponse.payment.clientSecret;
+  customerSessionClientSecret = getCustomerSessionClientSecret(checkoutResponse.payment) || "";
+  savedPaymentMethodsAvailable.value = Boolean(customerSessionClientSecret);
   stripeClient = await loadStripe(publishableKey);
 
   if (!stripeClient) {
@@ -461,6 +477,7 @@ async function mountPaymentForm(checkoutResponse, publishableKey) {
 
   elements = stripeClient.elements({
     clientSecret,
+    ...(customerSessionClientSecret ? { customerSessionClientSecret } : {}),
     appearance: {
       theme: "night",
       variables: {
@@ -517,6 +534,8 @@ onBeforeUnmount(() => {
   elements = null;
   stripeClient = null;
   clientSecret = "";
+  customerSessionClientSecret = "";
+  savedPaymentMethodsAvailable.value = false;
 });
 
 async function confirmPayment() {
@@ -577,98 +596,7 @@ async function confirmPayment() {
     submitting.value = false;
   }
 }
-    return;
-  }
 
-  submitting.value = true;
-  errorMessage.value = "";
-// Remove merge conflict markers and resolve consistently depending on payment method (Stripe or API checkout)
-if (paymentMethod.value === "stripe") {
-  try {
-    const { error: submitError } = await elements.submit();
-
-    if (submitError) {
-      errorMessage.value = getSafePaymentError(submitError);
-      return;
-    }
-
-    const returnUrl = buildPaymentReturnUrl({
-      configuredBaseUrl: config.public.appBaseUrl,
-      currentOrigin: window.location.origin,
-      nodeEnv: import.meta.env.PROD ? "production" : "development"
-    });
-
-    const { error } = await stripeClient.confirmPayment({
-      elements,
-      clientSecret,
-      confirmParams: {
-        return_url: returnUrl,
-        payment_method_data: {
-          billing_details: {
-            name: billingDetails.name || undefined,
-            address: {
-              line1: billingDetails.addressLine1 || undefined,
-              line2: billingDetails.addressLine2 || undefined,
-              postal_code: billingDetails.postalCode || undefined,
-              city: billingDetails.city || undefined,
-              country: "FR"
-            }
-          }
-        }
-      },
-      redirect: "if_required"
-    });
-
-    if (error) {
-      errorMessage.value = getSafePaymentError(error);
-      return;
-    }
-
-    clientSecret = "";
-    await navigateTo("/payment/return");
-  } catch (error) {
-    errorMessage.value = getSafePaymentError({
-      message: error?.data?.message || error?.message,
-      supportReference: error?.data?.supportReference
-    });
-  }
-} else {
-  successMessage.value = "";
-
-  try {
-    const response = await $fetch("/api/orders/checkout", {
-      method: "POST",
-      credentials: "include",
-      body: {
-        billingEmail: billingEmail.value,
-        paymentMethod: paymentMethod.value,
-        items: cart.items.map((item) => ({
-          artworkId: item.artwork.id,
-          quantity: item.quantity,
-        })),
-      },
-    });
-
-    cart.clear();
-    successMessage.value = `Commande ${response.order.reference} confirmee.`;
-
-    setTimeout(async () => {
-      await navigateTo("/profile");
-    }, 1200);
-  } catch (error) {
-    if (error?.statusCode === 401) {
-      await navigateTo("/login");
-      return;
-    }
-
-    errorMessage.value =
-      error?.data?.message || "Impossible de finaliser la commande.";
-  }
-}
-  } finally {
-    submitting.value = false;
-  }
-}
 function formatMoney(amount, currency = "EUR") {
   return new Intl.NumberFormat("fr-FR", {
     style: "currency",

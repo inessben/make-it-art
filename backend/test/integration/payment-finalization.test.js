@@ -49,7 +49,8 @@ databaseTest("a succeeded payment is finalized once in one auditable transaction
       where: { orderId: fixture.order.id }
     });
     const tasks = await prisma.fulfillmentTask.findMany({
-      where: { orderId: fixture.order.id }
+      where: { orderId: fixture.order.id },
+      orderBy: { taskType: "asc" }
     });
     const transitions = await prisma.financialTransition.findMany({
       where: { orderId: fixture.order.id }
@@ -64,7 +65,17 @@ databaseTest("a succeeded payment is finalized once in one auditable transaction
     assert.equal(artwork.stockQuantity, 0);
     assert.equal(artwork.reservedQuantity, 0);
     assert.equal(reservation.status, "CONSUMED");
-    assert.equal(tasks.length, 4);
+    assert.equal(tasks.length, 5);
+    assert.deepEqual(
+      tasks.map((task) => task.taskType),
+      [
+        "GENERATE_CERTIFICATE",
+        "GRANT_DOWNLOAD_RIGHTS",
+        "ISSUE_SALE_INVOICE",
+        "NOTIFY_ARTIST_SALE",
+        "SEND_PAYMENT_CONFIRMATION"
+      ]
+    );
     assert.equal(transitions.length, 2);
     assert.equal(cart.items.length, 0);
     assert.equal(cart.version, fixture.cart.version + 1);
@@ -99,7 +110,7 @@ databaseTest(
       const tasks = await prisma.fulfillmentTask.count({ where: { orderId: fixture.order.id } });
       assert.equal(artwork.stockQuantity, 0);
       assert.equal(artwork.reservedQuantity, 0);
-      assert.equal(tasks, 4);
+      assert.equal(tasks, 5);
     } finally {
       await cleanup(prisma, fixture);
       await prisma.$disconnect();
@@ -248,7 +259,7 @@ databaseTest("a declined attempt can be retried with a new successful charge", a
     assert.equal(payment.status, "SUCCEEDED");
     assert.equal(payment.providerChargeId, successfulChargeId);
     assert.equal(payment.failureCode, null);
-    assert.equal(taskCount, 4);
+    assert.equal(taskCount, 5);
     assert.equal(alertCount, 0);
   } finally {
     await cleanup(prisma, fixture);

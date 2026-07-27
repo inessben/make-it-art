@@ -1,5 +1,5 @@
-const fs = require("node:fs");
 const fsp = require("node:fs/promises");
+const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
@@ -19,6 +19,8 @@ function getArtworkPreviewsDirectory() {
 }
 
 async function ensureArtworkUploadDirectory() {
+  await fsp.mkdir(path.join(ARTWORKS_DIR, "hd"), { recursive: true });
+  await fsp.mkdir(path.join(ARTWORKS_DIR, "preview"), { recursive: true });
   await fsp.mkdir(ARTWORKS_DIR, { recursive: true });
   await fsp.mkdir(PREVIEWS_DIR, { recursive: true });
 }
@@ -37,6 +39,10 @@ function buildArtworkPreviewPath(filename) {
 function buildArtworkImageUrl(imagePath) {
   if (!imagePath) {
     return null;
+  }
+
+  if (/^https?:\/\//i.test(imagePath)) {
+    return imagePath;
   }
 
   return `/api/uploads/${imagePath.replace(/^\/+/, "")}`;
@@ -90,7 +96,7 @@ function assertSafeArtworkFilename(filename) {
 }
 
 async function removeArtworkImageFile(imagePath) {
-  if (!imagePath) {
+  if (!imagePath || /^https?:\/\//i.test(imagePath)) {
     return;
   }
 

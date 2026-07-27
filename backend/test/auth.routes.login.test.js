@@ -212,7 +212,8 @@ test("POST /auth/login returns a challenge cookie when an email code is required
   const { baseUrl, calls } = await startAuthRoutesApp(t, {
     startLoginResult: {
       bypassCode: false,
-      challengeToken: "challenge-token"
+      challengeToken: "challenge-token",
+      passwordCompromised: true
     }
   });
 
@@ -224,6 +225,7 @@ test("POST /auth/login returns a challenge cookie when an email code is required
   assert.equal(response.status, 200);
   assert.deepEqual(response.body, {
     message: "Login code sent. Please check your email.",
+    passwordCompromised: true,
     requiresCode: true
   });
   assert.deepEqual(calls.startLoginWithCode, [
@@ -271,6 +273,7 @@ test("POST /auth/login creates session cookies when code is bypassed", async (t)
   assert.equal(response.status, 200);
   assert.deepEqual(response.body, {
     message: "Login successful",
+    passwordCompromised: false,
     requiresCode: false,
     redirectTo: "/",
     user

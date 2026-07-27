@@ -1,7 +1,7 @@
 <template>
   <ArtistShell
     title="Dashboard artiste"
-    description="Vue metier de vos ventes, revenus, performances et analytics sur les 6 derniers mois."
+    description="Vue metier de vos ventes, gains, commissions et signaux business sur les 6 derniers mois."
   >
     <template #actions>
       <button
@@ -14,7 +14,14 @@
       </button>
     </template>
 
-    <section class="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
+    <div
+      v-if="errorMessage"
+      class="rounded-2xl border border-[#7f1d1d] bg-[#2b1014] px-5 py-4 text-sm text-[#FECACA]"
+    >
+      {{ errorMessage }}
+    </div>
+
+    <section class="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
       <article
         v-for="statCard in stats"
         :key="statCard.label"
@@ -32,63 +39,55 @@
       </article>
     </section>
 
-    <section class="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+    <section class="grid gap-4 xl:grid-cols-[1.4fr_0.9fr]">
       <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-        <div class="flex items-end justify-between gap-4">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-              Analytics
+            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Analytics</p>
+            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Evolution des ventes</h2>
+            <p class="mt-3 max-w-2xl text-sm leading-6 text-[#A0ADB4]">
+              Lecture rapide de votre activite commerciale avec gains confirmes, progression et
+              rythme de conversion.
             </p>
-            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
-              Ventes sur 6 mois
-            </h2>
           </div>
-          <span
-            class="rounded-full bg-[#4A6CF7]/10 px-4 py-2 text-sm font-semibold text-[#4A6CF7]"
-          >
-            Live data
+          <span class="rounded-full bg-[#4A6CF7]/10 px-4 py-2 text-sm font-semibold text-[#4A6CF7]">
+            6 derniers mois
           </span>
         </div>
 
         <div
-          v-if="errorMessage"
-          class="mt-6 rounded-2xl border border-[#7f1d1d] bg-[#2b1014] px-5 py-4 text-sm text-[#FECACA]"
-        >
-          {{ errorMessage }}
-        </div>
-
-        <div
-          v-else-if="loading"
+          v-if="loading"
           class="mt-6 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4 text-sm text-[#A0ADB4]"
         >
           Chargement du dashboard...
         </div>
 
-        <div v-else class="mt-8 grid gap-6">
-          <div class="grid grid-cols-6 items-end gap-3">
+        <div v-else class="mt-8 grid gap-8">
+          <div class="grid grid-cols-6 gap-3">
             <div
               v-for="month in analytics.salesByMonth"
               :key="month.label"
-              class="flex flex-col items-center gap-3"
+              class="flex min-w-0 flex-col gap-3"
             >
-              <div class="flex h-40 w-full items-end rounded-2xl bg-[#01050E] px-2 pb-2">
+              <div class="flex h-44 items-end rounded-2xl bg-[#01050E] p-2">
                 <div
-                  class="w-full rounded-xl bg-[#4A6CF7] transition-all"
-                  :style="{ height: `${barHeight(month.grossRevenueValue)}%` }"
+                  class="w-full rounded-xl bg-gradient-to-t from-[#4A6CF7] to-[#7C8FFF] transition-all"
+                  :style="{ height: `${barHeight(month.availableEarningsValue)}%` }"
                 />
               </div>
-              <div class="text-center">
-                <p class="text-xs font-semibold text-[#E6EDF7]">
-                  {{ month.salesCount }}
-                </p>
-                <p class="mt-1 text-[10px] uppercase tracking-[0.12em] text-[#7F8A99]">
+              <div class="space-y-1 text-center">
+                <p class="text-xs font-semibold text-[#E6EDF7]">{{ month.salesCount }} vente(s)</p>
+                <p class="text-[11px] uppercase tracking-[0.16em] text-[#7F8A99]">
                   {{ month.label }}
+                </p>
+                <p class="text-xs text-[#9DB2FF]">
+                  {{ month.availableEarnings }}
                 </p>
               </div>
             </div>
           </div>
 
-          <div class="grid gap-3 sm:grid-cols-3">
+          <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <div
               v-for="metric in performanceCards"
               :key="metric.label"
@@ -100,92 +99,320 @@
               <p class="mt-3 text-2xl font-semibold text-white">
                 {{ metric.value }}
               </p>
-              <p class="mt-2 text-sm text-[#A0ADB4]">{{ metric.description }}</p>
+              <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">
+                {{ metric.description }}
+              </p>
+            </div>
+          </div>
+
+          <div class="rounded-[22px] border border-[#1A1F2A] bg-[#01050E] p-5">
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Pipeline</p>
+                <h3 class="mt-2 text-lg font-semibold text-[#E6EDF7]">Etat de vos gains</h3>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <span
+                  v-for="status in statusBreakdown"
+                  :key="status.status"
+                  class="rounded-full px-3 py-1 text-xs font-semibold"
+                  :class="settlementClass(status.status)"
+                >
+                  {{ status.status }} - {{ status.count }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
       </article>
 
+      <div class="grid gap-4">
+        <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Cash flow</p>
+          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Gains et retraits</h2>
+          <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
+            Lecture operationnelle de ce qui est disponible, encore en attente ou impacte par des
+            remboursements.
+          </p>
+
+          <div class="mt-6 grid gap-3">
+            <div
+              v-for="card in financeCards"
+              :key="card.label"
+              class="rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-4"
+            >
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+                    {{ card.label }}
+                  </p>
+                  <p class="mt-3 text-2xl font-semibold text-white">
+                    {{ card.value }}
+                  </p>
+                </div>
+                <span class="rounded-full px-3 py-1 text-xs font-semibold" :class="card.badgeClass">
+                  {{ card.badge }}
+                </span>
+              </div>
+              <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
+                {{ card.description }}
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-6 rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-4">
+            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Retraits</p>
+            <p class="mt-3 text-lg font-semibold text-[#E6EDF7]">
+              {{ finance.withdrawalMode || "Manual settlement" }}
+            </p>
+            <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
+              {{ finance.withdrawalNote || defaultWithdrawalNote }}
+            </p>
+          </div>
+
+          <div class="mt-6 rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-4">
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
+                  Withdrawal workspace
+                </p>
+                <p class="mt-2 text-lg font-semibold text-[#E6EDF7]">Manual payout pipeline</p>
+                <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
+                  Suivez le solde retirable, les demandes en attente et les versements deja executes
+                  par l'administration.
+                </p>
+              </div>
+              <NuxtLink
+                to="/artist/withdrawals"
+                class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-4 py-2 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+              >
+                Gérer les retraits
+              </NuxtLink>
+            </div>
+
+            <div class="mt-5 grid gap-3 md:grid-cols-2">
+              <div
+                v-for="card in withdrawalCards"
+                :key="card.label"
+                class="rounded-[18px] border border-[#1A1F2A] bg-[#090017] p-4"
+              >
+                <p class="text-xs uppercase tracking-[0.16em] text-[#4A6CF7]">
+                  {{ card.label }}
+                </p>
+                <p class="mt-3 text-2xl font-semibold text-white">
+                  {{ card.value }}
+                </p>
+                <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">
+                  {{ card.description }}
+                </p>
+              </div>
+            </div>
+
+            <div
+              v-if="recentWithdrawalItems.length === 0"
+              class="mt-5 rounded-[18px] border border-[#1A1F2A] bg-[#090017] px-4 py-4 text-sm text-[#A0ADB4]"
+            >
+              Aucune demande de retrait pour le moment.
+            </div>
+
+            <div v-else class="mt-5 grid gap-3">
+              <div
+                v-for="request in recentWithdrawalItems"
+                :key="request.publicId"
+                class="rounded-[18px] border border-[#1A1F2A] bg-[#090017] p-4"
+              >
+                <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-3">
+                      <span
+                        class="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em]"
+                        :class="withdrawalStatusClass(request.status)"
+                      >
+                        {{ request.status }}
+                      </span>
+                      <span class="text-xs uppercase tracking-[0.12em] text-[#7F8A99]">
+                        {{ formatDate(request.createdAt) }}
+                      </span>
+                    </div>
+                    <p class="mt-3 text-base font-semibold text-[#E6EDF7]">
+                      {{ request.amountLabel }}
+                    </p>
+                    <p v-if="request.adminNote" class="mt-2 text-sm leading-6 text-[#BFDBFE]">
+                      Note admin : {{ request.adminNote }}
+                    </p>
+                  </div>
+                  <NuxtLink
+                    to="/artist/withdrawals"
+                    class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#E6EDF7] transition hover:border-[#4A6CF7] hover:text-[#9DB4FF]"
+                  >
+                    Ouvrir
+                  </NuxtLink>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
+          <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Top oeuvres</p>
+              <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Performances catalogue</h2>
+            </div>
+            <NuxtLink
+              to="/artist/sales"
+              class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-4 py-2 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+            >
+              Voir les ventes
+            </NuxtLink>
+          </div>
+
+          <div
+            v-if="!loading && analytics.topArtworks.length === 0"
+            class="mt-6 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4 text-sm text-[#A0ADB4]"
+          >
+            Aucune oeuvre vendue pour le moment.
+          </div>
+
+          <div v-else class="mt-6 grid gap-3">
+            <div
+              v-for="artwork in analytics.topArtworks"
+              :key="artwork.artworkId"
+              class="rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-4"
+            >
+              <div class="flex items-start justify-between gap-4">
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-semibold text-[#E6EDF7]">
+                    {{ artwork.title }}
+                  </p>
+                  <p class="mt-2 text-sm text-[#A0ADB4]">{{ artwork.salesCount }} vente(s)</p>
+                </div>
+                <div class="text-right text-sm">
+                  <p class="font-semibold text-[#9DB2FF]">{{ artwork.artistEarnings }}</p>
+                  <p class="mt-1 text-[#7F8A99]">{{ artwork.grossRevenue }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="grid gap-4 xl:grid-cols-[1.35fr_0.95fr]">
       <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-        <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-          Top oeuvres
-        </p>
-        <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
-          Meilleures performances
-        </h2>
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Activite recente</p>
+            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Dernieres ventes</h2>
+          </div>
+          <NuxtLink
+            to="/artist/sales"
+            class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-5 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+          >
+            Ouvrir le journal complet
+          </NuxtLink>
+        </div>
 
         <div
-          v-if="!loading && analytics.topArtworks.length === 0"
+          v-if="!loading && recentSales.length === 0"
           class="mt-6 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4 text-sm text-[#A0ADB4]"
         >
-          Aucune vente enregistree pour le moment.
+          Les ventes apparaitront ici des qu'un collectionneur finalisera un achat.
+        </div>
+
+        <div v-else class="mt-6 overflow-hidden rounded-[22px] border border-[#1A1F2A]">
+          <table class="min-w-full divide-y divide-[#1A1F2A] text-left text-sm">
+            <thead class="bg-[#01050E] text-xs uppercase tracking-[0.16em] text-[#7F8A99]">
+              <tr>
+                <th class="px-5 py-4 font-semibold">Commande</th>
+                <th class="px-5 py-4 font-semibold">Oeuvre</th>
+                <th class="px-5 py-4 font-semibold">Acheteur</th>
+                <th class="px-5 py-4 font-semibold">Brut</th>
+                <th class="px-5 py-4 font-semibold">Commission</th>
+                <th class="px-5 py-4 font-semibold">Gain</th>
+                <th class="px-5 py-4 font-semibold">Etat</th>
+                <th class="px-5 py-4 font-semibold">Date</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#1A1F2A] bg-[#050916]">
+              <tr v-for="sale in recentSales" :key="sale.id">
+                <td class="px-5 py-4 font-semibold text-[#E6EDF7]">{{ sale.reference }}</td>
+                <td class="px-5 py-4 text-[#D8E1F0]">{{ sale.artworkTitle }}</td>
+                <td class="px-5 py-4 text-[#A0ADB4]">{{ sale.buyer }}</td>
+                <td class="px-5 py-4 text-[#DCE7FF]">{{ sale.amount }}</td>
+                <td class="px-5 py-4 text-[#A0ADB4]">{{ sale.commissionAmount }}</td>
+                <td class="px-5 py-4 font-semibold text-[#9DB2FF]">
+                  {{ sale.availableEarnings }}
+                </td>
+                <td class="px-5 py-4">
+                  <span
+                    class="rounded-full px-3 py-1 text-xs font-semibold"
+                    :class="settlementClass(sale.settlementStatus)"
+                  >
+                    {{ sale.settlementStatus }}
+                  </span>
+                </td>
+                <td class="px-5 py-4 text-[#7F8A99]">{{ formatDate(sale.createdAt) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Notifications</p>
+            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Centre d'alertes</h2>
+          </div>
+          <NuxtLink
+            to="/notifications"
+            class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-4 py-2 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+          >
+            {{ notifications.unreadCount || 0 }} non lue(s)
+          </NuxtLink>
+        </div>
+
+        <div
+          v-if="!loading && notificationItems.length === 0"
+          class="mt-6 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4 text-sm text-[#A0ADB4]"
+        >
+          Aucune notification recente pour le moment.
         </div>
 
         <div v-else class="mt-6 grid gap-3">
           <div
-            v-for="artwork in analytics.topArtworks"
-            :key="artwork.artworkId"
+            v-for="notification in notificationItems"
+            :key="notification.id"
             class="rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-4"
           >
-            <p class="text-sm font-semibold text-[#E6EDF7]">{{ artwork.title }}</p>
-            <p class="mt-2 text-sm text-[#A0ADB4]">
-              {{ artwork.salesCount }} vente(s) · {{ artwork.grossRevenue }}
-            </p>
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span
+                    class="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em]"
+                    :class="notificationClass(notification.type)"
+                  >
+                    {{ notificationLabel(notification.type) }}
+                  </span>
+                  <span v-if="!notification.read" class="text-xs font-semibold text-[#4A6CF7]">
+                    Nouveau
+                  </span>
+                </div>
+                <h3 class="mt-4 text-sm font-semibold text-[#E6EDF7]">
+                  {{ notification.title }}
+                </h3>
+                <p class="mt-2 text-sm leading-6 text-[#A0ADB4]">
+                  {{ notification.message }}
+                </p>
+              </div>
+              <span class="shrink-0 text-xs uppercase tracking-[0.12em] text-[#7F8A99]">
+                {{ formatDate(notification.createdAt) }}
+              </span>
+            </div>
           </div>
         </div>
       </article>
-    </section>
-
-    <section class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-            Activite recente
-          </p>
-          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">
-            Dernieres ventes
-          </h2>
-        </div>
-        <NuxtLink
-          to="/artist/sales"
-          class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-5 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
-        >
-          Voir toutes les ventes
-        </NuxtLink>
-      </div>
-
-      <div
-        v-if="!loading && recentSales.length === 0"
-        class="mt-6 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4 text-sm text-[#A0ADB4]"
-      >
-        Les ventes apparaitront ici des qu'un collectionneur finalisera un achat.
-      </div>
-
-      <div
-        v-else
-        class="mt-6 overflow-hidden rounded-[22px] border border-[#1A1F2A]"
-      >
-        <table class="min-w-full divide-y divide-[#1A1F2A] text-left text-sm">
-          <thead class="bg-[#01050E] text-xs uppercase tracking-[0.16em] text-[#7F8A99]">
-            <tr>
-              <th class="px-5 py-4 font-semibold">Commande</th>
-              <th class="px-5 py-4 font-semibold">Oeuvre</th>
-              <th class="px-5 py-4 font-semibold">Acheteur</th>
-              <th class="px-5 py-4 font-semibold">Montant net</th>
-              <th class="px-5 py-4 font-semibold">Date</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-[#1A1F2A] bg-[#050916]">
-            <tr v-for="sale in recentSales" :key="sale.id">
-              <td class="px-5 py-4 font-semibold text-[#E6EDF7]">{{ sale.reference }}</td>
-              <td class="px-5 py-4 text-[#D8E1F0]">{{ sale.artworkTitle }}</td>
-              <td class="px-5 py-4 text-[#A0ADB4]">{{ sale.buyer }}</td>
-              <td class="px-5 py-4 font-semibold text-[#9DB2FF]">{{ sale.netAmount }}</td>
-              <td class="px-5 py-4 text-[#7F8A99]">{{ formatDate(sale.createdAt) }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
     </section>
   </ArtistShell>
 </template>
@@ -195,18 +422,30 @@ import { computed, onMounted, ref } from "vue";
 import { navigateTo } from "#app";
 
 definePageMeta({
-  middleware: "artist",
+  middleware: "artist"
 });
+
+const defaultWithdrawalNote =
+  "Les retraits automatiques ne sont pas encore connectes. Utilisez ce solde pour piloter vos versements manuels.";
 
 const loading = ref(true);
 const errorMessage = ref("");
 const stats = ref([]);
 const performance = ref({});
+const finance = ref({});
+const withdrawalFinance = ref({});
+const withdrawalSummary = ref({});
 const analytics = ref({
   salesByMonth: [],
   topArtworks: [],
+  statusBreakdown: []
+});
+const notifications = ref({
+  unreadCount: 0,
+  items: []
 });
 const recentSales = ref([]);
+const recentWithdrawals = ref([]);
 
 const performanceCards = computed(() => {
   const data = performance.value || {};
@@ -215,28 +454,98 @@ const performanceCards = computed(() => {
     {
       label: "Croissance",
       value: `${data.revenueGrowthPercent ?? 0}%`,
-      description: "Evolution du CA vs mois precedent.",
+      description: "Evolution des gains disponibles vs mois precedent."
     },
     {
       label: "Panier moyen",
       value: data.avgSaleValue || "EUR 0.00",
-      description: "Montant moyen par vente confirmee.",
+      description: "Montant brut moyen par vente confirmee."
     },
     {
       label: "Conversion",
       value: `${data.conversionRate ?? 0}%`,
-      description: "Ratio ventes / favoris sur votre catalogue.",
+      description: "Ratio ventes / favoris sur votre catalogue."
     },
+    {
+      label: "Audience",
+      value: `${data.followersTotal ?? 0} followers`,
+      description: `${data.artworksTotal ?? 0} oeuvre(s) publiee(s) dans votre studio.`
+    }
   ];
 });
 
+const financeCards = computed(() => {
+  const data = finance.value || {};
+
+  return [
+    {
+      label: "Disponible",
+      value: data.availableBalance || "EUR 0.00",
+      description: "Gains confirmes actuellement disponibles pour votre suivi de retrait.",
+      badge: "Ready",
+      badgeClass: "bg-[#12301F] text-[#86EFAC]"
+    },
+    {
+      label: "En attente",
+      value: data.pendingBalance || "EUR 0.00",
+      description: "Montant encore bloque tant que le paiement n'est pas totalement securise.",
+      badge: "Pending",
+      badgeClass: "bg-[#2A2410] text-[#FDE68A]"
+    },
+    {
+      label: "Remboursements",
+      value: data.refundedAmount || "EUR 0.00",
+      description: "Part brute deja remboursee ou retiree de votre activite.",
+      badge: `${data.refundCount ?? 0} dossier(s)`,
+      badgeClass: "bg-[#3A1620] text-[#FECACA]"
+    },
+    {
+      label: "Commission",
+      value: data.totalCommission || "EUR 0.00",
+      description: `Commission plateforme cumulee (${data.commissionRate || "7% HT"}).`,
+      badge: "Platform",
+      badgeClass: "bg-[#1E2540] text-[#9DB2FF]"
+    }
+  ];
+});
+
+const withdrawalCards = computed(() => {
+  const data = withdrawalFinance.value || {};
+  const counts = withdrawalSummary.value || {};
+
+  return [
+    {
+      label: "Disponible a demander",
+      value: data.availableToWithdraw || "EUR 0.00",
+      description: "Solde net restant apres demandes en attente et versements deja effectues."
+    },
+    {
+      label: "Demandes en attente",
+      value: data.pendingWithdrawalAmount || "EUR 0.00",
+      description: `${counts.requestedCount ?? 0} demande(s) encore en revue admin.`
+    },
+    {
+      label: "Deja verse",
+      value: data.paidOutAmount || "EUR 0.00",
+      description: `${counts.paidCount ?? 0} demande(s) deja marquees comme payees.`
+    },
+    {
+      label: "Minimum",
+      value: data.minimumRequestAmount || "EUR 25.00",
+      description: `${counts.totalRequests ?? 0} demande(s) de retrait au total.`
+    }
+  ];
+});
+
+const statusBreakdown = computed(() => analytics.value.statusBreakdown || []);
+const notificationItems = computed(() => notifications.value.items || []);
+const recentWithdrawalItems = computed(() => recentWithdrawals.value || []);
+
 const maxMonthlyRevenue = computed(() =>
   Math.max(
-    ...(analytics.value.salesByMonth || []).map(
-      (month) => month.grossRevenueValue || 0,
-    ),
-    1,
-  ),
+    ...(analytics.value.salesByMonth || []).map((month) => month.availableEarningsValue || 0),
+    1
+  )
 );
 
 onMounted(async () => {
@@ -250,14 +559,76 @@ function barHeight(value) {
 
 function formatDate(value) {
   if (!value) {
-    return "—";
+    return "-";
   }
 
-  return new Date(value).toLocaleDateString("fr-FR", {
+  return new Date(value).toLocaleString("fr-FR", {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
   });
+}
+
+function settlementClass(status) {
+  if (status === "Available" || status === "Paid") {
+    return "bg-[#12301F] text-[#86EFAC]";
+  }
+
+  if (status === "Refunded" || status === "Partially refunded") {
+    return "bg-[#3A1620] text-[#FECACA]";
+  }
+
+  if (status === "Under review") {
+    return "bg-[#1E2540] text-[#9DB2FF]";
+  }
+
+  if (status === "Failed" || status === "Canceled") {
+    return "bg-[#30111A] text-[#FCA5A5]";
+  }
+
+  return "bg-[#2A2410] text-[#FDE68A]";
+}
+
+function notificationLabel(type) {
+  if (type === "sale") {
+    return "Vente";
+  }
+
+  if (type === "withdrawal") {
+    return "Retrait";
+  }
+
+  return "Systeme";
+}
+
+function notificationClass(type) {
+  if (type === "sale") {
+    return "bg-[#12301F] text-[#86EFAC]";
+  }
+
+  if (type === "withdrawal") {
+    return "bg-[#2A2410] text-[#FDE68A]";
+  }
+
+  return "bg-[#1E2540] text-[#9DB2FF]";
+}
+
+function withdrawalStatusClass(status) {
+  if (status === "PAID") {
+    return "bg-[#12301F] text-[#86EFAC]";
+  }
+
+  if (status === "APPROVED") {
+    return "bg-[#1E2540] text-[#9DB2FF]";
+  }
+
+  if (status === "REJECTED" || status === "CANCELED") {
+    return "bg-[#3A1620] text-[#FECACA]";
+  }
+
+  return "bg-[#2A2410] text-[#FDE68A]";
 }
 
 async function loadDashboard() {
@@ -266,16 +637,25 @@ async function loadDashboard() {
 
   try {
     const response = await $fetch("/api/artists/me/dashboard", {
-      credentials: "include",
+      credentials: "include"
     });
 
     stats.value = response.stats || [];
     performance.value = response.performance || {};
+    finance.value = response.finance || {};
+    withdrawalFinance.value = response.withdrawals || {};
+    withdrawalSummary.value = response.withdrawalSummary || {};
     analytics.value = response.analytics || {
       salesByMonth: [],
       topArtworks: [],
+      statusBreakdown: []
+    };
+    notifications.value = response.notifications || {
+      unreadCount: 0,
+      items: []
     };
     recentSales.value = response.recentSales || [];
+    recentWithdrawals.value = response.recentWithdrawals || [];
   } catch (error) {
     if (error?.statusCode === 401) {
       await navigateTo("/login");
@@ -287,8 +667,7 @@ async function loadDashboard() {
       return;
     }
 
-    errorMessage.value =
-      error?.data?.message || "Impossible de charger le dashboard artiste.";
+    errorMessage.value = error?.data?.message || "Impossible de charger le dashboard artiste.";
   } finally {
     loading.value = false;
   }

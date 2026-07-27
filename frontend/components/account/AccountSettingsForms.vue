@@ -134,6 +134,7 @@
                   :disabled="savingPassword"
                   type="password"
                   autocomplete="new-password"
+                  :minlength="MIN_PASSWORD_LENGTH"
                   class="h-12 border-b border-slate-750 bg-slate-900 px-5 text-body-1 text-slate-100 outline-none focus:border-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </label>
@@ -144,10 +145,15 @@
                   :disabled="savingPassword"
                   type="password"
                   autocomplete="new-password"
+                  :minlength="MIN_PASSWORD_LENGTH"
                   class="h-12 border-b border-slate-750 bg-slate-900 px-5 text-body-1 text-slate-100 outline-none focus:border-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </label>
             </div>
+            <PasswordStrengthFeedback
+              :password="password.next"
+              :user-inputs="[profile.username, profile.email]"
+            />
           </div>
 
           <button
@@ -231,7 +237,8 @@ import AccountSettingsSidebar from "~/components/account/AccountSettingsSidebar.
 import { useAuthStore } from "~/stores/auth";
 import {
   getPasswordConfirmationError,
-  getPasswordValidationError
+  getPasswordValidationError,
+  MIN_PASSWORD_LENGTH
 } from "~/utils/password-validation";
 
 const props = defineProps({
@@ -251,11 +258,19 @@ const successMessage = ref("");
 const errorMessage = ref("");
 const showArtistWorkspaceSection = computed(() => !auth.isAdmin);
 const artistWorkspaceRoute = computed(() =>
-  auth.isArtist || auth.hasArtistApplication ? "/artist-profile" : "/become-artist"
+  auth.isVerifiedArtist
+    ? "/artist"
+    : auth.isArtist || auth.hasArtistApplication
+      ? "/artist-profile"
+      : "/become-artist"
 );
 const artistWorkspaceTitle = computed(() => {
+  if (auth.isVerifiedArtist) {
+    return "Artist dashboard";
+  }
+
   if (auth.isArtist) {
-    return "Artist workspace";
+    return "Artist profile";
   }
 
   if (auth.artistApplicationStatus === "pending") {
@@ -273,6 +288,10 @@ const artistWorkspaceTitle = computed(() => {
   return "Become an artist";
 });
 const artistWorkspaceDescription = computed(() => {
+  if (auth.isVerifiedArtist) {
+    return "Open your artist dashboard, review sales analytics, commissions, gains and recent alerts from one place.";
+  }
+
   if (auth.isArtist) {
     return "Manage your artist profile, review your public information and keep access to your signed agreement.";
   }
@@ -292,6 +311,10 @@ const artistWorkspaceDescription = computed(() => {
   return "Apply to sell your artworks on Make It Art and unlock your artist profile once the administration approves your request.";
 });
 const artistWorkspaceActionLabel = computed(() => {
+  if (auth.isVerifiedArtist) {
+    return "Open artist dashboard";
+  }
+
   if (auth.isArtist) {
     return "Open artist profile";
   }
@@ -357,7 +380,7 @@ async function updatePassword() {
     return;
   }
   const validationError =
-    getPasswordValidationError(password.next) ||
+    getPasswordValidationError(password.next, [profile.username, profile.email]) ||
     getPasswordConfirmationError(password.next, password.confirmation);
   if (validationError) {
     errorMessage.value = validationError;

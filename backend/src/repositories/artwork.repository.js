@@ -118,7 +118,11 @@ async function createArtwork({
   price,
   protection,
   imagePath,
-  previewPath,
+  hdPath = null,
+  previewPath = null,
+  storageProvider = "local",
+  mediaStatus = "ready",
+  watermarkApplied = false
 }) {
   const priceAmount = parsePriceAmount(price);
   return prisma.artwork.create({
@@ -136,8 +140,12 @@ async function createArtwork({
       reservedQuantity: 0,
       favoriteCount: 0,
       protection: Boolean(protection),
-      imagePath: imagePath || null,
-      previewPath: previewPath || null,
+      imagePath: imagePath || previewPath || null,
+      hdPath: hdPath || null,
+      previewPath: previewPath || imagePath || null,
+      storageProvider: storageProvider || "local",
+      mediaStatus: mediaStatus || "ready",
+      watermarkApplied: Boolean(watermarkApplied),
       moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED,
       moderationNote: null,
       moderatedAt: null,
@@ -156,7 +164,7 @@ async function updateArtwork({
   categoryId,
   price,
   protection,
-  imagePath,
+  imagePath
 }) {
   const existing = await findOwnedArtwork({ artworkId, artistId });
 
@@ -189,7 +197,7 @@ async function updateArtwork({
           }
         : {}),
       protection: Boolean(protection),
-      ...(imagePath ? { imagePath } : {}),
+      ...(imagePath ? { imagePath } : {})
     },
     include: artworkInclude
   });

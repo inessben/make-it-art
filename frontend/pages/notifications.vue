@@ -5,9 +5,7 @@
     >
       <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">
-            Notifications
-          </p>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Notifications</p>
           <h1 class="mt-4 text-[clamp(2rem,2.5vw,2.8rem)] font-semibold leading-[1.05]">
             Centre de notifications
           </h1>
@@ -30,7 +28,7 @@
             class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-6 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
             @click="navigateBack"
           >
-            Retour au profil
+            Retour au compte
           </button>
         </div>
       </div>
@@ -41,12 +39,10 @@
         </span>
         <label class="rounded-2xl border border-[#1A1F2A] bg-[#090017] px-4 py-3">
           <span class="sr-only">Filtrer</span>
-          <select
-            v-model="typeFilter"
-            class="bg-transparent text-sm text-[#E6EDF7] outline-none"
-          >
+          <select v-model="typeFilter" class="bg-transparent text-sm text-[#E6EDF7] outline-none">
             <option value="all">Toutes</option>
             <option value="sale">Ventes</option>
+            <option value="withdrawal">Retraits</option>
             <option value="system">Systeme</option>
           </select>
         </label>
@@ -79,9 +75,7 @@
           :key="notification.id"
           class="rounded-[24px] border bg-[#090017] p-6 transition"
           :class="
-            notification.read
-              ? 'border-[#1A1F2A] opacity-80'
-              : 'border-[#4A6CF7]/40 bg-[#0A1020]'
+            notification.read ? 'border-[#1A1F2A] opacity-80' : 'border-[#4A6CF7]/40 bg-[#0A1020]'
           "
         >
           <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -110,11 +104,11 @@
 
             <div class="flex shrink-0 flex-wrap gap-3">
               <NuxtLink
-                v-if="notification.type === 'sale' && auth.isVerifiedArtist"
-                to="/artist/sales"
+                v-if="notificationRoute(notification)"
+                :to="notificationRoute(notification)"
                 class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-4 py-2 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
               >
-                Voir la vente
+                {{ notificationActionLabel(notification.type) }}
               </NuxtLink>
               <button
                 v-if="!notification.read"
@@ -138,7 +132,7 @@ import { navigateTo } from "#app";
 import { useAuthStore } from "~/stores/auth";
 
 definePageMeta({
-  middleware: "auth",
+  middleware: "auth"
 });
 
 const auth = useAuthStore();
@@ -153,9 +147,7 @@ const filteredNotifications = computed(() => {
     return notifications.value;
   }
 
-  return notifications.value.filter(
-    (notification) => notification.type === typeFilter.value,
-  );
+  return notifications.value.filter((notification) => notification.type === typeFilter.value);
 });
 
 onMounted(async () => {
@@ -167,6 +159,10 @@ function typeLabel(type) {
     return "Vente";
   }
 
+  if (type === "withdrawal") {
+    return "Retrait";
+  }
+
   return "Systeme";
 }
 
@@ -175,7 +171,35 @@ function typeClass(type) {
     return "bg-[#12301F] text-[#86EFAC]";
   }
 
+  if (type === "withdrawal") {
+    return "bg-[#2A2410] text-[#FDE68A]";
+  }
+
   return "bg-[#1E2540] text-[#9DB2FF]";
+}
+
+function notificationRoute(notification) {
+  if (notification?.type === "sale" && auth.isVerifiedArtist) {
+    return "/artist/sales";
+  }
+
+  if (notification?.type === "withdrawal" && auth.isVerifiedArtist) {
+    return "/artist/withdrawals";
+  }
+
+  return "";
+}
+
+function notificationActionLabel(type) {
+  if (type === "sale") {
+    return "Voir la vente";
+  }
+
+  if (type === "withdrawal") {
+    return "Voir le retrait";
+  }
+
+  return "Ouvrir";
 }
 
 function formatDate(value) {
@@ -188,12 +212,12 @@ function formatDate(value) {
     month: "short",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit",
+    minute: "2-digit"
   });
 }
 
 function navigateBack() {
-  return navigateTo("/profile");
+  return navigateTo("/account-settings");
 }
 
 async function loadNotifications() {
@@ -202,7 +226,7 @@ async function loadNotifications() {
 
   try {
     const response = await $fetch("/api/notifications/me", {
-      credentials: "include",
+      credentials: "include"
     });
 
     notifications.value = response.notifications || [];
@@ -213,8 +237,7 @@ async function loadNotifications() {
       return;
     }
 
-    errorMessage.value =
-      error?.data?.message || "Impossible de charger vos notifications.";
+    errorMessage.value = error?.data?.message || "Impossible de charger vos notifications.";
   } finally {
     loading.value = false;
   }
@@ -224,13 +247,12 @@ async function markRead(notificationId) {
   try {
     await $fetch(`/api/notifications/${notificationId}/read`, {
       method: "PATCH",
-      credentials: "include",
+      credentials: "include"
     });
 
     await loadNotifications();
   } catch (error) {
-    errorMessage.value =
-      error?.data?.message || "Impossible de mettre a jour la notification.";
+    errorMessage.value = error?.data?.message || "Impossible de mettre a jour la notification.";
   }
 }
 
@@ -238,7 +260,7 @@ async function markAllRead() {
   try {
     await $fetch("/api/notifications/me/read-all", {
       method: "PATCH",
-      credentials: "include",
+      credentials: "include"
     });
 
     await loadNotifications();

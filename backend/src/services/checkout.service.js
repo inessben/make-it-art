@@ -12,15 +12,13 @@ const { getStripeClient } = require("../lib/stripe");
 const { getCartSummary, withLockedPayableCart } = require("./cart.service");
 const { cancelSupersededCheckouts, CheckoutRecoveryError } = require("./checkout-recovery.service");
 const { reconcilePaymentIntent } = require("./payment-monitoring.service");
+const { tryCreatePaymentCustomerContext } = require("./saved-payment-method.service");
 
 const orderRepository = require("../repositories/order.repository");
 const notificationRepository = require("../repositories/notification.repository");
 const { sendArtistSaleEmail } = require("./mail.service");
 const { parsePriceValue } = require("../utils/serialize-marketplace");
-const {
-  computeNetRevenue,
-  formatOrderReference,
-} = require("../utils/commerce");
+const { computeNetRevenue, formatOrderReference } = require("../utils/commerce");
 
 /**
  * Stripe-based checkout flow and alternative "simple" checkout flow are merged here due to conflict.
@@ -240,11 +238,18 @@ async function createPendingCheckout({
   );
 }
 
-function assertStripeIntentMatchesOrder(paymentIntent, order) {
+function stripeId(value) {
+  return typeof value === "string" ? value : value?.id;
+}
+
+function assertStripeIntentMatchesOrder(paymentIntent, order, expectedCustomerId) {
+  const intentCustomerId = stripeId(paymentIntent.customer);
+
   return (
     paymentIntent.amount === order.totalAmount &&
     paymentIntent.currency === order.currency.toLowerCase() &&
-    paymentIntent.metadata?.order_id === order.publicId
+    paymentIntent.metadata?.order_id === order.publicId &&
+    (!intentCustomerId || !expectedCustomerId || intentCustomerId === expectedCustomerId)
   );
 }
 
@@ -298,6 +303,17 @@ async function renewCanceledCheckoutSnapshot({ userId, expectedVersion }) {
 async function createOrRetrievePaymentIntent(stripeClient, checkout) {
   const { order, payment } = checkout;
   let paymentIntent;
+  const customerContext = await tryCreatePaymentCustomerContext({
+    userId: order.userId,
+    stripeClient,
+    prismaClient: prisma
+  });
+
+  if (customerContext.errorCode) {
+    console.warn("Stripe saved payment methods are unavailable for this checkout", {
+      code: customerContext.errorCode
+    });
+  }
 
   try {
     if (payment.providerPaymentId) {
@@ -308,6 +324,7 @@ async function createOrRetrievePaymentIntent(stripeClient, checkout) {
           amount: order.totalAmount,
           currency: order.currency.toLowerCase(),
           receipt_email: order.billingSnapshot?.email || undefined,
+          ...(customerContext.customerId ? { customer: customerContext.customerId } : {}),
           ...(env.stripe.paymentMethodConfigurationId
             ? { payment_method_configuration: env.stripe.paymentMethodConfigurationId }
             : {}),
@@ -338,7 +355,7 @@ async function createOrRetrievePaymentIntent(stripeClient, checkout) {
     throw checkoutError;
   }
 
-  if (!assertStripeIntentMatchesOrder(paymentIntent, order)) {
+  if (!assertStripeIntentMatchesOrder(paymentIntent, order, customerContext.customerId)) {
     await markOrderForReview(order.id);
     throw new CheckoutError(
       "CHECKOUT_REVIEW_REQUIRED",
@@ -348,6 +365,11 @@ async function createOrRetrievePaymentIntent(stripeClient, checkout) {
   }
 
   const requiresConfirmation = isPaymentIntentReusable(paymentIntent.status);
+  const intentCustomerId = stripeId(paymentIntent.customer);
+  const customerSessionClientSecret =
+    requiresConfirmation && intentCustomerId && intentCustomerId === customerContext.customerId
+      ? customerContext.customerSessionClientSecret
+      : null;
 
   if (requiresConfirmation && !paymentIntent.client_secret) {
     throw new CheckoutError(
@@ -386,7 +408,9 @@ async function createOrRetrievePaymentIntent(stripeClient, checkout) {
     paymentIntent,
     orderStatus: synchronizedOrder.status,
     requiresConfirmation,
-    clientSecret: requiresConfirmation ? paymentIntent.client_secret : null
+    clientSecret: requiresConfirmation ? paymentIntent.client_secret : null,
+    customerSessionClientSecret,
+    savedPaymentMethodsAvailable: Boolean(customerSessionClientSecret)
   };
 }
 
@@ -472,7 +496,9 @@ async function initializeCheckout({
     billingDetails: checkout.order.billingSnapshot,
     paymentStatus: paymentState.paymentIntent.status,
     requiresConfirmation: paymentState.requiresConfirmation,
-    clientSecret: paymentState.clientSecret
+    clientSecret: paymentState.clientSecret,
+    customerSessionClientSecret: paymentState.customerSessionClientSecret,
+    savedPaymentMethodsAvailable: paymentState.savedPaymentMethodsAvailable
   };
 }
 
@@ -486,7 +512,7 @@ function normalizeCheckoutItems(items) {
   return items
     .map((item) => ({
       artworkId: Number.parseInt(item.artworkId, 10),
-      quantity: Math.max(1, Math.floor(Number(item.quantity || 1))),
+      quantity: Math.max(1, Math.floor(Number(item.quantity || 1)))
     }))
     .filter((item) => Number.isInteger(item.artworkId) && item.artworkId > 0);
 }
@@ -502,16 +528,16 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
   const artworks = await prisma.artwork.findMany({
     where: {
       id: {
-        in: artworkIds,
-      },
+        in: artworkIds
+      }
     },
     include: {
       artist: {
         include: {
-          user: true,
-        },
-      },
-    },
+          user: true
+        }
+      }
+    }
   });
 
   if (artworks.length !== artworkIds.length) {
@@ -552,7 +578,7 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
         artwork,
         quantity: 1,
         unitPrice,
-        lineTotal: unitPrice,
+        lineTotal: unitPrice
       });
     }
   }
@@ -561,21 +587,21 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
     userId,
     lineItems: lineItems.map((lineItem) => ({
       artworkId: lineItem.artworkId,
-      unitPrice: lineItem.unitPrice,
+      unitPrice: lineItem.unitPrice
     })),
     paymentMethod: paymentMethod || "card",
-    totalAmount,
+    totalAmount
   });
 
   const buyer = await prisma.user.findUnique({
     where: {
-      id: userId,
+      id: userId
     },
     select: {
       id: true,
       username: true,
-      email: true,
-    },
+      email: true
+    }
   });
 
   const buyerLabel = buyer?.username || buyer?.email || "Un collectionneur";
@@ -596,7 +622,7 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
         lineItem.artwork.artist?.user?.username ||
         "Artiste",
       artworks: [],
-      grossAmount: 0,
+      grossAmount: 0
     };
 
     existing.artworks.push(lineItem.artwork.title || "Oeuvre");
@@ -623,10 +649,10 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
         buyer: {
           id: buyer?.id || userId,
           username: buyer?.username || null,
-          email: billingEmail || buyer?.email || null,
+          email: billingEmail || buyer?.email || null
         },
-        artworkTitles: notificationData.artworks,
-      },
+        artworkTitles: notificationData.artworks
+      }
     });
 
     if (notificationData.artistEmail) {
@@ -639,7 +665,7 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
           grossAmount: notificationData.grossAmount,
           netAmount: computeNetRevenue(notificationData.grossAmount),
           buyerLabel,
-          salesUrl: `${env.appBaseUrl}/artist/sales`,
+          salesUrl: `${env.appBaseUrl}/artist/sales`
         });
       } catch (error) {
         console.error("Artist sale email error:", error);
@@ -651,9 +677,7 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
     order: checkoutResult.order,
     payment: checkoutResult.payment,
     totalAmount,
-    billingEmail: billingEmail || buyer?.email || null,
-  };
-}
+    billingEmail: billingEmail || buyer?.email || null
   };
 }
 
@@ -662,5 +686,5 @@ module.exports = {
   RESERVATION_DURATION_MS,
   deriveIdempotencyKey,
   initializeCheckout,
-  createCheckout,
+  createCheckout
 };

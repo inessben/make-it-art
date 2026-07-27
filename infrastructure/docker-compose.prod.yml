@@ -101,6 +101,7 @@ services:
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       STRIPE_PAYMENT_METHOD_CONFIGURATION_ID: ${STRIPE_PAYMENT_METHOD_CONFIGURATION_ID}
+      SAVED_PAYMENT_METHOD_CONSENT_VERSION: ${SAVED_PAYMENT_METHOD_CONSENT_VERSION:-2026-07-26}
       PAYMENT_MARKET_COUNTRY: ${PAYMENT_MARKET_COUNTRY:-FR}
       PAYMENT_CUSTOMER_SCOPE: ${PAYMENT_CUSTOMER_SCOPE:-B2C}
       STRIPE_TAX_ENABLED: ${STRIPE_TAX_ENABLED:-false}
@@ -170,6 +171,8 @@ services:
     dns:
       - 1.1.1.1
       - 8.8.8.8
+    volumes:
+      - backend_uploads:/app/uploads
     networks:
       - app_net
 
@@ -242,6 +245,7 @@ services:
       - app_net
 
 volumes:
+  backend_uploads:
   db_data:
   redis_data:
   umami_db_data:

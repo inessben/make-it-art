@@ -53,6 +53,7 @@ databaseTest("checkout creates one server-priced PaymentIntent and reuses it", a
     assert.equal(createdIntent.amount, 2750);
     assert.equal(createdIntent.currency, "eur");
     assert.equal(createdIntent.receipt_email, fixture.buyer.email);
+    assert.match(createdIntent.customer, /^cus_/);
     assert.equal(createdIntent.metadata.order_id, first.orderId);
     assert.equal(createdIntent.metadata.merchant_of_record, "MAKE_IT_ART");
     assert.equal(createdIntent.metadata.customer_type, "B2C");
@@ -79,6 +80,8 @@ databaseTest("checkout creates one server-priced PaymentIntent and reuses it", a
     assert.equal(orders[0].commissionRateBps, 700);
     assert.equal(orders[0].payments[0].providerPaymentId, createdIntent.id);
     assert.equal(orders[0].payments[0].idempotencyKey.includes(clientIdempotencyKey), false);
+    assert.match(first.customerSessionClientSecret, /^cuss_/);
+    assert.equal(first.savedPaymentMethodsAvailable, true);
 
     const reservedArtwork = await prisma.artwork.findUnique({
       where: { id: fixture.artwork.id }
@@ -241,7 +244,9 @@ databaseTest(
       Object.assign(intent, {
         status: "succeeded",
         amount_received: intent.amount,
-        latest_charge: `ch_test_${marker.replaceAll("-", "")}`
+        latest_charge: `ch_test_${marker.replaceAll("-", "")}`,
+        payment_method: "pm_testsaved",
+        setup_future_usage: "on_session"
       });
 
       const reconciled = await initializeCheckout(input);
@@ -254,7 +259,17 @@ databaseTest(
         await prisma.cartItem.count({ where: { cart: { userId: fixture.buyer.id } } }),
         0
       );
-      assert.equal(await prisma.fulfillmentTask.count({ where: { orderId: storedOrder.id } }), 4);
+      assert.equal(await prisma.fulfillmentTask.count({ where: { orderId: storedOrder.id } }), 5);
+      assert.equal(
+        await prisma.savedPaymentMethodConsent.count({
+          where: {
+            userId: fixture.buyer.id,
+            providerPaymentMethodId: "pm_testsaved",
+            revokedAt: null
+          }
+        }),
+        1
+      );
 
       await processStripePaymentEvent({
         prismaClient: prisma,
@@ -268,7 +283,7 @@ databaseTest(
       const artwork = await prisma.artwork.findUnique({ where: { id: fixture.artwork.id } });
       assert.equal(artwork.stockQuantity, 0);
       assert.equal(artwork.reservedQuantity, 0);
-      assert.equal(await prisma.fulfillmentTask.count({ where: { orderId: storedOrder.id } }), 4);
+      assert.equal(await prisma.fulfillmentTask.count({ where: { orderId: storedOrder.id } }), 5);
     } finally {
       await cleanup(prisma, marker, fixture.userIds);
       await prisma.$disconnect();
@@ -655,6 +670,8 @@ databaseTest("expired checkout cancellation releases inventory and is idempotent
 function createFakeStripe({ amountOffset = 0 } = {}) {
   const intents = new Map();
   const byId = new Map();
+  const customers = new Map();
+  let customerSessionCount = 0;
 
   return {
     intents,
@@ -662,6 +679,26 @@ function createFakeStripe({ amountOffset = 0 } = {}) {
       return [...byId.values()].filter((intent) => intent.cancellation_reason).length;
     },
     client: {
+      customers: {
+        async create(parameters) {
+          const id = `cus_test${customers.size + 1}`;
+          const customer = { id, ...parameters, deleted: false };
+          customers.set(id, customer);
+          return customer;
+        },
+        async retrieve(id) {
+          return customers.get(id);
+        }
+      },
+      customerSessions: {
+        async create() {
+          customerSessionCount += 1;
+          return {
+            id: `cuss_test${customerSessionCount}`,
+            client_secret: `cuss_test${customerSessionCount}_secret_test`
+          };
+        }
+      },
       paymentIntents: {
         async create(parameters, options) {
           if (intents.has(options.idempotencyKey)) {
@@ -674,6 +711,7 @@ function createFakeStripe({ amountOffset = 0 } = {}) {
             amount: parameters.amount + amountOffset,
             currency: parameters.currency,
             receipt_email: parameters.receipt_email,
+            customer: parameters.customer,
             payment_method_configuration: parameters.payment_method_configuration,
             metadata: parameters.metadata,
             status: "requires_payment_method",

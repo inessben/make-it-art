@@ -1,26 +1,32 @@
 export const artistNavigation = [
   {
     label: "Dashboard",
-    description: "Ventes, revenus et performances",
+    description: "Sales, revenue and performance",
     route: "/artist",
-    icon: "DB",
+    icon: "DB"
   },
   {
-    label: "Ventes",
-    description: "Historique detaille des transactions",
+    label: "Sales",
+    description: "Detailed transaction history",
     route: "/artist/sales",
-    icon: "SL",
+    icon: "SL"
+  },
+  {
+    label: "Withdrawals",
+    description: "Manual payout requests and tracking",
+    route: "/artist/withdrawals",
+    icon: "WD"
   },
   {
     label: "Portfolio",
-    description: "Profil public et oeuvres",
+    description: "Public profile and artworks",
     route: "/artist-profile",
-    icon: "PF",
+    icon: "PF"
   },
   {
     label: "Notifications",
-    description: "Alertes de vente et activite",
+    description: "Sales alerts and activity",
     route: "/notifications",
-    icon: "NT",
-  },
+    icon: "NT"
+  }
 ];
