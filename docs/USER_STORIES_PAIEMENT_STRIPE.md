@@ -1,7 +1,7 @@
 # Epic DEV9 — Paiement Stripe réel et sécurisé
 
 > **Milestone :** M5 — E-Commerce Ready  
-> **Statut :** ✅ suite complète — `PAY-US-01` à `PAY-US-11` implémentées
+> **Statut audité le 24 juillet 2026 :** cœur paiement et effets asynchrones implémentés ; politique France B2C codée ; configuration Dashboard, valeurs légales/fiscales et preuves live encore à fermer avant activation
 > **Date :** 18 juillet 2026  
 > **Périmètre initial :** achats ponctuels d'œuvres numériques en EUR
 
@@ -13,7 +13,7 @@ Le résultat attendu couvre :
 
 - un vrai `POST /api/v1/orders/checkout` ;
 - Stripe Payment Element, basé sur Stripe Elements ;
-- les parcours carte, Apple Pay et Google Pay lorsqu'ils sont disponibles ;
+- le parcours carte au lancement ; Apple Pay et Google Pay après leur recette réelle ;
 - l'authentification forte 3D Secure/SCA ;
 - les webhooks Stripe signés et idempotents ;
 - la confirmation, les échecs, les reprises et les remboursements ;
@@ -21,12 +21,14 @@ Le résultat attendu couvre :
 
 ## 2. Décision d'architecture
 
-Le checkout de Make It Art utilisera **Stripe Payment Element + PaymentIntent** dans une page hébergée par Make It Art.
+Le checkout de Make It Art utilise actuellement **Stripe Payment Element + PaymentIntent** dans une page hébergée par Make It Art.
+
+Stripe recommande désormais **Checkout Sessions avec `ui_mode: custom` + Payment Element** pour la plupart des paiements ponctuels. Le maintien temporaire de PaymentIntents est assumé pour le lancement carte parce que Make It Art contrôle déjà ses snapshots, réservations de stock, reprises et rapprochements. La migration vers Checkout Sessions custom est décidée et doit précéder taxes, remises, B2B, vente hors France ou nouveaux moyens de paiement (`PAY-US-16`).
 
 - `POST /api/v1/orders/checkout` crée ou réutilise un `PaymentIntent` côté serveur.
 - Le navigateur reçoit seulement le `client_secret` nécessaire à Stripe.js.
 - Le client confirme le paiement avec `stripe.confirmPayment(...)`.
-- Le serveur considère `payment_intent.succeeded`, reçu sur un webhook dont la signature est valide, comme la preuve canonique du paiement.
+- Le serveur considère `payment_intent.succeeded`, reçu sur un webhook signé ou relu directement depuis l'API Stripe par le job de rapprochement, comme la preuve canonique du paiement.
 - Une redirection vers la page de confirmation n'est jamais une preuve de paiement.
 - Cette architecture n'utilise pas Stripe Checkout hébergé : l'événement `checkout.session.completed` mentionné dans l'ancien cahier des charges n'est donc pas requis.
 
@@ -37,7 +39,7 @@ Le checkout de Make It Art utilisera **Stripe Payment Element + PaymentIntent** 
 | **P0**   | Obligatoire avant d'accepter un paiement réel                                  |
 | **P1**   | Obligatoire pour le cycle après-vente, livrable juste après le MVP de paiement |
 
-Ordre recommandé : `PAY-US-01` → `02` → `03` → `04` → `05` → `06` → `07` → `08` → `10` → `11`, puis `PAY-US-09`.
+Ordre recommandé : `PAY-US-01` → `02` → `03` → `04` → `05` → `06` → `07` → `08` → `10` → `11`, puis `PAY-US-09`, `12`, `13` et `14`.
 
 ## 4. Règles de sécurité non négociables
 
@@ -48,7 +50,7 @@ Ordre recommandé : `PAY-US-01` → `02` → `03` → `04` → `05` → `06` →
 5. Toute opération modifiant un paiement est authentifiée, autorisée, protégée contre le rejeu et idempotente.
 6. Les environnements Stripe sandbox et production utilisent des clés, des webhooks et des secrets distincts.
 7. Le paiement en production est servi uniquement en HTTPS, sans contenu mixte.
-8. Seul un webhook Stripe valide peut faire passer une commande à `PAID` et déclencher la livraison.
+8. Seul un webhook Stripe valide ou une relecture serveur authentifiée de ce même `PaymentIntent` peut faire passer une commande à `PAID` et déclencher la livraison.
 9. Un événement dupliqué, retardé ou reçu dans le désordre ne doit produire ni double débit ni double livraison.
 10. Aucun accès à une commande ne repose sur la difficulté à deviner son identifiant : l'autorisation du propriétaire est vérifiée à chaque requête.
 
@@ -77,7 +79,7 @@ Les transitions sont contrôlées côté serveur. Un événement ancien ne peut 
 
 **Priorité :** P0  
 **Dépendance :** aucune  
-**Statut :** ✅ Implémentée le 18 juillet 2026
+**Statut :** ✅ Implémentée le 18 juillet 2026, auditée le 19 juillet 2026
 
 **En tant que** collectionneur,  
 **je veux** que le montant et l'état de ma commande soient enregistrés sans ambiguïté,  
@@ -98,7 +100,7 @@ Les transitions sont contrôlées côté serveur. Un événement ancien ne peut 
 
 **Priorité :** P0  
 **Dépendance :** `PAY-US-01`  
-**Statut :** ✅ Implémentée le 18 juillet 2026
+**Statut :** ✅ Implémentée le 18 juillet 2026, protection CSRF renforcée le 19 juillet 2026
 
 **En tant que** collectionneur,  
 **je veux** revoir un panier dont le prix et la disponibilité sont fiables,  
@@ -118,7 +120,7 @@ Les transitions sont contrôlées côté serveur. Un événement ancien ne peut 
 
 **Priorité :** P0  
 **Dépendances :** `PAY-US-01`, `PAY-US-02`  
-**Statut :** ✅ Implémentée le 18 juillet 2026
+**Statut :** ✅ Implémentée le 18 juillet 2026, réutilisation inter-snapshot bloquée le 19 juillet 2026
 
 **En tant que** collectionneur,  
 **je veux** initialiser mon paiement de manière fiable,  
@@ -182,7 +184,7 @@ Les transitions sont contrôlées côté serveur. Un événement ancien ne peut 
 
 ### PAY-US-06 — Finaliser une commande exactement une fois
 
-**Statut :** ✅ Implémentée le 18 juillet 2026
+**Statut :** ✅ Implémentée le 19 juillet 2026 — finalisation atomique, worker récupérable, emails, droits et certificats durables présents
 
 **Priorité :** P0  
 **Dépendance :** `PAY-US-05`
@@ -204,7 +206,7 @@ Les transitions sont contrôlées côté serveur. Un événement ancien ne peut 
 
 ### PAY-US-07 — Afficher une confirmation fiable et privée
 
-**Statut :** ✅ Implémentée le 18 juillet 2026
+**Statut :** ✅ Implémentée le 19 juillet 2026 — page privée et email asynchrone sécurisé présents
 
 **Priorité :** P0  
 **Dépendance :** `PAY-US-06`
@@ -247,7 +249,7 @@ Les transitions sont contrôlées côté serveur. Un événement ancien ne peut 
 
 ### PAY-US-09 — Rembourser de façon contrôlée
 
-**Statut :** ✅ Implémentée le 18 juillet 2026
+**Statut :** ✅ Implémentée le 19 juillet 2026 — remboursement financier, notification asynchrone et révocation durable des droits présents
 
 **Priorité :** P1  
 **Dépendances :** `PAY-US-06`, rôles d'administration et politique de remboursement
@@ -269,7 +271,7 @@ Les transitions sont contrôlées côté serveur. Un événement ancien ne peut 
 
 ### PAY-US-10 — Protéger les secrets, les logs et l'exploitation
 
-**Statut :** ✅ Implémentée le 18 juillet 2026
+**Statut :** ✅ Implémentée le 19 juillet 2026 — protections, rapprochement, alertes et supervision des tâches/webhooks présents
 
 **Priorité :** P0  
 **Dépendance :** transverse
@@ -311,40 +313,145 @@ Les transitions sont contrôlées côté serveur. Un événement ancien ne peut 
 - **AC-05 — Sécurité applicative :** Étant donné un test hostile, quand un montant, une devise, une quantité, une commande ou un utilisateur est falsifié, alors le serveur rejette l'accès ou applique exclusivement ses valeurs de confiance.
 - **AC-06 — Non-régression :** Étant donné un double clic, un double checkout ou un double webhook, quand le scénario termine, alors une seule transaction Stripe, une seule commande payée et une seule livraison existent.
 - **AC-07 — Revue :** Étant donné une version candidate, quand elle est évaluée, alors la revue de code, l'analyse de dépendances et les tests de sécurité ne laissent aucune vulnérabilité haute ou critique non traitée.
-- **AC-08 — Go-live :** Étant donné le passage en production, quand la checklist est validée, alors clés live, secret live, URL HTTPS, événements abonnés, domaine des wallets, CSP, alertes et procédure de rotation ont chacun une preuve.
+- **AC-08 — Go-live :** Étant donné le passage en production, quand la checklist est validée, alors clés live, secret live, URL HTTPS, événements abonnés, Payment Method Configuration carte, CSP, alertes et procédure de rotation ont chacun une preuve. Les domaines wallet sont exigés seulement lors de la phase Apple Pay/Google Pay.
 - **AC-09 — Arrêt sûr :** Étant donné un incident après déploiement, quand le checkout est désactivé, alors aucun nouveau paiement ne démarre mais les webhooks et la finalisation des paiements déjà engagés continuent de fonctionner.
+
+### PAY-US-12 — Ne jamais rouvrir un paiement Stripe déjà engagé ou terminé
+
+**Statut :** ✅ Implémentée le 19 juillet 2026
+**Priorité :** P0
+**Dépendances :** `PAY-US-03`, `PAY-US-06`, `PAY-US-08`
+
+**En tant que** collectionneur,
+**je veux** que le checkout vérifie l'état réel du `PaymentIntent` avant d'afficher Stripe Elements,
+**afin de** ne jamais confirmer une seconde fois un paiement déjà soumis ou encaissé.
+
+#### Critères d'acceptation
+
+- **AC-01 — Liste positive :** Étant donné un `PaymentIntent`, quand le backend prépare ou reprend un checkout, alors un `client_secret` est retourné uniquement pour `requires_payment_method`, `requires_confirmation` ou `requires_action`.
+- **AC-02 — Succès terminal :** Étant donné un `PaymentIntent` `succeeded`, quand le checkout le relit, alors la finalisation atomique existante est exécutée, la réponse ne contient aucun `client_secret` et la commande retournée est `PAID`.
+- **AC-03 — Traitement engagé :** Étant donné un `PaymentIntent` `processing` ou `requires_capture`, quand le checkout le relit, alors la commande passe à `PAYMENT_PROCESSING`, aucun formulaire de paiement n'est remonté et le client est redirigé vers le suivi.
+- **AC-04 — Annulation :** Étant donné un `PaymentIntent` `canceled`, quand il est relu, alors la commande est annulée, les réservations sont libérées et aucun `client_secret` n'est retourné.
+- **AC-05 — Finalisation unique :** Étant donné une réconciliation immédiate suivie du webhook Stripe retardé, quand les deux sont traités, alors stock, panier, droits et tâches de livraison ne sont finalisés qu'une fois.
+- **AC-06 — Défense frontend :** Étant donné une réponse checkout terminale ou sans `requiresConfirmation`, quand la page la reçoit, alors Stripe Elements n'est jamais créé ni monté et `/payment/return` est ouvert.
+
+### PAY-US-13 — Auto-réparer un webhook de paiement manqué
+
+**Statut :** ✅ Implémentée le 19 juillet 2026
+**Priorité :** P0
+**Dépendances :** `PAY-US-05`, `PAY-US-06`, `PAY-US-10`, `PAY-US-12`
+
+**En tant que** collectionneur,
+**je veux** que Make It Art rapproche automatiquement une commande désynchronisée avec Stripe,
+**afin de** recevoir mon achat même si le webhook de succès a été retardé ou perdu.
+
+#### Critères d'acceptation
+
+- **AC-01 — États surveillés :** Étant donné le job de rapprochement, quand il cherche les commandes obsolètes, alors il inspecte `PENDING_PAYMENT`, `PAYMENT_PROCESSING` et `PAYMENT_FAILED`.
+- **AC-02 — Relecture authentifiée :** Étant donné une commande surveillée, quand son état est rapproché, alors le backend relit le `PaymentIntent` par son identifiant persistant avec le SDK Stripe et vérifie montant, devise et metadata avant toute transition.
+- **AC-03 — Événement déterministe :** Étant donné un état Stripe réconciliable, quand il est appliqué, alors un identifiant technique déterministe rend la réparation idempotente et compatible avec un webhook reçu plus tard.
+- **AC-04 — État impossible :** Étant donné `providerStatus=succeeded` ou `payment=SUCCEEDED` avec une commande non `PAID`, quand l'incohérence est détectée, alors elle est journalisée avec uniquement des identifiants techniques et réparée ou placée en revue.
+- **AC-05 — Alerte sûre :** Étant donné au moins une incohérence réparée ou une réconciliation en échec, quand le balayage se termine, alors une alerte opérateur agrégée est envoyée sans `client_secret`, donnée bancaire ni donnée personnelle.
+- **AC-06 — Aucun faux positif :** Étant donné un `PaymentIntent` encore réutilisable, quand le job le relit, alors il ne marque jamais la commande `PAID` et ne déclenche aucun droit.
+
+### PAY-US-14 — Rendre la récupération du checkout claire et observable
+
+**Statut :** ✅ Implémentée le 19 juillet 2026
+**Priorité :** P1
+**Dépendances :** `PAY-US-07`, `PAY-US-12`, `PAY-US-13`
+
+**En tant que** collectionneur,
+**je veux** comprendre si le prix, le formulaire ou le paiement est vérifié,
+**afin de** ne pas repayer à cause d'un message ambigu ou d'une erreur de chargement.
+
+#### Critères d'acceptation
+
+- **AC-01 — Libellé précis :** Étant donné le récapitulatif checkout, quand le prix a été recalculé, alors le badge affiche « Prix vérifié côté serveur » et ne suggère jamais que le paiement est confirmé.
+- **AC-02 — Erreur de chargement :** Étant donné un `loaderror` Stripe Elements, quand il survient, alors le bouton de paiement reste désactivé, aucun détail sensible n'est affiché et une action permet de vérifier le statut serveur de la commande.
+- **AC-03 — Message anti-double-paiement :** Étant donné une confirmation en attente ou un formulaire indisponible, quand l'utilisateur consulte la page, alors l'interface lui demande explicitement de ne pas soumettre un nouveau paiement avant la vérification.
+- **AC-04 — Tests de non-régression :** Étant donné la suite automatisée, quand elle s'exécute, alors elle couvre succès retrouvé sans webhook, traitement, annulation, reprise autorisée, webhook tardif, état `PAYMENT_FAILED` réparé et refus frontend de monter un paiement terminal.
+
+### PAY-US-15 — Décider et implémenter le traitement fiscal avant le live
+
+**Statut :** ✅ Politique France B2C implémentée le 24 juillet 2026 ; preuves et valeurs de production à fournir avant activation
+
+**Priorité :** P0
+
+**Dépendances :** identité légale Make It Art et taux B2C français validé pour la configuration live
+
+**En tant que** responsable de la plateforme,
+**je veux** que taxes et TVA soient traitées selon une décision validée,
+**afin de** ne pas encaisser des commandes avec un `taxAmount = 0` supposé à tort.
+
+#### Critères d'acceptation
+
+- **AC-01 — Périmètre fermé :** Make It Art est le marchand officiel ; seules les ventes `B2C`, en EUR, avec adresse de facturation `FR` sont acceptées. Les champs professionnels et les autres pays sont refusés côté serveur.
+- **AC-02 — Prix TTC :** le panier, la commande et la facture figent en centimes le brut avant réduction, la réduction, le montant HT, le taux, la TVA incluse et le TTC. La production exige un taux explicitement validé et ne le déduit jamais de Stripe.
+- **AC-03 — Facturation client :** après un paiement confirmé, l'outbox produit une facture de vente Make It Art → client, numérotée séquentiellement, issue des snapshots immuables et téléchargeable uniquement par le propriétaire.
+- **AC-04 — Aucune fausse activation :** `STRIPE_TAX_ENABLED=false` est imposé en phase 1. Aucun `automatic_tax` ni Tax Calculation n'est activé implicitement.
+- **AC-05 — Phase 2 fermée :** avant B2B ou vente hors France, une inscription fiscale active, les codes fiscaux des œuvres, l'adresse requise, la collecte d'identifiant TVA, Stripe Tax et les corrections de remboursement sont validés en sandbox.
+- **AC-06 — Preuves live :** l'identité légale de l'émetteur, le numéro d'immatriculation, le numéro de TVA, le taux B2C et un exemple de facture sont revus par les responsables fiscal/comptable avant `PAYMENT_FISCAL_POLICY_ACK=true`.
+
+### PAY-US-16 — Réévaluer PaymentIntents face à Checkout Sessions custom
+
+**Statut :** ✅ Migration décidée et cadrée ; réalisation obligatoire avant l'extension fonctionnelle
+
+**Priorité :** P1, P0 si Stripe Tax/remises/conversion sont ajoutés
+
+**Dépendances :** `PAY-US-03` à `PAY-US-14`
+
+**En tant que** mainteneur,
+**je veux** comparer l'intégration PaymentIntent actuelle à Checkout Sessions `ui_mode: custom`,
+**afin de** réduire le code financier spécifique sans perdre les garanties de réservation et d'idempotence.
+
+#### Critères d'acceptation
+
+- **AC-01 — ADR :** `docs/DECISIONS.md` acte Checkout Sessions `ui_mode: custom` comme cible après le lancement carte et décrit les garanties à conserver.
+- **AC-02 — Recommandation Stripe :** PaymentIntents sont conservés seulement pour le lancement déjà testé ; Checkout Sessions custom devient le chemin obligatoire avant taxes, remises, B2B, vente hors France ou nouveaux moyens.
+- **AC-03 — Méthodes dynamiques :** aucune intégration ne fournit `payment_method_types`; les moyens sont pilotés par Dashboard/Payment Method Configuration et restent compatibles avec la durée de réservation.
+- **AC-04 — Migration sûre :** si migration, commandes et paiements existants restent rapprochables, les identifiants Session et PaymentIntent sont persistés et les webhooks coexistent sans double livraison.
+- **AC-05 — Mesure :** le nouveau flux est testé en sandbox sur succès, refus, 3DS, moyen asynchrone, expiration, reprise et remboursement avant bascule.
+- **AC-06 — Garde-fou :** la configuration de production reste `card_only` et Stripe Tax reste désactivé tant que cette migration et ses prérequis ne sont pas terminés.
 
 ---
 
 ## 7. Matrice minimale de tests d'acceptation
 
-| Scénario                                   | Résultat attendu                                        |
-| ------------------------------------------ | ------------------------------------------------------- |
-| Paiement carte nominal                     | Une commande `PAID`, une livraison, un email            |
-| 3DS réussi                                 | Paiement confirmé après authentification                |
-| 3DS refusé ou annulé                       | Commande non payée, aucune livraison, reprise possible  |
-| Paiement en traitement                     | État `PAYMENT_PROCESSING`, aucune fausse confirmation   |
-| Carte refusée                              | Message sûr, panier récupérable, aucun droit            |
-| Double clic                                | Un seul `PaymentIntent`, aucun double débit             |
-| Deux checkouts concurrents                 | Même paiement pour la même version de commande          |
-| Coupure réseau après confirmation          | État récupéré depuis le serveur et le webhook           |
-| Montant ou devise falsifié                 | Valeur client ignorée/rejetée, total serveur conservé   |
-| Achat du dernier exemplaire en concurrence | Un seul acheteur poursuit ; l'autre reçoit `409`        |
-| Consultation de la commande d'un tiers     | `404`, aucune fuite d'information                       |
-| Webhook sans signature ou payload modifié  | `400`, aucun effet métier                               |
-| Webhook valide envoyé deux fois            | Un seul changement d'état et une seule livraison        |
-| Webhooks reçus dans le désordre            | État final correct, aucune régression de `PAID`         |
-| Montant Stripe différent du snapshot       | `PAYMENT_REVIEW`, alerte, aucune livraison              |
-| Remboursements concurrents                 | Aucun sur-remboursement                                 |
-| Désactivation d'urgence du checkout        | Nouveaux paiements bloqués, paiements engagés finalisés |
+| Scénario                                   | Résultat attendu                                          |
+| ------------------------------------------ | --------------------------------------------------------- |
+| Paiement carte nominal                     | Une commande `PAID`, une livraison, un email              |
+| 3DS réussi                                 | Paiement confirmé après authentification                  |
+| 3DS refusé ou annulé                       | Commande non payée, aucune livraison, reprise possible    |
+| Paiement en traitement                     | État `PAYMENT_PROCESSING`, aucune fausse confirmation     |
+| Carte refusée                              | Message sûr, panier récupérable, aucun droit              |
+| Double clic                                | Un seul `PaymentIntent`, aucun double débit               |
+| Deux checkouts concurrents                 | Même paiement pour la même version de commande            |
+| Coupure réseau après confirmation          | État récupéré depuis le serveur et le webhook             |
+| Succès Stripe sans webhook reçu            | Réconciliation serveur, commande `PAID`, aucun formulaire |
+| Paiement déjà `processing` ou `succeeded`  | Aucun `client_secret`, redirection vers le suivi          |
+| Réconciliation puis webhook retardé        | Une seule finalisation et une seule livraison             |
+| Montant ou devise falsifié                 | Valeur client ignorée/rejetée, total serveur conservé     |
+| Achat du dernier exemplaire en concurrence | Un seul acheteur poursuit ; l'autre reçoit `409`          |
+| Consultation de la commande d'un tiers     | `404`, aucune fuite d'information                         |
+| Webhook sans signature ou payload modifié  | `400`, aucun effet métier                                 |
+| Webhook valide envoyé deux fois            | Un seul changement d'état et une seule livraison          |
+| Webhooks reçus dans le désordre            | État final correct, aucune régression de `PAID`           |
+| Montant Stripe différent du snapshot       | `PAYMENT_REVIEW`, alerte, aucune livraison                |
+| Remboursements concurrents                 | Aucun sur-remboursement                                   |
+| Rejeu de livraison après crash             | Un droit et un certificat uniques                         |
+| Litige ouvert puis gagné                   | Droits suspendus puis restaurés selon la politique        |
+| Litige perdu                               | Droits révoqués uniquement sous politique validée         |
+| Achat B2B ou adresse hors France           | Refus serveur avant création du PaymentIntent             |
+| Paiement France B2C                        | Snapshot HT/TVA/TTC et facture de vente PDF unique        |
+| Désactivation d'urgence du checkout        | Nouveaux paiements bloqués, paiements engagés finalisés   |
 
 ## 8. Hors périmètre de cet epic
 
 - Stripe Connect et le versement des gains aux artistes ;
 - abonnements, paiements récurrents, cryptomonnaies et NFT ;
 - stockage manuel de cartes ou création d'un formulaire bancaire maison ;
-- implémentation détaillée des téléchargements et certificats, couverte par DEV10 ;
-- décision juridique sur les taxes, factures et droit de rétractation, qui doit être validée avant le mode live même si leur montant est intégré au calcul serveur.
+- stockage des fichiers numériques sources et diffusion CDN, distincts des droits et certificats durables couverts ici ;
+- validation juridique/comptable finale du taux, des mentions de facture et du droit de rétractation, qui reste une preuve externe avant le mode live.
 
 ## 9. Definition of Done
 
