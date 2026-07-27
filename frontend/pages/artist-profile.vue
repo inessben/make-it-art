@@ -1,489 +1,473 @@
 <template>
-  <main class="min-h-screen bg-black px-4 py-8 text-slate-100 sm:px-6 sm:py-10">
+  <ArtistShell
+    eyebrow="Artist workspace"
+    title="Artist public profile"
+    description="Manage your public identity, visual assets and published portfolio."
+  >
     <section
-      class="mx-auto grid w-full max-w-[1120px] gap-8 rounded-2xl border border-slate-800 bg-slate-950 p-4 shadow-[0_32px_90px_rgba(0,0,0,0.22)] sm:rounded-[32px] sm:p-8"
+      v-if="loading"
+      class="rounded-[24px] border border-slate-800 bg-violet-950 p-6 text-slate-400"
     >
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <NuxtLink
-          to="/account-settings"
-          class="inline-flex items-center justify-center rounded-2xl border border-slate-800 bg-slate-850 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
-        >
-          Back to account
-        </NuxtLink>
+      Loading your artist workspace...
+    </section>
 
-        <a
-          href="#artist-profile-settings"
-          class="inline-flex items-center justify-center rounded-2xl border border-violet-700 bg-violet-700/10 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:bg-violet-700/20"
-        >
-          Edit public profile
-        </a>
+    <section
+      v-else-if="missingArtist"
+      class="grid gap-5 rounded-[24px] border border-slate-800 bg-violet-950 p-7"
+    >
+      <div>
+        <p class="text-xs uppercase tracking-widest text-violet-700">Artist profile</p>
+        <h1 class="mt-4 text-3xl font-semibold text-white">No artist profile yet</h1>
+        <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
+          Create your artist profile to start publishing your portfolio.
+        </p>
+      </div>
+      <NuxtLink
+        to="/become-artist"
+        class="inline-flex w-fit items-center justify-center rounded-2xl bg-violet-700 px-6 py-3 text-sm font-semibold text-black transition hover:bg-violet-600"
+      >
+        Become an artist
+      </NuxtLink>
+    </section>
+
+    <section
+      v-else-if="pendingApplication"
+      class="grid gap-6 rounded-[24px] border border-slate-800 bg-violet-950 p-7"
+    >
+      <div>
+        <p class="text-xs uppercase tracking-widest text-violet-700">Artist application</p>
+        <h1 class="mt-4 text-3xl font-semibold text-white">Your application is under review</h1>
+        <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
+          Your agreement has been signed and submitted to the administration. Your artist profile
+          will become active once the application is approved.
+        </p>
       </div>
 
-      <section
-        v-if="loading"
-        class="rounded-[24px] border border-slate-800 bg-violet-950 p-6 text-slate-400"
-      >
-        Loading your artist workspace...
-      </section>
-
-      <section
-        v-else-if="missingArtist"
-        class="grid gap-5 rounded-[24px] border border-slate-800 bg-violet-950 p-7"
-      >
-        <div>
-          <p class="text-xs uppercase tracking-widest text-violet-700">Artist profile</p>
-          <h1 class="mt-4 text-3xl font-semibold text-white">No artist profile yet</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
-            Create your artist profile to start publishing your portfolio.
-          </p>
+      <dl class="grid gap-3 rounded-[24px] border border-slate-800 bg-slate-950 p-5 text-sm">
+        <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
+          <dt class="text-slate-400">Artist name</dt>
+          <dd class="font-semibold text-white">
+            {{ pendingApplication.payload?.displayName || userNameFallback }}
+          </dd>
         </div>
+        <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
+          <dt class="text-slate-400">Status</dt>
+          <dd class="font-semibold text-amber-300">Awaiting admin approval</dd>
+        </div>
+        <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
+          <dt class="text-slate-400">Submission date</dt>
+          <dd class="font-semibold text-white">
+            {{ formatDate(pendingApplication.submittedAt) }}
+          </dd>
+        </div>
+      </dl>
+
+      <div class="flex flex-wrap gap-3">
+        <a
+          href="/api/artists/me/contract.pdf"
+          target="_blank"
+          rel="noreferrer"
+          class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-violet-700 px-6 text-sm font-semibold text-black transition hover:bg-violet-600"
+        >
+          Open PDF agreement
+        </a>
         <NuxtLink
           to="/become-artist"
-          class="inline-flex w-fit items-center justify-center rounded-2xl bg-violet-700 px-6 py-3 text-sm font-semibold text-black transition hover:bg-violet-600"
+          class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-800 bg-slate-850 px-6 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
         >
-          Become an artist
+          View application
         </NuxtLink>
-      </section>
+      </div>
+    </section>
 
-      <section
-        v-else-if="pendingApplication"
-        class="grid gap-6 rounded-[24px] border border-slate-800 bg-violet-950 p-7"
-      >
-        <div>
-          <p class="text-xs uppercase tracking-widest text-violet-700">Artist application</p>
-          <h1 class="mt-4 text-3xl font-semibold text-white">Your application is under review</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
-            Your agreement has been signed and submitted to the administration. Your artist profile
-            will become active once the application is approved.
-          </p>
-        </div>
+    <section
+      v-else-if="rejectedApplication"
+      class="grid gap-6 rounded-[24px] border border-amber-900 bg-amber-950 p-7"
+    >
+      <div>
+        <p class="text-xs uppercase tracking-widest text-amber-300">Application rejected</p>
+        <h1 class="mt-4 text-3xl font-semibold text-white">Your application needs changes</h1>
+        <p class="mt-3 max-w-2xl text-sm leading-6 text-amber-200">
+          The administration did not activate your artist profile. Update your information, review
+          the agreement and submit a new application.
+        </p>
+        <p v-if="rejectedApplication.reviewNote" class="mt-4 text-sm leading-6 text-amber-100">
+          Admin note: {{ rejectedApplication.reviewNote }}
+        </p>
+      </div>
 
-        <dl class="grid gap-3 rounded-[24px] border border-slate-800 bg-slate-950 p-5 text-sm">
-          <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
-            <dt class="text-slate-400">Artist name</dt>
-            <dd class="font-semibold text-white">
-              {{ pendingApplication.payload?.displayName || userNameFallback }}
-            </dd>
-          </div>
-          <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
-            <dt class="text-slate-400">Status</dt>
-            <dd class="font-semibold text-amber-300">Awaiting admin approval</dd>
-          </div>
-          <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
-            <dt class="text-slate-400">Submission date</dt>
-            <dd class="font-semibold text-white">
-              {{ formatDate(pendingApplication.submittedAt) }}
-            </dd>
-          </div>
-        </dl>
-
-        <div class="flex flex-wrap gap-3">
-          <a
-            href="/api/artists/me/contract.pdf"
-            target="_blank"
-            rel="noreferrer"
-            class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-violet-700 px-6 text-sm font-semibold text-black transition hover:bg-violet-600"
-          >
-            Open PDF agreement
-          </a>
-          <NuxtLink
-            to="/become-artist"
-            class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-800 bg-slate-850 px-6 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
-          >
-            View application
-          </NuxtLink>
-        </div>
-      </section>
-
-      <section
-        v-else-if="rejectedApplication"
-        class="grid gap-6 rounded-[24px] border border-amber-900 bg-amber-950 p-7"
-      >
-        <div>
-          <p class="text-xs uppercase tracking-widest text-amber-300">Application rejected</p>
-          <h1 class="mt-4 text-3xl font-semibold text-white">Your application needs changes</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-6 text-amber-200">
-            The administration did not activate your artist profile. Update your information, review
-            the agreement and submit a new application.
-          </p>
-          <p v-if="rejectedApplication.reviewNote" class="mt-4 text-sm leading-6 text-amber-100">
-            Admin note: {{ rejectedApplication.reviewNote }}
-          </p>
-        </div>
-
-        <div class="flex flex-wrap gap-3">
-          <NuxtLink
-            to="/become-artist"
-            class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-violet-700 px-6 text-sm font-semibold text-black transition hover:bg-violet-600"
-          >
-            Update and resubmit
-          </NuxtLink>
-          <a
-            v-if="rejectedApplication.hasContractPdf"
-            href="/api/artists/me/contract.pdf"
-            target="_blank"
-            rel="noreferrer"
-            class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-800 bg-slate-850 px-6 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
-          >
-            Review PDF agreement
-          </a>
-        </div>
-      </section>
-
-      <section
-        v-else-if="errorMessage"
-        class="rounded-[24px] border border-red-900 bg-red-950 p-6 text-red-200"
-      >
-        {{ errorMessage }}
-      </section>
-
-      <template v-else>
-        <header class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-          <div class="flex flex-col gap-6 sm:flex-row sm:items-start">
-            <div
-              class="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-750 ring-1 ring-violet-700/30"
-            >
-              <img
-                v-if="displayedAvatarUrl"
-                :src="displayedAvatarUrl"
-                :alt="artist.displayName"
-                class="h-full w-full object-cover"
-              />
-              <span v-else class="text-4xl font-bold text-slate-100">{{ initials }}</span>
-            </div>
-            <div class="max-w-2xl">
-              <p class="text-xs uppercase tracking-widest text-violet-700">Artist profile</p>
-              <div class="mt-4 flex flex-wrap items-center gap-3">
-                <h1 class="text-title-1 text-white">
-                  {{ artist.displayName }}
-                </h1>
-                <span
-                  class="rounded-full px-4 py-2 text-sm font-semibold"
-                  :class="
-                    artist.verified
-                      ? 'bg-violet-700/10 text-violet-400'
-                      : 'bg-amber-950 text-amber-300'
-                  "
-                >
-                  {{ artist.verified ? "Verified" : "Pending" }}
-                </span>
-              </div>
-              <p class="mt-4 max-w-2xl text-slate-400 leading-7">
-                {{ artist.bio || "Artist bio to be completed." }}
-              </p>
-              <p class="mt-4 text-sm text-slate-500">{{ artist.email }}</p>
-            </div>
-          </div>
-
-          <div v-if="artist.verified" class="flex flex-wrap gap-3">
-            <NuxtLink
-              to="/artist"
-              class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6d8bff]"
-            >
-              Dashboard artiste
-            </NuxtLink>
-            <NuxtLink
-              to="/artworks/new"
-              class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-6 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
-            >
-              Publier une oeuvre
-            </NuxtLink>
-            <NuxtLink
-              v-if="artist.id"
-              :to="`/artists/${artist.id}`"
-              class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-6 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
-            >
-              Voir mon profil public
-            </NuxtLink>
-          </div>
-        </header>
-
-        <section class="grid gap-4 sm:grid-cols-3">
-          <article class="rounded-[24px] border border-slate-800 bg-slate-800 p-6 text-center">
-            <p class="text-sm uppercase tracking-widest text-violet-700">Artworks</p>
-            <p class="mt-4 text-3xl font-semibold text-white">
-              {{ artist.stats.artworks }}
-            </p>
-          </article>
-          <article class="rounded-[24px] border border-slate-800 bg-slate-800 p-6 text-center">
-            <p class="text-sm uppercase tracking-widest text-violet-700">Followers</p>
-            <p class="mt-4 text-3xl font-semibold text-white">
-              {{ artist.stats.followers }}
-            </p>
-          </article>
-          <article class="rounded-[24px] border border-slate-800 bg-slate-800 p-6 text-center">
-            <p class="text-sm uppercase tracking-widest text-violet-700">Collections</p>
-            <p class="mt-4 text-3xl font-semibold text-white">
-              {{ artist.stats.collections }}
-            </p>
-          </article>
-        </section>
-
-        <section
-          id="artist-profile-settings"
-          class="grid gap-6 rounded-[24px] border border-slate-800 bg-slate-950 p-6 lg:grid-cols-[0.8fr_1.2fr]"
+      <div class="flex flex-wrap gap-3">
+        <NuxtLink
+          to="/become-artist"
+          class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-violet-700 px-6 text-sm font-semibold text-black transition hover:bg-violet-600"
         >
-          <div class="grid gap-4">
-            <div>
-              <p class="text-xs uppercase tracking-widest text-violet-700">Public visuals</p>
-              <h2 class="mt-3 text-2xl font-semibold text-white">Artist identity</h2>
-              <p class="mt-3 text-sm leading-6 text-slate-400">
-                Upload both the hero cover and the profile image used on your public artist pages.
-              </p>
-            </div>
+          Update and resubmit
+        </NuxtLink>
+        <a
+          v-if="rejectedApplication.hasContractPdf"
+          href="/api/artists/me/contract.pdf"
+          target="_blank"
+          rel="noreferrer"
+          class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-800 bg-slate-850 px-6 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
+        >
+          Review PDF agreement
+        </a>
+      </div>
+    </section>
 
-            <div
-              class="flex aspect-[16/7] w-full items-center justify-center overflow-hidden rounded-[28px] border border-slate-800 bg-slate-900"
-            >
-              <img
-                v-if="displayedCoverUrl"
-                :src="displayedCoverUrl"
-                :alt="`${artist.displayName} cover`"
-                class="h-full w-full object-cover"
-              />
-              <div
-                v-else
-                class="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(124,58,237,0.26),_transparent_54%),linear-gradient(180deg,_rgba(15,23,42,0.92),_rgba(2,6,23,1))] px-6 text-center"
+    <section
+      v-else-if="errorMessage"
+      class="rounded-[24px] border border-red-900 bg-red-950 p-6 text-red-200"
+    >
+      {{ errorMessage }}
+    </section>
+
+    <template v-else>
+      <header class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+        <div class="flex flex-col gap-6 sm:flex-row sm:items-start">
+          <div
+            class="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-750 ring-1 ring-violet-700/30"
+          >
+            <img
+              v-if="displayedAvatarUrl"
+              :src="displayedAvatarUrl"
+              :alt="artist.displayName"
+              class="h-full w-full object-cover"
+            />
+            <span v-else class="text-4xl font-bold text-slate-100">{{ initials }}</span>
+          </div>
+          <div class="max-w-2xl">
+            <p class="text-xs uppercase tracking-widest text-violet-700">Artist profile</p>
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+              <h1 class="text-title-1 text-white">
+                {{ artist.displayName }}
+              </h1>
+              <span
+                class="rounded-full px-4 py-2 text-sm font-semibold"
+                :class="
+                  artist.verified
+                    ? 'bg-violet-700/10 text-violet-400'
+                    : 'bg-amber-950 text-amber-300'
+                "
               >
-                <span class="text-sm font-medium uppercase tracking-[0.25em] text-slate-300">
-                  Public hero cover
-                </span>
-              </div>
+                {{ artist.verified ? "Verified" : "Pending" }}
+              </span>
             </div>
+            <p class="mt-4 max-w-2xl text-slate-400 leading-7">
+              {{ artist.bio || "Artist bio to be completed." }}
+            </p>
+            <p class="mt-4 text-sm text-slate-500">{{ artist.email }}</p>
+          </div>
+        </div>
 
-            <div
-              class="rounded-[20px] border border-slate-800 bg-black/30 p-4 text-sm text-slate-400"
-            >
-              {{ selectedCoverImageName || "No new cover selected." }}
-            </div>
+        <div v-if="artist.verified" class="flex flex-wrap gap-3">
+          <NuxtLink
+            to="/artist"
+            class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6d8bff]"
+          >
+            Artist dashboard
+          </NuxtLink>
+          <NuxtLink
+            to="/artworks/new"
+            class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-6 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+          >
+            Publish artwork
+          </NuxtLink>
+          <NuxtLink
+            v-if="artist.id"
+            :to="`/artists/${artist.id}`"
+            class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-6 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+          >
+            Open public profile
+          </NuxtLink>
+        </div>
+      </header>
 
-            <div
-              class="flex h-44 w-44 items-center justify-center overflow-hidden rounded-[28px] border border-slate-800 bg-slate-900"
-            >
-              <img
-                v-if="displayedAvatarUrl"
-                :src="displayedAvatarUrl"
-                :alt="artist.displayName"
-                class="h-full w-full object-cover"
-              />
-              <span v-else class="text-5xl font-bold text-slate-100">{{ initials }}</span>
-            </div>
+      <section class="grid gap-4 sm:grid-cols-3">
+        <article class="rounded-[24px] border border-slate-800 bg-slate-800 p-6 text-center">
+          <p class="text-sm uppercase tracking-widest text-violet-700">Artworks</p>
+          <p class="mt-4 text-3xl font-semibold text-white">
+            {{ artist.stats.artworks }}
+          </p>
+        </article>
+        <article class="rounded-[24px] border border-slate-800 bg-slate-800 p-6 text-center">
+          <p class="text-sm uppercase tracking-widest text-violet-700">Followers</p>
+          <p class="mt-4 text-3xl font-semibold text-white">
+            {{ artist.stats.followers }}
+          </p>
+        </article>
+        <article class="rounded-[24px] border border-slate-800 bg-slate-800 p-6 text-center">
+          <p class="text-sm uppercase tracking-widest text-violet-700">Collections</p>
+          <p class="mt-4 text-3xl font-semibold text-white">
+            {{ artist.stats.collections }}
+          </p>
+        </article>
+      </section>
 
+      <section
+        id="artist-profile-settings"
+        class="grid gap-6 rounded-[24px] border border-slate-800 bg-slate-950 p-6 lg:grid-cols-[0.8fr_1.2fr]"
+      >
+        <div class="grid gap-4">
+          <div>
+            <p class="text-xs uppercase tracking-widest text-violet-700">Public visuals</p>
+            <h2 class="mt-3 text-2xl font-semibold text-white">Artist identity</h2>
+            <p class="mt-3 text-sm leading-6 text-slate-400">
+              Upload both the hero cover and the profile image used on your public artist pages.
+            </p>
+          </div>
+
+          <div
+            class="flex aspect-[16/7] w-full items-center justify-center overflow-hidden rounded-[28px] border border-slate-800 bg-slate-900"
+          >
+            <img
+              v-if="displayedCoverUrl"
+              :src="displayedCoverUrl"
+              :alt="`${artist.displayName} cover`"
+              class="h-full w-full object-cover"
+            />
             <div
-              class="rounded-[20px] border border-slate-800 bg-black/30 p-4 text-sm text-slate-400"
+              v-else
+              class="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(124,58,237,0.26),_transparent_54%),linear-gradient(180deg,_rgba(15,23,42,0.92),_rgba(2,6,23,1))] px-6 text-center"
             >
-              {{ selectedAvatarImageName || "No new profile image selected." }}
+              <span class="text-sm font-medium uppercase tracking-[0.25em] text-slate-300">
+                Public hero cover
+              </span>
             </div>
           </div>
 
-          <form class="grid gap-5" @submit.prevent="saveArtistProfile">
-            <label class="grid gap-2">
-              <span class="text-sm font-medium text-slate-100">Artist display name</span>
-              <input
-                v-model.trim="profileForm.displayName"
-                type="text"
-                maxlength="160"
-                class="rounded-2xl border border-slate-800 bg-black px-4 py-3 text-slate-100 outline-none transition focus:border-violet-600"
-                placeholder="Your public artist name"
-              />
-            </label>
+          <div
+            class="rounded-[20px] border border-slate-800 bg-black/30 p-4 text-sm text-slate-400"
+          >
+            {{ selectedCoverImageName || "No new cover selected." }}
+          </div>
 
-            <label class="grid gap-2">
-              <span class="text-sm font-medium text-slate-100">Artist bio</span>
-              <textarea
-                v-model.trim="profileForm.bio"
-                rows="6"
-                maxlength="4000"
-                class="rounded-2xl border border-slate-800 bg-black px-4 py-3 text-slate-100 outline-none transition focus:border-violet-600"
-                placeholder="Tell collectors about your work, style and creative universe."
-              />
-            </label>
+          <div
+            class="flex h-44 w-44 items-center justify-center overflow-hidden rounded-[28px] border border-slate-800 bg-slate-900"
+          >
+            <img
+              v-if="displayedAvatarUrl"
+              :src="displayedAvatarUrl"
+              :alt="artist.displayName"
+              class="h-full w-full object-cover"
+            />
+            <span v-else class="text-5xl font-bold text-slate-100">{{ initials }}</span>
+          </div>
 
+          <div
+            class="rounded-[20px] border border-slate-800 bg-black/30 p-4 text-sm text-slate-400"
+          >
+            {{ selectedAvatarImageName || "No new profile image selected." }}
+          </div>
+        </div>
+
+        <form class="grid gap-5" @submit.prevent="saveArtistProfile">
+          <label class="grid gap-2">
+            <span class="text-sm font-medium text-slate-100">Artist display name</span>
             <input
-              id="artist-cover-image"
-              class="hidden"
-              type="file"
-              accept="image/png,image/jpeg,image/webp,image/gif"
-              @change="onCoverImageSelected"
+              v-model.trim="profileForm.displayName"
+              type="text"
+              maxlength="160"
+              class="rounded-2xl border border-slate-800 bg-black px-4 py-3 text-slate-100 outline-none transition focus:border-violet-600"
+              placeholder="Your public artist name"
             />
+          </label>
 
-            <input
-              id="artist-profile-image"
-              class="hidden"
-              type="file"
-              accept="image/png,image/jpeg,image/webp,image/gif"
-              @change="onProfileImageSelected"
+          <label class="grid gap-2">
+            <span class="text-sm font-medium text-slate-100">Artist bio</span>
+            <textarea
+              v-model.trim="profileForm.bio"
+              rows="6"
+              maxlength="4000"
+              class="rounded-2xl border border-slate-800 bg-black px-4 py-3 text-slate-100 outline-none transition focus:border-violet-600"
+              placeholder="Tell collectors about your work, style and creative universe."
             />
+          </label>
 
-            <div class="grid gap-4 rounded-[20px] border border-slate-800 bg-black/20 p-4">
-              <div>
-                <p class="text-sm font-medium text-slate-100">Hero cover</p>
-                <p class="mt-1 text-sm leading-6 text-slate-400">
-                  This wide image is displayed as the banner on your public artist profile.
-                </p>
-              </div>
-              <div class="flex flex-wrap gap-3">
-                <label
-                  for="artist-cover-image"
-                  class="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-2xl border border-slate-750 bg-slate-850 px-5 text-sm font-semibold text-slate-100 transition hover:border-violet-700 hover:text-violet-200"
-                >
-                  Choose cover
-                </label>
-                <button
-                  type="button"
-                  class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-red-900 bg-red-950/40 px-5 text-sm font-semibold text-red-200 transition hover:border-red-700 hover:text-red-100 disabled:cursor-not-allowed disabled:opacity-50"
-                  :disabled="!artist.coverUrl && !selectedCoverImage"
-                  @click="markCoverForRemoval"
-                >
-                  Remove cover
-                </button>
-              </div>
+          <input
+            id="artist-cover-image"
+            class="hidden"
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            @change="onCoverImageSelected"
+          />
+
+          <input
+            id="artist-profile-image"
+            class="hidden"
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            @change="onProfileImageSelected"
+          />
+
+          <div class="grid gap-4 rounded-[20px] border border-slate-800 bg-black/20 p-4">
+            <div>
+              <p class="text-sm font-medium text-slate-100">Hero cover</p>
+              <p class="mt-1 text-sm leading-6 text-slate-400">
+                This wide image is displayed as the banner on your public artist profile.
+              </p>
             </div>
-
-            <div class="grid gap-4 rounded-[20px] border border-slate-800 bg-black/20 p-4">
-              <div>
-                <p class="text-sm font-medium text-slate-100">Profile image</p>
-                <p class="mt-1 text-sm leading-6 text-slate-400">
-                  This square image is displayed on artist cards and profile avatars.
-                </p>
-              </div>
-              <div class="flex flex-wrap gap-3">
-                <label
-                  for="artist-profile-image"
-                  class="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-2xl border border-slate-750 bg-slate-850 px-5 text-sm font-semibold text-slate-100 transition hover:border-violet-700 hover:text-violet-200"
-                >
-                  Choose image
-                </label>
-                <button
-                  type="button"
-                  class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-red-900 bg-red-950/40 px-5 text-sm font-semibold text-red-200 transition hover:border-red-700 hover:text-red-100 disabled:cursor-not-allowed disabled:opacity-50"
-                  :disabled="!artist.avatarUrl && !selectedProfileImage"
-                  @click="markAvatarForRemoval"
-                >
-                  Remove image
-                </button>
-              </div>
-            </div>
-
-            <AppStatePanel
-              v-if="profileSuccessMessage"
-              compact
-              type="success"
-              :message="profileSuccessMessage"
-            />
-            <AppStatePanel
-              v-if="profileErrorMessage"
-              compact
-              type="error"
-              :message="profileErrorMessage"
-            />
-
             <div class="flex flex-wrap gap-3">
-              <button
-                type="submit"
-                class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-violet-700 px-6 text-sm font-semibold text-black transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
-                :disabled="savingProfile"
+              <label
+                for="artist-cover-image"
+                class="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-2xl border border-slate-750 bg-slate-850 px-5 text-sm font-semibold text-slate-100 transition hover:border-violet-700 hover:text-violet-200"
               >
-                {{ savingProfile ? "Saving..." : "Save public profile" }}
-              </button>
+                Choose cover
+              </label>
               <button
                 type="button"
-                class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-800 bg-slate-850 px-6 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
-                :disabled="savingProfile"
-                @click="resetProfileForm"
+                class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-red-900 bg-red-950/40 px-5 text-sm font-semibold text-red-200 transition hover:border-red-700 hover:text-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                :disabled="!artist.coverUrl && !selectedCoverImage"
+                @click="markCoverForRemoval"
               >
-                Reset
+                Remove cover
               </button>
             </div>
-          </form>
-        </section>
+          </div>
 
-        <section class="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-          <div class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-7">
-            <div class="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Portfolio</p>
-                <h2 class="mt-4 text-2xl font-semibold text-white">Mes oeuvres publiees</h2>
-              </div>
-              <NuxtLink
-                v-if="artist.verified"
-                to="/artworks/new"
-                class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#4A6CF7] bg-[#4A6CF7]/10 px-5 text-sm font-semibold text-[#D5E0FF] transition hover:bg-[#4A6CF7]/20"
+          <div class="grid gap-4 rounded-[20px] border border-slate-800 bg-black/20 p-4">
+            <div>
+              <p class="text-sm font-medium text-slate-100">Profile image</p>
+              <p class="mt-1 text-sm leading-6 text-slate-400">
+                This square image is displayed on artist cards and profile avatars.
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+              <label
+                for="artist-profile-image"
+                class="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-2xl border border-slate-750 bg-slate-850 px-5 text-sm font-semibold text-slate-100 transition hover:border-violet-700 hover:text-violet-200"
               >
-                Nouvelle oeuvre
-              </NuxtLink>
+                Choose image
+              </label>
+              <button
+                type="button"
+                class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-red-900 bg-red-950/40 px-5 text-sm font-semibold text-red-200 transition hover:border-red-700 hover:text-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                :disabled="!artist.avatarUrl && !selectedProfileImage"
+                @click="markAvatarForRemoval"
+              >
+                Remove image
+              </button>
             </div>
+          </div>
 
-            <div v-if="artworksLoading" class="mt-6 text-sm text-[#A0ADB4]">
-              Chargement de vos oeuvres...
-            </div>
-            <div
-              v-else-if="!publishedArtworks.length"
-              class="mt-6 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 text-sm leading-6 text-[#A0ADB4]"
+          <AppStatePanel
+            v-if="profileSuccessMessage"
+            compact
+            type="success"
+            :message="profileSuccessMessage"
+          />
+          <AppStatePanel
+            v-if="profileErrorMessage"
+            compact
+            type="error"
+            :message="profileErrorMessage"
+          />
+
+          <div class="flex flex-wrap gap-3">
+            <button
+              type="submit"
+              class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-violet-700 px-6 text-sm font-semibold text-black transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="savingProfile"
             >
-              <span v-if="artist.verified">
-                Vous n'avez pas encore publie d'oeuvre. Lancez votre premiere publication pour
-                apparaitre dans le catalogue.
-              </span>
-              <span v-else>
-                Votre profil artiste doit etre valide avant de publier des oeuvres.
-              </span>
+              {{ savingProfile ? "Saving..." : "Save public profile" }}
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-800 bg-slate-850 px-6 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
+              :disabled="savingProfile"
+              @click="resetProfileForm"
+            >
+              Reset
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-7">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Portfolio</p>
+              <h2 class="mt-4 text-2xl font-semibold text-white">Published artworks</h2>
             </div>
-            <div v-else class="mt-6 grid gap-4">
-              <article
-                v-for="artwork in publishedArtworks"
-                :key="artwork.id"
-                class="flex flex-col gap-4 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div class="flex items-center gap-4">
+            <NuxtLink
+              v-if="artist.verified"
+              to="/artworks/new"
+              class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#4A6CF7] bg-[#4A6CF7]/10 px-5 text-sm font-semibold text-[#D5E0FF] transition hover:bg-[#4A6CF7]/20"
+            >
+              New artwork
+            </NuxtLink>
+          </div>
+
+          <div v-if="artworksLoading" class="mt-6 text-sm text-[#A0ADB4]">
+            Loading your artworks...
+          </div>
+          <div
+            v-else-if="!publishedArtworks.length"
+            class="mt-6 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 text-sm leading-6 text-[#A0ADB4]"
+          >
+            <span v-if="artist.verified">
+              You have not published any artwork yet. Launch your first release to appear in the
+              catalogue.
+            </span>
+            <span v-else>
+              Your artist profile must be approved before you can publish artworks.
+            </span>
+          </div>
+          <div v-else class="mt-6 grid gap-4">
+            <article
+              v-for="artwork in publishedArtworks"
+              :key="artwork.id"
+              class="flex flex-col gap-4 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div class="flex items-center gap-4">
+                <div
+                  class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-[#1A2336] bg-[#03060D]"
+                >
+                  <img
+                    v-if="artwork.imageUrl"
+                    :src="artwork.imageUrl"
+                    :alt="artwork.title"
+                    class="h-full w-full object-cover"
+                  />
                   <div
-                    class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-[#1A2336] bg-[#03060D]"
+                    v-else
+                    class="flex h-full w-full items-center justify-center text-sm font-semibold text-[#8AA2FF]"
                   >
-                    <img
-                      v-if="artwork.imageUrl"
-                      :src="artwork.imageUrl"
-                      :alt="artwork.title"
-                      class="h-full w-full object-cover"
-                    />
-                    <div
-                      v-else
-                      class="flex h-full w-full items-center justify-center text-sm font-semibold text-[#8AA2FF]"
-                    >
-                      MIA
-                    </div>
-                  </div>
-                  <div>
-                    <p class="text-lg font-semibold text-white">
-                      {{ artwork.title }}
-                    </p>
-                    <p class="mt-2 text-sm text-[#A0ADB4]">
-                      {{ artwork.category?.name || "Sans categorie" }} ·
-                      {{ formatArtworkPrice(artwork) }}
-                    </p>
+                    MIA
                   </div>
                 </div>
-                <NuxtLink
-                  :to="`/artworks/${artwork.id}`"
-                  class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#24314F] bg-[#10151E] px-5 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
-                >
-                  Voir la fiche
-                </NuxtLink>
-              </article>
-            </div>
+                <div>
+                  <p class="text-lg font-semibold text-white">
+                    {{ artwork.title }}
+                  </p>
+                  <p class="mt-2 text-sm text-[#A0ADB4]">
+                    {{ artwork.category?.name || "Sans categorie" }} ·
+                    {{ formatArtworkPrice(artwork) }}
+                  </p>
+                </div>
+              </div>
+              <NuxtLink
+                :to="`/artworks/${artwork.id}`"
+                class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#24314F] bg-[#10151E] px-5 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+              >
+                View artwork
+              </NuxtLink>
+            </article>
           </div>
-          <div class="rounded-[24px] border border-slate-800 bg-violet-950 p-7">
-            <p class="text-xs uppercase tracking-widest text-violet-700">MVP</p>
-            <h2 class="mt-4 text-2xl font-semibold text-white">Next steps</h2>
-            <ul class="mt-4 grid gap-3 text-sm leading-6 text-slate-400">
-              <li>Add your first artworks.</li>
-              <li>Connect styles and social links to your public profile content.</li>
-              <li>Keep your signed agreement available in the admin workspace.</li>
-            </ul>
-          </div>
-        </section>
-      </template>
-    </section>
-  </main>
+        </div>
+        <div class="rounded-[24px] border border-slate-800 bg-violet-950 p-7">
+          <p class="text-xs uppercase tracking-widest text-violet-700">MVP</p>
+          <h2 class="mt-4 text-2xl font-semibold text-white">Next steps</h2>
+          <ul class="mt-4 grid gap-3 text-sm leading-6 text-slate-400">
+            <li>Add your first artworks.</li>
+            <li>Connect styles and social links to your public profile content.</li>
+            <li>Keep your signed agreement available in the admin workspace.</li>
+          </ul>
+        </div>
+      </section>
+    </template>
+  </ArtistShell>
 </template>
 
 <script setup>
@@ -788,7 +772,7 @@ function formatArtworkPrice(artwork) {
     return artwork.price;
   }
 
-  return "Prix non renseigne";
+  return "Price unavailable";
 }
 
 function formatDate(value) {
