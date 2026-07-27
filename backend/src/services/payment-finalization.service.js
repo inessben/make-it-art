@@ -5,6 +5,7 @@ const { isFranceB2COrder } = require("../domain/commerce-policy");
 const { isTransactionWriteConflict, waitForTransactionRetry } = require("../lib/transaction-retry");
 const { canTransitionOrder, canTransitionPayment } = require("../domain/payment-state");
 const { recordSavedPaymentMethodConsent } = require("./saved-payment-method.service");
+const { releaseReservedArtwork } = require("./inventory-reservation.service");
 
 const EVENT_TARGETS = Object.freeze({
   "payment_intent.processing": {
@@ -241,15 +242,7 @@ async function releaseReservations(transaction, payment) {
   );
 
   for (const reservation of activeReservations) {
-    const updated = await transaction.artwork.updateMany({
-      where: {
-        id: reservation.artworkId,
-        reservedQuantity: { gte: reservation.quantity }
-      },
-      data: { reservedQuantity: { decrement: reservation.quantity } }
-    });
-
-    if (updated.count !== 1) {
+    if (!(await releaseReservedArtwork(transaction, reservation))) {
       throw new PaymentFinalizationError(
         "INVENTORY_RELEASE_CONFLICT",
         "Inventory cannot be released safely"

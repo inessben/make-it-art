@@ -242,6 +242,15 @@ databaseTest("a declined attempt can be retried with a new successful charge", a
       prismaClient: prisma
     });
 
+    const reservedArtwork = await prisma.artwork.findUnique({
+      where: { id: fixture.artwork.id }
+    });
+    const activeReservation = await prisma.inventoryReservation.findFirst({
+      where: { orderId: fixture.order.id }
+    });
+    assert.equal(reservedArtwork.reservedQuantity, 1);
+    assert.equal(activeReservation.status, "ACTIVE");
+
     const result = await processStripePaymentEvent({
       event: stripeEvent(fixture, "payment_intent.succeeded", {
         latest_charge: successfulChargeId
@@ -265,6 +274,37 @@ databaseTest("a declined attempt can be retried with a new successful charge", a
     assert.equal(payment.failureCode, null);
     assert.equal(taskCount, 5);
     assert.equal(alertCount, 0);
+  } finally {
+    await cleanup(prisma, fixture);
+    await prisma.$disconnect();
+  }
+});
+
+databaseTest("a canceled PaymentIntent releases an exclusive artwork exactly once", async () => {
+  const prisma = require("../../src/lib/prisma");
+  const { processStripePaymentEvent } = require("../../src/services/payment-finalization.service");
+  const fixture = await createFixture(prisma);
+  const event = stripeEvent(fixture, "payment_intent.canceled");
+
+  try {
+    const first = await processStripePaymentEvent({ event, prismaClient: prisma });
+    const duplicate = await processStripePaymentEvent({ event, prismaClient: prisma });
+    const order = await prisma.order.findUnique({ where: { id: fixture.order.id } });
+    const payment = await prisma.payment.findUnique({ where: { id: fixture.payment.id } });
+    const artwork = await prisma.artwork.findUnique({ where: { id: fixture.artwork.id } });
+    const reservation = await prisma.inventoryReservation.findFirst({
+      where: { orderId: fixture.order.id }
+    });
+
+    assert.equal(first.outcome, "applied");
+    assert.equal(duplicate.duplicate, true);
+    assert.equal(order.status, "CANCELED");
+    assert.equal(payment.status, "CANCELED");
+    assert.equal(artwork.stockQuantity, 1);
+    assert.equal(artwork.reservedQuantity, 0);
+    assert.equal(artwork.saleStatus, "AVAILABLE");
+    assert.equal(artwork.isSold, false);
+    assert.equal(reservation.status, "RELEASED");
   } finally {
     await cleanup(prisma, fixture);
     await prisma.$disconnect();

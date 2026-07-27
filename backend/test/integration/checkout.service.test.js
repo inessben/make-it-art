@@ -446,10 +446,18 @@ databaseTest("checkout does not expose a processing intent to Stripe Elements", 
     intent.status = "processing";
 
     const processing = await initializeCheckout(input);
+    const reservedArtwork = await prisma.artwork.findUnique({
+      where: { id: fixture.artwork.id }
+    });
+    const reservation = await prisma.inventoryReservation.findFirst({
+      where: { order: { publicId: processing.orderId } }
+    });
 
     assert.equal(processing.orderStatus, "PAYMENT_PROCESSING");
     assert.equal(processing.requiresConfirmation, false);
     assert.equal(processing.clientSecret, null);
+    assert.equal(reservedArtwork.reservedQuantity, 1);
+    assert.equal(reservation.status, "ACTIVE");
   } finally {
     await cleanup(prisma, marker, fixture.userIds);
     await prisma.$disconnect();
@@ -499,7 +507,10 @@ databaseTest("a provider-canceled intent cannot be resumed", async () => {
     const artwork = await prisma.artwork.findUnique({ where: { id: fixture.artwork.id } });
     assert.equal(order.status, "CANCELED");
     assert.equal(order.reservations[0].status, "RELEASED");
+    assert.equal(artwork.stockQuantity, 1);
     assert.equal(artwork.reservedQuantity, 0);
+    assert.equal(artwork.saleStatus, "AVAILABLE");
+    assert.equal(artwork.isSold, false);
   } finally {
     await cleanup(prisma, marker, fixture.userIds);
     await prisma.$disconnect();
@@ -771,7 +782,10 @@ databaseTest("expired checkout cancellation releases inventory and is idempotent
     assert.equal(firstSweep.canceled, 1);
     assert.equal(secondSweep.canceled, 0);
     assert.equal(order.status, "CANCELED");
+    assert.equal(artwork.stockQuantity, 1);
     assert.equal(artwork.reservedQuantity, 0);
+    assert.equal(artwork.saleStatus, "AVAILABLE");
+    assert.equal(artwork.isSold, false);
     assert.equal(reservation.status, "EXPIRED");
     assert.equal(stripe.cancellations, 1);
     assert.equal(retryCart.version, cart.version + 1);
