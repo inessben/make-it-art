@@ -10,6 +10,7 @@
         v-if="artwork.imageUrl"
         :src="artwork.imageUrl"
         :alt="artwork.title"
+        :artwork-id="artwork.id"
         img-class="aspect-[4/5] w-full object-cover transition duration-300 group-hover:scale-[1.02]"
       />
       <div

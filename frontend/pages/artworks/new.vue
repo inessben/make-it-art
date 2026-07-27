@@ -133,8 +133,8 @@
         >
           <input v-model="form.protection" type="checkbox" />
           <span>
-            Signaler la protection anti-IA (filigrane, métadonnées et accès contrôlé déjà appliqués
-            à toutes les œuvres)
+            Protection anti-IA renforcée (badge catalogue). Le filigrane anti-copie est déjà appliqué
+            sur toutes les prévisualisations publiques.
           </span>
         </label>
 

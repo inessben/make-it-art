@@ -18,33 +18,71 @@
       <slot name="fallback" />
     </div>
 
+    <!-- 1) Brand anti-AI watermark (complements server-baked watermark) -->
+    <div class="mia-protected-media__watermark mia-protected-media__watermark--brand" aria-hidden="true">
+      <span v-for="n in 12" :key="`brand-${n}`" class="mia-protected-media__watermark-tile">
+        Make It Art · No AI
+      </span>
+    </div>
+
+    <!-- 3) Forensic viewer watermark tied to the consulting user (or guest session) -->
+    <div
+      class="mia-protected-media__watermark mia-protected-media__watermark--viewer"
+      aria-hidden="true"
+    >
+      <span
+        v-for="n in 9"
+        :key="`viewer-${n}`"
+        class="mia-protected-media__watermark-tile mia-protected-media__watermark-tile--viewer"
+      >
+        {{ viewerWatermarkId }}
+      </span>
+    </div>
+
+    <div
+      class="mia-protected-media__viewer-badge"
+      aria-hidden="true"
+    >
+      {{ viewerWatermarkId }}
+    </div>
+
     <!-- Transparent shield: blocks casual save / inspect of the visual surface -->
     <div
-      class="mia-protected-media__shield absolute inset-0 z-[1]"
+      class="mia-protected-media__shield absolute inset-0 z-[2]"
       aria-hidden="true"
       @contextmenu.prevent
       @dragstart.prevent
     />
 
     <div
-      class="mia-protected-media__blackout absolute inset-0 z-[2] grid place-items-center bg-black transition-opacity duration-150"
+      class="mia-protected-media__blackout absolute inset-0 z-[3] grid place-items-center bg-black px-4 transition-opacity duration-150"
       :class="isBlackedOut ? 'opacity-100' : 'pointer-events-none opacity-0'"
       aria-hidden="true"
     >
-      <p
-        v-show="isBlackedOut"
-        class="px-4 text-center text-xs font-semibold uppercase tracking-[0.16em] text-slate-400"
-      >
-        Capture bloquée
-      </p>
+      <div v-show="isBlackedOut" class="max-w-sm text-center">
+        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">
+          {{ blackoutMessage }}
+        </p>
+        <p
+          v-if="blackoutMode === 'screen-share' || blackoutMode === 'cast'"
+          class="mt-3 text-[11px] leading-5 text-slate-500"
+        >
+          Comme sur les plateformes de streaming : arrêtez le partage d'écran ou l'enregistrement
+          pour afficher l'aperçu.
+        </p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { computed } from "vue";
+import { storeToRefs } from "pinia";
 import { useScreenshotGuard } from "~/composables/useScreenshotGuard";
+import { useAuthStore } from "~/stores/auth";
+import { buildViewerWatermarkId } from "~/utils/viewerWatermark";
 
-defineProps({
+const props = defineProps({
   src: {
     type: String,
     default: ""
@@ -52,6 +90,10 @@ defineProps({
   alt: {
     type: String,
     default: ""
+  },
+  artworkId: {
+    type: [Number, String],
+    default: null
   },
   imgClass: {
     type: String,
@@ -63,7 +105,16 @@ defineProps({
   }
 });
 
-const { isBlackedOut } = useScreenshotGuard();
+const auth = useAuthStore();
+const { user } = storeToRefs(auth);
+const { isBlackedOut, blackoutMessage, blackoutMode } = useScreenshotGuard();
+
+const viewerWatermarkId = computed(() =>
+  buildViewerWatermarkId({
+    userId: user.value?.id || null,
+    artworkId: props.artworkId
+  })
+);
 </script>
 
 <style scoped>
@@ -78,7 +129,69 @@ const { isBlackedOut } = useScreenshotGuard();
   user-drag: none;
 }
 
-.mia-protected-media--blackout .mia-protected-media__image {
+.mia-protected-media__watermark {
+  pointer-events: none;
+  position: absolute;
+  inset: -20%;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem 1.5rem;
+}
+
+.mia-protected-media__watermark--brand {
+  transform: rotate(-28deg);
+  opacity: 0.2;
+}
+
+.mia-protected-media__watermark--viewer {
+  transform: rotate(18deg);
+  opacity: 0.28;
+  gap: 3.5rem 2rem;
+  z-index: 1;
+}
+
+.mia-protected-media__watermark-tile {
+  white-space: nowrap;
+  font-size: clamp(0.7rem, 2.2vw, 0.95rem);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+.mia-protected-media__watermark-tile--viewer {
+  font-size: clamp(0.55rem, 1.6vw, 0.72rem);
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: #dbe7ff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75);
+}
+
+.mia-protected-media__viewer-badge {
+  pointer-events: none;
+  position: absolute;
+  right: 0.65rem;
+  bottom: 0.65rem;
+  z-index: 1;
+  max-width: calc(100% - 1.3rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 0.35rem;
+  background: rgba(5, 9, 18, 0.72);
+  padding: 0.28rem 0.45rem;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #c9d7f0;
+}
+
+.mia-protected-media--blackout .mia-protected-media__image,
+.mia-protected-media--blackout .mia-protected-media__watermark,
+.mia-protected-media--blackout .mia-protected-media__viewer-badge {
   visibility: hidden;
 }
 </style>

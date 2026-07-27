@@ -53,7 +53,10 @@
                 v-if="artwork.imageUrl"
                 :src="artwork.imageUrl"
                 :alt="artwork.title"
-                img-class="max-h-[720px] w-full object-cover"
+                :artwork-id="artwork.id"
+                protection-level="strict"
+                fit="contain"
+                img-class="aspect-[4/3] w-full max-h-[720px]"
               />
               <div
                 v-else
@@ -362,6 +365,7 @@ import { navigateTo, useHead, useRequestHeaders, useRoute, useRuntimeConfig } fr
 import ArtworkCard from "~/components/marketplace/ArtworkCard.vue";
 import { useAnalyticsEvent } from "~/composables/useAnalyticsEvent";
 import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
+import { useScreenshotGuard } from "~/composables/useScreenshotGuard";
 import { useAuthStore } from "~/stores/auth";
 import { useCartStore } from "~/stores/cart";
 import {
@@ -370,6 +374,9 @@ import {
   getArtistInitials,
   isArtworkOwnedByArtist
 } from "~/utils/marketplace";
+
+// Page-level strict guard: keeps anti-share protection active even before media paints.
+useScreenshotGuard({ level: "strict" });
 
 const route = useRoute();
 const auth = useAuthStore();

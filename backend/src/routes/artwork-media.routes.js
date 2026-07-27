@@ -15,6 +15,7 @@ const {
   ensureArtworkPreviewFile,
   UPLOADS_ROOT
 } = require("../services/artwork-media.service");
+const { ensureWatermarkedPreview } = require("../services/artwork-watermark.service");
 const {
   ArtworkMediaAccessError,
   assertCanAccessHd,
@@ -42,7 +43,13 @@ async function loadArtwork(req, res, next) {
         previewPath: true,
         storageProvider: true,
         watermarkApplied: true,
-        mediaStatus: true
+        mediaStatus: true,
+        artist: {
+          select: {
+            displayName: true,
+            user: { select: { username: true } }
+          }
+        }
       }
     });
 
@@ -108,6 +115,7 @@ async function findArtworkByPreviewFilename(filename) {
 
 router.get("/artworks/:id(\\d+)/media/preview", loadArtwork, async (req, res) => {
   try {
+    req.artworkMedia = await ensureWatermarkedPreview(req.artworkMedia);
     const payload = await openArtworkMediaStream(req.artworkMedia, "preview");
     applyArtworkMediaHeaders(res);
     return pipeMedia(res, {
@@ -181,7 +189,15 @@ router.get(
         if (ensuredPreviewPath && ensuredPreviewPath !== artwork.previewPath) {
           await prisma.artwork.update({
             where: { id: artwork.id },
-            data: { previewPath: ensuredPreviewPath }
+            data: {
+              previewPath: ensuredPreviewPath,
+              watermarkApplied: true
+            }
+          });
+        } else if (ensuredPreviewPath) {
+          await prisma.artwork.update({
+            where: { id: artwork.id },
+            data: { watermarkApplied: true }
           });
         }
 

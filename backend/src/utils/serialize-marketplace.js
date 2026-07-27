@@ -74,10 +74,13 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
   const price = hasFiatPrice
     ? `${priceValue.toFixed(2).replace(".", ",")} €`
     : normalizeText(artwork.price) || normalizeText(artwork.priceTokens);
-  const previewUrl =
-    buildArtworkPreviewUrl(artwork.previewPath, artwork.imagePath) ||
-    buildArtworkImageUrl(artwork.previewPath || artwork.imagePath) ||
-    (artwork.id ? `/api/artworks/${artwork.id}/media/preview` : null);
+  const previewUrl = artwork.id
+    ? `/api/artworks/${artwork.id}/media/preview`
+    : buildArtworkPreviewUrl(artwork.previewPath, artwork.imagePath) ||
+      buildArtworkImageUrl(artwork.previewPath || artwork.imagePath);
+  const drmPreviewUrl = artwork.id ? `/api/artworks/${artwork.id}/media/preview.drm` : null;
+  const drmLicenseUrl = artwork.id ? `/api/artworks/${artwork.id}/media/drm-license` : null;
+  const drmBundleUrl = artwork.id ? `/api/artworks/${artwork.id}/media/drm-bundle` : null;
 
   return {
     id: artwork.id,
@@ -91,6 +94,10 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     createdAt: artwork.createdAt || null,
     imageUrl: previewUrl,
     previewUrl,
+    drmPreviewUrl,
+    drmLicenseUrl,
+    drmBundleUrl,
+    imageDrm: Boolean(artwork.id),
     hasHdFile: Boolean(artwork.hdPath),
     hdDownloadUrl: artwork.hdPath ? `/api/artworks/${artwork.id}/media/hd` : null,
     storageProvider: normalizeText(artwork.storageProvider) || "local",

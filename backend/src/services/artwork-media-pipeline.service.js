@@ -48,7 +48,7 @@ async function processArtworkUpload({
 
     const preview = await generateArtworkPreview({
       sourcePath: uploadedFile.path,
-      applyWatermark
+      applyWatermark: applyWatermark !== false
     });
     previewLocalPath = preview.path;
 

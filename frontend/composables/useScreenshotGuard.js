@@ -1,8 +1,13 @@
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import {
+  installScreenCaptureGuard,
+  screenCaptureActive,
+  screenCaptureSource
+} from "~/utils/screenCaptureGuard";
 
 const shortcutBlackout = ref(false);
 const focusBlackout = ref(false);
-const isBlackedOut = computed(() => shortcutBlackout.value || focusBlackout.value);
+
 const activeGuards = ref(0);
 
 let listenersBound = false;
@@ -30,12 +35,10 @@ function isCaptureShortcut(event) {
     return true;
   }
 
-  // macOS / iPadOS system screenshots
   if (event.metaKey && event.shiftKey && ["3", "4", "5", "6"].includes(event.key)) {
     return true;
   }
 
-  // In-page screenshot helpers (e.g. some browser extensions / Firefox)
   if (event.shiftKey && (event.metaKey || event.ctrlKey) && key === "s") {
     return true;
   }
@@ -52,20 +55,34 @@ function clearClipboardSoon() {
   }, 120);
 }
 
+function syncDocumentGuardClass(isActive) {
+  if (isActive) {
+    document.documentElement.classList.add("mia-screenshot-guard-active");
+    return;
+  }
+  document.documentElement.classList.remove("mia-screenshot-guard-active");
+}
+
 function triggerShortcutBlackout() {
   if (import.meta.server || activeGuards.value < 1) return;
 
   shortcutBlackout.value = true;
-  document.documentElement.classList.add("mia-screenshot-guard-active");
+  syncDocumentGuardClass(true);
   clearClipboardSoon();
 
   window.clearTimeout(blackoutTimer);
   blackoutTimer = window.setTimeout(() => {
     shortcutBlackout.value = false;
-    if (!focusBlackout.value) {
-      document.documentElement.classList.remove("mia-screenshot-guard-active");
-    }
+    syncDocumentGuardClass(isContentHidden());
   }, BLACKOUT_MS);
+}
+
+function isContentHidden() {
+  return (
+    focusBlackout.value ||
+    screenCaptureActive.value ||
+    shortcutBlackout.value
+  );
 }
 
 function syncFocusBlackout() {
@@ -74,17 +91,11 @@ function syncFocusBlackout() {
     return;
   }
 
-  const shouldHide =
+  focusBlackout.value =
     document.visibilityState === "hidden" ||
     (typeof document.hasFocus === "function" && !document.hasFocus());
 
-  focusBlackout.value = shouldHide;
-
-  if (shouldHide || shortcutBlackout.value) {
-    document.documentElement.classList.add("mia-screenshot-guard-active");
-  } else {
-    document.documentElement.classList.remove("mia-screenshot-guard-active");
-  }
+  syncDocumentGuardClass(isContentHidden());
 }
 
 function onKeyDown(event) {
@@ -123,6 +134,16 @@ function onWindowFocus() {
   syncFocusBlackout();
 }
 
+function onPageFreeze() {
+  if (activeGuards.value < 1) return;
+  focusBlackout.value = true;
+  syncDocumentGuardClass(true);
+}
+
+function onPageResume() {
+  syncFocusBlackout();
+}
+
 function onCopy(event) {
   if (activeGuards.value < 1 || isTypingTarget(event.target)) return;
   event.preventDefault();
@@ -132,6 +153,9 @@ function onCopy(event) {
 function bindListeners() {
   if (listenersBound || import.meta.server) return;
   listenersBound = true;
+
+  installScreenCaptureGuard();
+
   window.addEventListener("keydown", onKeyDown, true);
   window.addEventListener("keyup", onKeyUp, true);
   window.addEventListener("blur", onWindowBlur);
@@ -139,11 +163,14 @@ function bindListeners() {
   document.addEventListener("visibilitychange", onVisibilityChange);
   document.addEventListener("copy", onCopy, true);
   document.addEventListener("cut", onCopy, true);
+  document.addEventListener("freeze", onPageFreeze);
+  document.addEventListener("resume", onPageResume);
 }
 
 function unbindListeners() {
   if (!listenersBound || import.meta.server) return;
   listenersBound = false;
+
   window.removeEventListener("keydown", onKeyDown, true);
   window.removeEventListener("keyup", onKeyUp, true);
   window.removeEventListener("blur", onWindowBlur);
@@ -151,26 +178,72 @@ function unbindListeners() {
   document.removeEventListener("visibilitychange", onVisibilityChange);
   document.removeEventListener("copy", onCopy, true);
   document.removeEventListener("cut", onCopy, true);
+  document.removeEventListener("freeze", onPageFreeze);
+  document.removeEventListener("resume", onPageResume);
+
   window.clearTimeout(blackoutTimer);
   window.clearTimeout(clipboardClearTimer);
   shortcutBlackout.value = false;
   focusBlackout.value = false;
-  document.documentElement.classList.remove("mia-screenshot-guard-active");
+  syncDocumentGuardClass(false);
 }
 
+const isBlackedOut = computed(() => {
+  if (activeGuards.value < 1) {
+    return false;
+  }
+  return (
+    shortcutBlackout.value ||
+    focusBlackout.value ||
+    screenCaptureActive.value
+  );
+});
+
+const blackoutMessage = computed(() => {
+  if (screenCaptureActive.value) {
+    return "Contenu masqué pendant le partage d'écran ou l'enregistrement";
+  }
+  if (focusBlackout.value) {
+    return "Contenu masqué — revenez sur cet onglet pour continuer";
+  }
+  return "Capture bloquée";
+});
+
+const blackoutMode = computed(() => {
+  if (screenCaptureActive.value) {
+    return screenCaptureSource.value === "cast" ? "cast" : "screen-share";
+  }
+  if (focusBlackout.value) {
+    return "focus";
+  }
+  if (shortcutBlackout.value) {
+    return "shortcut";
+  }
+  return "none";
+});
+
 /**
- * Best-effort screenshot deterrents for protected artwork media.
- * Browsers cannot fully block OS-level capture (unlike native FLAG_SECURE / Widevine),
- * but this mirrors the streaming-site UX: blackout while unfocused, blocked shortcuts,
- * and clipboard wipe after PrintScreen attempts.
+ * Best-effort deterrents for screenshots and in-browser capture/streaming.
+ * True Netflix-style blocking during Discord/Teams desktop capture requires DRM video;
+ * static images cannot be fully protected at the OS compositor level from JavaScript alone.
  */
 export function useScreenshotGuard() {
+  let stopCaptureWatch = null;
+
   onMounted(() => {
     activeGuards.value += 1;
     bindListeners();
+    syncFocusBlackout();
+
+    stopCaptureWatch = watch(screenCaptureActive, () => {
+      if (activeGuards.value > 0) {
+        syncDocumentGuardClass(isContentHidden());
+      }
+    });
   });
 
   onBeforeUnmount(() => {
+    stopCaptureWatch?.();
     activeGuards.value = Math.max(0, activeGuards.value - 1);
     if (activeGuards.value === 0) {
       unbindListeners();
@@ -179,6 +252,8 @@ export function useScreenshotGuard() {
 
   return {
     isBlackedOut,
+    blackoutMessage,
+    blackoutMode,
     triggerBlackout: triggerShortcutBlackout
   };
 }

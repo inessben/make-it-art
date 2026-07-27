@@ -128,8 +128,11 @@ module.exports = {
     pythonPath: process.env.PDF_PYTHON_PATH || process.env.ARTWORK_PYTHON_PATH || "python3",
     previewMaxWidth: Number(process.env.ARTWORK_PREVIEW_MAX_WIDTH || 1600),
     previewQuality: Number(process.env.ARTWORK_PREVIEW_QUALITY || 82),
-    watermarkText: process.env.ARTWORK_WATERMARK_TEXT || "Make It Art",
+    watermarkText:
+      process.env.ARTWORK_WATERMARK_TEXT || "Make It Art · Preview · No AI training",
     watermarkPublicPreviews: process.env.ARTWORK_WATERMARK_PUBLIC_PREVIEWS !== "false",
+    imageDrmSecret: process.env.ARTWORK_IMAGE_DRM_SECRET || "",
+    imageDrmEnabled: process.env.ARTWORK_IMAGE_DRM_ENABLED !== "false",
     s3: {
       bucket: process.env.AWS_S3_BUCKET || "",
       region: process.env.AWS_S3_REGION || "",

@@ -118,8 +118,8 @@ async function generateArtworkPreview({ imagePath, title, artistName, copyrightH
   const python = resolvePythonCommand();
   const metadata = {
     maxSize: 800,
-    watermark: "Make it Art — preview only · AI training prohibited",
-    copyright: `© ${copyrightHolder || artistName || "Make it Art"} — All rights reserved`,
+    watermark: "Make It Art · Preview · No AI training",
+    copyright: `© ${copyrightHolder || artistName || "Make it Art"} — All rights reserved. AI training prohibited.`,
     artist: artistName || "Make it Art artist",
     title: title || "Protected artwork",
     usageTerms:

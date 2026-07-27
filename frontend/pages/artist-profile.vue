@@ -272,6 +272,7 @@
                       v-if="artwork.imageUrl"
                       :src="artwork.imageUrl"
                       :alt="artwork.title"
+                      :artwork-id="artwork.id"
                       img-class="h-full w-full object-cover"
                       class="h-full w-full"
                     />
