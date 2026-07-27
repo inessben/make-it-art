@@ -170,6 +170,8 @@ services:
     dns:
       - 1.1.1.1
       - 8.8.8.8
+    volumes:
+      - backend_uploads:/app/uploads
     networks:
       - app_net
 
@@ -242,6 +244,7 @@ services:
       - app_net
 
 volumes:
+  backend_uploads:
   db_data:
   redis_data:
   umami_db_data:
