@@ -1,7 +1,7 @@
 <template>
   <ArtistShell
-    title="Ventes"
-    description="Historique metier de toutes vos transactions avec statut, commissions, gains et remboursements."
+    title="Sales"
+    description="Business history of your transactions with statuses, commissions, earnings and refunds."
   >
     <template #actions>
       <button
@@ -10,7 +10,7 @@
         :disabled="loading"
         @click="loadSales"
       >
-        {{ loading ? "Actualisation..." : "Actualiser" }}
+        {{ loading ? "Refreshing..." : "Refresh" }}
       </button>
     </template>
 
@@ -36,10 +36,10 @@
       <div class="flex flex-col gap-4">
         <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Historique</p>
-            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Journal des ventes</h2>
+            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">History</p>
+            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Sales journal</h2>
             <p class="mt-3 max-w-3xl text-sm leading-6 text-[#A0ADB4]">
-              Filtrez vos ventes par statut de commande, disponibilite des gains ou recherche libre.
+              Filter your sales by order status, earnings availability or free-text search.
             </p>
           </div>
 
@@ -57,22 +57,22 @@
 
         <div class="grid gap-3 xl:grid-cols-[minmax(0,1.4fr)_repeat(2,minmax(0,0.75fr))]">
           <label class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3">
-            <span class="sr-only">Rechercher</span>
+            <span class="sr-only">Search</span>
             <input
               v-model="searchTerm"
               type="text"
-              placeholder="Commande, oeuvre ou acheteur"
+              placeholder="Order, artwork or buyer"
               class="w-full bg-transparent text-sm text-[#E6EDF7] outline-none placeholder:text-[#6D7A88]"
             />
           </label>
 
           <label class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3">
-            <span class="sr-only">Filtrer par statut de commande</span>
+            <span class="sr-only">Filter by order status</span>
             <select
               v-model="statusFilter"
               class="w-full bg-transparent text-sm text-[#E6EDF7] outline-none"
             >
-              <option value="all">Tous les statuts commande</option>
+              <option value="all">All order statuses</option>
               <option value="Paid">Paid</option>
               <option value="Pending">Pending</option>
               <option value="Processing">Processing</option>
@@ -85,12 +85,12 @@
           </label>
 
           <label class="rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-4 py-3">
-            <span class="sr-only">Filtrer par etat de gain</span>
+            <span class="sr-only">Filter by earnings status</span>
             <select
               v-model="settlementFilter"
               class="w-full bg-transparent text-sm text-[#E6EDF7] outline-none"
             >
-              <option value="all">Tous les etats gain</option>
+              <option value="all">All earnings states</option>
               <option value="Available">Available</option>
               <option value="Pending">Pending</option>
               <option value="Refund pending">Refund pending</option>
@@ -115,29 +115,29 @@
         v-else-if="loading"
         class="mt-6 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4 text-sm text-[#A0ADB4]"
       >
-        Chargement des ventes...
+        Loading sales...
       </div>
 
       <div
         v-else-if="filteredSales.length === 0"
         class="mt-6 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4 text-sm text-[#A0ADB4]"
       >
-        Aucune vente ne correspond aux filtres actuels.
+        No sale matches the current filters.
       </div>
 
       <div v-else class="mt-6 overflow-hidden rounded-[22px] border border-[#1A1F2A]">
         <table class="min-w-full divide-y divide-[#1A1F2A] text-left text-sm">
           <thead class="bg-[#01050E] text-xs uppercase tracking-[0.16em] text-[#7F8A99]">
             <tr>
-              <th class="px-5 py-4 font-semibold">Statut commande</th>
-              <th class="px-5 py-4 font-semibold">Oeuvre</th>
-              <th class="px-5 py-4 font-semibold">Acheteur</th>
-              <th class="px-5 py-4 font-semibold">Commande</th>
-              <th class="px-5 py-4 font-semibold">Etat gain</th>
-              <th class="px-5 py-4 font-semibold">Brut</th>
+              <th class="px-5 py-4 font-semibold">Order status</th>
+              <th class="px-5 py-4 font-semibold">Artwork</th>
+              <th class="px-5 py-4 font-semibold">Buyer</th>
+              <th class="px-5 py-4 font-semibold">Order</th>
+              <th class="px-5 py-4 font-semibold">Earnings state</th>
+              <th class="px-5 py-4 font-semibold">Gross</th>
               <th class="px-5 py-4 font-semibold">Commission</th>
-              <th class="px-5 py-4 font-semibold">Disponible</th>
-              <th class="px-5 py-4 font-semibold">Rembourse</th>
+              <th class="px-5 py-4 font-semibold">Available</th>
+              <th class="px-5 py-4 font-semibold">Refunded</th>
               <th class="px-5 py-4 font-semibold">Date</th>
             </tr>
           </thead>
@@ -195,34 +195,34 @@ const settlementFilter = ref("all");
 
 const summaryCards = computed(() => [
   {
-    label: "Ventes confirmees",
+    label: "Confirmed sales",
     value: summary.value.totalSales ?? 0,
-    description: "Transactions effectivement confirmees sur votre catalogue."
+    description: "Transactions that were effectively confirmed on your catalogue."
   },
   {
-    label: "CA brut",
+    label: "Gross revenue",
     value: summary.value.grossRevenue || "EUR 0.00",
-    description: "Volume brut encaisse avant commission."
+    description: "Gross volume collected before commission."
   },
   {
-    label: "Gains artiste",
+    label: "Artist earnings",
     value: summary.value.artistEarnings || "EUR 0.00",
-    description: "Gains estimes generes par vos ventes confirmees."
+    description: "Estimated earnings generated by your confirmed sales."
   },
   {
-    label: "Solde disponible",
+    label: "Available balance",
     value: summary.value.availableBalance || "EUR 0.00",
-    description: "Montant actuellement disponible pour votre suivi de retrait."
+    description: "Amount currently available for withdrawal tracking."
   },
   {
-    label: "Solde en attente",
+    label: "Pending balance",
     value: summary.value.pendingBalance || "EUR 0.00",
-    description: "Montant encore en cours de confirmation."
+    description: "Amount still being confirmed."
   },
   {
     label: "Commission",
     value: summary.value.totalCommission || "EUR 0.00",
-    description: `Commission plateforme cumulee (${summary.value.commissionRate || "7% HT"}).`
+    description: `Cumulative platform commission (${summary.value.commissionRate || "7% ex VAT"}).`
   }
 ]);
 
@@ -301,7 +301,7 @@ function formatDate(value) {
     return "-";
   }
 
-  return new Date(value).toLocaleString("fr-FR", {
+  return new Date(value).toLocaleString("en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -332,7 +332,7 @@ async function loadSales() {
       return;
     }
 
-    errorMessage.value = error?.data?.message || "Impossible de charger vos ventes.";
+    errorMessage.value = error?.data?.message || "Unable to load your sales.";
   } finally {
     loading.value = false;
   }

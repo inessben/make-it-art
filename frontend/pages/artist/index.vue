@@ -1,7 +1,7 @@
 <template>
   <ArtistShell
-    title="Dashboard artiste"
-    description="Vue metier de vos ventes, gains, commissions et signaux business sur les 6 derniers mois."
+    title="Artist dashboard"
+    description="Business overview of your sales, earnings, commissions and marketplace signals across the last six months."
   >
     <template #actions>
       <button
@@ -10,7 +10,7 @@
         :disabled="loading"
         @click="loadDashboard"
       >
-        {{ loading ? "Actualisation..." : "Actualiser" }}
+        {{ loading ? "Refreshing..." : "Refresh" }}
       </button>
     </template>
 
@@ -44,14 +44,14 @@
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Analytics</p>
-            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Evolution des ventes</h2>
+            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Sales momentum</h2>
             <p class="mt-3 max-w-2xl text-sm leading-6 text-[#A0ADB4]">
-              Lecture rapide de votre activite commerciale avec gains confirmes, progression et
-              rythme de conversion.
+              Quick insight into your commercial activity with confirmed earnings, growth and
+              conversion pace.
             </p>
           </div>
           <span class="rounded-full bg-[#4A6CF7]/10 px-4 py-2 text-sm font-semibold text-[#4A6CF7]">
-            6 derniers mois
+            Last 6 months
           </span>
         </div>
 
@@ -59,7 +59,7 @@
           v-if="loading"
           class="mt-6 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4 text-sm text-[#A0ADB4]"
         >
-          Chargement du dashboard...
+          Loading dashboard...
         </div>
 
         <div v-else class="mt-8 grid gap-8">
@@ -76,7 +76,7 @@
                 />
               </div>
               <div class="space-y-1 text-center">
-                <p class="text-xs font-semibold text-[#E6EDF7]">{{ month.salesCount }} vente(s)</p>
+                <p class="text-xs font-semibold text-[#E6EDF7]">{{ month.salesCount }} sale(s)</p>
                 <p class="text-[11px] uppercase tracking-[0.16em] text-[#7F8A99]">
                   {{ month.label }}
                 </p>
@@ -109,7 +109,7 @@
             <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Pipeline</p>
-                <h3 class="mt-2 text-lg font-semibold text-[#E6EDF7]">Etat de vos gains</h3>
+                <h3 class="mt-2 text-lg font-semibold text-[#E6EDF7]">Earnings state</h3>
               </div>
               <div class="flex flex-wrap gap-2">
                 <span
@@ -129,10 +129,9 @@
       <div class="grid gap-4">
         <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
           <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Cash flow</p>
-          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Gains et retraits</h2>
+          <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Earnings and withdrawals</h2>
           <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
-            Lecture operationnelle de ce qui est disponible, encore en attente ou impacte par des
-            remboursements.
+            Operational view of what is available, still pending or affected by refunds.
           </p>
 
           <div class="mt-6 grid gap-3">
@@ -161,7 +160,7 @@
           </div>
 
           <div class="mt-6 rounded-[20px] border border-[#1A1F2A] bg-[#01050E] p-4">
-            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Retraits</p>
+            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Withdrawals</p>
             <p class="mt-3 text-lg font-semibold text-[#E6EDF7]">
               {{ finance.withdrawalMode || "Manual settlement" }}
             </p>
@@ -178,15 +177,15 @@
                 </p>
                 <p class="mt-2 text-lg font-semibold text-[#E6EDF7]">Manual payout pipeline</p>
                 <p class="mt-3 text-sm leading-6 text-[#A0ADB4]">
-                  Suivez le solde retirable, les demandes en attente et les versements deja executes
-                  par l'administration.
+                  Track the withdrawable balance, pending requests and payouts already completed by
+                  the admin team.
                 </p>
               </div>
               <NuxtLink
                 to="/artist/withdrawals"
                 class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-4 py-2 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
               >
-                Gérer les retraits
+                Manage withdrawals
               </NuxtLink>
             </div>
 
@@ -212,7 +211,7 @@
               v-if="recentWithdrawalItems.length === 0"
               class="mt-5 rounded-[18px] border border-[#1A1F2A] bg-[#090017] px-4 py-4 text-sm text-[#A0ADB4]"
             >
-              Aucune demande de retrait pour le moment.
+              No withdrawal requests yet.
             </div>
 
             <div v-else class="mt-5 grid gap-3">
@@ -238,14 +237,14 @@
                       {{ request.amountLabel }}
                     </p>
                     <p v-if="request.adminNote" class="mt-2 text-sm leading-6 text-[#BFDBFE]">
-                      Note admin : {{ request.adminNote }}
+                      Admin note: {{ request.adminNote }}
                     </p>
                   </div>
                   <NuxtLink
                     to="/artist/withdrawals"
                     class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#E6EDF7] transition hover:border-[#4A6CF7] hover:text-[#9DB4FF]"
                   >
-                    Ouvrir
+                    Open
                   </NuxtLink>
                 </div>
               </div>
@@ -256,14 +255,14 @@
         <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
           <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Top oeuvres</p>
-              <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Performances catalogue</h2>
+              <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Top artworks</p>
+              <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Catalogue performance</h2>
             </div>
             <NuxtLink
               to="/artist/sales"
               class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-4 py-2 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
             >
-              Voir les ventes
+              View sales
             </NuxtLink>
           </div>
 
@@ -271,7 +270,7 @@
             v-if="!loading && analytics.topArtworks.length === 0"
             class="mt-6 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4 text-sm text-[#A0ADB4]"
           >
-            Aucune oeuvre vendue pour le moment.
+            No sold artwork yet.
           </div>
 
           <div v-else class="mt-6 grid gap-3">
@@ -285,7 +284,7 @@
                   <p class="truncate text-sm font-semibold text-[#E6EDF7]">
                     {{ artwork.title }}
                   </p>
-                  <p class="mt-2 text-sm text-[#A0ADB4]">{{ artwork.salesCount }} vente(s)</p>
+                  <p class="mt-2 text-sm text-[#A0ADB4]">{{ artwork.salesCount }} sale(s)</p>
                 </div>
                 <div class="text-right text-sm">
                   <p class="font-semibold text-[#9DB2FF]">{{ artwork.artistEarnings }}</p>
@@ -302,14 +301,14 @@
       <article class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Activite recente</p>
-            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Dernieres ventes</h2>
+            <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Recent activity</p>
+            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Latest sales</h2>
           </div>
           <NuxtLink
             to="/artist/sales"
             class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-5 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
           >
-            Ouvrir le journal complet
+            Open full journal
           </NuxtLink>
         </div>
 
@@ -317,20 +316,20 @@
           v-if="!loading && recentSales.length === 0"
           class="mt-6 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4 text-sm text-[#A0ADB4]"
         >
-          Les ventes apparaitront ici des qu'un collectionneur finalisera un achat.
+          Sales will appear here as soon as a collector completes a purchase.
         </div>
 
         <div v-else class="mt-6 overflow-hidden rounded-[22px] border border-[#1A1F2A]">
           <table class="min-w-full divide-y divide-[#1A1F2A] text-left text-sm">
             <thead class="bg-[#01050E] text-xs uppercase tracking-[0.16em] text-[#7F8A99]">
               <tr>
-                <th class="px-5 py-4 font-semibold">Commande</th>
-                <th class="px-5 py-4 font-semibold">Oeuvre</th>
-                <th class="px-5 py-4 font-semibold">Acheteur</th>
-                <th class="px-5 py-4 font-semibold">Brut</th>
+                <th class="px-5 py-4 font-semibold">Order</th>
+                <th class="px-5 py-4 font-semibold">Artwork</th>
+                <th class="px-5 py-4 font-semibold">Buyer</th>
+                <th class="px-5 py-4 font-semibold">Gross</th>
                 <th class="px-5 py-4 font-semibold">Commission</th>
-                <th class="px-5 py-4 font-semibold">Gain</th>
-                <th class="px-5 py-4 font-semibold">Etat</th>
+                <th class="px-5 py-4 font-semibold">Earnings</th>
+                <th class="px-5 py-4 font-semibold">State</th>
                 <th class="px-5 py-4 font-semibold">Date</th>
               </tr>
             </thead>
@@ -363,13 +362,13 @@
         <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Notifications</p>
-            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Centre d'alertes</h2>
+            <h2 class="mt-3 text-xl font-semibold text-[#E6EDF7]">Alerts center</h2>
           </div>
           <NuxtLink
             to="/notifications"
             class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-4 py-2 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
           >
-            {{ notifications.unreadCount || 0 }} non lue(s)
+            {{ notifications.unreadCount || 0 }} unread
           </NuxtLink>
         </div>
 
@@ -377,7 +376,7 @@
           v-if="!loading && notificationItems.length === 0"
           class="mt-6 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4 text-sm text-[#A0ADB4]"
         >
-          Aucune notification recente pour le moment.
+          No recent notifications yet.
         </div>
 
         <div v-else class="mt-6 grid gap-3">
@@ -396,7 +395,7 @@
                     {{ notificationLabel(notification.type) }}
                   </span>
                   <span v-if="!notification.read" class="text-xs font-semibold text-[#4A6CF7]">
-                    Nouveau
+                    New
                   </span>
                 </div>
                 <h3 class="mt-4 text-sm font-semibold text-[#E6EDF7]">
@@ -426,7 +425,7 @@ definePageMeta({
 });
 
 const defaultWithdrawalNote =
-  "Les retraits automatiques ne sont pas encore connectes. Utilisez ce solde pour piloter vos versements manuels.";
+  "Automatic payouts are not connected yet. Use this balance to manage your manual settlements.";
 
 const loading = ref(true);
 const errorMessage = ref("");
@@ -452,24 +451,24 @@ const performanceCards = computed(() => {
 
   return [
     {
-      label: "Croissance",
+      label: "Growth",
       value: `${data.revenueGrowthPercent ?? 0}%`,
       description: "Evolution des gains disponibles vs mois precedent."
     },
     {
-      label: "Panier moyen",
+      label: "Average ticket",
       value: data.avgSaleValue || "EUR 0.00",
-      description: "Montant brut moyen par vente confirmee."
+      description: "Average gross amount per confirmed sale."
     },
     {
       label: "Conversion",
       value: `${data.conversionRate ?? 0}%`,
-      description: "Ratio ventes / favoris sur votre catalogue."
+      description: "Sales-to-favorites ratio across your catalogue."
     },
     {
       label: "Audience",
       value: `${data.followersTotal ?? 0} followers`,
-      description: `${data.artworksTotal ?? 0} oeuvre(s) publiee(s) dans votre studio.`
+      description: `${data.artworksTotal ?? 0} artwork(s) published in your studio.`
     }
   ];
 });
@@ -479,30 +478,30 @@ const financeCards = computed(() => {
 
   return [
     {
-      label: "Disponible",
+      label: "Available",
       value: data.availableBalance || "EUR 0.00",
-      description: "Gains confirmes actuellement disponibles pour votre suivi de retrait.",
+      description: "Confirmed earnings currently available for withdrawal tracking.",
       badge: "Ready",
       badgeClass: "bg-[#12301F] text-[#86EFAC]"
     },
     {
-      label: "En attente",
+      label: "Pending",
       value: data.pendingBalance || "EUR 0.00",
-      description: "Montant encore bloque tant que le paiement n'est pas totalement securise.",
+      description: "Amount still blocked until the payment is fully secured.",
       badge: "Pending",
       badgeClass: "bg-[#2A2410] text-[#FDE68A]"
     },
     {
-      label: "Remboursements",
+      label: "Refunds",
       value: data.refundedAmount || "EUR 0.00",
-      description: "Part brute deja remboursee ou retiree de votre activite.",
-      badge: `${data.refundCount ?? 0} dossier(s)`,
+      description: "Gross amount already refunded or removed from your activity.",
+      badge: `${data.refundCount ?? 0} case(s)`,
       badgeClass: "bg-[#3A1620] text-[#FECACA]"
     },
     {
       label: "Commission",
       value: data.totalCommission || "EUR 0.00",
-      description: `Commission plateforme cumulee (${data.commissionRate || "7% HT"}).`,
+      description: `Cumulative platform commission (${data.commissionRate || "7% ex VAT"}).`,
       badge: "Platform",
       badgeClass: "bg-[#1E2540] text-[#9DB2FF]"
     }
@@ -515,24 +514,24 @@ const withdrawalCards = computed(() => {
 
   return [
     {
-      label: "Disponible a demander",
+      label: "Available to request",
       value: data.availableToWithdraw || "EUR 0.00",
-      description: "Solde net restant apres demandes en attente et versements deja effectues."
+      description: "Net balance remaining after pending requests and completed payouts."
     },
     {
-      label: "Demandes en attente",
+      label: "Pending requests",
       value: data.pendingWithdrawalAmount || "EUR 0.00",
-      description: `${counts.requestedCount ?? 0} demande(s) encore en revue admin.`
+      description: `${counts.requestedCount ?? 0} request(s) still under admin review.`
     },
     {
-      label: "Deja verse",
+      label: "Already paid",
       value: data.paidOutAmount || "EUR 0.00",
-      description: `${counts.paidCount ?? 0} demande(s) deja marquees comme payees.`
+      description: `${counts.paidCount ?? 0} request(s) already marked as paid.`
     },
     {
       label: "Minimum",
       value: data.minimumRequestAmount || "EUR 25.00",
-      description: `${counts.totalRequests ?? 0} demande(s) de retrait au total.`
+      description: `${counts.totalRequests ?? 0} withdrawal request(s) in total.`
     }
   ];
 });
@@ -562,7 +561,7 @@ function formatDate(value) {
     return "-";
   }
 
-  return new Date(value).toLocaleString("fr-FR", {
+  return new Date(value).toLocaleString("en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -593,14 +592,14 @@ function settlementClass(status) {
 
 function notificationLabel(type) {
   if (type === "sale") {
-    return "Vente";
+    return "Sale";
   }
 
   if (type === "withdrawal") {
-    return "Retrait";
+    return "Withdrawal";
   }
 
-  return "Systeme";
+  return "System";
 }
 
 function notificationClass(type) {
@@ -667,7 +666,7 @@ async function loadDashboard() {
       return;
     }
 
-    errorMessage.value = error?.data?.message || "Impossible de charger le dashboard artiste.";
+    errorMessage.value = error?.data?.message || "Unable to load the artist dashboard.";
   } finally {
     loading.value = false;
   }
