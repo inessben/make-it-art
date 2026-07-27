@@ -4,7 +4,9 @@ import assert from "node:assert/strict";
 import {
   ARTWORK_LICENSE_OPTIONS,
   formatArtworkLicenseType,
+  formatArtworkManagementReason,
   getArtworkAvailabilityPresentation,
+  getArtworkVisibilityPresentation,
   isArtworkDescriptionRequired,
   isArtworkOwnedByArtist
 } from "../utils/marketplace.js";
@@ -25,6 +27,14 @@ test("artwork licence labels expose every publication choice", () => {
   assert.equal(formatArtworkLicenseType("PERSONAL"), "Licence personnelle");
   assert.equal(formatArtworkLicenseType("COMMERCIAL"), "Licence commerciale");
   assert.equal(formatArtworkLicenseType("EXCLUSIVE"), "Licence exclusive");
+});
+
+test("artwork management states have accessible labels and refusal explanations", () => {
+  assert.equal(getArtworkVisibilityPresentation("PUBLISHED").label, "Publiée");
+  assert.equal(getArtworkVisibilityPresentation("HIDDEN").label, "Masquée");
+  assert.equal(getArtworkVisibilityPresentation("ARCHIVED").label, "Archivée");
+  assert.match(formatArtworkManagementReason("ARTWORK_HAS_PURCHASES"), /déjà été achetée/i);
+  assert.match(formatArtworkManagementReason("ARTWORK_TRANSACTION_IN_PROGRESS"), /paiement/i);
 });
 
 test("exclusive availability has explicit customer-facing labels", () => {

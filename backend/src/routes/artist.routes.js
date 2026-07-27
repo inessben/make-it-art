@@ -979,12 +979,38 @@ router.get("/artists/me/artworks", ensureVerifiedArtist, async (req, res) => {
     const artworks = await artworkRepository.listArtworksByArtistId(req.artist.id);
 
     return res.status(200).json({
-      artworks: artworks.map((artwork) => serializeArtwork(artwork))
+      artworks: artworks.map((artwork) => serializeArtwork(artwork, { includeManagement: true }))
     });
   } catch (error) {
     console.error("Artist artworks fetch error:", error);
     return res.status(500).json({
       message: "Impossible de charger vos oeuvres."
+    });
+  }
+});
+
+router.get("/artists/me/artworks/:id(\\d+)", ensureVerifiedArtist, async (req, res) => {
+  try {
+    const artworkId = Number.parseInt(req.params.id, 10);
+    const artwork = await artworkRepository.findOwnedArtwork({
+      artworkId,
+      artistId: req.artist.id
+    });
+
+    if (!artwork) {
+      return res.status(404).json({
+        message: "Oeuvre introuvable.",
+        code: "ARTWORK_NOT_FOUND"
+      });
+    }
+
+    return res.status(200).json({
+      artwork: serializeArtwork(artwork, { includeManagement: true })
+    });
+  } catch (error) {
+    console.error("Artist artwork detail fetch error:", error);
+    return res.status(500).json({
+      message: "Impossible de charger cette oeuvre."
     });
   }
 });
@@ -1030,7 +1056,7 @@ router.post("/artists/me/artworks", ensureVerifiedArtist, handleArtworkUpload, a
 
     return res.status(201).json({
       message: "Oeuvre publiee et visible dans le catalogue.",
-      artwork: serializeArtwork(artwork)
+      artwork: serializeArtwork(artwork, { includeManagement: true })
     });
   } catch (error) {
     const mappedError = mapArtworkRouteError(error);
@@ -1089,7 +1115,7 @@ router.patch("/artists/me/artworks/:id(\\d+)", ensureVerifiedArtist, async (req,
 
     return res.status(200).json({
       message: "Oeuvre mise a jour et republiee.",
-      artwork: serializeArtwork(artwork)
+      artwork: serializeArtwork(artwork, { includeManagement: true })
     });
   } catch (error) {
     const mappedError = mapArtworkRouteError(error);

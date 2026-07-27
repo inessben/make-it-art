@@ -4,7 +4,42 @@ const { ARTWORK_MODERATION_STATUS } = require("../constants/artwork-moderation-s
 const { parsePriceValue } = require("../utils/serialize-marketplace");
 const { syncArtistCollectionsOwnership } = require("./collector.repository");
 
-function buildArtworkInclude(viewerId) {
+const lifecycleInclude = {
+  orderItems: {
+    where: {
+      order: {
+        status: {
+          in: [
+            "PENDING_PAYMENT",
+            "PAYMENT_PROCESSING",
+            "PAYMENT_REVIEW",
+            "PAID",
+            "PARTIALLY_REFUNDED",
+            "REFUNDED"
+          ]
+        }
+      }
+    },
+    select: {
+      order: {
+        select: {
+          status: true
+        }
+      }
+    }
+  },
+  reservations: {
+    where: {
+      status: "ACTIVE"
+    },
+    select: {
+      id: true,
+      status: true
+    }
+  }
+};
+
+function buildArtworkInclude(viewerId, { includeLifecycle = false } = {}) {
   return {
     category: true,
     artist: {
@@ -47,7 +82,8 @@ function buildArtworkInclude(viewerId) {
             id: true
           }
         }
-      : false
+      : false,
+    ...(includeLifecycle ? lifecycleInclude : {})
   };
 }
 
@@ -67,7 +103,8 @@ function buildArtistInclude(viewerId) {
     },
     artworks: {
       where: {
-        moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED
+        moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED,
+        visibility: "PUBLISHED"
       },
       select: {
         id: true
@@ -103,7 +140,8 @@ function buildArtistInclude(viewerId) {
         items: {
           where: {
             artwork: {
-              moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED
+              moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED,
+              visibility: "PUBLISHED"
             }
           },
           take: 4,
@@ -260,6 +298,7 @@ async function listPublicArtworks({
   const artworks = await prisma.artwork.findMany({
     where: {
       moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED,
+      visibility: "PUBLISHED",
       artist: {
         verified: true
       }
@@ -282,14 +321,21 @@ async function findPublicArtworkById({ artworkId, viewerId = null }) {
     where: {
       id: artworkId
     },
-    include: buildArtworkInclude(viewerId)
+    include: buildArtworkInclude(viewerId, { includeLifecycle: Boolean(viewerId) })
   });
 
-  if (!artwork || !artwork.artist?.verified) {
+  if (!artwork) {
     return null;
   }
 
-  if (artwork.moderationStatus !== ARTWORK_MODERATION_STATUS.APPROVED) {
+  const isOwner = Boolean(viewerId) && artwork.artist?.userId === viewerId;
+
+  if (
+    !isOwner &&
+    (!artwork.artist?.verified ||
+      artwork.moderationStatus !== ARTWORK_MODERATION_STATUS.APPROVED ||
+      artwork.visibility !== "PUBLISHED")
+  ) {
     return null;
   }
 
@@ -310,6 +356,7 @@ async function listRelatedArtworks({
       },
       artistId,
       moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED,
+      visibility: "PUBLISHED",
       artist: {
         verified: true
       }
@@ -337,6 +384,7 @@ async function listRelatedArtworks({
       },
       categoryId,
       moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED,
+      visibility: "PUBLISHED",
       artist: {
         verified: true
       }
@@ -420,7 +468,8 @@ async function findPublicArtistById({ artistId, viewerId = null }) {
       ...buildArtistInclude(viewerId),
       artworks: {
         where: {
-          moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED
+          moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED,
+          visibility: "PUBLISHED"
         },
         include: buildArtworkInclude(viewerId),
         orderBy: [
@@ -485,6 +534,7 @@ async function getMarketplaceOverview({ viewerId = null } = {}) {
     prisma.artwork.count({
       where: {
         moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED,
+        visibility: "PUBLISHED",
         artist: {
           verified: true
         }

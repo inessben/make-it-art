@@ -226,6 +226,55 @@
                 </p>
               </div>
 
+              <section
+                v-if="artwork.management"
+                class="mt-2 rounded-[28px] border border-[#293A66] bg-[#091121] p-6"
+                aria-labelledby="artwork-management-title"
+              >
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">
+                      Espace propriétaire
+                    </p>
+                    <h2 id="artwork-management-title" class="mt-3 text-xl font-semibold text-white">
+                      Gérer l’œuvre
+                    </h2>
+                  </div>
+                  <span
+                    class="rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em]"
+                    :class="visibilityClass"
+                  >
+                    {{ visibilityPresentation.label }}
+                  </span>
+                </div>
+
+                <p class="mt-4 text-sm leading-6 text-[#AFC0DA]">
+                  Les autorisations sont vérifiées par le serveur selon les achats et paiements en
+                  cours.
+                </p>
+
+                <ul class="mt-5 grid gap-3 sm:grid-cols-2" aria-label="Actions de gestion">
+                  <li
+                    v-for="item in managementActionSummary"
+                    :key="item.key"
+                    class="rounded-2xl border border-[#203357] bg-[#050912] p-4"
+                  >
+                    <div class="flex items-center justify-between gap-3">
+                      <span class="font-semibold text-white">{{ item.label }}</span>
+                      <span
+                        class="text-xs font-semibold uppercase tracking-[0.1em]"
+                        :class="item.available ? 'text-[#9DE2B4]' : 'text-[#F7D990]'"
+                      >
+                        {{ item.available ? "Disponible" : "Indisponible" }}
+                      </span>
+                    </div>
+                    <p v-if="!item.available" class="mt-2 text-sm text-[#AFC0DA]">
+                      {{ item.reason }}
+                    </p>
+                  </li>
+                </ul>
+              </section>
+
               <div class="mt-2 grid gap-3">
                 <button
                   v-if="artwork.isAvailableForPurchase"
@@ -371,10 +420,12 @@ import { useAuthStore } from "~/stores/auth";
 import { useCartStore } from "~/stores/cart";
 import {
   formatArtworkLicenseType,
+  formatArtworkManagementReason,
   formatMarketplaceDate,
   formatMarketplacePrice,
   getArtistInitials,
   getArtworkAvailabilityPresentation,
+  getArtworkVisibilityPresentation,
   isArtworkOwnedByArtist
 } from "~/utils/marketplace";
 
@@ -458,6 +509,35 @@ const formattedPrice = computed(() =>
   formatMarketplacePrice(artwork.value?.priceValue ?? artwork.value?.price)
 );
 const availability = computed(() => getArtworkAvailabilityPresentation(artwork.value));
+const visibilityPresentation = computed(() =>
+  getArtworkVisibilityPresentation(artwork.value?.management?.lifecycle?.visibility)
+);
+const visibilityClass = computed(() => {
+  const tones = {
+    published: "border-[#24543A] bg-[#10261A] text-[#9DE2B4]",
+    hidden: "border-[#5B4A1A] bg-[#2B220E] text-[#F7D990]",
+    archived: "border-[#34415A] bg-[#1A2336] text-[#B7C5DD]"
+  };
+  return tones[visibilityPresentation.value.tone] || tones.published;
+});
+const managementActionSummary = computed(() => {
+  const capabilities = artwork.value?.management?.capabilities;
+  if (!capabilities) return [];
+
+  return [
+    ["edit", "Modifier", "canEdit"],
+    ["delete", "Supprimer", "canDelete"],
+    ["hide", "Masquer", "canHide"],
+    ["publish", "Republier", "canPublish"],
+    ["archive", "Archiver", "canArchive"],
+    ["restore", "Restaurer", "canRestore"]
+  ].map(([key, label, capability]) => ({
+    key,
+    label,
+    available: Boolean(capabilities[capability]),
+    reason: formatArtworkManagementReason(capabilities.reasons?.[key])
+  }));
+});
 const availabilityClass = computed(() => {
   const tones = {
     available: "bg-[#10261A] text-[#9DE2B4]",

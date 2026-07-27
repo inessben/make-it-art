@@ -62,7 +62,8 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
   const currentArtist = "artistResult" in overrides ? overrides.artistResult : verifiedArtist;
   const calls = {
     createArtwork: [],
-    listArtworksByArtistId: []
+    listArtworksByArtistId: [],
+    findOwnedArtwork: []
   };
   const originalArtistRequired = require.cache[artistRequiredPath];
 
@@ -112,6 +113,12 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
             favorites: []
           }
         );
+      },
+      async findOwnedArtwork(payload) {
+        calls.findOwnedArtwork.push(payload);
+        return hasOverride(overrides, "findOwnedArtworkResult")
+          ? overrides.findOwnedArtworkResult
+          : null;
       },
       async updateArtwork() {
         throw new Error("ARTWORK_NOT_FOUND");
@@ -442,4 +449,45 @@ test("GET /artists/me/artworks lists artworks for the current artist", async (t)
   assert.equal(response.body.artworks[0].moderationStatus, "pending");
   assert.equal(response.body.artworks[0].moderationReviewer, "Admin");
   assert.deepEqual(calls.listArtworksByArtistId, [verifiedArtist.id]);
+});
+
+test("GET /artists/me/artworks/:id returns private lifecycle capabilities to the owner", async (t) => {
+  const ownedArtwork = {
+    id: 42,
+    title: "Private lifecycle",
+    priceAmount: 12000,
+    currency: "EUR",
+    licenseType: "PERSONAL",
+    saleStatus: "AVAILABLE",
+    visibility: "HIDDEN",
+    moderationStatus: "approved",
+    stockQuantity: 0,
+    reservedQuantity: 0,
+    orderItems: [],
+    reservations: [],
+    artist: verifiedArtist,
+    category: { id: 9, name: "Illustration" }
+  };
+  const { baseUrl, calls } = await startArtistArtworkRoutesApp(t, {
+    findOwnedArtworkResult: ownedArtwork
+  });
+
+  const response = await requestJson(baseUrl, "/artists/me/artworks/42");
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.artwork.visibility, "HIDDEN");
+  assert.equal(response.body.artwork.management.capabilities.canEdit, true);
+  assert.equal(response.body.artwork.management.capabilities.canPublish, true);
+  assert.deepEqual(calls.findOwnedArtwork, [{ artworkId: 42, artistId: verifiedArtist.id }]);
+});
+
+test("GET /artists/me/artworks/:id does not expose an artwork owned by another artist", async (t) => {
+  const { baseUrl } = await startArtistArtworkRoutesApp(t, {
+    findOwnedArtworkResult: null
+  });
+
+  const response = await requestJson(baseUrl, "/artists/me/artworks/42");
+
+  assert.equal(response.status, 404);
+  assert.equal(response.body.code, "ARTWORK_NOT_FOUND");
 });

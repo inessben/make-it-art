@@ -56,3 +56,16 @@ test("a purchased exclusive artwork is exposed as sold", () => {
   assert.equal(serialized.availabilityStatus, "SOLD");
   assert.equal(serialized.isAvailableForPurchase, false);
 });
+
+test("hidden artworks are not purchasable and owner management is opt-in", () => {
+  const source = artwork({ visibility: "HIDDEN", orderItems: [], reservations: [] });
+  const publicPayload = serializeArtwork(source);
+  const ownerPayload = serializeArtwork(source, { includeManagement: true });
+
+  assert.equal(publicPayload.visibility, "HIDDEN");
+  assert.equal(publicPayload.isAvailableForPurchase, false);
+  assert.equal("management" in publicPayload, false);
+  assert.equal(ownerPayload.management.lifecycle.visibility, "HIDDEN");
+  assert.equal(ownerPayload.management.capabilities.canPublish, false);
+  assert.equal(ownerPayload.management.capabilities.reasons.publish, "ARTWORK_MODERATION_BLOCKED");
+});

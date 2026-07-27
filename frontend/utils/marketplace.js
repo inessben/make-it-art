@@ -70,6 +70,32 @@ const ARTWORK_AVAILABILITY = Object.freeze({
   UNAVAILABLE: { status: "UNAVAILABLE", label: "Indisponible", tone: "unavailable" }
 });
 
+const ARTWORK_VISIBILITY = Object.freeze({
+  PUBLISHED: { label: "Publiée", tone: "published" },
+  HIDDEN: { label: "Masquée", tone: "hidden" },
+  ARCHIVED: { label: "Archivée", tone: "archived" }
+});
+
+const ARTWORK_MANAGEMENT_REASON_LABELS = Object.freeze({
+  ARTWORK_ARCHIVED: "Restaurez d'abord cette œuvre.",
+  ARTWORK_HAS_PURCHASES: "Cette œuvre a déjà été achetée.",
+  ARTWORK_TRANSACTION_IN_PROGRESS: "Un paiement ou une réservation est en cours.",
+  ARTWORK_NOT_PUBLISHED: "Cette œuvre n'est pas publiée.",
+  ARTWORK_ALREADY_ARCHIVED: "Cette œuvre est déjà archivée.",
+  ARTWORK_NOT_HIDDEN: "Seule une œuvre masquée peut être republiée.",
+  ARTWORK_MODERATION_BLOCKED: "La modération ne permet pas la republication.",
+  ARTWORK_NOT_ARCHIVED: "Seule une œuvre archivée peut être restaurée."
+});
+
+export function getArtworkVisibilityPresentation(value) {
+  const visibility = String(value || "PUBLISHED").toUpperCase();
+  return ARTWORK_VISIBILITY[visibility] || ARTWORK_VISIBILITY.PUBLISHED;
+}
+
+export function formatArtworkManagementReason(value) {
+  return ARTWORK_MANAGEMENT_REASON_LABELS[String(value || "")] || "Action indisponible.";
+}
+
 export function getArtworkAvailabilityPresentation(artwork) {
   const fallbackStatus = artwork?.isAvailableForPurchase ? "AVAILABLE" : "UNAVAILABLE";
   const status = String(artwork?.availabilityStatus || fallbackStatus).toUpperCase();

@@ -31,10 +31,12 @@ function buildAuthMiddleware(currentUser) {
 function buildArtist(id) {
   return {
     id,
+    userId: 70 + id,
     displayName: `Artist ${id}`,
     verified: true,
     createdAt: new Date("2026-07-04T10:00:00.000Z"),
     user: {
+      id: 70 + id,
       username: `Artist User ${id}`,
       bio: "Digital artist",
       artistApplicationDraft: {
@@ -263,6 +265,32 @@ test("GET /artworks returns the public catalog payload", async (t) => {
   assert.equal(response.body.artworks[0].id, 12);
   assert.equal(response.body.artworks[0].isFavorite, true);
   assert.equal(response.body.artworks[0].artist.displayName, "Artist 3");
+});
+
+test("GET /artworks/:id only exposes management capabilities to the owner", async (t) => {
+  const artist = buildArtist(3);
+  const owner = { id: artist.user.id, artist: { id: artist.id } };
+  const lifecycleArtwork = buildArtwork(12, {
+    artist,
+    visibility: "PUBLISHED",
+    moderationStatus: "approved",
+    saleStatus: "AVAILABLE",
+    licenseType: "PERSONAL",
+    priceAmount: 12000,
+    stockQuantity: 0,
+    reservedQuantity: 0,
+    orderItems: [],
+    reservations: []
+  });
+  const ownerApp = await startMarketplaceApp(t, {
+    viewerUser: owner,
+    findPublicArtworkByIdResult: lifecycleArtwork
+  });
+
+  const ownerResponse = await requestJson(ownerApp.baseUrl, "/artworks/12");
+
+  assert.equal(ownerResponse.status, 200);
+  assert.equal(ownerResponse.body.artwork.management.capabilities.canEdit, true);
 });
 
 test("POST /artworks/:id/favorite stores a favorite for a collector account", async (t) => {

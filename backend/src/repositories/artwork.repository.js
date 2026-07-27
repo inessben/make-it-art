@@ -5,6 +5,41 @@ const { isExclusiveArtworkLicenseType } = require("../constants/artwork-license-
 const MAX_ARTWORK_PRICE_AMOUNT = 99_999_999;
 const LEGACY_PRICE_PATTERN = /^(\d{1,6})(?:[.,](\d{1,2}))?\s*(?:€|eur|tokens?)?$/i;
 
+const artworkLifecycleInclude = {
+  orderItems: {
+    where: {
+      order: {
+        status: {
+          in: [
+            "PENDING_PAYMENT",
+            "PAYMENT_PROCESSING",
+            "PAYMENT_REVIEW",
+            "PAID",
+            "PARTIALLY_REFUNDED",
+            "REFUNDED"
+          ]
+        }
+      }
+    },
+    select: {
+      order: {
+        select: {
+          status: true
+        }
+      }
+    }
+  },
+  reservations: {
+    where: {
+      status: "ACTIVE"
+    },
+    select: {
+      id: true,
+      status: true
+    }
+  }
+};
+
 function parsePriceAmount(price) {
   const normalized =
     typeof price === "number" ? String(price) : typeof price === "string" ? price.trim() : null;
@@ -47,7 +82,8 @@ const artworkInclude = {
       username: true,
       email: true
     }
-  }
+  },
+  ...artworkLifecycleInclude
 };
 
 async function listArtworksForAdmin() {
@@ -139,6 +175,7 @@ async function createArtwork({
       currency: "EUR",
       licenseType,
       saleStatus: "AVAILABLE",
+      visibility: "PUBLISHED",
       stockQuantity: isExclusiveArtworkLicenseType(licenseType) ? 1 : 0,
       reservedQuantity: 0,
       favoriteCount: 0,
