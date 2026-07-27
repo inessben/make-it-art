@@ -251,6 +251,8 @@ model Artwork {
   saleStatus            ArtworkSaleStatus      @default(DRAFT) @map("sale_status")
   visibility            ArtworkVisibility      @default(PUBLISHED)
   archivedAt            DateTime?              @map("archived_at") @db.Timestamp(6)
+  version               Int                    @default(1)
+  updatedAt             DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
   stockQuantity         Int                    @default(0) @map("stock_quantity")
   reservedQuantity      Int                    @default(0) @map("reserved_quantity")
 

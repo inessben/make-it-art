@@ -1,6 +1,7 @@
 const prisma = require("../lib/prisma");
 const { ARTWORK_MODERATION_STATUS } = require("../constants/artwork-moderation-status");
 const { isExclusiveArtworkLicenseType } = require("../constants/artwork-license-types");
+const { buildArtworkManagement } = require("../services/artwork-lifecycle.service");
 
 const MAX_ARTWORK_PRICE_AMOUNT = 99_999_999;
 const LEGACY_PRICE_PATTERN = /^(\d{1,6})(?:[.,](\d{1,2}))?\s*(?:€|eur|tokens?)?$/i;
@@ -137,8 +138,8 @@ async function listArtworksByArtistId(artistId) {
   });
 }
 
-async function findOwnedArtwork({ artworkId, artistId }) {
-  return prisma.artwork.findFirst({
+async function findOwnedArtwork({ artworkId, artistId, prismaClient = prisma }) {
+  return prismaClient.artwork.findFirst({
     where: {
       id: artworkId,
       artistId
@@ -205,55 +206,91 @@ async function updateArtwork({
   price,
   licenseType,
   protection,
-  imagePath
+  expectedVersion,
+  media = null
 }) {
-  const existing = await findOwnedArtwork({ artworkId, artistId });
-
-  if (!existing) {
-    throw new Error("ARTWORK_NOT_FOUND");
-  }
-
-  const licenseChanged = existing.licenseType !== licenseType;
-  if (licenseChanged && (existing.reservedQuantity > 0 || existing.isSold)) {
-    throw new Error("ARTWORK_LICENSE_LOCKED");
-  }
-
   const priceAmount = parsePriceAmount(price);
-  const shouldPublishDraft =
-    existing.saleStatus === "DRAFT" &&
-    existing.stockQuantity === 0 &&
-    existing.reservedQuantity === 0;
 
-  return prisma.artwork.update({
-    where: {
-      id: artworkId
-    },
-    data: {
-      title,
-      description: description || null,
-      categoryId: categoryId || null,
-      price,
-      priceTokens: price,
-      priceAmount,
-      currency: "EUR",
-      licenseType,
-      ...(licenseChanged
-        ? {
-            saleStatus: "AVAILABLE",
-            stockQuantity: isExclusiveArtworkLicenseType(licenseType) ? 1 : 0
+  return prisma.$transaction(
+    async (transaction) => {
+      const existing = await findOwnedArtwork({
+        artworkId,
+        artistId,
+        prismaClient: transaction
+      });
+
+      if (!existing) {
+        throw new Error("ARTWORK_NOT_FOUND");
+      }
+
+      const management = buildArtworkManagement(existing);
+      if (!management.capabilities.canEdit) {
+        throw new Error(management.capabilities.reasons.edit);
+      }
+
+      if (!Number.isSafeInteger(expectedVersion) || existing.version !== expectedVersion) {
+        throw new Error("ARTWORK_VERSION_CONFLICT");
+      }
+
+      const licenseChanged = existing.licenseType !== licenseType;
+      const shouldPublishDraft =
+        existing.saleStatus === "DRAFT" &&
+        existing.stockQuantity === 0 &&
+        existing.reservedQuantity === 0;
+      const result = await transaction.artwork.updateMany({
+        where: {
+          id: artworkId,
+          artistId,
+          version: expectedVersion
+        },
+        data: {
+          title,
+          description: description || null,
+          categoryId: categoryId || null,
+          price,
+          priceTokens: price,
+          priceAmount,
+          currency: "EUR",
+          licenseType,
+          ...(licenseChanged
+            ? {
+                saleStatus: "AVAILABLE",
+                stockQuantity: isExclusiveArtworkLicenseType(licenseType) ? 1 : 0
+              }
+            : {}),
+          ...(shouldPublishDraft
+            ? {
+                saleStatus: "AVAILABLE",
+                stockQuantity: isExclusiveArtworkLicenseType(licenseType) ? 1 : 0
+              }
+            : {}),
+          protection: Boolean(protection),
+          ...(media
+            ? {
+                imagePath: media.imagePath,
+                hdPath: media.hdPath,
+                previewPath: media.previewPath,
+                storageProvider: media.storageProvider,
+                mediaStatus: media.mediaStatus,
+                watermarkApplied: Boolean(media.watermarkApplied)
+              }
+            : {}),
+          version: {
+            increment: 1
           }
-        : {}),
-      ...(shouldPublishDraft
-        ? {
-            saleStatus: "AVAILABLE",
-            stockQuantity: isExclusiveArtworkLicenseType(licenseType) ? 1 : 0
-          }
-        : {}),
-      protection: Boolean(protection),
-      ...(imagePath ? { imagePath } : {})
+        }
+      });
+
+      if (result.count !== 1) {
+        throw new Error("ARTWORK_VERSION_CONFLICT");
+      }
+
+      return findOwnedArtwork({ artworkId, artistId, prismaClient: transaction });
     },
-    include: artworkInclude
-  });
+    {
+      isolationLevel: "Serializable"
+    }
+  );
 }
 
 async function deleteArtwork({ artworkId, artistId }) {

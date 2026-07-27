@@ -229,6 +229,7 @@ function isApplicationLocked(application) {
 
 function normalizeArtworkInput(input = {}) {
   const categoryId = Number.parseInt(input.categoryId, 10);
+  const expectedVersion = Number.parseInt(input.expectedVersion, 10);
 
   return {
     title: normalizeText(input.title),
@@ -236,7 +237,10 @@ function normalizeArtworkInput(input = {}) {
     categoryId: Number.isInteger(categoryId) && categoryId > 0 ? categoryId : null,
     price: normalizeText(input.price) || normalizeText(input.priceTokens),
     licenseType: normalizeArtworkLicenseType(input.licenseType),
-    protection: input.protection === true || input.protection === "true" || input.protection === "1"
+    protection:
+      input.protection === true || input.protection === "true" || input.protection === "1",
+    expectedVersion:
+      Number.isSafeInteger(expectedVersion) && expectedVersion > 0 ? expectedVersion : null
   };
 }
 
@@ -310,6 +314,38 @@ function mapArtworkRouteError(error) {
       status: 409,
       message:
         "Le type de licence ne peut plus etre modifie pendant une reservation ou apres la vente."
+    };
+  }
+
+  if (error?.message === "ARTWORK_HAS_PURCHASES") {
+    return {
+      status: 409,
+      code: "ARTWORK_HAS_PURCHASES",
+      message: "Cette oeuvre a deja ete achetee et ne peut plus etre modifiee."
+    };
+  }
+
+  if (error?.message === "ARTWORK_TRANSACTION_IN_PROGRESS") {
+    return {
+      status: 409,
+      code: "ARTWORK_TRANSACTION_IN_PROGRESS",
+      message: "Un paiement ou une reservation est en cours pour cette oeuvre."
+    };
+  }
+
+  if (error?.message === "ARTWORK_ARCHIVED") {
+    return {
+      status: 409,
+      code: "ARTWORK_ARCHIVED",
+      message: "Restaurez cette oeuvre avant de la modifier."
+    };
+  }
+
+  if (error?.message === "ARTWORK_VERSION_CONFLICT") {
+    return {
+      status: 409,
+      code: "ARTWORK_VERSION_CONFLICT",
+      message: "Cette oeuvre a ete modifiee entre-temps. Rechargez la fiche."
     };
   }
 
@@ -1089,49 +1125,95 @@ router.post("/artists/me/artworks", ensureVerifiedArtist, handleArtworkUpload, a
   }
 });
 
-router.patch("/artists/me/artworks/:id(\\d+)", ensureVerifiedArtist, async (req, res) => {
-  try {
-    const artworkId = Number.parseInt(req.params.id, 10);
-    const input = normalizeArtworkInput(req.body);
-    const validationError = validateArtworkInput(input);
+router.patch(
+  "/artists/me/artworks/:id(\\d+)",
+  ensureVerifiedArtist,
+  csrfProtection,
+  handleArtworkUpload,
+  async (req, res) => {
+    let replacementMedia = null;
+    let previousArtwork = null;
 
-    if (validationError) {
-      return res.status(400).json({
-        message: validationError
+    try {
+      const artworkId = Number.parseInt(req.params.id, 10);
+      const input = normalizeArtworkInput(req.body);
+      const validationError = validateArtworkInput(input);
+
+      if (validationError) {
+        return res.status(400).json({
+          message: validationError
+        });
+      }
+
+      if (!input.expectedVersion) {
+        return res.status(400).json({
+          message: "La version de l'oeuvre est requise.",
+          code: "ARTWORK_VERSION_REQUIRED"
+        });
+      }
+
+      const categoryId = await resolveCategoryId(input);
+      previousArtwork = await artworkRepository.findOwnedArtwork({
+        artworkId,
+        artistId: req.artist.id
+      });
+
+      if (!previousArtwork) {
+        return res.status(404).json({
+          message: "Oeuvre introuvable.",
+          code: "ARTWORK_NOT_FOUND"
+        });
+      }
+
+      if (req.file) {
+        replacementMedia = await processArtworkUpload({
+          uploadedFile: req.file,
+          applyWatermark: env.artworkMedia.watermarkPublicPreviews || input.protection,
+          storageProviderName: env.artworkMedia.storageProvider
+        });
+      }
+
+      const artwork = await artworkRepository.updateArtwork({
+        artworkId,
+        artistId: req.artist.id,
+        title: input.title,
+        description: input.description,
+        categoryId,
+        price: input.price,
+        licenseType: input.licenseType,
+        protection: input.protection,
+        expectedVersion: input.expectedVersion,
+        media: replacementMedia
+      });
+
+      if (replacementMedia) {
+        await deleteArtworkMediaAssets(previousArtwork);
+      }
+
+      return res.status(200).json({
+        message: "Oeuvre mise a jour.",
+        artwork: serializeArtwork(artwork, { includeManagement: true })
+      });
+    } catch (error) {
+      if (replacementMedia) {
+        await deleteArtworkMediaAssets(replacementMedia);
+      }
+      const mappedError = mapArtworkRouteError(error);
+
+      if (mappedError) {
+        return res.status(mappedError.status).json({
+          message: mappedError.message,
+          ...(mappedError.code ? { code: mappedError.code } : {})
+        });
+      }
+
+      console.error("Artist artwork update error:", error);
+      return res.status(500).json({
+        message: "Impossible de mettre a jour cette oeuvre."
       });
     }
-
-    const categoryId = await resolveCategoryId(input);
-    const artwork = await artworkRepository.updateArtwork({
-      artworkId,
-      artistId: req.artist.id,
-      title: input.title,
-      description: input.description,
-      categoryId,
-      price: input.price,
-      licenseType: input.licenseType,
-      protection: input.protection
-    });
-
-    return res.status(200).json({
-      message: "Oeuvre mise a jour et republiee.",
-      artwork: serializeArtwork(artwork, { includeManagement: true })
-    });
-  } catch (error) {
-    const mappedError = mapArtworkRouteError(error);
-
-    if (mappedError) {
-      return res.status(mappedError.status).json({
-        message: mappedError.message
-      });
-    }
-
-    console.error("Artist artwork update error:", error);
-    return res.status(500).json({
-      message: "Impossible de mettre a jour cette oeuvre."
-    });
   }
-});
+);
 
 router.delete("/artists/me/artworks/:id(\\d+)", ensureVerifiedArtist, async (req, res) => {
   try {

@@ -6,6 +6,7 @@ const { loadModuleWithMocks } = require("./helpers/mock-require");
 
 const routesPath = require.resolve("../src/routes/artist.routes");
 const authRequiredPath = require.resolve("../src/middlewares/auth-required.middleware");
+const csrfMiddlewarePath = require.resolve("../src/middlewares/csrf.middleware");
 const artistRequiredPath = require.resolve("../src/middlewares/artist-required.middleware");
 const applicationRepositoryPath =
   require.resolve("../src/repositories/artist-application-draft.repository");
@@ -63,12 +64,19 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
   const calls = {
     createArtwork: [],
     listArtworksByArtistId: [],
-    findOwnedArtwork: []
+    findOwnedArtwork: [],
+    updateArtwork: [],
+    deleteArtworkMediaAssets: []
   };
   const originalArtistRequired = require.cache[artistRequiredPath];
 
   const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
     [authRequiredPath]: buildAuthMiddleware(currentAuthUser),
+    [csrfMiddlewarePath]: {
+      csrfProtection(_req, _res, next) {
+        next();
+      }
+    },
     [applicationRepositoryPath]: {
       async findByUserId() {
         return overrides.findByUserIdResult || null;
@@ -120,8 +128,10 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
           ? overrides.findOwnedArtworkResult
           : null;
       },
-      async updateArtwork() {
-        throw new Error("ARTWORK_NOT_FOUND");
+      async updateArtwork(payload) {
+        calls.updateArtwork.push(payload);
+        if (overrides.updateArtworkError) throw overrides.updateArtworkError;
+        return overrides.updateArtworkResult || overrides.findOwnedArtworkResult;
       },
       async deleteArtwork() {
         throw new Error("ARTWORK_NOT_FOUND");
@@ -204,7 +214,8 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
           hdUrl: "/api/uploads/artworks/hd/test-artwork.jpg"
         };
       },
-      async deleteArtworkMediaAssets() {
+      async deleteArtworkMediaAssets(artwork) {
+        calls.deleteArtworkMediaAssets.push(artwork);
         return undefined;
       }
     },
@@ -490,4 +501,101 @@ test("GET /artists/me/artworks/:id does not expose an artwork owned by another a
 
   assert.equal(response.status, 404);
   assert.equal(response.body.code, "ARTWORK_NOT_FOUND");
+});
+
+test("PATCH /artists/me/artworks/:id updates an eligible artwork with optimistic versioning", async (t) => {
+  const previousArtwork = {
+    id: 42,
+    artistId: verifiedArtist.id,
+    title: "Before",
+    version: 3,
+    storageProvider: "local",
+    imagePath: "old-preview.jpg",
+    previewPath: "old-preview.jpg",
+    hdPath: "old-hd.jpg"
+  };
+  const updatedArtwork = {
+    ...previousArtwork,
+    title: "After",
+    version: 4,
+    priceAmount: 14500,
+    currency: "EUR",
+    price: "145",
+    licenseType: "PERSONAL",
+    saleStatus: "AVAILABLE",
+    visibility: "PUBLISHED",
+    moderationStatus: "approved",
+    stockQuantity: 0,
+    reservedQuantity: 0,
+    orderItems: [],
+    reservations: [],
+    artist: verifiedArtist,
+    category: { id: 9, name: "Illustration" }
+  };
+  const { baseUrl, calls } = await startArtistArtworkRoutesApp(t, {
+    findOwnedArtworkResult: previousArtwork,
+    updateArtworkResult: updatedArtwork
+  });
+
+  const response = await requestJson(baseUrl, "/artists/me/artworks/42", {
+    method: "PATCH",
+    body: {
+      title: "After",
+      description: "Updated description",
+      categoryId: 9,
+      price: "145",
+      licenseType: "PERSONAL",
+      protection: true,
+      expectedVersion: 3
+    }
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.message, "Oeuvre mise a jour.");
+  assert.equal(response.body.artwork.title, "After");
+  assert.equal(calls.updateArtwork.length, 1);
+  assert.equal(calls.updateArtwork[0].expectedVersion, 3);
+  assert.equal(calls.updateArtwork[0].media.hdPath, "artworks/hd/test-artwork.jpg");
+  assert.deepEqual(calls.deleteArtworkMediaAssets, [previousArtwork]);
+});
+
+test("PATCH /artists/me/artworks/:id requires the version opened by the artist", async (t) => {
+  const { baseUrl, calls } = await startArtistArtworkRoutesApp(t);
+  const response = await requestJson(baseUrl, "/artists/me/artworks/42", {
+    method: "PATCH",
+    body: {
+      title: "Missing version",
+      categoryId: 9,
+      price: "145",
+      licenseType: "PERSONAL"
+    }
+  });
+
+  assert.equal(response.status, 400);
+  assert.equal(response.body.code, "ARTWORK_VERSION_REQUIRED");
+  assert.equal(calls.updateArtwork.length, 0);
+});
+
+test("PATCH /artists/me/artworks/:id exposes purchase conflicts without changing media", async (t) => {
+  const previousArtwork = { id: 42, artistId: verifiedArtist.id, version: 1 };
+  const { baseUrl, calls } = await startArtistArtworkRoutesApp(t, {
+    findOwnedArtworkResult: previousArtwork,
+    updateArtworkError: new Error("ARTWORK_HAS_PURCHASES")
+  });
+  const response = await requestJson(baseUrl, "/artists/me/artworks/42", {
+    method: "PATCH",
+    body: {
+      title: "Locked artwork",
+      categoryId: 9,
+      price: "145",
+      licenseType: "PERSONAL",
+      expectedVersion: 1
+    }
+  });
+
+  assert.equal(response.status, 409);
+  assert.equal(response.body.code, "ARTWORK_HAS_PURCHASES");
+  assert.equal(calls.updateArtwork.length, 1);
+  assert.equal(calls.deleteArtworkMediaAssets.length, 1);
+  assert.equal(calls.deleteArtworkMediaAssets[0].hdPath, "artworks/hd/test-artwork.jpg");
 });

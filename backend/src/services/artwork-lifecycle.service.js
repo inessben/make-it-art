@@ -76,6 +76,8 @@ function buildArtworkManagement(artwork) {
     lifecycle: {
       visibility,
       archivedAt: artwork?.archivedAt || null,
+      version: Number.isSafeInteger(artwork?.version) ? artwork.version : 1,
+      updatedAt: artwork?.updatedAt || null,
       hasConfirmedPurchase: purchased,
       hasTransactionInProgress: transactionInProgress
     },

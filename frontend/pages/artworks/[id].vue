@@ -273,6 +273,14 @@
                     </p>
                   </li>
                 </ul>
+
+                <NuxtLink
+                  v-if="artwork.management.capabilities.canEdit"
+                  :to="`/artworks/${artwork.id}/edit`"
+                  class="mt-5 inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
+                >
+                  Modifier l’œuvre
+                </NuxtLink>
               </section>
 
               <div class="mt-2 grid gap-3">
