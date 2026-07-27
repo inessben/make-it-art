@@ -131,6 +131,8 @@ module.exports = {
     watermarkText:
       process.env.ARTWORK_WATERMARK_TEXT || "Make It Art · Preview · No AI training",
     watermarkPublicPreviews: process.env.ARTWORK_WATERMARK_PUBLIC_PREVIEWS !== "false",
+    forensicWatermarkSecret: process.env.ARTWORK_FORENSIC_WATERMARK_SECRET || "",
+    forensicWatermarkEnabled: process.env.ARTWORK_FORENSIC_WATERMARK_ENABLED !== "false",
     imageDrmSecret: process.env.ARTWORK_IMAGE_DRM_SECRET || "",
     imageDrmEnabled: process.env.ARTWORK_IMAGE_DRM_ENABLED !== "false",
     s3: {

@@ -3,6 +3,7 @@ const path = require("path");
 const fsp = require("node:fs/promises");
 const prisma = require("../lib/prisma");
 const { authRequired } = require("../middlewares/auth-required.middleware");
+const { authOptional } = require("../middlewares/auth-optional.middleware");
 const { artworkMediaRateLimit } = require("../middlewares/rate-limit.middleware");
 const {
   blockAiTrainingBots,
@@ -21,6 +22,13 @@ const {
   assertCanAccessHd,
   openArtworkMediaStream
 } = require("../services/artwork-download.service");
+const {
+  FORENSIC_COOKIE,
+  createGuestViewerToken,
+  personalizePreviewBuffer,
+  readStreamToBuffer
+} = require("../services/forensic-watermark.service");
+const env = require("../config/env");
 
 const router = express.Router();
 
@@ -113,16 +121,67 @@ async function findArtworkByPreviewFilename(filename) {
   });
 }
 
-router.get("/artworks/:id(\\d+)/media/preview", loadArtwork, async (req, res) => {
+function resolveForensicViewer(req, res) {
+  if (req.user?.id) {
+    return { userId: req.user.id, guestToken: null };
+  }
+
+  let guestToken = String(req.cookies?.[FORENSIC_COOKIE] || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+
+  if (!guestToken) {
+    guestToken = createGuestViewerToken();
+    res.cookie(FORENSIC_COOKIE, guestToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: env.nodeEnv === "production",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      path: "/"
+    });
+  }
+
+  return { userId: null, guestToken };
+}
+
+router.get("/artworks/:id(\\d+)/media/preview", authOptional, loadArtwork, async (req, res) => {
   try {
     req.artworkMedia = await ensureWatermarkedPreview(req.artworkMedia);
     const payload = await openArtworkMediaStream(req.artworkMedia, "preview");
+    const plaintext = await readStreamToBuffer(payload.stream);
+    const viewer = resolveForensicViewer(req, res);
+
+    let body = plaintext;
+    let forensicId = null;
+
+    if (env.artworkMedia.forensicWatermarkEnabled !== false) {
+      try {
+        const personalized = await personalizePreviewBuffer(plaintext, {
+          userId: viewer.userId,
+          guestToken: viewer.guestToken,
+          artworkId: req.artworkMedia.id
+        });
+        body = personalized.buffer;
+        forensicId = personalized.visibleId;
+      } catch (forensicError) {
+        console.error("Forensic watermark embed failed, serving base preview:", forensicError);
+      }
+    }
+
     applyArtworkMediaHeaders(res);
-    return pipeMedia(res, {
-      stream: payload.stream,
-      contentType: payload.contentType,
-      filename: `artwork-${req.artworkMedia.id}-preview.jpg`
-    });
+    const forensicActive = Boolean(forensicId);
+    res.set("Content-Type", forensicActive ? "image/png" : "image/jpeg");
+    res.set("Cache-Control", "private, no-store");
+    res.set(
+      "Content-Disposition",
+      `inline; filename="artwork-${req.artworkMedia.id}-preview.${forensicActive ? "png" : "jpg"}"`
+    );
+    if (forensicActive) {
+      res.set("X-MIA-Forensic-Watermark", "1");
+      res.set("X-MIA-Trace-Id", forensicId);
+    }
+
+    return res.status(200).send(body);
   } catch (error) {
     if (error instanceof ArtworkMediaAccessError) {
       return res.status(error.status).json({ message: error.message, code: error.code });

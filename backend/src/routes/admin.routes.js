@@ -29,6 +29,13 @@ const paymentRepository = require("../repositories/payment.repository");
 const { ensureBuffer } = require("../utils/ensure-buffer");
 const { inviteAdminUser } = require("../services/auth.service");
 const { writeAdminAuditLog } = require("../services/admin-audit.service");
+const multer = require("multer");
+const fsp = require("node:fs/promises");
+const os = require("node:os");
+const path = require("node:path");
+const {
+  extractForensicWatermarkFromFile
+} = require("../services/forensic-watermark.service");
 const {
   AdminUserManagementError,
   removeAdminAccess,
@@ -1569,6 +1576,88 @@ router.get("/admin/artworks", authRequired, adminRequired, async (_req, res) => 
     });
   }
 });
+
+const forensicUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 12 * 1024 * 1024 },
+  fileFilter(_req, file, callback) {
+    if (!String(file.mimetype || "").startsWith("image/")) {
+      callback(new Error("FORENSIC_IMAGE_REQUIRED"));
+      return;
+    }
+    callback(null, true);
+  }
+});
+
+/**
+ * Webtoon-style Toon Radar decode: upload a leaked screenshot/preview and recover
+ * the invisible viewer identity embedded at serve time.
+ */
+router.post(
+  "/admin/forensic-watermark/decode",
+  authRequired,
+  adminRequired,
+  forensicUpload.single("image"),
+  async (req, res) => {
+    let tempPath = null;
+
+    try {
+      if (!req.file?.buffer) {
+        return res.status(400).json({
+          message: "Image file is required (field name: image)",
+          code: "FORENSIC_IMAGE_REQUIRED"
+        });
+      }
+
+      const ext = path.extname(req.file.originalname || "").toLowerCase() || ".png";
+      tempPath = path.join(
+        os.tmpdir(),
+        `mia-forensic-decode-${Date.now()}-${Math.random().toString(16).slice(2)}${ext}`
+      );
+      await fsp.writeFile(tempPath, req.file.buffer);
+
+      const decoded = await extractForensicWatermarkFromFile(tempPath);
+
+      if (!decoded.ok) {
+        return res.status(422).json({
+          message: "No valid forensic watermark found in this image",
+          code: "FORENSIC_NOT_FOUND",
+          reason: decoded.reason || "UNKNOWN"
+        });
+      }
+
+      let user = null;
+      if (decoded.userId) {
+        user = await prisma.user.findUnique({
+          where: { id: decoded.userId },
+          select: { id: true, email: true, username: true }
+        });
+      }
+
+      return res.status(200).json({
+        message: "Forensic watermark decoded",
+        forensic: {
+          kind: decoded.kind,
+          userId: decoded.userId,
+          artworkId: decoded.artworkId,
+          guestToken: decoded.guestToken,
+          visibleId: decoded.visibleId,
+          user
+        }
+      });
+    } catch (error) {
+      console.error("Forensic watermark decode error:", error);
+      return res.status(500).json({
+        message: "Unable to decode forensic watermark",
+        code: "FORENSIC_DECODE_FAILED"
+      });
+    } finally {
+      if (tempPath) {
+        await fsp.unlink(tempPath).catch(() => {});
+      }
+    }
+  }
+);
 
 router.patch("/admin/artworks/:id/moderation", authRequired, adminRequired, async (req, res) => {
   try {

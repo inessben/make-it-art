@@ -101,6 +101,12 @@
                   Aperçu filigrané
                 </span>
                 <span
+                  v-if="artwork.forensicWatermark"
+                  class="rounded-full bg-[#1A2A1A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#A8E0B8]"
+                >
+                  Trace ID invisible
+                </span>
+                <span
                   v-if="!artwork.isAvailableForPurchase"
                   class="rounded-full bg-[#3A1A1A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#F5A8A8]"
                 >
@@ -234,7 +240,8 @@
                 Télécharger le fichier HD
               </a>
               <p v-if="artwork.hasHdFile" class="text-sm text-slate-500">
-                L'aperçu public est compressé{{ artwork.watermarkApplied ? " et filigrané" : "" }}.
+                L'aperçu public est compressé{{ artwork.watermarkApplied ? " et filigrané" : ""
+                }}{{ artwork.forensicWatermark ? ", avec un identifiant invisible lié à votre session (méthode type Webtoon / Toon Radar)" : "" }}.
                 Le HD est réservé à l'artiste et aux acheteurs.
               </p>
             </div>
