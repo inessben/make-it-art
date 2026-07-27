@@ -108,12 +108,7 @@ async function removeArtworkImageFile(imagePath) {
   }
 }
 
-async function generateArtworkPreview({
-  imagePath,
-  title,
-  artistName,
-  copyrightHolder
-}) {
+async function generateArtworkPreview({ imagePath, title, artistName, copyrightHolder }) {
   const { absolutePath: sourcePath } = assertSafeRelativeUploadPath(imagePath);
   const previewRelativePath = buildArtworkPreviewPath(path.basename(imagePath));
   const { absolutePath: outputPath } = assertSafeRelativeUploadPath(previewRelativePath);
@@ -148,9 +143,7 @@ async function generateArtworkPreview({
 
     if (result.status !== 0) {
       const details = [result.stderr, result.stdout].filter(Boolean).join("\n").trim();
-      throw new Error(
-        details || "Unable to generate a protected artwork preview"
-      );
+      throw new Error(details || "Unable to generate a protected artwork preview");
     }
 
     await fsp.access(outputPath, fs.constants.R_OK);

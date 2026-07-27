@@ -78,16 +78,18 @@ function serializeApplicationDraft(draft) {
   };
 }
 
-function serializeArtistProfile(artist) {
+function serializeArtistProfile(artist, application = null) {
   if (!artist) {
     return null;
   }
+
+  const approvedByApplication = application?.status === ARTIST_APPLICATION_STATUS.APPROVED;
 
   return {
     id: artist.id,
     userId: artist.userId,
     displayName: artist.displayName,
-    verified: Boolean(artist.verified),
+    verified: Boolean(artist.verified) || approvedByApplication,
     createdAt: artist.createdAt,
     bio: artist.user?.bio || "",
     email: artist.user?.email || "",
@@ -349,7 +351,7 @@ router.get("/artists/me", async (req, res) => {
     ]);
 
     return res.status(200).json({
-      artist: serializeArtistProfile(artist),
+      artist: serializeArtistProfile(artist, application),
       application: serializeApplicationDraft(application)
     });
   } catch (error) {

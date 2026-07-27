@@ -47,7 +47,9 @@ function serializeOrder(order) {
       const entitlement = entitlements.get(item.id) || null;
       const certificate = certificates.get(item.id) || null;
       const downloadLimit =
-        entitlement && Number.isSafeInteger(entitlement.downloadLimit) && entitlement.downloadLimit > 0
+        entitlement &&
+        Number.isSafeInteger(entitlement.downloadLimit) &&
+        entitlement.downloadLimit > 0
           ? entitlement.downloadLimit
           : 5;
       const downloadCount = entitlement?.downloadCount ?? 0;

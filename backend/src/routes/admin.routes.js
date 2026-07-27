@@ -16,6 +16,7 @@ const artistApplicationDraftRepository = require("../repositories/artist-applica
 const userRepository = require("../repositories/user.repository");
 const artistRepository = require("../repositories/artist.repository");
 const artworkRepository = require("../repositories/artwork.repository");
+const notificationRepository = require("../repositories/notification.repository");
 const {
   ADMIN_AUDIT_ENTITY_LABELS,
   ADMIN_AUDIT_ENTITY_TYPES,
@@ -1291,6 +1292,21 @@ router.patch("/admin/artists/:id/verification", authRequired, adminRequired, asy
         prismaClient: transaction
       });
 
+      if (verified) {
+        const pendingApplication = await transaction.artistApplicationDraft.findUnique({
+          where: { userId: updatedArtist.userId }
+        });
+
+        if (pendingApplication?.status === ARTIST_APPLICATION_STATUS.PENDING) {
+          await artistApplicationDraftRepository.markApproved({
+            applicationId: pendingApplication.id,
+            reviewedByAdminId: req.user.id,
+            reviewNote: "Activated from artist verification",
+            prismaClient: transaction
+          });
+        }
+      }
+
       await writeAdminAuditLog(transaction, {
         actorUser: req.user,
         action: verified ? "ARTIST_VERIFIED" : "ARTIST_UNVERIFIED",
@@ -1395,28 +1411,65 @@ router.patch("/admin/artist-applications/:id", authRequired, adminRequired, asyn
         ipAddress: req.ip
       });
 
-      if (
-        status === ARTIST_APPLICATION_STATUS.APPROVED &&
-        Number.isSafeInteger(reviewedApplication?.user?.artist?.id)
-      ) {
-        await writeAdminAuditLog(transaction, {
-          actorUser: req.user,
-          action: "ARTIST_PROFILE_ACTIVATED",
-          entityType: "ARTIST",
-          entityId: reviewedApplication.user.artist.id,
-          ipAddress: req.ip
-        });
+      if (status === ARTIST_APPLICATION_STATUS.APPROVED) {
+        let artistId = reviewedApplication?.user?.artist?.id;
+
+        if (!Number.isSafeInteger(artistId)) {
+          const ensuredArtist = await transaction.artist.findUnique({
+            where: { userId: reviewedApplication.userId },
+            select: { id: true, verified: true }
+          });
+          artistId = ensuredArtist?.id;
+
+          if (Number.isSafeInteger(artistId) && !ensuredArtist.verified) {
+            await transaction.artist.update({
+              where: { id: artistId },
+              data: { verified: true }
+            });
+          }
+        }
+
+        if (Number.isSafeInteger(artistId)) {
+          await writeAdminAuditLog(transaction, {
+            actorUser: req.user,
+            action: "ARTIST_PROFILE_ACTIVATED",
+            entityType: "ARTIST",
+            entityId: artistId,
+            ipAddress: req.ip
+          });
+        }
       }
 
       return reviewedApplication;
     });
+
+    if (status === ARTIST_APPLICATION_STATUS.APPROVED) {
+      try {
+        await notificationRepository.createNotificationOnce({
+          userId: application.userId,
+          type: "artist_application_approved",
+          title: "Profil artiste valide",
+          message:
+            "Votre candidature artiste a ete approuvee. Votre espace artiste est maintenant accessible.",
+          payload: {
+            applicationId,
+            artistId: application.user?.artist?.id || null
+          },
+          eventKey: `artist-application-approved:${applicationId}`
+        });
+      } catch (notificationError) {
+        console.error("Artist approval notification failed:", notificationError);
+      }
+    }
+
+    const refreshedApplication = await artistApplicationDraftRepository.findById(application.id);
 
     return res.status(200).json({
       message:
         status === ARTIST_APPLICATION_STATUS.APPROVED
           ? "Artist application approved"
           : "Artist application rejected",
-      application: serializeAdminArtistApplication(application)
+      application: serializeAdminArtistApplication(refreshedApplication || application)
     });
   } catch (error) {
     if (error.code === "P2025") {

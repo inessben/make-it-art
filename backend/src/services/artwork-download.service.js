@@ -131,7 +131,9 @@ async function consumeArtworkDownload({ userId, orderPublicId, orderItemId, now 
     await fsp.access(absolutePath);
 
     const extension = path.extname(filePath) || ".bin";
-    const safeTitle = String(entitlement.orderItem?.artworkTitle || entitlement.artwork.title || "artwork")
+    const safeTitle = String(
+      entitlement.orderItem?.artworkTitle || entitlement.artwork.title || "artwork"
+    )
       .replace(/[^A-Za-z0-9._-]+/g, "_")
       .slice(0, 80);
 

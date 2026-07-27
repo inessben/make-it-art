@@ -390,11 +390,7 @@ function artworkDownloadUrl(item) {
 
 function canDownloadItem(item) {
   const rights = item?.delivery?.downloadRights;
-  return Boolean(
-    item?.id &&
-      rights?.status === "ACTIVE" &&
-      Number(rights.remainingDownloads) > 0
-  );
+  return Boolean(item?.id && rights?.status === "ACTIVE" && Number(rights.remainingDownloads) > 0);
 }
 
 function refundToneClass(status) {

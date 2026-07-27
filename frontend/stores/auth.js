@@ -22,7 +22,15 @@ export const useAuthStore = defineStore("auth", {
         return false;
       }
 
-      return Boolean(state.user?.artist?.verified);
+      if (state.user?.artist?.verified === true) {
+        return true;
+      }
+
+      // An approved application with an artist profile unlocks the workspace
+      // even if a previous session payload still has verified=false.
+      return Boolean(
+        state.user?.artist && state.user?.artistApplication?.status === "approved"
+      );
     },
     hasArtistApplication(state) {
       if (this.isAdmin) {

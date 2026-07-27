@@ -154,12 +154,12 @@
                 <span
                   class="rounded-full px-4 py-2 text-sm font-semibold"
                   :class="
-                    artist.verified
+                    artist.verified || approvedApplication
                       ? 'bg-violet-700/10 text-violet-400'
                       : 'bg-amber-950 text-amber-300'
                   "
                 >
-                  {{ artist.verified ? "Verified" : "Pending" }}
+                  {{ artist.verified || approvedApplication ? "Verified" : "Pending" }}
                 </span>
               </div>
               <p class="mt-4 max-w-2xl text-slate-400 leading-7">
@@ -169,7 +169,7 @@
             </div>
           </div>
 
-          <div v-if="artist.verified" class="flex flex-wrap gap-3">
+          <div v-if="artist.verified || approvedApplication" class="flex flex-wrap gap-3">
             <NuxtLink
               to="/artist"
               class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6d8bff]"
@@ -221,7 +221,7 @@
                 <h2 class="mt-4 text-2xl font-semibold text-white">Mes oeuvres publiees</h2>
               </div>
               <NuxtLink
-                v-if="artist.verified"
+                v-if="artist.verified || approvedApplication"
                 to="/artworks/new"
                 class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#4A6CF7] bg-[#4A6CF7]/10 px-5 text-sm font-semibold text-[#D5E0FF] transition hover:bg-[#4A6CF7]/20"
               >
@@ -236,7 +236,7 @@
               v-else-if="!publishedArtworks.length"
               class="mt-6 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 text-sm leading-6 text-[#A0ADB4]"
             >
-              <span v-if="artist.verified">
+              <span v-if="artist.verified || approvedApplication">
                 Vous n'avez pas encore publie d'oeuvre. Lancez votre premiere publication pour
                 apparaitre dans le catalogue.
               </span>
@@ -303,6 +303,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from "vue";
+import { useAuthStore } from "~/stores/auth";
 
 definePageMeta({
   middleware: "auth"
@@ -316,11 +317,23 @@ const publishedArtworks = ref([]);
 const missingArtist = ref(false);
 const errorMessage = ref("");
 
-const pendingApplication = computed(() =>
-  application.value?.status === "pending" ? application.value : null
-);
-const rejectedApplication = computed(() =>
-  application.value?.status === "rejected" ? application.value : null
+const pendingApplication = computed(() => {
+  // A verified artist profile always wins over a stale "pending" application view.
+  if (artist.value?.verified) {
+    return null;
+  }
+
+  return application.value?.status === "pending" ? application.value : null;
+});
+const rejectedApplication = computed(() => {
+  if (artist.value?.verified) {
+    return null;
+  }
+
+  return application.value?.status === "rejected" ? application.value : null;
+});
+const approvedApplication = computed(() =>
+  application.value?.status === "approved" ? application.value : null
 );
 const userNameFallback = computed(
   () => artist.value?.username || application.value?.payload?.displayName || "Artist"
@@ -338,7 +351,7 @@ const initials = computed(() => {
 });
 
 async function loadPublishedArtworks() {
-  if (!artist.value?.verified) {
+  if (!artist.value?.verified && application.value?.status !== "approved") {
     publishedArtworks.value = [];
     return;
   }
@@ -360,6 +373,13 @@ async function loadPublishedArtworks() {
 
 onMounted(async () => {
   try {
+    const auth = useAuthStore();
+    try {
+      await auth.fetchCurrentUser();
+    } catch {
+      // The page middleware already enforces auth; keep loading the profile payload.
+    }
+
     const response = await $fetch("/api/artists/me", {
       credentials: "include"
     });

@@ -18,7 +18,10 @@ test("known generative AI crawlers are blocked", () => {
   assert.equal(isAiTrainingBot("ClaudeBot/1.0"), true);
   assert.equal(isAiTrainingBot("CCBot/2.0"), true);
   assert.equal(isAiTrainingBot("Google-Extended"), true);
-  assert.equal(isAiTrainingBot("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0"), false);
+  assert.equal(
+    isAiTrainingBot("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0"),
+    false
+  );
 });
 
 test("empty or scraper user-agents are treated as suspicious automation", () => {

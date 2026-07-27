@@ -3,9 +3,7 @@ const path = require("path");
 const fsp = require("node:fs/promises");
 const prisma = require("../lib/prisma");
 const { authRequired } = require("../middlewares/auth-required.middleware");
-const {
-  artworkMediaRateLimit
-} = require("../middlewares/rate-limit.middleware");
+const { artworkMediaRateLimit } = require("../middlewares/rate-limit.middleware");
 const {
   blockAiTrainingBots,
   artworkAntiScrapingGuard
@@ -159,8 +157,7 @@ router.get(
       let absolutePreviewPath;
 
       try {
-        ({ absolutePath: absolutePreviewPath } =
-          assertSafeRelativeUploadPath(previewRelativePath));
+        ({ absolutePath: absolutePreviewPath } = assertSafeRelativeUploadPath(previewRelativePath));
         await fsp.access(absolutePreviewPath);
       } catch (_missingPreview) {
         const artwork = await findArtworkByPreviewFilename(filename);
@@ -219,37 +216,33 @@ router.get(
   async (_req, res) => {
     res.set("X-Robots-Tag", "noindex, nofollow, noai, noimageai");
     return res.status(403).json({
-      message:
-        "Original artwork files are protected. Use an entitled HD download endpoint.",
+      message: "Original artwork files are protected. Use an entitled HD download endpoint.",
       code: "ARTWORK_ORIGINAL_PROTECTED"
     });
   }
 );
 
-router.get(
-  "/artworks/:filename",
-  blockAiTrainingBots,
-  artworkMediaRateLimit,
-  async (req, res) => {
+router.get("/artworks/:filename", blockAiTrainingBots, artworkMediaRateLimit, async (req, res) => {
+  res.set("X-Robots-Tag", "noindex, nofollow, noai, noimageai");
+  return res.status(403).json({
+    message:
+      "Original artwork files are protected. Use the marketplace preview or an entitled download.",
+    code: "ARTWORK_ORIGINAL_PROTECTED"
+  });
+});
+
+// Static files must only be mounted under `/uploads` (see routes/index.js).
+// Attaching them on the shared router would swallow `/admin/*` and other API routes
+// when this router is also mounted at the API root.
+const uploadsStatic = express.static(path.resolve(UPLOADS_ROOT), {
+  fallthrough: false,
+  maxAge: "1h",
+  setHeaders(res) {
     res.set("X-Robots-Tag", "noindex, nofollow, noai, noimageai");
-    return res.status(403).json({
-      message:
-        "Original artwork files are protected. Use the marketplace preview or an entitled download.",
-      code: "ARTWORK_ORIGINAL_PROTECTED"
-    });
+    res.set("Cross-Origin-Resource-Policy", "same-site");
+    res.set("Cache-Control", "private, max-age=3600, no-transform");
   }
-);
-
-router.use(
-  express.static(path.resolve(UPLOADS_ROOT), {
-    fallthrough: false,
-    maxAge: "1h",
-    setHeaders(res) {
-      res.set("X-Robots-Tag", "noindex, nofollow, noai, noimageai");
-      res.set("Cross-Origin-Resource-Policy", "same-site");
-      res.set("Cache-Control", "private, max-age=3600, no-transform");
-    }
-  })
-);
+});
 
 module.exports = router;
+module.exports.uploadsStatic = uploadsStatic;

@@ -15,20 +15,20 @@ const refundRoutes = require("./refund.routes");
 const paymentOperationsRoutes = require("./payment-operations.routes");
 const artworkMediaRoutes = require("./artwork-media.routes");
 const savedPaymentMethodRoutes = require("./saved-payment-method.routes");
-const {
-  blockAiTrainingBots
-} = require("../middlewares/artwork-media-guard.middleware");
+const { blockAiTrainingBots } = require("../middlewares/artwork-media-guard.middleware");
 
 const router = express.Router();
 
 router.use(blockAiTrainingBots);
 router.use("/uploads", artworkMediaRoutes);
+router.use("/uploads", artworkMediaRoutes.uploadsStatic);
 
 router.use(docsRoutes);
 router.use(healthRoutes);
 router.use(authRoutes);
 router.use(artistRoutes);
 router.use(marketplaceRoutes);
+// Media streaming/protection routes (no static catch-all — that stays under /uploads).
 router.use(artworkMediaRoutes);
 router.use(ordersRoutes);
 router.use(notificationsRoutes);
