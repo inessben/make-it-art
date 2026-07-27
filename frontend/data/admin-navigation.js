@@ -24,6 +24,12 @@ export const adminNavigation = [
     icon: "AP"
   },
   {
+    label: "Categories",
+    description: "Homepage category visuals",
+    route: "/admin/categories",
+    icon: "CT"
+  },
+  {
     label: "Artworks",
     description: "Content moderation",
     route: "/admin/artworks",

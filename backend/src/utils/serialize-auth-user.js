@@ -1,4 +1,5 @@
 const { isAdminUser } = require("../middlewares/admin-required.middleware");
+const { buildUploadedImageUrl } = require("../services/uploaded-image.service");
 
 function serializeArtist(artist) {
   if (!artist) {
@@ -8,6 +9,7 @@ function serializeArtist(artist) {
   return {
     id: artist.id,
     displayName: artist.displayName,
+    avatarUrl: buildUploadedImageUrl(artist.avatarPath),
     verified: Boolean(artist.verified),
     createdAt: artist.createdAt
   };

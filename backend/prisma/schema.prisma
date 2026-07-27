@@ -174,6 +174,7 @@ model Artist {
   id          Int          @id @default(autoincrement())
   userId      Int          @unique @map("user_id")
   displayName String?      @map("display_name")
+  avatarPath  String?      @map("avatar_path")
   verified    Boolean?
   createdAt   DateTime?    @map("created_at")
   user        User         @relation(fields: [userId], references: [id])
@@ -266,9 +267,10 @@ model UserGallery {
 }
 
 model Category {
-  id       Int       @id @default(autoincrement())
-  name     String?
-  artworks Artwork[]
+  id        Int       @id @default(autoincrement())
+  name      String?
+  imagePath String?   @map("image_path")
+  artworks  Artwork[]
 
   @@map("category")
 }

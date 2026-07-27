@@ -1,5 +1,6 @@
 const { extractArtistApplicationPayload } = require("../services/artist-contract.service");
 const { buildArtworkImageUrl } = require("../services/artwork-media.service");
+const { buildUploadedImageUrl } = require("../services/uploaded-image.service");
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -33,6 +34,7 @@ function serializeArtistSummary(artist) {
       normalizeText(artist.displayName) || normalizeText(artist.user?.username) || "Artist",
     verified: Boolean(artist.verified),
     bio: normalizeText(artist.user?.bio),
+    avatarUrl: buildUploadedImageUrl(artist.avatarPath),
     artType: normalizeText(payload.artType),
     styles: Array.isArray(payload.styles) ? payload.styles.filter(Boolean) : [],
     portfolioUrl: normalizeText(payload.portfolioUrl),
@@ -111,7 +113,8 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     category: artwork.category
       ? {
           id: artwork.category.id,
-          name: normalizeText(artwork.category.name) || "Uncategorized"
+          name: normalizeText(artwork.category.name) || "Uncategorized",
+          imageUrl: buildUploadedImageUrl(artwork.category.imagePath)
         }
       : null,
     artist: includeArtist ? serializeArtistSummary(artwork.artist) : null
