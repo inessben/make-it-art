@@ -274,13 +274,31 @@
                   </li>
                 </ul>
 
-                <NuxtLink
-                  v-if="artwork.management.capabilities.canEdit"
-                  :to="`/artworks/${artwork.id}/edit`"
-                  class="mt-5 inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
+                <div class="mt-5 flex flex-wrap gap-3">
+                  <NuxtLink
+                    v-if="artwork.management.capabilities.canEdit"
+                    :to="`/artworks/${artwork.id}/edit`"
+                    class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
+                  >
+                    Modifier l’œuvre
+                  </NuxtLink>
+                  <button
+                    v-if="artwork.management.capabilities.canDelete"
+                    ref="deleteTrigger"
+                    type="button"
+                    class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#7A3131] bg-[#2A1010] px-6 text-sm font-semibold text-[#FFB4B4] transition hover:border-[#B64747] hover:bg-[#3A1515]"
+                    @click="openDeleteDialog"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+                <p
+                  v-if="managementMessage"
+                  class="mt-4 rounded-2xl border border-[#7A3131] bg-[#2A1010] p-4 text-sm text-[#FFB4B4]"
+                  role="alert"
                 >
-                  Modifier l’œuvre
-                </NuxtLink>
+                  {{ managementMessage }}
+                </p>
               </section>
 
               <div class="mt-2 grid gap-3">
@@ -417,10 +435,55 @@
       </template>
     </section>
   </main>
+
+  <Teleport to="body">
+    <div v-if="deleteDialogOpen" class="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4">
+      <section
+        class="w-full max-w-lg rounded-[28px] border border-[#7A3131] bg-[#090D18] p-6 shadow-2xl sm:p-8"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-artwork-title"
+        aria-describedby="delete-artwork-description"
+        @keydown.esc.prevent.stop="closeDeleteDialog"
+        @keydown.tab="trapDeleteDialogFocus"
+      >
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#FF9E9E]">
+          Action définitive
+        </p>
+        <h2 id="delete-artwork-title" class="mt-3 text-2xl font-semibold text-white">
+          Supprimer « {{ artwork?.title }} » ?
+        </h2>
+        <p id="delete-artwork-description" class="mt-4 text-sm leading-6 text-[#B7C5DD]">
+          Cette œuvre et ses médias seront supprimés définitivement. Cette action ne peut pas être
+          annulée.
+        </p>
+        <div class="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            ref="deleteCancelButton"
+            type="button"
+            class="min-h-12 rounded-2xl border border-[#34415A] px-5 text-sm font-semibold text-white transition hover:border-[#61708E] disabled:opacity-50"
+            :disabled="deletingArtwork"
+            @click="closeDeleteDialog"
+          >
+            Annuler
+          </button>
+          <button
+            ref="deleteConfirmButton"
+            type="button"
+            class="min-h-12 rounded-2xl bg-[#C84D4D] px-5 text-sm font-semibold text-white transition hover:bg-[#E15C5C] disabled:cursor-wait disabled:opacity-50"
+            :disabled="deletingArtwork"
+            @click="confirmArtworkDeletion"
+          >
+            {{ deletingArtwork ? "Suppression…" : "Supprimer définitivement" }}
+          </button>
+        </div>
+      </section>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import { navigateTo, useHead, useRequestHeaders, useRoute, useRuntimeConfig } from "#app";
 import { useAnalyticsEvent } from "~/composables/useAnalyticsEvent";
 import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
@@ -445,6 +508,12 @@ const cart = useCartStore();
 const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
 const cartMessage = ref("");
 const cartMessageType = ref("success");
+const managementMessage = ref("");
+const deleteDialogOpen = ref(false);
+const deletingArtwork = ref(false);
+const deleteTrigger = ref(null);
+const deleteCancelButton = ref(null);
+const deleteConfirmButton = ref(null);
 
 function schemaAvailability(status) {
   const values = {
@@ -648,6 +717,62 @@ const {
   toggleFollow
 } = useMarketplaceActions(auth);
 const { trackEvent } = useAnalyticsEvent();
+
+async function openDeleteDialog() {
+  managementMessage.value = "";
+  deleteDialogOpen.value = true;
+  await nextTick();
+  deleteCancelButton.value?.focus();
+}
+
+async function closeDeleteDialog() {
+  if (deletingArtwork.value) return;
+  deleteDialogOpen.value = false;
+  await nextTick();
+  deleteTrigger.value?.focus();
+}
+
+function trapDeleteDialogFocus(event) {
+  const firstButton = deleteCancelButton.value;
+  const lastButton = deleteConfirmButton.value;
+  if (!firstButton || !lastButton) return;
+
+  if (event.shiftKey && document.activeElement === firstButton) {
+    event.preventDefault();
+    lastButton.focus();
+  } else if (!event.shiftKey && document.activeElement === lastButton) {
+    event.preventDefault();
+    firstButton.focus();
+  }
+}
+
+async function confirmArtworkDeletion() {
+  const expectedVersion = artwork.value?.management?.lifecycle?.version;
+  if (!artwork.value?.id || !expectedVersion || deletingArtwork.value) return;
+
+  deletingArtwork.value = true;
+  managementMessage.value = "";
+
+  try {
+    const csrf = await $fetch("/api/v1/security/csrf-token", { credentials: "include" });
+    await $fetch(`/api/artists/me/artworks/${artwork.value.id}`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: { "x-csrf-token": csrf.csrfToken },
+      body: { expectedVersion }
+    });
+    await navigateTo({ path: "/artist-profile", query: { artworkDeleted: "1" } });
+  } catch (deleteError) {
+    deleteDialogOpen.value = false;
+    managementMessage.value =
+      deleteError?.data?.message || "Impossible de supprimer cette œuvre pour le moment.";
+    await refresh();
+    await nextTick();
+    deleteTrigger.value?.focus();
+  } finally {
+    deletingArtwork.value = false;
+  }
+}
 
 async function toggleCart() {
   cart.hydrate();

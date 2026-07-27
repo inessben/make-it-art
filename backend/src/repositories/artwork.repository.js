@@ -293,20 +293,58 @@ async function updateArtwork({
   );
 }
 
-async function deleteArtwork({ artworkId, artistId }) {
-  const existing = await findOwnedArtwork({ artworkId, artistId });
+async function deleteArtwork({ artworkId, artistId, expectedVersion }) {
+  return prisma.$transaction(
+    async (transaction) => {
+      const existing = await findOwnedArtwork({
+        artworkId,
+        artistId,
+        prismaClient: transaction
+      });
 
-  if (!existing) {
-    throw new Error("ARTWORK_NOT_FOUND");
-  }
+      if (!existing) {
+        throw new Error("ARTWORK_NOT_FOUND");
+      }
 
-  await prisma.artwork.delete({
-    where: {
-      id: artworkId
+      const management = buildArtworkManagement(existing);
+      if (!management.capabilities.canDelete) {
+        throw new Error(management.capabilities.reasons.delete);
+      }
+
+      if (!Number.isSafeInteger(expectedVersion) || existing.version !== expectedVersion) {
+        throw new Error("ARTWORK_VERSION_CONFLICT");
+      }
+
+      await transaction.cartItem.deleteMany({ where: { artworkId } });
+      await transaction.favorite.deleteMany({ where: { artworkId } });
+      await transaction.collectionItem.deleteMany({ where: { artworkId } });
+      await transaction.inventoryReservation.deleteMany({
+        where: {
+          artworkId,
+          status: {
+            not: "ACTIVE"
+          }
+        }
+      });
+
+      const result = await transaction.artwork.deleteMany({
+        where: {
+          id: artworkId,
+          artistId,
+          version: expectedVersion
+        }
+      });
+
+      if (result.count !== 1) {
+        throw new Error("ARTWORK_VERSION_CONFLICT");
+      }
+
+      return existing;
+    },
+    {
+      isolationLevel: "Serializable"
     }
-  });
-
-  return existing;
+  );
 }
 
 async function updateArtworkModeration({

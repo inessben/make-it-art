@@ -402,7 +402,7 @@ model Order {
 model OrderItem {
   id                   Int                   @id @default(autoincrement())
   orderId              Int                   @map("order_id")
-  artworkId            Int                   @map("artwork_id")
+  artworkId            Int?                  @map("artwork_id")
   // Legacy display field; Stripe totals are unitAmount/subtotalAmount.
   priceTokens          String?               @map("price_tokens")
   artworkTitle         String                @map("artwork_title")
@@ -419,7 +419,7 @@ model OrderItem {
   commissionRateBps    Int                   @default(700) @map("commission_rate_bps")
   currency             Currency              @default(EUR)
   createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamp(6)
-  artwork              Artwork               @relation(fields: [artworkId], references: [id])
+  artwork              Artwork?              @relation(fields: [artworkId], references: [id], onDelete: SetNull)
   order                Order                 @relation(fields: [orderId], references: [id])
   digitalEntitlement   DigitalEntitlement?
   ownershipCertificate OwnershipCertificate?

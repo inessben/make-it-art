@@ -1,6 +1,7 @@
 const express = require("express");
 const { authRequired } = require("../middlewares/auth-required.middleware");
 const { csrfProtection } = require("../middlewares/csrf.middleware");
+const { artworkManagementRateLimit } = require("../middlewares/rate-limit.middleware");
 const { isAdminUser } = require("../middlewares/admin-required.middleware");
 const { ensureVerifiedArtist } = require("../middlewares/artist-required.middleware");
 const artistApplicationDraftRepository = require("../repositories/artist-application-draft.repository");
@@ -337,7 +338,7 @@ function mapArtworkRouteError(error) {
     return {
       status: 409,
       code: "ARTWORK_ARCHIVED",
-      message: "Restaurez cette oeuvre avant de la modifier."
+      message: "Restaurez cette oeuvre avant de la modifier ou de la supprimer."
     };
   }
 
@@ -1215,33 +1216,49 @@ router.patch(
   }
 );
 
-router.delete("/artists/me/artworks/:id(\\d+)", ensureVerifiedArtist, async (req, res) => {
-  try {
-    const artworkId = Number.parseInt(req.params.id, 10);
+router.delete(
+  "/artists/me/artworks/:id(\\d+)",
+  ensureVerifiedArtist,
+  artworkManagementRateLimit,
+  csrfProtection,
+  async (req, res) => {
+    try {
+      const artworkId = Number.parseInt(req.params.id, 10);
+      const expectedVersion = Number.parseInt(req.body?.expectedVersion, 10);
 
-    const deleted = await artworkRepository.deleteArtwork({
-      artworkId,
-      artistId: req.artist.id
-    });
-    await deleteArtworkMediaAssets(deleted);
+      if (!Number.isSafeInteger(expectedVersion) || expectedVersion <= 0) {
+        return res.status(400).json({
+          message: "La version de l'oeuvre est requise.",
+          code: "ARTWORK_VERSION_REQUIRED"
+        });
+      }
 
-    return res.status(200).json({
-      message: "Oeuvre supprimee."
-    });
-  } catch (error) {
-    const mappedError = mapArtworkRouteError(error);
+      const deleted = await artworkRepository.deleteArtwork({
+        artworkId,
+        artistId: req.artist.id,
+        expectedVersion
+      });
+      await deleteArtworkMediaAssets(deleted);
 
-    if (mappedError) {
-      return res.status(mappedError.status).json({
-        message: mappedError.message
+      return res.status(200).json({
+        message: "Oeuvre supprimee definitivement."
+      });
+    } catch (error) {
+      const mappedError = mapArtworkRouteError(error);
+
+      if (mappedError) {
+        return res.status(mappedError.status).json({
+          message: mappedError.message,
+          ...(mappedError.code ? { code: mappedError.code } : {})
+        });
+      }
+
+      console.error("Artist artwork delete error:", error);
+      return res.status(500).json({
+        message: "Impossible de supprimer cette oeuvre."
       });
     }
-
-    console.error("Artist artwork delete error:", error);
-    return res.status(500).json({
-      message: "Impossible de supprimer cette oeuvre."
-    });
   }
-});
+);
 
 module.exports = router;

@@ -4,6 +4,14 @@
     title="Artist public profile"
     description="Manage your public identity, visual assets and published portfolio."
   >
+    <p
+      v-if="deletionSuccessMessage"
+      class="rounded-2xl border border-emerald-700/60 bg-emerald-950/40 p-4 text-sm text-emerald-200"
+      role="status"
+    >
+      {{ deletionSuccessMessage }}
+    </p>
+
     <section
       v-if="loading"
       class="rounded-[24px] border border-slate-800 bg-violet-950 p-6 text-slate-400"
@@ -486,6 +494,7 @@ definePageMeta({
 });
 
 const artist = ref(null);
+const route = useRoute();
 const application = ref(null);
 const loading = ref(true);
 const artworksLoading = ref(false);
@@ -499,6 +508,9 @@ const selectedCoverImage = ref(null);
 const selectedCoverPreviewUrl = ref("");
 const profileSuccessMessage = ref("");
 const profileErrorMessage = ref("");
+const deletionSuccessMessage = computed(() =>
+  route.query.artworkDeleted === "1" ? "L’œuvre a été supprimée définitivement." : ""
+);
 const profileForm = reactive({
   displayName: "",
   bio: "",

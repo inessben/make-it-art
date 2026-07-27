@@ -139,6 +139,22 @@ const walletWriteRateLimit = asExpressMiddleware(
     }
   })
 );
+
+const artworkManagementRateLimit = asExpressMiddleware(
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: isProduction ? 30 : 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) =>
+      req.user ? `artwork-management-user:${req.user.id}` : ipKeyGenerator(req.ip),
+    message: {
+      message: "Trop de demandes de gestion d'oeuvre. Reessayez dans quelques instants.",
+      code: "ARTWORK_MANAGEMENT_RATE_LIMITED"
+    }
+  })
+);
+
 module.exports = {
   authRateLimit,
   strictAuthRateLimit,
@@ -148,5 +164,6 @@ module.exports = {
   checkoutUserRateLimit,
   securityRateLimit,
   refundRateLimit,
-  paymentOperationsRateLimit
+  paymentOperationsRateLimit,
+  artworkManagementRateLimit
 };

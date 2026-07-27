@@ -35,9 +35,9 @@ function hasTransactionInProgress(artwork) {
 }
 
 function firstBlockedReason({ purchased, transactionInProgress, archived }) {
-  if (archived) return "ARTWORK_ARCHIVED";
   if (purchased) return "ARTWORK_HAS_PURCHASES";
   if (transactionInProgress) return "ARTWORK_TRANSACTION_IN_PROGRESS";
+  if (archived) return "ARTWORK_ARCHIVED";
   return null;
 }
 

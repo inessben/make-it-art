@@ -23,8 +23,16 @@ function existingArtwork(overrides = {}) {
   };
 }
 
-function loadRepository({ existing = existingArtwork(), updateCount = 1 } = {}) {
-  const calls = { updateMany: [], transactionOptions: null };
+function loadRepository({ existing = existingArtwork(), updateCount = 1, deleteCount = 1 } = {}) {
+  const calls = {
+    updateMany: [],
+    deleteArtwork: [],
+    cartItems: [],
+    favorites: [],
+    collectionItems: [],
+    reservations: [],
+    transactionOptions: null
+  };
   let findCount = 0;
   const transaction = {
     artwork: {
@@ -35,6 +43,30 @@ function loadRepository({ existing = existingArtwork(), updateCount = 1 } = {}) 
       async updateMany(input) {
         calls.updateMany.push(input);
         return { count: updateCount };
+      },
+      async deleteMany(input) {
+        calls.deleteArtwork.push(input);
+        return { count: deleteCount };
+      }
+    },
+    cartItem: {
+      async deleteMany(input) {
+        calls.cartItems.push(input);
+      }
+    },
+    favorite: {
+      async deleteMany(input) {
+        calls.favorites.push(input);
+      }
+    },
+    collectionItem: {
+      async deleteMany(input) {
+        calls.collectionItems.push(input);
+      }
+    },
+    inventoryReservation: {
+      async deleteMany(input) {
+        calls.reservations.push(input);
       }
     }
   };
@@ -131,5 +163,84 @@ test("artwork update is serializable and atomically increments its version", asy
   });
   assert.deepEqual(loaded.calls.updateMany[0].data.version, { increment: 1 });
   assert.equal(loaded.calls.updateMany[0].data.hdPath, "hd-new.png");
+  loaded.restore();
+});
+
+test("artwork deletion rejects every confirmed purchase status without cleanup", async () => {
+  for (const status of ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"]) {
+    const loaded = loadRepository({
+      existing: existingArtwork({ orderItems: [{ order: { status } }] })
+    });
+
+    await assert.rejects(
+      () => loaded.repository.deleteArtwork({ artworkId: 42, artistId: 3, expectedVersion: 2 }),
+      /ARTWORK_HAS_PURCHASES/
+    );
+    assert.equal(loaded.calls.deleteArtwork.length, 0);
+    assert.equal(loaded.calls.cartItems.length, 0);
+    loaded.restore();
+  }
+});
+
+test("artwork deletion reports purchase history before archived state", async () => {
+  const loaded = loadRepository({
+    existing: existingArtwork({
+      visibility: "ARCHIVED",
+      orderItems: [{ order: { status: "REFUNDED" } }]
+    })
+  });
+
+  await assert.rejects(
+    () => loaded.repository.deleteArtwork({ artworkId: 42, artistId: 3, expectedVersion: 2 }),
+    /ARTWORK_HAS_PURCHASES/
+  );
+  loaded.restore();
+});
+
+test("artwork deletion rejects an active payment or reservation", async () => {
+  for (const source of [
+    { orderItems: [{ order: { status: "PAYMENT_REVIEW" } }] },
+    { reservations: [{ status: "ACTIVE" }] }
+  ]) {
+    const loaded = loadRepository({ existing: existingArtwork(source) });
+
+    await assert.rejects(
+      () => loaded.repository.deleteArtwork({ artworkId: 42, artistId: 3, expectedVersion: 2 }),
+      /ARTWORK_TRANSACTION_IN_PROGRESS/
+    );
+    assert.equal(loaded.calls.deleteArtwork.length, 0);
+    loaded.restore();
+  }
+});
+
+test("artwork deletion cleans non-commercial references in a serializable transaction", async () => {
+  const loaded = loadRepository();
+  const deleted = await loaded.repository.deleteArtwork({
+    artworkId: 42,
+    artistId: 3,
+    expectedVersion: 2
+  });
+
+  assert.equal(deleted.id, 42);
+  assert.deepEqual(loaded.calls.transactionOptions, { isolationLevel: "Serializable" });
+  assert.deepEqual(loaded.calls.cartItems, [{ where: { artworkId: 42 } }]);
+  assert.deepEqual(loaded.calls.favorites, [{ where: { artworkId: 42 } }]);
+  assert.deepEqual(loaded.calls.collectionItems, [{ where: { artworkId: 42 } }]);
+  assert.deepEqual(loaded.calls.reservations, [
+    { where: { artworkId: 42, status: { not: "ACTIVE" } } }
+  ]);
+  assert.deepEqual(loaded.calls.deleteArtwork, [{ where: { id: 42, artistId: 3, version: 2 } }]);
+  loaded.restore();
+});
+
+test("artwork deletion rejects a stale version before cleaning references", async () => {
+  const loaded = loadRepository();
+
+  await assert.rejects(
+    () => loaded.repository.deleteArtwork({ artworkId: 42, artistId: 3, expectedVersion: 1 }),
+    /ARTWORK_VERSION_CONFLICT/
+  );
+  assert.equal(loaded.calls.deleteArtwork.length, 0);
+  assert.equal(loaded.calls.cartItems.length, 0);
   loaded.restore();
 });

@@ -85,7 +85,27 @@ async function deleteArtworkMediaAssets(artwork) {
   const keys = [
     ...new Set([artwork.hdPath, artwork.previewPath, artwork.imagePath].filter(Boolean))
   ];
-  await Promise.allSettled(keys.map((key) => storage.deleteObject(key)));
+
+  await Promise.all(
+    keys.map(async (key) => {
+      let lastError = null;
+
+      for (let attempt = 1; attempt <= 3; attempt += 1) {
+        try {
+          await storage.deleteObject(key);
+          return;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      console.error("Artwork media deletion failed after retries", {
+        storageProvider: storage.name,
+        key,
+        error: lastError?.message || "unknown storage error"
+      });
+    })
+  );
 }
 
 module.exports = {

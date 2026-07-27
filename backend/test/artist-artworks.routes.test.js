@@ -7,6 +7,7 @@ const { loadModuleWithMocks } = require("./helpers/mock-require");
 const routesPath = require.resolve("../src/routes/artist.routes");
 const authRequiredPath = require.resolve("../src/middlewares/auth-required.middleware");
 const csrfMiddlewarePath = require.resolve("../src/middlewares/csrf.middleware");
+const rateLimitMiddlewarePath = require.resolve("../src/middlewares/rate-limit.middleware");
 const artistRequiredPath = require.resolve("../src/middlewares/artist-required.middleware");
 const applicationRepositoryPath =
   require.resolve("../src/repositories/artist-application-draft.repository");
@@ -66,6 +67,7 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
     listArtworksByArtistId: [],
     findOwnedArtwork: [],
     updateArtwork: [],
+    deleteArtwork: [],
     deleteArtworkMediaAssets: []
   };
   const originalArtistRequired = require.cache[artistRequiredPath];
@@ -74,6 +76,11 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
     [authRequiredPath]: buildAuthMiddleware(currentAuthUser),
     [csrfMiddlewarePath]: {
       csrfProtection(_req, _res, next) {
+        next();
+      }
+    },
+    [rateLimitMiddlewarePath]: {
+      artworkManagementRateLimit(_req, _res, next) {
         next();
       }
     },
@@ -133,7 +140,10 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
         if (overrides.updateArtworkError) throw overrides.updateArtworkError;
         return overrides.updateArtworkResult || overrides.findOwnedArtworkResult;
       },
-      async deleteArtwork() {
+      async deleteArtwork(payload) {
+        calls.deleteArtwork.push(payload);
+        if (overrides.deleteArtworkError) throw overrides.deleteArtworkError;
+        if (hasOverride(overrides, "deleteArtworkResult")) return overrides.deleteArtworkResult;
         throw new Error("ARTWORK_NOT_FOUND");
       }
     },
@@ -598,4 +608,60 @@ test("PATCH /artists/me/artworks/:id exposes purchase conflicts without changing
   assert.equal(calls.updateArtwork.length, 1);
   assert.equal(calls.deleteArtworkMediaAssets.length, 1);
   assert.equal(calls.deleteArtworkMediaAssets[0].hdPath, "artworks/hd/test-artwork.jpg");
+});
+
+test("DELETE /artists/me/artworks/:id removes an eligible owned artwork and its media", async (t) => {
+  const deletedArtwork = {
+    id: 42,
+    artistId: verifiedArtist.id,
+    title: "Draft to delete",
+    version: 3,
+    storageProvider: "local",
+    imagePath: "preview.jpg",
+    previewPath: "preview.jpg",
+    hdPath: "hd.jpg"
+  };
+  const { baseUrl, calls } = await startArtistArtworkRoutesApp(t, {
+    deleteArtworkResult: deletedArtwork
+  });
+
+  const response = await requestJson(baseUrl, "/artists/me/artworks/42", {
+    method: "DELETE",
+    body: { expectedVersion: 3 }
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.message, "Oeuvre supprimee definitivement.");
+  assert.deepEqual(calls.deleteArtwork, [
+    { artworkId: 42, artistId: verifiedArtist.id, expectedVersion: 3 }
+  ]);
+  assert.deepEqual(calls.deleteArtworkMediaAssets, [deletedArtwork]);
+});
+
+test("DELETE /artists/me/artworks/:id requires the version opened by the artist", async (t) => {
+  const { baseUrl, calls } = await startArtistArtworkRoutesApp(t);
+
+  const response = await requestJson(baseUrl, "/artists/me/artworks/42", {
+    method: "DELETE",
+    body: {}
+  });
+
+  assert.equal(response.status, 400);
+  assert.equal(response.body.code, "ARTWORK_VERSION_REQUIRED");
+  assert.equal(calls.deleteArtwork.length, 0);
+});
+
+test("DELETE /artists/me/artworks/:id exposes purchase conflicts without deleting media", async (t) => {
+  const { baseUrl, calls } = await startArtistArtworkRoutesApp(t, {
+    deleteArtworkError: new Error("ARTWORK_HAS_PURCHASES")
+  });
+
+  const response = await requestJson(baseUrl, "/artists/me/artworks/42", {
+    method: "DELETE",
+    body: { expectedVersion: 2 }
+  });
+
+  assert.equal(response.status, 409);
+  assert.equal(response.body.code, "ARTWORK_HAS_PURCHASES");
+  assert.equal(calls.deleteArtworkMediaAssets.length, 0);
 });
