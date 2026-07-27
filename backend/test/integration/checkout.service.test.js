@@ -412,6 +412,8 @@ databaseTest(
       const artwork = await prisma.artwork.findUnique({ where: { id: fixture.artwork.id } });
       assert.equal(artwork.stockQuantity, 0);
       assert.equal(artwork.reservedQuantity, 0);
+      assert.equal(artwork.saleStatus, "SOLD_OUT");
+      assert.equal(artwork.isSold, true);
       assert.equal(await prisma.fulfillmentTask.count({ where: { orderId: storedOrder.id } }), 5);
     } finally {
       await cleanup(prisma, marker, fixture.userIds);

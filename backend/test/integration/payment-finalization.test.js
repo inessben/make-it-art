@@ -64,6 +64,8 @@ databaseTest("a succeeded payment is finalized once in one auditable transaction
     assert.equal(payment.status, "SUCCEEDED");
     assert.equal(artwork.stockQuantity, 0);
     assert.equal(artwork.reservedQuantity, 0);
+    assert.equal(artwork.saleStatus, "SOLD_OUT");
+    assert.equal(artwork.isSold, true);
     assert.equal(reservation.status, "CONSUMED");
     assert.equal(tasks.length, 5);
     assert.deepEqual(
@@ -110,6 +112,8 @@ databaseTest(
       const tasks = await prisma.fulfillmentTask.count({ where: { orderId: fixture.order.id } });
       assert.equal(artwork.stockQuantity, 0);
       assert.equal(artwork.reservedQuantity, 0);
+      assert.equal(artwork.saleStatus, "SOLD_OUT");
+      assert.equal(artwork.isSold, true);
       assert.equal(tasks, 5);
     } finally {
       await cleanup(prisma, fixture);
@@ -337,6 +341,7 @@ async function createFixture(prisma) {
           artworkId: artwork.id,
           artworkTitle: artwork.title,
           artistName: artist.displayName,
+          licenseType: "EXCLUSIVE",
           quantity: 1,
           unitAmount: 4200,
           subtotalAmount: 4200,
