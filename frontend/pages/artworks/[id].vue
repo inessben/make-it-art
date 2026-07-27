@@ -92,6 +92,12 @@
                   Protection active
                 </span>
                 <span
+                  v-if="artwork.watermarkApplied"
+                  class="rounded-full bg-[#1A2336] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#9FB4D9]"
+                >
+                  Aperçu filigrané
+                </span>
+                <span
                   v-if="artwork.isSold"
                   class="rounded-full bg-[#3A1A1A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#F5A8A8]"
                 >
@@ -216,6 +222,18 @@
                 class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#3A1A1A] bg-[#1A0A0A] px-6 text-sm font-semibold text-[#F5A8A8]"
               >
                 This artwork is no longer available for purchase
+              </p>
+              <a
+                v-if="artwork.hasHdFile && artwork.hdDownloadUrl"
+                :href="artwork.hdDownloadUrl"
+                class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#24314F] bg-[#0C111D] px-6 text-sm font-semibold text-[#E6EDF7] transition hover:border-[#4A6CF7]"
+              >
+                Télécharger le fichier HD
+              </a>
+              <p v-if="artwork.hasHdFile" class="text-sm text-slate-500">
+                L'aperçu public est compressé{{
+                  artwork.watermarkApplied ? " et filigrané" : ""
+                }}. Le HD est réservé à l'artiste et aux acheteurs.
               </p>
             </div>
 

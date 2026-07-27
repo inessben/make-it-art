@@ -18,6 +18,9 @@ const serializeAuthUserPath = require.resolve("../src/utils/serialize-auth-user"
 const uploadArtworkMiddlewarePath = require.resolve("../src/middlewares/upload-artwork.middleware");
 const artistRequiredMiddlewarePath =
   require.resolve("../src/middlewares/artist-required.middleware");
+const artworkMediaPipelinePath = require.resolve(
+  "../src/services/artwork-media-pipeline.service"
+);
 
 const authUser = {
   id: 7,
@@ -174,9 +177,29 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
     [uploadArtworkMiddlewarePath]: {
       handleArtworkUpload(req, _res, next) {
         req.file = {
-          filename: "test-artwork.jpg"
+          filename: "test-artwork.jpg",
+          path: "/tmp/test-artwork.jpg",
+          mimetype: "image/jpeg",
+          originalname: "test-artwork.jpg"
         };
         next();
+      }
+    },
+    [artworkMediaPipelinePath]: {
+      async processArtworkUpload() {
+        return {
+          storageProvider: "local",
+          mediaStatus: "ready",
+          hdPath: "artworks/hd/test-artwork.jpg",
+          previewPath: "artworks/preview/test-artwork.jpg",
+          imagePath: "artworks/preview/test-artwork.jpg",
+          watermarkApplied: true,
+          previewUrl: "/api/uploads/artworks/preview/test-artwork.jpg",
+          hdUrl: "/api/uploads/artworks/hd/test-artwork.jpg"
+        };
+      },
+      async deleteArtworkMediaAssets() {
+        return undefined;
       }
     },
     [artistRequiredMiddlewarePath]: {
@@ -267,7 +290,12 @@ test("POST /artists/me/artworks creates an artwork for a verified artist", async
     categoryId: 9,
     price: "120 tokens",
     protection: true,
-    imagePath: "artworks/test-artwork.jpg"
+    imagePath: "artworks/preview/test-artwork.jpg",
+    hdPath: "artworks/hd/test-artwork.jpg",
+    previewPath: "artworks/preview/test-artwork.jpg",
+    storageProvider: "local",
+    mediaStatus: "ready",
+    watermarkApplied: true
   });
 });
 

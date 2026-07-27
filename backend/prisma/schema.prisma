@@ -196,6 +196,11 @@ model Artwork {
   protection            Boolean?
   protectionId          Int?                   @map("protection_id")
   imagePath             String?                @map("image_path")
+  hdPath                String?                @map("hd_path")
+  previewPath           String?                @map("preview_path")
+  storageProvider       String                 @default("local") @map("storage_provider")
+  mediaStatus           String                 @default("ready") @map("media_status")
+  watermarkApplied      Boolean                @default(false) @map("watermark_applied")
   isSold                Boolean                @default(false) @map("is_sold")
   artist                Artist                 @relation(fields: [artistId], references: [id])
   category              Category?              @relation(fields: [categoryId], references: [id])

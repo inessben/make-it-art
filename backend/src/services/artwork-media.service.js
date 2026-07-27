@@ -9,6 +9,8 @@ function getArtworksUploadDirectory() {
 }
 
 async function ensureArtworkUploadDirectory() {
+  await fsp.mkdir(path.join(ARTWORKS_DIR, "hd"), { recursive: true });
+  await fsp.mkdir(path.join(ARTWORKS_DIR, "preview"), { recursive: true });
   await fsp.mkdir(ARTWORKS_DIR, { recursive: true });
 }
 
@@ -21,11 +23,15 @@ function buildArtworkImageUrl(imagePath) {
     return null;
   }
 
+  if (/^https?:\/\//i.test(imagePath)) {
+    return imagePath;
+  }
+
   return `/api/uploads/${imagePath.replace(/^\/+/, "")}`;
 }
 
 async function removeArtworkImageFile(imagePath) {
-  if (!imagePath) {
+  if (!imagePath || /^https?:\/\//i.test(imagePath)) {
     return;
   }
 

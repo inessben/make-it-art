@@ -117,7 +117,12 @@ async function createArtwork({
   categoryId,
   price,
   protection,
-  imagePath
+  imagePath,
+  hdPath = null,
+  previewPath = null,
+  storageProvider = "local",
+  mediaStatus = "ready",
+  watermarkApplied = false
 }) {
   const priceAmount = parsePriceAmount(price);
   return prisma.artwork.create({
@@ -135,7 +140,12 @@ async function createArtwork({
       reservedQuantity: 0,
       favoriteCount: 0,
       protection: Boolean(protection),
-      imagePath: imagePath || null,
+      imagePath: imagePath || previewPath || null,
+      hdPath: hdPath || null,
+      previewPath: previewPath || imagePath || null,
+      storageProvider: storageProvider || "local",
+      mediaStatus: mediaStatus || "ready",
+      watermarkApplied: Boolean(watermarkApplied),
       moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED,
       moderationNote: null,
       moderatedAt: null,

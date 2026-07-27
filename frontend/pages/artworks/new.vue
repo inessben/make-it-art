@@ -9,9 +9,9 @@
           Publier une oeuvre
         </h1>
         <p class="mt-4 max-w-2xl text-sm leading-7 text-[#96A4B8]">
-          Dépose le visuel de ton œuvre comme sur Instagram ou Pinterest, puis complète les
-          informations pour la rendre visible dans le catalogue public. Seuls les artistes vérifiés
-          peuvent publier.
+          Dépose le visuel HD de ton œuvre. Le serveur génère automatiquement un aperçu public
+          filigrané pour le catalogue. Le fichier HD reste séparé et n'est téléchargeable que par
+          toi et tes acheteurs. JPG, PNG, WEBP ou GIF · 25 Mo max.
         </p>
       </header>
 
@@ -38,9 +38,12 @@
             >
               <img
                 :src="previewUrl"
-                alt="Apercu de l'oeuvre"
-                class="max-h-[420px] w-full object-cover"
+                alt="Aperçu de l'oeuvre"
+                class="max-h-[420px] w-full object-contain"
               />
+              <p class="border-t border-[#1A2336] px-4 py-3 text-sm text-[#96A4B8]">
+                Aperçu · {{ selectedFile?.name || "image sélectionnée" }}
+              </p>
             </div>
 
             <div
@@ -51,28 +54,28 @@
                 <p class="text-sm font-semibold text-white">
                   Glisse une image ou clique pour parcourir
                 </p>
-                <p class="mt-2 text-sm text-[#96A4B8]">JPG, PNG, WEBP ou GIF · 10 Mo max</p>
+                <p class="mt-2 text-sm text-[#96A4B8]">JPG, PNG, WEBP ou GIF · 25 Mo max · HD conservé</p>
               </div>
             </div>
-
-            <div class="flex flex-wrap gap-3">
-              <button
-                type="button"
-                class="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#4A6CF7] px-5 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
-                @click.prevent="openFilePicker"
-              >
-                Choisir une image
-              </button>
-              <button
-                v-if="selectedFile"
-                type="button"
-                class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#24314F] bg-[#0C111D] px-5 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#141C2E]"
-                @click.prevent="clearSelectedFile"
-              >
-                Retirer
-              </button>
-            </div>
           </label>
+
+          <div class="flex flex-wrap gap-3">
+            <button
+              type="button"
+              class="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#4A6CF7] px-5 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
+              @click="openFilePicker"
+            >
+              Choisir une image
+            </button>
+            <button
+              v-if="selectedFile"
+              type="button"
+              class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#24314F] bg-[#0C111D] px-5 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#141C2E]"
+              @click="clearSelectedFile"
+            >
+              Retirer
+            </button>
+          </div>
         </div>
 
         <label class="grid gap-2 text-sm text-[#9EABBE]">
@@ -191,13 +194,16 @@ function openFilePicker() {
   fileInput.value?.click();
 }
 
-function clearSelectedFile() {
+function revokePreviewUrl() {
   if (previewUrl.value) {
     URL.revokeObjectURL(previewUrl.value);
+    previewUrl.value = "";
   }
+}
 
+function clearSelectedFile() {
+  revokePreviewUrl();
   selectedFile.value = null;
-  previewUrl.value = "";
 
   if (fileInput.value) {
     fileInput.value.value = "";
@@ -212,7 +218,8 @@ function handleFileChange(event) {
     return;
   }
 
-  clearSelectedFile();
+  // Ne pas vider l'input ici: ça peut relancer un change vide et effacer l'aperçu.
+  revokePreviewUrl();
   selectedFile.value = file;
   previewUrl.value = URL.createObjectURL(file);
 }
@@ -234,9 +241,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
-  if (previewUrl.value) {
-    URL.revokeObjectURL(previewUrl.value);
-  }
+  revokePreviewUrl();
 });
 
 async function submitArtwork() {

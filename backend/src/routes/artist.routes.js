@@ -20,7 +20,11 @@ const { parsePriceValue, serializeArtwork } = require("../utils/serialize-market
 const { ensureBuffer } = require("../utils/ensure-buffer");
 const prisma = require("../lib/prisma");
 const { handleArtworkUpload } = require("../middlewares/upload-artwork.middleware");
-const { buildArtworkImagePath } = require("../services/artwork-media.service");
+const {
+  processArtworkUpload,
+  deleteArtworkMediaAssets
+} = require("../services/artwork-media-pipeline.service");
+const env = require("../config/env");
 const {
   buildArtistDashboardPayload,
   buildArtistSalesPayload
@@ -663,6 +667,11 @@ router.post("/artists/me/artworks", ensureVerifiedArtist, handleArtworkUpload, a
     }
 
     const categoryId = await resolveCategoryId(input);
+    const media = await processArtworkUpload({
+      uploadedFile: req.file,
+      applyWatermark: env.artworkMedia.watermarkPublicPreviews || input.protection,
+      storageProviderName: env.artworkMedia.storageProvider
+    });
     const artwork = await artworkRepository.createArtwork({
       artistId: req.artist.id,
       title: input.title,
@@ -670,7 +679,12 @@ router.post("/artists/me/artworks", ensureVerifiedArtist, handleArtworkUpload, a
       categoryId,
       price: input.price,
       protection: input.protection,
-      imagePath: buildArtworkImagePath(req.file.filename)
+      imagePath: media.imagePath,
+      hdPath: media.hdPath,
+      previewPath: media.previewPath,
+      storageProvider: media.storageProvider,
+      mediaStatus: media.mediaStatus,
+      watermarkApplied: media.watermarkApplied
     });
 
     return res.status(201).json({
@@ -683,6 +697,21 @@ router.post("/artists/me/artworks", ensureVerifiedArtist, handleArtworkUpload, a
     if (mappedError) {
       return res.status(mappedError.status).json({
         message: mappedError.message
+      });
+    }
+
+    if (String(error.message || "").includes("PREVIEW_GENERATION_FAILED")) {
+      return res.status(500).json({
+        message: "Impossible de generer l'apercu de l'oeuvre."
+      });
+    }
+
+    if (
+      error.message === "S3_ARTWORK_STORAGE_NOT_CONFIGURED" ||
+      error.message === "CLOUDINARY_ARTWORK_STORAGE_NOT_CONFIGURED"
+    ) {
+      return res.status(503).json({
+        message: "Le stockage distant des medias n'est pas configure."
       });
     }
 
@@ -740,10 +769,11 @@ router.delete("/artists/me/artworks/:id(\\d+)", ensureVerifiedArtist, async (req
   try {
     const artworkId = Number.parseInt(req.params.id, 10);
 
-    await artworkRepository.deleteArtwork({
+    const deleted = await artworkRepository.deleteArtwork({
       artworkId,
       artistId: req.artist.id
     });
+    await deleteArtworkMediaAssets(deleted);
 
     return res.status(200).json({
       message: "Oeuvre supprimee."
