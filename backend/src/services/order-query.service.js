@@ -46,6 +46,9 @@ function serializeOrder(order) {
     items: order.items.map((item) => {
       const entitlement = entitlements.get(item.id) || null;
       const certificate = certificates.get(item.id) || null;
+      const publicDetailAvailable =
+        item.artwork?.visibility === "PUBLISHED" &&
+        String(item.artwork?.moderationStatus || "").toLowerCase() === "approved";
       return {
         artworkId: item.artworkId,
         title: item.artworkTitle,
@@ -54,13 +57,21 @@ function serializeOrder(order) {
         quantity: item.quantity,
         unitAmount: item.unitAmount,
         currency: item.currency,
+        publicAccess: {
+          publicDetailAvailable,
+          withdrawnFromPublic: !publicDetailAvailable
+        },
         delivery: {
           downloadRights: entitlement
             ? {
                 status: entitlement.status,
                 grantedAt: entitlement.grantedAt,
                 suspendedAt: entitlement.suspendedAt,
-                revokedAt: entitlement.revokedAt
+                revokedAt: entitlement.revokedAt,
+                downloadUrl:
+                  entitlement.status === "ACTIVE" && item.artworkId
+                    ? `/api/artworks/${item.artworkId}/media/hd`
+                    : null
               }
             : null,
           certificate: certificate
@@ -81,7 +92,15 @@ function serializeOrder(order) {
 
 const safeOrderInclude = {
   items: {
-    orderBy: { id: "asc" }
+    orderBy: { id: "asc" },
+    include: {
+      artwork: {
+        select: {
+          visibility: true,
+          moderationStatus: true
+        }
+      }
+    }
   },
   payments: {
     orderBy: { checkoutVersion: "desc" },
