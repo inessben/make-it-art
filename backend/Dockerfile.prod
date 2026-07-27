@@ -20,6 +20,7 @@ COPY requirements.txt ./
 RUN python3 -m pip install --no-cache-dir --break-system-packages -r requirements.txt
 
 COPY package*.json ./
+COPY prisma ./prisma
 
 RUN npm config set registry ${NPM_REGISTRY} \
  && npm config set fetch-retries 6 \
