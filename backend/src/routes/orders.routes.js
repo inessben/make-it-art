@@ -50,6 +50,11 @@ function mapCheckoutError(error) {
         status: 409,
         message: "Une ou plusieurs oeuvres ne sont plus disponibles a l'achat."
       };
+    case "EXCLUSIVE_CHECKOUT_REQUIRES_SECURE_FLOW":
+      return {
+        status: 409,
+        message: "Cette oeuvre exclusive doit etre achetee depuis le panier securise."
+      };
     default:
       return null;
   }

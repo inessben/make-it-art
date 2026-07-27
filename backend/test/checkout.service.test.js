@@ -26,7 +26,7 @@ const artwork = {
   title: "Neon Garden",
   price: "120 tokens",
   priceTokens: "120 tokens",
-  licenseType: "EXCLUSIVE",
+  licenseType: "COMMERCIAL",
   artist: {
     id: 3,
     userId: artistUser.id,
@@ -192,7 +192,7 @@ test("createCheckout still succeeds when artist sale email fails", async (t) => 
 
 test("createCheckout rejects artworks that are already sold", async (t) => {
   const { service, restore } = loadCheckoutService({
-    artworks: [{ ...artwork, isSold: true }]
+    artworks: [{ ...artwork, licenseType: "EXCLUSIVE", isSold: true }]
   });
 
   t.after(() => {
@@ -207,6 +207,26 @@ test("createCheckout rejects artworks that are already sold", async (t) => {
       }),
     (error) => error.message === "ARTWORK_ALREADY_SOLD"
   );
+});
+
+test("createCheckout sends unsold exclusive artworks to the secure cart flow", async (t) => {
+  const { service, calls, restore } = loadCheckoutService({
+    artworks: [{ ...artwork, licenseType: "EXCLUSIVE", isSold: false }]
+  });
+
+  t.after(() => {
+    restore();
+  });
+
+  await assert.rejects(
+    () =>
+      service.createCheckout({
+        userId: buyer.id,
+        items: [{ artworkId: artwork.id, quantity: 1 }]
+      }),
+    (error) => error.message === "EXCLUSIVE_CHECKOUT_REQUIRES_SECURE_FLOW"
+  );
+  assert.equal(calls.createCheckoutOrder.length, 0);
 });
 
 test("createCheckout keeps a personal artwork purchasable after previous sales", async (t) => {

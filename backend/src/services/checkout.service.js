@@ -10,6 +10,7 @@ const {
 const { isPaymentIntentReusable } = require("../domain/payment-intent-state");
 const { getStripeClient } = require("../lib/stripe");
 const { getCartSummary, withLockedPayableCart } = require("./cart.service");
+const { isExclusiveArtworkLicenseType } = require("../constants/artwork-license-types");
 const { cancelSupersededCheckouts, CheckoutRecoveryError } = require("./checkout-recovery.service");
 const { reconcilePaymentIntent } = require("./payment-monitoring.service");
 const { tryCreatePaymentCustomerContext } = require("./saved-payment-method.service");
@@ -162,7 +163,9 @@ async function createPendingCheckout({
       assertAmountSupported(cartSummary.totalAmount);
 
       const expiresAt = new Date(Date.now() + RESERVATION_DURATION_MS);
-      const reservableItems = cartSummary.items.filter((item) => !item.isUnlimited);
+      const reservableItems = cartSummary.items.filter((item) =>
+        isExclusiveArtworkLicenseType(item.licenseType)
+      );
       const order = await transaction.order.create({
         data: {
           userId,
@@ -226,12 +229,27 @@ async function createPendingCheckout({
       });
 
       for (const item of reservableItems) {
-        await transaction.artwork.update({
-          where: { id: item.artworkId },
+        const reservation = await transaction.artwork.updateMany({
+          where: {
+            id: item.artworkId,
+            licenseType: "EXCLUSIVE",
+            saleStatus: "AVAILABLE",
+            isSold: false,
+            stockQuantity: 1,
+            reservedQuantity: 0
+          },
           data: {
-            reservedQuantity: { increment: item.quantity }
+            reservedQuantity: 1
           }
         });
+
+        if (item.quantity !== 1 || reservation.count !== 1) {
+          throw new CheckoutError(
+            "EXCLUSIVE_ARTWORK_UNAVAILABLE",
+            "This exclusive artwork is already reserved or sold",
+            409
+          );
+        }
       }
 
       return {
@@ -567,6 +585,10 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
 
     if (artwork.licenseType === "EXCLUSIVE" && artwork.isSold) {
       throw new Error("ARTWORK_ALREADY_SOLD");
+    }
+
+    if (artwork.licenseType === "EXCLUSIVE") {
+      throw new Error("EXCLUSIVE_CHECKOUT_REQUIRES_SECURE_FLOW");
     }
 
     const unitPrice = parsePriceValue(artwork.price || artwork.priceTokens);

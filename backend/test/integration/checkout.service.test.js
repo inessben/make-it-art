@@ -218,6 +218,63 @@ databaseTest("concurrent retries return one order and one PaymentIntent", async 
   }
 });
 
+databaseTest("two buyers racing for an exclusive artwork create only one payment", async () => {
+  const prisma = require("../../src/lib/prisma");
+  const { getCartSummary, setCartItem } = require("../../src/services/cart.service");
+  const { initializeCheckout } = require("../../src/services/checkout.service");
+  const marker = randomUUID();
+  const fixture = await createFixture(prisma, marker, 6800);
+  const secondBuyer = await prisma.user.create({
+    data: {
+      email: `checkout-race-${marker}@make-it-art.test`,
+      username: `checkout-race-${marker}`,
+      isActive: true,
+      verified: true
+    }
+  });
+  fixture.userIds.push(secondBuyer.id);
+  const stripe = createFakeStripe();
+  const buyers = [fixture.buyer, secondBuyer];
+
+  try {
+    await Promise.all(
+      buyers.map((buyer) => setCartItem(buyer.id, { artworkId: fixture.artwork.id, quantity: 1 }))
+    );
+    const carts = await Promise.all(buyers.map((buyer) => getCartSummary(buyer.id)));
+    const attempts = await Promise.allSettled(
+      buyers.map((buyer, index) =>
+        initializeCheckout({
+          userId: buyer.id,
+          cartVersion: carts[index].version,
+          pricingFingerprint: carts[index].pricingFingerprint,
+          billingDetails: { ...billingDetails, name: buyer.username },
+          clientIdempotencyKey: randomUUID(),
+          stripeClient: stripe.client
+        })
+      )
+    );
+
+    const winner = attempts.find((attempt) => attempt.status === "fulfilled");
+    const loser = attempts.find((attempt) => attempt.status === "rejected");
+    const storedArtwork = await prisma.artwork.findUnique({
+      where: { id: fixture.artwork.id }
+    });
+    const activeReservations = await prisma.inventoryReservation.count({
+      where: { artworkId: fixture.artwork.id, status: "ACTIVE" }
+    });
+
+    assert.ok(winner);
+    assert.ok(loser);
+    assert.ok(["CART_NOT_PAYABLE", "EXCLUSIVE_ARTWORK_UNAVAILABLE"].includes(loser.reason.code));
+    assert.equal(stripe.intents.size, 1);
+    assert.equal(activeReservations, 1);
+    assert.equal(storedArtwork.reservedQuantity, 1);
+  } finally {
+    await cleanup(prisma, marker, fixture.userIds);
+    await prisma.$disconnect();
+  }
+});
+
 databaseTest("an idempotency key cannot be reused for another cart snapshot", async () => {
   const prisma = require("../../src/lib/prisma");
   const { getCartSummary, setCartItem } = require("../../src/services/cart.service");
