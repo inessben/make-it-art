@@ -82,7 +82,9 @@ async function deleteArtworkMediaAssets(artwork) {
   }
 
   const storage = getArtworkStorageProvider(artwork.storageProvider || "local");
-  const keys = [...new Set([artwork.hdPath, artwork.previewPath, artwork.imagePath].filter(Boolean))];
+  const keys = [
+    ...new Set([artwork.hdPath, artwork.previewPath, artwork.imagePath].filter(Boolean))
+  ];
   await Promise.allSettled(keys.map((key) => storage.deleteObject(key)));
 }
 

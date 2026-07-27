@@ -18,9 +18,7 @@ const serializeAuthUserPath = require.resolve("../src/utils/serialize-auth-user"
 const uploadArtworkMiddlewarePath = require.resolve("../src/middlewares/upload-artwork.middleware");
 const artistRequiredMiddlewarePath =
   require.resolve("../src/middlewares/artist-required.middleware");
-const artworkMediaPipelinePath = require.resolve(
-  "../src/services/artwork-media-pipeline.service"
-);
+const artworkMediaPipelinePath = require.resolve("../src/services/artwork-media-pipeline.service");
 
 const authUser = {
   id: 7,

@@ -54,7 +54,9 @@
                 <p class="text-sm font-semibold text-white">
                   Glisse une image ou clique pour parcourir
                 </p>
-                <p class="mt-2 text-sm text-[#96A4B8]">JPG, PNG, WEBP ou GIF · 25 Mo max · HD conservé</p>
+                <p class="mt-2 text-sm text-[#96A4B8]">
+                  JPG, PNG, WEBP ou GIF · 25 Mo max · HD conservé
+                </p>
               </div>
             </div>
           </label>

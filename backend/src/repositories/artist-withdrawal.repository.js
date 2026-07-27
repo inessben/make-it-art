@@ -88,11 +88,7 @@ async function listWithdrawalsForAdmin({ limit = 100, statuses, prismaClient = p
     where: {
       ...(Array.isArray(statuses) && statuses.length > 0 ? { status: { in: statuses } } : {})
     },
-    orderBy: [
-      { status: "asc" },
-      { createdAt: "desc" },
-      { id: "desc" }
-    ],
+    orderBy: [{ status: "asc" }, { createdAt: "desc" }, { id: "desc" }],
     take: limit,
     include: artistWithdrawalInclude
   });

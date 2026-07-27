@@ -418,7 +418,9 @@ async function sendArtistWithdrawalStatusEmail({
 }) {
   const transporter = createTransporter();
   const displayName = artistName || "Artist";
-  const statusLabel = String(status || "REQUESTED").replaceAll("_", " ").toLowerCase();
+  const statusLabel = String(status || "REQUESTED")
+    .replaceAll("_", " ")
+    .toLowerCase();
   const formattedAmount = `${(amount / 100).toFixed(2)} EUR`;
   const dashboardUrl = `${env.appBaseUrl}/artist/withdrawals`;
 

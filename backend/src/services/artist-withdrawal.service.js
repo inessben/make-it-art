@@ -1,11 +1,12 @@
 const env = require("../config/env");
 const artistWithdrawalRepository = require("../repositories/artist-withdrawal.repository");
 const notificationRepository = require("../repositories/notification.repository");
-const { ARTIST_WITHDRAWAL_STATUS, OPEN_ARTIST_WITHDRAWAL_STATUSES } = require("../constants/artist-withdrawal-status");
-const { buildArtistSalesPayload } = require("./artist-analytics.service");
 const {
-  formatCurrencyAmount
-} = require("../utils/commerce");
+  ARTIST_WITHDRAWAL_STATUS,
+  OPEN_ARTIST_WITHDRAWAL_STATUSES
+} = require("../constants/artist-withdrawal-status");
+const { buildArtistSalesPayload } = require("./artist-analytics.service");
+const { formatCurrencyAmount } = require("../utils/commerce");
 const {
   sendArtistWithdrawalRequestAlert,
   sendArtistWithdrawalStatusEmail
@@ -321,10 +322,7 @@ async function updateArtistWithdrawalStatus({
   } else if (action === "cancel") {
     nextStatus = ARTIST_WITHDRAWAL_STATUS.CANCELED;
   } else {
-    throw new ArtistWithdrawalError(
-      "INVALID_WITHDRAWAL_ACTION",
-      "Unsupported withdrawal action."
-    );
+    throw new ArtistWithdrawalError("INVALID_WITHDRAWAL_ACTION", "Unsupported withdrawal action.");
   }
 
   const updated = await artistWithdrawalRepository.updateWithdrawal({
