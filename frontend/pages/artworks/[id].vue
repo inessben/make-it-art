@@ -308,9 +308,22 @@
             <section class="rounded-[28px] border border-[#151E30] bg-[#050912] p-6">
               <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">Artist</p>
               <div v-if="artwork.artist" class="mt-4 grid gap-3">
-                <p class="text-2xl font-semibold text-white">
-                  {{ artwork.artist.displayName }}
-                </p>
+                <div class="flex items-center gap-4">
+                  <div
+                    class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#24314F] bg-[#101728] text-lg font-semibold text-[#D5E0FF]"
+                  >
+                    <img
+                      v-if="artwork.artist.avatarUrl"
+                      :src="artwork.artist.avatarUrl"
+                      :alt="artwork.artist.displayName"
+                      class="h-full w-full object-cover"
+                    />
+                    <template v-else>{{ artistInitials }}</template>
+                  </div>
+                  <p class="text-2xl font-semibold text-white">
+                    {{ artwork.artist.displayName }}
+                  </p>
+                </div>
                 <p class="text-sm leading-7 text-[#A4B0C0]">
                   {{ artwork.artist.bio || "This artist is still completing the public profile." }}
                 </p>

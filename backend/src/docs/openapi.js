@@ -613,11 +613,7 @@ const marketplacePaths = {
             categories: {
               type: "array",
               items: {
-                type: "object",
-                properties: {
-                  id: { type: "integer" },
-                  name: { type: "string" }
-                }
+                $ref: "#/components/schemas/CategorySummary"
               }
             }
           }
@@ -1028,6 +1024,38 @@ const artistWorkspacePaths = {
         401: jsonResponse("Authentication required", errorSchema),
         403: jsonResponse("Admin accounts cannot access artist application routes", errorSchema),
         409: jsonResponse("Artist application already pending or approved", errorSchema)
+      }
+    }
+  },
+  "/artists/me/profile": {
+    patch: {
+      tags: ["Artist Workspace"],
+      summary: "Update the authenticated artist public profile and avatar",
+      security: sessionAndCsrfSecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "multipart/form-data": {
+            schema: {
+              $ref: "#/components/schemas/ArtistProfileUpdateRequest"
+            }
+          }
+        }
+      },
+      responses: {
+        200: jsonResponse("Artist profile updated", {
+          type: "object",
+          properties: {
+            message: { type: "string" },
+            artist: {
+              $ref: "#/components/schemas/ArtistSummary"
+            }
+          }
+        }),
+        400: jsonResponse("Invalid artist profile update request", errorSchema),
+        401: jsonResponse("Authentication required", errorSchema),
+        403: jsonResponse("CSRF validation failed or admin account denied", errorSchema),
+        404: jsonResponse("Artist profile not found", errorSchema)
       }
     }
   },
@@ -1768,6 +1796,79 @@ const adminPaths = {
         200: jsonResponse("Admin dashboard payload", genericObjectSchema),
         401: jsonResponse("Authentication required", errorSchema),
         403: jsonResponse("Admin role required", errorSchema)
+      }
+    }
+  },
+  "/admin/categories": {
+    get: {
+      tags: ["Admin"],
+      summary: "List homepage category visuals for administration",
+      security: sessionOnlySecurity,
+      responses: {
+        200: jsonResponse("Admin categories payload", {
+          type: "object",
+          properties: {
+            summary: {
+              type: "object",
+              properties: {
+                totalCategories: { type: "integer" },
+                categoriesWithImage: { type: "integer" },
+                totalArtworks: { type: "integer" }
+              }
+            },
+            categories: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/CategorySummary"
+              }
+            }
+          }
+        }),
+        401: jsonResponse("Authentication required", errorSchema),
+        403: jsonResponse("Admin role required", errorSchema)
+      }
+    }
+  },
+  "/admin/categories/{categoryId}/image": {
+    patch: {
+      tags: ["Admin"],
+      summary: "Upload or remove the homepage image for one category",
+      security: sessionAndCsrfSecurity,
+      parameters: [
+        {
+          name: "categoryId",
+          in: "path",
+          required: true,
+          schema: {
+            type: "integer",
+            minimum: 1
+          }
+        }
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "multipart/form-data": {
+            schema: {
+              $ref: "#/components/schemas/AdminCategoryImageUpdateRequest"
+            }
+          }
+        }
+      },
+      responses: {
+        200: jsonResponse("Category image updated", {
+          type: "object",
+          properties: {
+            message: { type: "string" },
+            category: {
+              $ref: "#/components/schemas/CategorySummary"
+            }
+          }
+        }),
+        400: jsonResponse("Invalid category image update request", errorSchema),
+        401: jsonResponse("Authentication required", errorSchema),
+        403: jsonResponse("Admin role required or CSRF validation failed", errorSchema),
+        404: jsonResponse("Category not found", errorSchema)
       }
     }
   },
@@ -2981,6 +3082,7 @@ const openApiSpec = {
           displayName: { type: "string", nullable: true },
           verified: { type: "boolean" },
           bio: { type: "string", nullable: true },
+          avatarUrl: { type: "string", nullable: true },
           email: { type: "string", nullable: true },
           username: { type: "string", nullable: true },
           stats: {
@@ -2992,6 +3094,16 @@ const openApiSpec = {
               collections: { type: "integer" }
             }
           }
+        }
+      },
+      CategorySummary: {
+        type: "object",
+        additionalProperties: true,
+        properties: {
+          id: { type: "integer" },
+          name: { type: "string" },
+          imageUrl: { type: "string", nullable: true },
+          artworksCount: { type: "integer" }
         }
       },
       CollectionSummary: {
@@ -3278,6 +3390,19 @@ const openApiSpec = {
         },
         additionalProperties: false
       },
+      ArtistProfileUpdateRequest: {
+        type: "object",
+        properties: {
+          displayName: { type: "string" },
+          bio: { type: "string" },
+          removeAvatar: { type: "boolean" },
+          image: {
+            type: "string",
+            format: "binary"
+          }
+        },
+        additionalProperties: false
+      },
       ArtworkUpsertRequest: {
         type: "object",
         required: ["title", "categoryId", "price"],
@@ -3336,6 +3461,17 @@ const openApiSpec = {
         properties: {
           verified: {
             type: "boolean"
+          }
+        },
+        additionalProperties: false
+      },
+      AdminCategoryImageUpdateRequest: {
+        type: "object",
+        properties: {
+          removeImage: { type: "boolean" },
+          image: {
+            type: "string",
+            format: "binary"
           }
         },
         additionalProperties: false
