@@ -142,5 +142,15 @@ module.exports = {
       apiSecret: process.env.CLOUDINARY_API_SECRET || "",
       folder: process.env.CLOUDINARY_FOLDER || "make-it-art"
     }
+  },
+  cdp: {
+    projectId: process.env.CDP_PROJECT_ID || "",
+    authIssuer: process.env.CDP_AUTH_ISSUER || "make-it-art",
+    authAudience: process.env.CDP_AUTH_AUDIENCE || "",
+    authKeyId: process.env.CDP_AUTH_KEY_ID || "",
+    authPrivateKey: (process.env.CDP_AUTH_PRIVATE_KEY || "").replace(/\\n/g, "\n"),
+    apiKeyId: process.env.CDP_API_KEY_ID || "",
+    apiKeySecret: process.env.CDP_API_KEY_SECRET || "",
+    requestTimeoutMs: Number(process.env.CDP_REQUEST_TIMEOUT_MS || 8000)
   }
 };
