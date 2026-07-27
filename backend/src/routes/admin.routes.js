@@ -1445,7 +1445,7 @@ router.patch("/admin/artist-applications/:id", authRequired, adminRequired, asyn
 
     if (status === ARTIST_APPLICATION_STATUS.APPROVED) {
       try {
-        await notificationRepository.createNotificationOnce({
+        await notificationRepository.createNotification({
           userId: application.userId,
           type: "artist_application_approved",
           title: "Profil artiste valide",
@@ -1454,8 +1454,7 @@ router.patch("/admin/artist-applications/:id", authRequired, adminRequired, asyn
           payload: {
             applicationId,
             artistId: application.user?.artist?.id || null
-          },
-          eventKey: `artist-application-approved:${applicationId}`
+          }
         });
       } catch (notificationError) {
         console.error("Artist approval notification failed:", notificationError);

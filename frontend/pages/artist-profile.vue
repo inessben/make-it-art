@@ -137,7 +137,21 @@
         {{ errorMessage }}
       </section>
 
-      <template v-else>
+      <section
+        v-else-if="approvedApplication && !artist"
+        class="grid gap-6 rounded-[24px] border border-slate-800 bg-violet-950 p-7"
+      >
+        <div>
+          <p class="text-xs uppercase tracking-widest text-violet-700">Artist application</p>
+          <h1 class="mt-4 text-3xl font-semibold text-white">Application approved</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
+            Your application was approved. Refresh the page if your artist workspace is not visible
+            yet.
+          </p>
+        </div>
+      </section>
+
+      <template v-else-if="artist">
         <header class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div class="flex flex-col gap-6 sm:flex-row sm:items-start">
             <div
@@ -254,11 +268,12 @@
                   <div
                     class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-[#1A2336] bg-[#03060D]"
                   >
-                    <img
+                    <ProtectedArtworkMedia
                       v-if="artwork.imageUrl"
                       :src="artwork.imageUrl"
                       :alt="artwork.title"
-                      class="h-full w-full object-cover"
+                      img-class="h-full w-full object-cover"
+                      class="h-full w-full"
                     />
                     <div
                       v-else

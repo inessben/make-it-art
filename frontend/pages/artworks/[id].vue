@@ -49,14 +49,11 @@
         >
           <div class="border-b border-slate-900 p-4 sm:p-8 lg:border-b-0 lg:border-r lg:p-10">
             <div class="overflow-hidden rounded-[30px] border border-[#1B2640] bg-[#050912]">
-              <img
+              <ProtectedArtworkMedia
                 v-if="artwork.imageUrl"
                 :src="artwork.imageUrl"
                 :alt="artwork.title"
-                class="max-h-[720px] w-full object-cover select-none"
-                draggable="false"
-                @dragstart.prevent
-                @contextmenu.prevent
+                img-class="max-h-[720px] w-full object-cover"
               />
               <div
                 v-else

@@ -56,3 +56,9 @@ $color-brand: theme("colors.violet.700");
     @apply ui-button border-slate-700 bg-transparent text-slate-100 hover:border-violet-600;
   }
 }
+
+/* Soft global cue while artwork screenshot guard is active */
+html.mia-screenshot-guard-active {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
