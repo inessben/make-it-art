@@ -227,6 +227,18 @@
             Saisissez votre carte dans le formulaire Stripe ci-dessous.
           </p>
 
+          <p
+            v-if="savedPaymentMethodsAvailable"
+            class="mt-3 rounded-2xl border border-[#203357] bg-[#091121] px-5 py-4 text-sm leading-6 text-[#BFD0FF]"
+          >
+            Vous pouvez demander à Stripe d’enregistrer cette carte pour vos prochains achats. Elle
+            ne sera jamais débitée automatiquement et vous confirmerez toujours chaque paiement.
+          </p>
+          <p v-else class="mt-3 text-xs leading-5 text-[#71809A]">
+            L’enregistrement et la réutilisation des cartes ne sont pas disponibles pour cette
+            tentative. Vous pouvez tout de même payer normalement avec une nouvelle carte.
+          </p>
+
           <form class="mt-6 grid gap-5" @submit.prevent="confirmPayment">
             <div
               id="payment-element"
@@ -303,6 +315,7 @@ import {
   canMountPaymentElement,
   CHECKOUT_ORDER_STORAGE_KEY,
   createSecureUuid,
+  getCustomerSessionClientSecret,
   getOrCreateIdempotencyKey,
   getSafePaymentError,
   isPublishableStripeKey
@@ -327,6 +340,7 @@ const paymentElementContainer = ref(null);
 const errorMessage = ref("");
 const order = ref(null);
 const checkoutStarted = ref(false);
+const savedPaymentMethodsAvailable = ref(false);
 const billingDetails = reactive({
   customerType: "B2C",
   consumerConfirmed: false,
@@ -342,6 +356,7 @@ let stripeClient = null;
 let elements = null;
 let paymentElement = null;
 let clientSecret = "";
+let customerSessionClientSecret = "";
 
 onMounted(async () => {
   try {
@@ -452,6 +467,8 @@ async function mountPaymentForm(checkoutResponse, publishableKey) {
   }
 
   clientSecret = checkoutResponse.payment.clientSecret;
+  customerSessionClientSecret = getCustomerSessionClientSecret(checkoutResponse.payment) || "";
+  savedPaymentMethodsAvailable.value = Boolean(customerSessionClientSecret);
   stripeClient = await loadStripe(publishableKey);
 
   if (!stripeClient) {
@@ -460,6 +477,7 @@ async function mountPaymentForm(checkoutResponse, publishableKey) {
 
   elements = stripeClient.elements({
     clientSecret,
+    ...(customerSessionClientSecret ? { customerSessionClientSecret } : {}),
     appearance: {
       theme: "night",
       variables: {
@@ -516,6 +534,8 @@ onBeforeUnmount(() => {
   elements = null;
   stripeClient = null;
   clientSecret = "";
+  customerSessionClientSecret = "";
+  savedPaymentMethodsAvailable.value = false;
 });
 
 async function confirmPayment() {

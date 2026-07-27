@@ -21,6 +21,7 @@ function productionConfig(overrides = {}) {
       secretKey: ["rk", "live", "restrictedpaymentkey"].join("_"),
       webhookSecret: "whsec_liveendpointsecret",
       paymentMethodConfigurationId: "pmc_launchcardsonly",
+      savedPaymentMethodConsentVersion: "2026-07-26",
       checkoutExpirationSweepMs: 60000
     },
     commerce: {
@@ -86,6 +87,21 @@ test("production refuses unsafe fulfillment worker settings", () => {
       /Unsafe production configuration/
     );
   }
+});
+
+test("production requires a dated saved-card consent version", () => {
+  assert.throws(
+    () =>
+      validateProductionConfig(
+        productionConfig({
+          stripe: {
+            ...productionConfig().stripe,
+            savedPaymentMethodConsentVersion: "latest"
+          }
+        })
+      ),
+    /Unsafe production configuration/
+  );
 });
 
 test("production refuses unsafe payment anomaly monitoring settings", () => {

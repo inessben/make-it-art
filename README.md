@@ -137,6 +137,7 @@ Then update at least these values:
 - `STRIPE_SECRET_KEY` avec, de préférence, une clé restreinte `rk_live_*` au moindre privilège (`sk_live_*` reste techniquement accepté)
 - `STRIPE_WEBHOOK_SECRET` avec le secret `whsec_*` propre à l'endpoint de production
 - `STRIPE_PAYMENT_METHOD_CONFIGURATION_ID` avec une configuration `pmc_*` revue et limitée à la carte
+- `SAVED_PAYMENT_METHOD_CONSENT_VERSION` avec la version datée du texte autorisant le réaffichage des cartes (par exemple `2026-07-26`)
 - `NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` avec la clé publique correspondante `pk_live_*`
 - les champs `INVOICE_ISSUER_*` avec l'identité légale et fiscale réelle de Make It Art
 - `FRANCE_B2C_VAT_RATE_BPS` avec le taux validé par le responsable fiscal
@@ -152,6 +153,11 @@ La clé `STRIPE_SECRET_KEY` ne doit jamais être copiée dans une variable `NUXT
 est France B2C, carte uniquement, avec Make It Art comme marchand officiel et
 `STRIPE_TAX_ENABLED=false`. Apple Pay, Google Pay, Link, B2B et vente hors France restent désactivés ;
 leur activation exige la recette et les prérequis décrits dans la checklist.
+
+L'enregistrement des cartes utilise Stripe Customers et Customer Sessions uniquement pour de futurs
+achats confirmés par le client (`on_session`). La clé Stripe restreinte doit donc autoriser les opérations
+nécessaires sur Customers, Customer Sessions, PaymentIntents et PaymentMethods. Aucun numéro complet ni
+cryptogramme n'est stocké par Make It Art.
 
 Les checkouts non payés sont contrôlés chaque minute par le backend (`CHECKOUT_EXPIRATION_SWEEP_MS`).
 Une exécution manuelle et idempotente reste disponible dans le conteneur avec
