@@ -82,6 +82,7 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     priceValue,
     priceAmount: hasFiatPrice ? artwork.priceAmount : null,
     currency: hasFiatPrice ? artwork.currency || "EUR" : null,
+    licenseType: normalizeText(artwork.licenseType) || "PERSONAL",
     protection: Boolean(artwork.protection),
     createdAt: artwork.createdAt || null,
     imageUrl:

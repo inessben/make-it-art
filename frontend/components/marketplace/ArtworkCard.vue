@@ -48,6 +48,9 @@
         <span class="rounded-full bg-violet-700/10 px-3 py-1 text-violet-200">
           {{ artwork.category?.name || "Digital artwork" }}
         </span>
+        <span class="rounded-full bg-[#241D3D] px-3 py-1 text-[#D8C8FF]">
+          {{ formatArtworkLicenseType(artwork.licenseType) }}
+        </span>
         <span class="rounded-full bg-slate-850 px-3 py-1 text-slate-500">
           {{ formattedDate }}
         </span>
@@ -99,6 +102,7 @@
 <script setup>
 import { computed } from "vue";
 import {
+  formatArtworkLicenseType,
   formatMarketplaceDate,
   formatMarketplacePrice,
   getArtistInitials

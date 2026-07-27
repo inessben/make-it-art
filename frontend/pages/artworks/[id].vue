@@ -86,6 +86,11 @@
                   {{ artwork.category?.name || "Digital artwork" }}
                 </span>
                 <span
+                  class="rounded-full bg-[#241D3D] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#D8C8FF]"
+                >
+                  {{ formatArtworkLicenseType(artwork.licenseType) }}
+                </span>
+                <span
                   v-if="artwork.protection"
                   class="rounded-full bg-[#10261A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#9DE2B4]"
                 >
@@ -162,6 +167,12 @@
                 <p class="text-subtitle-2 uppercase text-slate-500">Protection</p>
                 <p class="mt-3 text-body-1 text-slate-200">
                   {{ artwork.protection ? "Protected" : "Standard" }}
+                </p>
+              </article>
+              <article class="border border-slate-800 bg-black/30 p-4">
+                <p class="text-subtitle-2 uppercase text-slate-500">Licence</p>
+                <p class="mt-3 text-body-1 text-slate-200">
+                  {{ formatArtworkLicenseType(artwork.licenseType) }}
                 </p>
               </article>
               <article class="border border-slate-800 bg-black/30 p-4">
@@ -378,6 +389,7 @@ import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
 import { useAuthStore } from "~/stores/auth";
 import { useCartStore } from "~/stores/cart";
 import {
+  formatArtworkLicenseType,
   formatMarketplaceDate,
   formatMarketplacePrice,
   getArtistInitials,

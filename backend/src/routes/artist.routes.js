@@ -9,6 +9,7 @@ const artworkRepository = require("../repositories/artwork.repository");
 const categoryRepository = require("../repositories/category.repository");
 const userRepository = require("../repositories/user.repository");
 const { ARTIST_APPLICATION_STATUS } = require("../constants/artist-application-status");
+const { normalizeArtworkLicenseType } = require("../constants/artwork-license-types");
 const {
   CONTRACT_VERSION,
   extractArtistApplicationPayload,
@@ -224,6 +225,7 @@ function normalizeArtworkInput(input = {}) {
     description: normalizeText(input.description),
     categoryId: Number.isInteger(categoryId) && categoryId > 0 ? categoryId : null,
     price: normalizeText(input.price) || normalizeText(input.priceTokens),
+    licenseType: normalizeArtworkLicenseType(input.licenseType),
     protection: input.protection === true || input.protection === "true" || input.protection === "1"
   };
 }
@@ -243,6 +245,10 @@ function validateArtworkInput(input) {
 
   if (!input.price) {
     return "Le prix de l'oeuvre est requis.";
+  }
+
+  if (!input.licenseType) {
+    return "Le type de licence de l'oeuvre est requis.";
   }
 
   if (parsePriceValue(input.price) === null) {
@@ -893,6 +899,7 @@ router.post("/artists/me/artworks", ensureVerifiedArtist, handleArtworkUpload, a
       description: input.description,
       categoryId,
       price: input.price,
+      licenseType: input.licenseType,
       protection: input.protection,
       imagePath: media.imagePath,
       hdPath: media.hdPath,
@@ -957,6 +964,7 @@ router.patch("/artists/me/artworks/:id(\\d+)", ensureVerifiedArtist, async (req,
       description: input.description,
       categoryId,
       price: input.price,
+      licenseType: input.licenseType,
       protection: input.protection
     });
 

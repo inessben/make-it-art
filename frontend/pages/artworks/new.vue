@@ -128,6 +128,26 @@
           />
         </label>
 
+        <fieldset class="grid gap-3 text-sm text-[#9EABBE]">
+          <legend class="font-medium text-[#E6EDF7]">Type de licence *</legend>
+          <label
+            v-for="license in licenseOptions"
+            :key="license.value"
+            class="flex cursor-pointer gap-3 rounded-2xl border bg-[#03060D] px-4 py-4 transition"
+            :class="
+              form.licenseType === license.value
+                ? 'border-[#4A6CF7] ring-1 ring-[#4A6CF7]/40'
+                : 'border-[#1A2336] hover:border-[#24314F]'
+            "
+          >
+            <input v-model="form.licenseType" type="radio" :value="license.value" required />
+            <span class="grid gap-1">
+              <strong class="font-semibold text-[#E6EDF7]">{{ license.label }}</strong>
+              <span class="leading-6 text-[#96A4B8]">{{ license.description }}</span>
+            </span>
+          </label>
+        </fieldset>
+
         <label
           class="flex items-center gap-3 rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-sm text-[#D7E3FF]"
         >
@@ -183,12 +203,30 @@ const formError = ref(false);
 const fileInput = ref(null);
 const selectedFile = ref(null);
 const previewUrl = ref("");
+const licenseOptions = [
+  {
+    value: "PERSONAL",
+    label: "Personnelle",
+    description: "L'acheteur peut utiliser l'oeuvre dans un cadre personnel."
+  },
+  {
+    value: "COMMERCIAL",
+    label: "Commerciale",
+    description: "L'acheteur peut utiliser l'oeuvre dans un cadre commercial."
+  },
+  {
+    value: "EXCLUSIVE",
+    label: "Exclusive",
+    description: "Une seule personne pourra acheter cette oeuvre."
+  }
+];
 
 const form = reactive({
   title: "",
   description: "",
   categoryId: "",
   price: "",
+  licenseType: "",
   protection: false
 });
 
@@ -264,6 +302,7 @@ async function submitArtwork() {
     formData.append("title", form.title);
     formData.append("categoryId", form.categoryId);
     formData.append("price", form.price);
+    formData.append("licenseType", form.licenseType);
     formData.append("protection", String(form.protection));
 
     if (form.description) {

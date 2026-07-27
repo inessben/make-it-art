@@ -116,6 +116,7 @@ async function createArtwork({
   description,
   categoryId,
   price,
+  licenseType,
   protection,
   imagePath,
   hdPath = null,
@@ -135,6 +136,7 @@ async function createArtwork({
       priceTokens: price,
       priceAmount,
       currency: "EUR",
+      licenseType,
       saleStatus: "AVAILABLE",
       stockQuantity: 1,
       reservedQuantity: 0,
@@ -163,6 +165,7 @@ async function updateArtwork({
   description,
   categoryId,
   price,
+  licenseType,
   protection,
   imagePath
 }) {
@@ -190,6 +193,7 @@ async function updateArtwork({
       priceTokens: price,
       priceAmount,
       currency: "EUR",
+      licenseType,
       ...(shouldPublishDraft
         ? {
             saleStatus: "AVAILABLE",

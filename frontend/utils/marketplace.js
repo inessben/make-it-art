@@ -30,6 +30,16 @@ export function formatMarketplaceDate(value) {
   }).format(new Date(value));
 }
 
+const ARTWORK_LICENSE_LABELS = Object.freeze({
+  PERSONAL: "Licence personnelle",
+  COMMERCIAL: "Licence commerciale",
+  EXCLUSIVE: "Licence exclusive"
+});
+
+export function formatArtworkLicenseType(value) {
+  return ARTWORK_LICENSE_LABELS[String(value || "").toUpperCase()] || "Licence personnelle";
+}
+
 export function getArtistInitials(name) {
   return String(name || "Artist")
     .split(" ")
