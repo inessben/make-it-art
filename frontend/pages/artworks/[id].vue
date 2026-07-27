@@ -98,10 +98,10 @@
                   Aperçu filigrané
                 </span>
                 <span
-                  v-if="artwork.isSold"
+                  v-if="!artwork.isAvailableForPurchase"
                   class="rounded-full bg-[#3A1A1A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#F5A8A8]"
                 >
-                  Sold out
+                  Unavailable
                 </span>
               </div>
 
@@ -195,7 +195,7 @@
                 }}
               </button>
               <button
-                v-if="!artwork.isSold"
+                v-if="artwork.isAvailableForPurchase"
                 type="button"
                 class="inline-flex min-h-12 items-center justify-center rounded-2xl border px-6 text-sm font-semibold transition"
                 :class="
@@ -231,9 +231,8 @@
                 Télécharger le fichier HD
               </a>
               <p v-if="artwork.hasHdFile" class="text-sm text-slate-500">
-                L'aperçu public est compressé{{
-                  artwork.watermarkApplied ? " et filigrané" : ""
-                }}. Le HD est réservé à l'artiste et aux acheteurs.
+                L'aperçu public est compressé{{ artwork.watermarkApplied ? " et filigrané" : "" }}.
+                Le HD est réservé à l'artiste et aux acheteurs.
               </p>
             </div>
 
@@ -422,9 +421,9 @@ useHead({
             url: `${siteUrl}/artworks/${artwork.value.id}`,
             priceCurrency: "EUR",
             price: Number(artwork.value.priceValue),
-            availability: artwork.value.isSold
-              ? "https://schema.org/SoldOut"
-              : "https://schema.org/PreOrder"
+            availability: artwork.value.isAvailableForPurchase
+              ? "https://schema.org/PreOrder"
+              : "https://schema.org/SoldOut"
           };
         }
 
@@ -467,7 +466,7 @@ const { trackEvent } = useAnalyticsEvent();
 async function toggleCart() {
   cart.hydrate();
 
-  if (!artwork.value?.id || artwork.value.isSold) {
+  if (!artwork.value?.id || !artwork.value.isAvailableForPurchase) {
     return;
   }
 
@@ -560,7 +559,7 @@ onMounted(async () => {
     trackEvent("view_artwork", { artworkId: artwork.value.id });
   }
 
-  if (artwork.value?.isSold && artwork.value?.id) {
+  if (artwork.value && !artwork.value.isAvailableForPurchase && artwork.value.id) {
     cart.removeArtwork(artwork.value.id);
   }
 

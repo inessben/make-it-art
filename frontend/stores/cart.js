@@ -9,6 +9,27 @@ export const useCartStore = defineStore("cart", {
   }),
 
   actions: {
+    hydrate() {
+      return this.cart;
+    },
+
+    persist() {
+      return this.cart;
+    },
+
+    removeArtwork(artworkId) {
+      if (!this.cart?.items?.length) {
+        return this.cart;
+      }
+
+      this.cart = {
+        ...this.cart,
+        items: this.cart.items.filter((item) => item.artworkId !== artworkId)
+      };
+
+      return this.cart;
+    },
+
     async csrfHeaders() {
       const response = await $fetch("/api/v1/security/csrf-token", {
         credentials: "include"
