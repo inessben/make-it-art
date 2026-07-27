@@ -175,6 +175,7 @@ model Artist {
   userId      Int          @unique @map("user_id")
   displayName String?      @map("display_name")
   avatarPath  String?      @map("avatar_path")
+  coverPath   String?      @map("cover_path")
   verified    Boolean?
   createdAt   DateTime?    @map("created_at")
   user        User         @relation(fields: [userId], references: [id])

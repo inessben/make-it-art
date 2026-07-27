@@ -90,13 +90,7 @@ async function updateArtistVerification({ artistId, verified, prismaClient = pri
   });
 }
 
-async function updateArtistProfile({
-  artistId,
-  userId,
-  displayName,
-  bio,
-  avatarPath
-}) {
+async function updateArtistProfile({ artistId, userId, displayName, bio, avatarPath }) {
   return prisma.$transaction(async (tx) => {
     await tx.user.update({
       where: {
@@ -117,6 +111,18 @@ async function updateArtistProfile({
       },
       include: includeArtistProfile()
     });
+  });
+}
+
+async function updateArtistCover({ artistId, coverPath }) {
+  return prisma.artist.update({
+    where: {
+      id: artistId
+    },
+    data: {
+      coverPath: coverPath || null
+    },
+    include: includeArtistProfile()
   });
 }
 
@@ -293,5 +299,6 @@ module.exports = {
   listArtistsForAdmin,
   updateArtistVerification,
   updateArtistProfile,
+  updateArtistCover,
   findArtistDetailForAdmin
 };

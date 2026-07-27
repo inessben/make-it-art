@@ -225,11 +225,36 @@
         >
           <div class="grid gap-4">
             <div>
-              <p class="text-xs uppercase tracking-widest text-violet-700">Public image</p>
+              <p class="text-xs uppercase tracking-widest text-violet-700">Public visuals</p>
               <h2 class="mt-3 text-2xl font-semibold text-white">Artist identity</h2>
               <p class="mt-3 text-sm leading-6 text-slate-400">
-                Upload the profile image used on your public artist pages and artist cards.
+                Upload both the hero cover and the profile image used on your public artist pages.
               </p>
+            </div>
+
+            <div
+              class="flex aspect-[16/7] w-full items-center justify-center overflow-hidden rounded-[28px] border border-slate-800 bg-slate-900"
+            >
+              <img
+                v-if="displayedCoverUrl"
+                :src="displayedCoverUrl"
+                :alt="`${artist.displayName} cover`"
+                class="h-full w-full object-cover"
+              />
+              <div
+                v-else
+                class="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(124,58,237,0.26),_transparent_54%),linear-gradient(180deg,_rgba(15,23,42,0.92),_rgba(2,6,23,1))] px-6 text-center"
+              >
+                <span class="text-sm font-medium uppercase tracking-[0.25em] text-slate-300">
+                  Public hero cover
+                </span>
+              </div>
+            </div>
+
+            <div
+              class="rounded-[20px] border border-slate-800 bg-black/30 p-4 text-sm text-slate-400"
+            >
+              {{ selectedCoverImageName || "No new cover selected." }}
             </div>
 
             <div
@@ -247,7 +272,7 @@
             <div
               class="rounded-[20px] border border-slate-800 bg-black/30 p-4 text-sm text-slate-400"
             >
-              {{ selectedImageName || "No new image selected." }}
+              {{ selectedAvatarImageName || "No new profile image selected." }}
             </div>
           </div>
 
@@ -275,6 +300,14 @@
             </label>
 
             <input
+              id="artist-cover-image"
+              class="hidden"
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              @change="onCoverImageSelected"
+            />
+
+            <input
               id="artist-profile-image"
               class="hidden"
               type="file"
@@ -282,21 +315,54 @@
               @change="onProfileImageSelected"
             />
 
-            <div class="flex flex-wrap gap-3">
-              <label
-                for="artist-profile-image"
-                class="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-2xl border border-slate-750 bg-slate-850 px-5 text-sm font-semibold text-slate-100 transition hover:border-violet-700 hover:text-violet-200"
-              >
-                Choose image
-              </label>
-              <button
-                type="button"
-                class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-red-900 bg-red-950/40 px-5 text-sm font-semibold text-red-200 transition hover:border-red-700 hover:text-red-100 disabled:cursor-not-allowed disabled:opacity-50"
-                :disabled="!artist.avatarUrl && !selectedProfileImage"
-                @click="markAvatarForRemoval"
-              >
-                Remove image
-              </button>
+            <div class="grid gap-4 rounded-[20px] border border-slate-800 bg-black/20 p-4">
+              <div>
+                <p class="text-sm font-medium text-slate-100">Hero cover</p>
+                <p class="mt-1 text-sm leading-6 text-slate-400">
+                  This wide image is displayed as the banner on your public artist profile.
+                </p>
+              </div>
+              <div class="flex flex-wrap gap-3">
+                <label
+                  for="artist-cover-image"
+                  class="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-2xl border border-slate-750 bg-slate-850 px-5 text-sm font-semibold text-slate-100 transition hover:border-violet-700 hover:text-violet-200"
+                >
+                  Choose cover
+                </label>
+                <button
+                  type="button"
+                  class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-red-900 bg-red-950/40 px-5 text-sm font-semibold text-red-200 transition hover:border-red-700 hover:text-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  :disabled="!artist.coverUrl && !selectedCoverImage"
+                  @click="markCoverForRemoval"
+                >
+                  Remove cover
+                </button>
+              </div>
+            </div>
+
+            <div class="grid gap-4 rounded-[20px] border border-slate-800 bg-black/20 p-4">
+              <div>
+                <p class="text-sm font-medium text-slate-100">Profile image</p>
+                <p class="mt-1 text-sm leading-6 text-slate-400">
+                  This square image is displayed on artist cards and profile avatars.
+                </p>
+              </div>
+              <div class="flex flex-wrap gap-3">
+                <label
+                  for="artist-profile-image"
+                  class="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-2xl border border-slate-750 bg-slate-850 px-5 text-sm font-semibold text-slate-100 transition hover:border-violet-700 hover:text-violet-200"
+                >
+                  Choose image
+                </label>
+                <button
+                  type="button"
+                  class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-red-900 bg-red-950/40 px-5 text-sm font-semibold text-red-200 transition hover:border-red-700 hover:text-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  :disabled="!artist.avatarUrl && !selectedProfileImage"
+                  @click="markAvatarForRemoval"
+                >
+                  Remove image
+                </button>
+              </div>
             </div>
 
             <AppStatePanel
@@ -437,12 +503,15 @@ const errorMessage = ref("");
 const savingProfile = ref(false);
 const selectedProfileImage = ref(null);
 const selectedAvatarPreviewUrl = ref("");
+const selectedCoverImage = ref(null);
+const selectedCoverPreviewUrl = ref("");
 const profileSuccessMessage = ref("");
 const profileErrorMessage = ref("");
 const profileForm = reactive({
   displayName: "",
   bio: "",
-  removeAvatar: false
+  removeAvatar: false,
+  removeCover: false
 });
 
 const pendingApplication = computed(() =>
@@ -478,12 +547,32 @@ const displayedAvatarUrl = computed(() => {
   return artist.value?.avatarUrl || "";
 });
 
-const selectedImageName = computed(() => {
+const displayedCoverUrl = computed(() => {
+  if (selectedCoverPreviewUrl.value) {
+    return selectedCoverPreviewUrl.value;
+  }
+
+  if (profileForm.removeCover) {
+    return "";
+  }
+
+  return artist.value?.coverUrl || "";
+});
+
+const selectedAvatarImageName = computed(() => {
   if (profileForm.removeAvatar) {
     return "Current image will be removed when you save.";
   }
 
   return selectedProfileImage.value?.name || "";
+});
+
+const selectedCoverImageName = computed(() => {
+  if (profileForm.removeCover) {
+    return "Current cover will be removed when you save.";
+  }
+
+  return selectedCoverImage.value?.name || "";
 });
 
 function revokeSelectedAvatarPreview() {
@@ -495,12 +584,24 @@ function revokeSelectedAvatarPreview() {
   selectedAvatarPreviewUrl.value = "";
 }
 
+function revokeSelectedCoverPreview() {
+  if (!selectedCoverPreviewUrl.value) {
+    return;
+  }
+
+  URL.revokeObjectURL(selectedCoverPreviewUrl.value);
+  selectedCoverPreviewUrl.value = "";
+}
+
 function syncProfileForm(source) {
   revokeSelectedAvatarPreview();
+  revokeSelectedCoverPreview();
   profileForm.displayName = source?.displayName || "";
   profileForm.bio = source?.bio || "";
   profileForm.removeAvatar = false;
+  profileForm.removeCover = false;
   selectedProfileImage.value = null;
+  selectedCoverImage.value = null;
 }
 
 async function loadPublishedArtworks() {
@@ -546,10 +647,32 @@ function onProfileImageSelected(event) {
   profileErrorMessage.value = "";
 }
 
+function onCoverImageSelected(event) {
+  const [file] = event?.target?.files || [];
+  revokeSelectedCoverPreview();
+  selectedCoverImage.value = file || null;
+
+  if (file) {
+    selectedCoverPreviewUrl.value = URL.createObjectURL(file);
+  }
+
+  profileForm.removeCover = false;
+  profileSuccessMessage.value = "";
+  profileErrorMessage.value = "";
+}
+
 function markAvatarForRemoval() {
   revokeSelectedAvatarPreview();
   selectedProfileImage.value = null;
   profileForm.removeAvatar = true;
+  profileSuccessMessage.value = "";
+  profileErrorMessage.value = "";
+}
+
+function markCoverForRemoval() {
+  revokeSelectedCoverPreview();
+  selectedCoverImage.value = null;
+  profileForm.removeCover = true;
   profileSuccessMessage.value = "";
   profileErrorMessage.value = "";
 }
@@ -571,6 +694,7 @@ async function saveArtistProfile() {
 
   try {
     const csrfToken = await fetchCsrfToken();
+    const successMessages = [];
     const formData = new FormData();
     formData.append("displayName", profileForm.displayName);
     formData.append("bio", profileForm.bio);
@@ -597,8 +721,39 @@ async function saveArtistProfile() {
       ...response.artist,
       stats: response.artist?.stats || artist.value.stats
     };
+
+    successMessages.push(response.message || "Artist profile updated.");
+
+    if (selectedCoverImage.value || profileForm.removeCover) {
+      const coverFormData = new FormData();
+
+      if (selectedCoverImage.value) {
+        coverFormData.append("image", selectedCoverImage.value);
+      }
+
+      if (profileForm.removeCover) {
+        coverFormData.append("removeCover", "true");
+      }
+
+      const coverResponse = await $fetch("/api/artists/me/cover", {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "x-csrf-token": csrfToken
+        },
+        body: coverFormData
+      });
+
+      artist.value = {
+        ...artist.value,
+        ...coverResponse.artist,
+        stats: coverResponse.artist?.stats || artist.value.stats
+      };
+      successMessages.push(coverResponse.message || "Artist cover updated.");
+    }
+
     syncProfileForm(artist.value);
-    profileSuccessMessage.value = response.message || "Artist profile updated.";
+    profileSuccessMessage.value = successMessages.join(" ");
   } catch (error) {
     profileErrorMessage.value = error?.data?.message || "Unable to update the artist profile.";
   } finally {
