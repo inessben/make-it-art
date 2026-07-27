@@ -6,6 +6,7 @@ const { canTransitionOrder, canTransitionPayment } = require("../domain/payment-
 const { getCartSummary } = require("./cart.service");
 const { reconcilePaymentIntent } = require("./payment-monitoring.service");
 const { createPaymentElementCustomerSession } = require("./saved-payment-method.service");
+const { releaseReservedArtwork } = require("./inventory-reservation.service");
 
 const OPEN_ORDER_STATUSES = ["PENDING_PAYMENT", "PAYMENT_PROCESSING", "PAYMENT_FAILED"];
 
@@ -58,15 +59,7 @@ async function finalizeLocalCancellation({ prismaClient, order, reason, provider
           for (const reservation of lockedOrder.reservations.filter(
             (candidate) => candidate.status === "ACTIVE"
           )) {
-            const released = await transaction.artwork.updateMany({
-              where: {
-                id: reservation.artworkId,
-                reservedQuantity: { gte: reservation.quantity }
-              },
-              data: { reservedQuantity: { decrement: reservation.quantity } }
-            });
-
-            if (released.count !== 1) {
+            if (!(await releaseReservedArtwork(transaction, reservation))) {
               throw new CheckoutRecoveryError(
                 "INVENTORY_RELEASE_CONFLICT",
                 "The reservation could not be released safely",

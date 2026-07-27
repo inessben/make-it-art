@@ -14,6 +14,7 @@
     "dev:down": "docker compose -f infrastructure/docker-compose.yml down",
     "dev:logs": "docker compose -f infrastructure/docker-compose.yml logs -f",
     "test": "npm --prefix backend run test && npm --prefix frontend run test",
+    "qa:artwork-licences": "docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml -f infrastructure/docker-compose.dev.yml exec -T backend npx prisma migrate deploy && docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml -f infrastructure/docker-compose.dev.yml exec -T backend npm run test:qa:artwork-licences && npm --prefix frontend run test:qa:artwork-licences",
     "test:coverage": "npm --prefix backend run test:coverage && npm --prefix frontend run test:coverage",
     "prod:build": "docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml build --no-cache",
     "prod:up": "docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml up -d",

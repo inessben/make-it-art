@@ -17,6 +17,12 @@ enum ArtworkSaleStatus {
   UNLISTED
 }
 
+enum ArtworkLicenseType {
+  PERSONAL
+  COMMERCIAL
+  EXCLUSIVE
+}
+
 enum OrderStatus {
   PENDING_PAYMENT
   PAYMENT_PROCESSING
@@ -206,6 +212,7 @@ model Artwork {
   price                 String?
   priceAmount           Int?                   @map("price_amount")
   currency              Currency               @default(EUR)
+  licenseType           ArtworkLicenseType     @default(PERSONAL) @map("license_type")
   favoriteCount         Int?                   @map("favorite_count")
   createdAt             DateTime?              @map("created_at")
   protection            Boolean?
@@ -387,6 +394,7 @@ model OrderItem {
   priceTokens          String?               @map("price_tokens")
   artworkTitle         String                @map("artwork_title")
   artistName           String                @map("artist_name")
+  licenseType          ArtworkLicenseType    @default(PERSONAL) @map("license_type")
   quantity             Int                   @default(1)
   unitAmount           Int                   @map("unit_amount")
   subtotalAmount       Int                   @map("subtotal_amount")

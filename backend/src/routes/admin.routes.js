@@ -126,7 +126,11 @@ function normalizeEmail(value) {
 }
 
 function parseBooleanFlag(value) {
-  return ["1", "true", "yes", "on"].includes(String(value || "").trim().toLowerCase());
+  return ["1", "true", "yes", "on"].includes(
+    String(value || "")
+      .trim()
+      .toLowerCase()
+  );
 }
 
 function parsePositiveInteger(value) {
@@ -846,6 +850,7 @@ function serializeAdminOrderItem(item) {
     artworkId: item.artworkId,
     artworkTitle: item.artworkTitle,
     artistName: item.artistName,
+    licenseType: item.licenseType,
     quantity: item.quantity,
     unitAmount: item.unitAmount,
     subtotalAmount: item.subtotalAmount,
@@ -1115,7 +1120,11 @@ router.patch(
         imagePath: nextImagePath
       });
 
-      if (uploadedImagePath && currentCategory.imagePath && currentCategory.imagePath !== uploadedImagePath) {
+      if (
+        uploadedImagePath &&
+        currentCategory.imagePath &&
+        currentCategory.imagePath !== uploadedImagePath
+      ) {
         await removeUploadedImage(currentCategory.imagePath);
       }
 

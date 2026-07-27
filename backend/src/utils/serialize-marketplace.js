@@ -1,6 +1,7 @@
 const { extractArtistApplicationPayload } = require("../services/artist-contract.service");
 const { buildArtworkImageUrl } = require("../services/artwork-media.service");
 const { buildUploadedImageUrl } = require("../services/uploaded-image.service");
+const { isUnlimitedArtworkLicenseType } = require("../constants/artwork-license-types");
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -54,6 +55,37 @@ function serializeArtistSummary(artist) {
   };
 }
 
+function resolveArtworkAvailabilityStatus({
+  isUnlimited,
+  saleStatus,
+  isSold,
+  stockQuantity,
+  reservedQuantity,
+  hasFiatPrice
+}) {
+  if (!isUnlimited && (isSold || saleStatus === "SOLD_OUT")) {
+    return "SOLD";
+  }
+
+  if (saleStatus !== "AVAILABLE" || !hasFiatPrice) {
+    return "UNAVAILABLE";
+  }
+
+  if (isUnlimited) {
+    return "AVAILABLE";
+  }
+
+  if (stockQuantity === 0 && reservedQuantity === 0) {
+    return "SOLD";
+  }
+
+  if (reservedQuantity > 0) {
+    return "RESERVED";
+  }
+
+  return stockQuantity > 0 ? "AVAILABLE" : "UNAVAILABLE";
+}
+
 function serializeArtwork(artwork, { includeArtist = true } = {}) {
   if (!artwork) {
     return null;
@@ -66,8 +98,17 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     : 0;
   const availableQuantity = Math.max(0, stockQuantity - reservedQuantity);
   const saleStatus = normalizeText(artwork.saleStatus) || "DRAFT";
-  const isAvailableForPurchase =
-    saleStatus === "AVAILABLE" && !artwork.isSold && hasFiatPrice && availableQuantity > 0;
+  const licenseType = normalizeText(artwork.licenseType) || "PERSONAL";
+  const isUnlimited = isUnlimitedArtworkLicenseType(licenseType);
+  const availabilityStatus = resolveArtworkAvailabilityStatus({
+    isUnlimited,
+    saleStatus,
+    isSold: Boolean(artwork.isSold),
+    stockQuantity,
+    reservedQuantity,
+    hasFiatPrice
+  });
+  const isAvailableForPurchase = availabilityStatus === "AVAILABLE";
   const priceValue = hasFiatPrice
     ? artwork.priceAmount / 100
     : parsePriceValue(artwork.price || artwork.priceTokens);
@@ -83,6 +124,8 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     priceValue,
     priceAmount: hasFiatPrice ? artwork.priceAmount : null,
     currency: hasFiatPrice ? artwork.currency || "EUR" : null,
+    licenseType,
+    isUnlimited,
     protection: Boolean(artwork.protection),
     createdAt: artwork.createdAt || null,
     imageUrl:
@@ -97,11 +140,12 @@ function serializeArtwork(artwork, { includeArtist = true } = {}) {
     mediaStatus: normalizeText(artwork.mediaStatus) || "ready",
     watermarkApplied: Boolean(artwork.watermarkApplied),
     favoriteCount: artwork.favoriteCount ?? artwork._count?.favorites ?? 0,
-    isSold: Boolean(artwork.isSold),
+    isSold: isUnlimited ? false : Boolean(artwork.isSold),
     saleStatus,
     stockQuantity,
     reservedQuantity,
-    availableQuantity,
+    availableQuantity: isUnlimited ? null : availableQuantity,
+    availabilityStatus,
     isAvailableForPurchase,
     isFavorite: Array.isArray(artwork.favorites) ? artwork.favorites.length > 0 : false,
     moderationStatus: normalizeText(artwork.moderationStatus) || "pending",

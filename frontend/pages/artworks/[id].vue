@@ -102,6 +102,38 @@
 
           <aside class="bg-[#171919] p-6 sm:p-8 xl:p-10">
             <div class="flex flex-col gap-5">
+              <div class="flex flex-wrap gap-2">
+                <span
+                  class="rounded-full bg-[#4A6CF7]/12 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#BCD0FF]"
+                >
+                  {{ artwork.category?.name || "Digital artwork" }}
+                </span>
+                <span
+                  class="rounded-full bg-[#241D3D] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#D8C8FF]"
+                >
+                  {{ formatArtworkLicenseType(artwork.licenseType) }}
+                </span>
+                <span
+                  v-if="artwork.protection"
+                  class="rounded-full bg-[#10261A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#9DE2B4]"
+                >
+                  Protection active
+                </span>
+                <span
+                  v-if="artwork.watermarkApplied"
+                  class="rounded-full bg-[#1A2336] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#9FB4D9]"
+                >
+                  Watermarked preview
+                </span>
+                <span
+                  v-if="availability.status !== 'AVAILABLE'"
+                  class="rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em]"
+                  :class="availabilityClass"
+                >
+                  {{ availability.label }}
+                </span>
+              </div>
+
               <div class="flex items-start justify-between gap-4">
                 <div class="flex min-w-0 items-center gap-4">
                   <div
@@ -217,7 +249,7 @@
                   v-else
                   class="inline-flex min-h-[62px] items-center justify-center rounded-[6px] border border-[#3A1A1A] bg-[#1A0A0A] px-6 text-base font-semibold uppercase tracking-[0.1em] text-[#F5A8A8]"
                 >
-                  This artwork is no longer available for purchase
+                  {{ availabilityMessage }}
                 </p>
 
                 <button
@@ -227,6 +259,31 @@
                 >
                   Make an offer
                 </button>
+
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    class="inline-flex min-h-[54px] items-center justify-center rounded-[6px] border border-white/10 px-5 text-sm font-semibold uppercase tracking-[0.12em] text-white transition hover:border-violet-500 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
+                    :disabled="Boolean(favoriteLoading[artwork.id])"
+                    @click="toggleFavorite(artwork)"
+                  >
+                    {{
+                      favoriteLoading[artwork.id]
+                        ? "Updating..."
+                        : artwork.isFavorite
+                          ? "Saved to wishlist"
+                          : "Add to wishlist"
+                    }}
+                  </button>
+
+                  <a
+                    v-if="artwork.hasHdFile && artwork.hdDownloadUrl"
+                    :href="artwork.hdDownloadUrl"
+                    class="inline-flex min-h-[54px] items-center justify-center rounded-[6px] border border-white/10 px-5 text-sm font-semibold uppercase tracking-[0.12em] text-white transition hover:border-violet-500 hover:bg-white/5"
+                  >
+                    Download HD
+                  </a>
+                </div>
 
                 <p class="pt-2 text-sm leading-7 text-slate-500">
                   Public previews may be compressed{{
@@ -287,7 +344,7 @@
                   :disabled="Boolean(favoriteLoading[related.id])"
                   @click="toggleFavorite(related)"
                 >
-                  {{ related.isFavorite ? "❤" : "♡" }}
+                  {{ related.isFavorite ? "Saved" : "Save" }}
                 </button>
               </div>
             </article>
@@ -313,8 +370,11 @@ import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
 import { useAuthStore } from "~/stores/auth";
 import { useCartStore } from "~/stores/cart";
 import {
+  formatArtworkLicenseType,
+  formatMarketplaceDate,
   formatMarketplacePrice,
   getArtistInitials,
+  getArtworkAvailabilityPresentation,
   isArtworkOwnedByArtist
 } from "~/utils/marketplace";
 
@@ -326,6 +386,17 @@ const cart = useCartStore();
 const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
 const cartMessage = ref("");
 const cartMessageType = ref("success");
+
+function schemaAvailability(status) {
+  const values = {
+    AVAILABLE: "https://schema.org/InStock",
+    RESERVED: "https://schema.org/LimitedAvailability",
+    SOLD: "https://schema.org/SoldOut",
+    UNAVAILABLE: "https://schema.org/OutOfStock"
+  };
+
+  return values[String(status || "").toUpperCase()] || values.UNAVAILABLE;
+}
 
 const { data, pending, error, refresh } = await useFetch(`/api/artworks/${route.params.id}`, {
   headers: requestHeaders,
@@ -364,9 +435,10 @@ useHead({
             url: `${siteUrl}/artworks/${artwork.value.id}`,
             priceCurrency: "EUR",
             price: Number(artwork.value.priceValue),
-            availability: artwork.value.isAvailableForPurchase
-              ? "https://schema.org/PreOrder"
-              : "https://schema.org/SoldOut"
+            availability: schemaAvailability(
+              artwork.value.availabilityStatus ||
+                (artwork.value.isAvailableForPurchase ? "AVAILABLE" : "UNAVAILABLE")
+            )
           };
         }
 
@@ -381,9 +453,21 @@ const errorMessage = computed(() =>
     ? error.value?.data?.message || "The artwork details are temporarily unavailable."
     : ""
 );
+const formattedDate = computed(() => formatMarketplaceDate(artwork.value?.createdAt));
 const formattedPrice = computed(() =>
   formatMarketplacePrice(artwork.value?.priceValue ?? artwork.value?.price)
 );
+const availability = computed(() => getArtworkAvailabilityPresentation(artwork.value));
+const availabilityClass = computed(() => {
+  const tones = {
+    available: "bg-[#10261A] text-[#9DE2B4]",
+    reserved: "bg-[#2B220E] text-[#F7D990]",
+    sold: "bg-[#3A1A1A] text-[#F5A8A8]",
+    unavailable: "bg-[#1A2336] text-[#9FB4D9]"
+  };
+
+  return tones[availability.value.tone] || tones.unavailable;
+});
 const isOwnArtwork = computed(() => isArtworkOwnedByArtist(artwork.value, auth.user));
 const isInCart = computed(() =>
   Boolean(
@@ -408,7 +492,25 @@ const availabilityText = computed(() => {
     return "owned by you";
   }
 
-  return artwork.value?.isAvailableForPurchase ? "available now" : "currently unavailable";
+  const labels = {
+    AVAILABLE: "available now",
+    RESERVED: "payment in progress",
+    SOLD: "sold",
+    UNAVAILABLE: "currently unavailable"
+  };
+
+  return labels[availability.value.status] || "currently unavailable";
+});
+const availabilityMessage = computed(() => {
+  if (availability.value.status === "RESERVED") {
+    return "This artwork is temporarily reserved while a payment is being completed.";
+  }
+
+  if (availability.value.status === "SOLD") {
+    return "This exclusive artwork has already been sold.";
+  }
+
+  return "This artwork is not currently available for purchase.";
 });
 const artworkFacts = computed(() => [
   {
@@ -416,12 +518,20 @@ const artworkFacts = computed(() => [
     value: artwork.value?.category?.name || artwork.value?.artist?.artType || "Digital artwork"
   },
   {
-    label: "Resolution",
-    value: artwork.value?.hasHdFile ? "HD file included" : "Preview only"
+    label: "Published",
+    value: formattedDate.value
   },
   {
     label: "License",
-    value: artwork.value?.protection ? "Protected usage" : "Standard usage"
+    value: formatArtworkLicenseType(artwork.value?.licenseType)
+  },
+  {
+    label: "Delivery",
+    value: artwork.value?.hasHdFile ? "HD file included" : "Preview only"
+  },
+  {
+    label: "Protection",
+    value: artwork.value?.protection ? "Protected" : "Standard"
   },
   {
     label: "Edition",

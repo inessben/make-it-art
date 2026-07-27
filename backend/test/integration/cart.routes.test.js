@@ -47,6 +47,7 @@ databaseTest("cart routes require ownership and reject client-managed prices", a
         title: `Cart route artwork ${marker}`,
         priceAmount: 4200,
         currency: "EUR",
+        licenseType: "COMMERCIAL",
         saleStatus: "AVAILABLE",
         stockQuantity: 1
       }

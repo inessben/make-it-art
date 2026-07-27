@@ -64,6 +64,8 @@ databaseTest("a succeeded payment is finalized once in one auditable transaction
     assert.equal(payment.status, "SUCCEEDED");
     assert.equal(artwork.stockQuantity, 0);
     assert.equal(artwork.reservedQuantity, 0);
+    assert.equal(artwork.saleStatus, "SOLD_OUT");
+    assert.equal(artwork.isSold, true);
     assert.equal(reservation.status, "CONSUMED");
     assert.equal(tasks.length, 5);
     assert.deepEqual(
@@ -110,6 +112,8 @@ databaseTest(
       const tasks = await prisma.fulfillmentTask.count({ where: { orderId: fixture.order.id } });
       assert.equal(artwork.stockQuantity, 0);
       assert.equal(artwork.reservedQuantity, 0);
+      assert.equal(artwork.saleStatus, "SOLD_OUT");
+      assert.equal(artwork.isSold, true);
       assert.equal(tasks, 5);
     } finally {
       await cleanup(prisma, fixture);
@@ -222,6 +226,42 @@ databaseTest("a later failure event cannot regress an already paid order", async
   }
 });
 
+databaseTest("a late cancellation cannot reopen an exclusive artwork after payment", async () => {
+  const prisma = require("../../src/lib/prisma");
+  const { processStripePaymentEvent } = require("../../src/services/payment-finalization.service");
+  const fixture = await createFixture(prisma);
+
+  try {
+    await processStripePaymentEvent({
+      event: stripeEvent(fixture, "payment_intent.succeeded"),
+      prismaClient: prisma
+    });
+    const result = await processStripePaymentEvent({
+      event: stripeEvent(fixture, "payment_intent.canceled"),
+      prismaClient: prisma
+    });
+
+    const order = await prisma.order.findUnique({ where: { id: fixture.order.id } });
+    const payment = await prisma.payment.findUnique({ where: { id: fixture.payment.id } });
+    const artwork = await prisma.artwork.findUnique({ where: { id: fixture.artwork.id } });
+    const reservation = await prisma.inventoryReservation.findFirst({
+      where: { orderId: fixture.order.id }
+    });
+
+    assert.equal(result.outcome, "ignored_transition");
+    assert.equal(order.status, "PAID");
+    assert.equal(payment.status, "SUCCEEDED");
+    assert.equal(artwork.saleStatus, "SOLD_OUT");
+    assert.equal(artwork.isSold, true);
+    assert.equal(artwork.stockQuantity, 0);
+    assert.equal(artwork.reservedQuantity, 0);
+    assert.equal(reservation.status, "CONSUMED");
+  } finally {
+    await cleanup(prisma, fixture);
+    await prisma.$disconnect();
+  }
+});
+
 databaseTest("a declined attempt can be retried with a new successful charge", async () => {
   const prisma = require("../../src/lib/prisma");
   const { processStripePaymentEvent } = require("../../src/services/payment-finalization.service");
@@ -237,6 +277,15 @@ databaseTest("a declined attempt can be retried with a new successful charge", a
       }),
       prismaClient: prisma
     });
+
+    const reservedArtwork = await prisma.artwork.findUnique({
+      where: { id: fixture.artwork.id }
+    });
+    const activeReservation = await prisma.inventoryReservation.findFirst({
+      where: { orderId: fixture.order.id }
+    });
+    assert.equal(reservedArtwork.reservedQuantity, 1);
+    assert.equal(activeReservation.status, "ACTIVE");
 
     const result = await processStripePaymentEvent({
       event: stripeEvent(fixture, "payment_intent.succeeded", {
@@ -267,6 +316,37 @@ databaseTest("a declined attempt can be retried with a new successful charge", a
   }
 });
 
+databaseTest("a canceled PaymentIntent releases an exclusive artwork exactly once", async () => {
+  const prisma = require("../../src/lib/prisma");
+  const { processStripePaymentEvent } = require("../../src/services/payment-finalization.service");
+  const fixture = await createFixture(prisma);
+  const event = stripeEvent(fixture, "payment_intent.canceled");
+
+  try {
+    const first = await processStripePaymentEvent({ event, prismaClient: prisma });
+    const duplicate = await processStripePaymentEvent({ event, prismaClient: prisma });
+    const order = await prisma.order.findUnique({ where: { id: fixture.order.id } });
+    const payment = await prisma.payment.findUnique({ where: { id: fixture.payment.id } });
+    const artwork = await prisma.artwork.findUnique({ where: { id: fixture.artwork.id } });
+    const reservation = await prisma.inventoryReservation.findFirst({
+      where: { orderId: fixture.order.id }
+    });
+
+    assert.equal(first.outcome, "applied");
+    assert.equal(duplicate.duplicate, true);
+    assert.equal(order.status, "CANCELED");
+    assert.equal(payment.status, "CANCELED");
+    assert.equal(artwork.stockQuantity, 1);
+    assert.equal(artwork.reservedQuantity, 0);
+    assert.equal(artwork.saleStatus, "AVAILABLE");
+    assert.equal(artwork.isSold, false);
+    assert.equal(reservation.status, "RELEASED");
+  } finally {
+    await cleanup(prisma, fixture);
+    await prisma.$disconnect();
+  }
+});
+
 async function createFixture(prisma) {
   const marker = randomUUID();
   const artistUser = await prisma.user.create({
@@ -284,6 +364,7 @@ async function createFixture(prisma) {
       title: `Finalization ${marker}`,
       priceAmount: 4200,
       currency: "EUR",
+      licenseType: "EXCLUSIVE",
       saleStatus: "AVAILABLE",
       stockQuantity: 1,
       reservedQuantity: 1
@@ -336,6 +417,7 @@ async function createFixture(prisma) {
           artworkId: artwork.id,
           artworkTitle: artwork.title,
           artistName: artist.displayName,
+          licenseType: "EXCLUSIVE",
           quantity: 1,
           unitAmount: 4200,
           subtotalAmount: 4200,

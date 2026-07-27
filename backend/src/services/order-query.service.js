@@ -50,6 +50,7 @@ function serializeOrder(order) {
         artworkId: item.artworkId,
         title: item.artworkTitle,
         artistName: item.artistName,
+        licenseType: item.licenseType,
         quantity: item.quantity,
         unitAmount: item.unitAmount,
         currency: item.currency,

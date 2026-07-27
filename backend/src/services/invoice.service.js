@@ -280,6 +280,7 @@ function saleInvoiceInput(order) {
       reference: `artwork:${item.artworkId}`,
       description: safeText(item.artworkTitle),
       artistName: safeText(item.artistName),
+      licenseType: item.licenseType,
       quantity: item.quantity,
       unitGrossAmount: item.unitAmount,
       subtotalAmount: item.subtotalAmount,
