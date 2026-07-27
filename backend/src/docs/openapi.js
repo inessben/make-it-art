@@ -1578,6 +1578,36 @@ const artistWorkspacePaths = {
         409: jsonResponse("Artwork transaction or version conflict", errorSchema)
       }
     }
+  },
+  "/artists/me/artworks/{id}/restore": {
+    post: {
+      tags: ["Artist Workspace"],
+      summary: "Restore an archived artwork to the private hidden state",
+      security: sessionAndCsrfSecurity,
+      parameters: [{ $ref: "#/components/parameters/ArtworkId" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["expectedVersion"],
+              properties: {
+                expectedVersion: { type: "integer", minimum: 1 }
+              }
+            }
+          }
+        }
+      },
+      responses: {
+        200: jsonResponse("Artwork restored as hidden", genericObjectSchema),
+        400: jsonResponse("Artwork version required", errorSchema),
+        401: jsonResponse("Authentication required", errorSchema),
+        403: jsonResponse("Verified artist account required", errorSchema),
+        404: jsonResponse("Artwork not found", errorSchema),
+        409: jsonResponse("Artwork lifecycle or version conflict", errorSchema)
+      }
+    }
   }
 };
 

@@ -71,6 +71,7 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
     hideArtwork: [],
     publishArtwork: [],
     archiveArtwork: [],
+    restoreArtwork: [],
     deleteArtworkMediaAssets: []
   };
   const originalArtistRequired = require.cache[artistRequiredPath];
@@ -163,6 +164,11 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
         calls.archiveArtwork.push(payload);
         if (overrides.archiveArtworkError) throw overrides.archiveArtworkError;
         return overrides.archiveArtworkResult || overrides.findOwnedArtworkResult;
+      },
+      async restoreArtwork(payload) {
+        calls.restoreArtwork.push(payload);
+        if (overrides.restoreArtworkError) throw overrides.restoreArtworkError;
+        return overrides.restoreArtworkResult || overrides.findOwnedArtworkResult;
       }
     },
     [categoryRepositoryPath]: {
@@ -837,4 +843,57 @@ test("POST /artists/me/artworks/:id/archive rejects an active transaction", asyn
 
   assert.equal(response.status, 409);
   assert.equal(response.body.code, "ARTWORK_TRANSACTION_IN_PROGRESS");
+});
+
+test("POST /artists/me/artworks/:id/restore restores an archive as hidden", async (t) => {
+  const restoredArtwork = {
+    id: 42,
+    artistId: verifiedArtist.id,
+    title: "Restored privately",
+    version: 7,
+    visibility: "HIDDEN",
+    archivedAt: null,
+    priceAmount: 12000,
+    currency: "EUR",
+    licenseType: "PERSONAL",
+    saleStatus: "AVAILABLE",
+    moderationStatus: "approved",
+    stockQuantity: 0,
+    reservedQuantity: 0,
+    orderItems: [],
+    reservations: [],
+    artist: verifiedArtist,
+    category: { id: 9, name: "Illustration" }
+  };
+  const { baseUrl, calls } = await startArtistArtworkRoutesApp(t, {
+    restoreArtworkResult: restoredArtwork
+  });
+
+  const response = await requestJson(baseUrl, "/artists/me/artworks/42/restore", {
+    method: "POST",
+    body: { expectedVersion: 6 }
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.artwork.visibility, "HIDDEN");
+  assert.equal(response.body.artwork.isAvailableForPurchase, false);
+  assert.equal(response.body.artwork.management.capabilities.canPublish, true);
+  assert.equal(response.body.artwork.management.capabilities.canEdit, true);
+  assert.deepEqual(calls.restoreArtwork, [
+    { artworkId: 42, artistId: verifiedArtist.id, expectedVersion: 6 }
+  ]);
+});
+
+test("POST /artists/me/artworks/:id/restore rejects non-archived artworks", async (t) => {
+  const { baseUrl } = await startArtistArtworkRoutesApp(t, {
+    restoreArtworkError: new Error("ARTWORK_NOT_ARCHIVED")
+  });
+
+  const response = await requestJson(baseUrl, "/artists/me/artworks/42/restore", {
+    method: "POST",
+    body: { expectedVersion: 6 }
+  });
+
+  assert.equal(response.status, 409);
+  assert.equal(response.body.code, "ARTWORK_NOT_ARCHIVED");
 });

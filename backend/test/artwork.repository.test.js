@@ -401,3 +401,52 @@ test("artwork archival rejects open payments and is idempotent once archived", a
   assert.equal(archived.calls.updateMany.length, 0);
   archived.restore();
 });
+
+test("artwork restoration changes an archive to hidden without changing commercial data", async () => {
+  const loaded = loadRepository({
+    existing: existingArtwork({
+      visibility: "ARCHIVED",
+      archivedAt: new Date("2026-07-27T23:30:00.000Z"),
+      version: 6,
+      priceAmount: 14500,
+      licenseType: "COMMERCIAL",
+      orderItems: [{ order: { status: "PAID" } }]
+    })
+  });
+
+  await loaded.repository.restoreArtwork({
+    artworkId: 42,
+    artistId: 3,
+    expectedVersion: 6
+  });
+
+  assert.deepEqual(loaded.calls.updateMany, [
+    {
+      where: {
+        id: 42,
+        artistId: 3,
+        visibility: "ARCHIVED",
+        version: 6
+      },
+      data: {
+        visibility: "HIDDEN",
+        archivedAt: null,
+        version: { increment: 1 }
+      }
+    }
+  ]);
+  loaded.restore();
+});
+
+test("artwork restoration rejects a non-archived state", async () => {
+  const loaded = loadRepository({
+    existing: existingArtwork({ visibility: "HIDDEN", version: 6 })
+  });
+
+  await assert.rejects(
+    () => loaded.repository.restoreArtwork({ artworkId: 42, artistId: 3, expectedVersion: 6 }),
+    /ARTWORK_NOT_ARCHIVED/
+  );
+  assert.equal(loaded.calls.updateMany.length, 0);
+  loaded.restore();
+});

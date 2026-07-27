@@ -302,6 +302,15 @@
                   >
                     Archiver
                   </button>
+                  <button
+                    v-if="artwork.management.capabilities.canRestore"
+                    ref="restoreTrigger"
+                    type="button"
+                    class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
+                    @click="openRestoreDialog"
+                  >
+                    Restaurer
+                  </button>
                   <NuxtLink
                     v-if="artwork.management.capabilities.canEdit"
                     :to="`/artworks/${artwork.id}/edit`"
@@ -606,6 +615,54 @@
       </section>
     </div>
   </Teleport>
+
+  <Teleport to="body">
+    <div
+      v-if="restoreDialogOpen"
+      class="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4"
+    >
+      <section
+        class="w-full max-w-lg rounded-[28px] border border-[#293A66] bg-[#090D18] p-6 shadow-2xl sm:p-8"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="restore-artwork-title"
+        aria-describedby="restore-artwork-description"
+        @keydown.esc.prevent.stop="closeRestoreDialog"
+        @keydown.tab="trapRestoreDialogFocus"
+      >
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#8AA2FF]">
+          Retour dans l’espace de travail
+        </p>
+        <h2 id="restore-artwork-title" class="mt-3 text-2xl font-semibold text-white">
+          Restaurer « {{ artwork?.title }} » ?
+        </h2>
+        <p id="restore-artwork-description" class="mt-4 text-sm leading-6 text-[#B7C5DD]">
+          L’œuvre rejoindra vos œuvres masquées. Elle restera privée et ne reviendra pas dans le
+          catalogue tant que vous ne choisirez pas séparément « Republier ».
+        </p>
+        <div class="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            ref="restoreCancelButton"
+            type="button"
+            class="min-h-12 rounded-2xl border border-[#34415A] px-5 text-sm font-semibold text-white transition hover:border-[#61708E] disabled:opacity-50"
+            :disabled="restoringArtwork"
+            @click="closeRestoreDialog"
+          >
+            Annuler
+          </button>
+          <button
+            ref="restoreConfirmButton"
+            type="button"
+            class="min-h-12 rounded-2xl bg-[#4A6CF7] px-5 text-sm font-semibold text-black transition hover:bg-[#6D8BFF] disabled:cursor-wait disabled:opacity-50"
+            :disabled="restoringArtwork"
+            @click="confirmArtworkRestore"
+          >
+            {{ restoringArtwork ? "Restauration…" : "Restaurer comme masquée" }}
+          </button>
+        </div>
+      </section>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
@@ -652,6 +709,11 @@ const archivingArtwork = ref(false);
 const archiveTrigger = ref(null);
 const archiveCancelButton = ref(null);
 const archiveConfirmButton = ref(null);
+const restoreDialogOpen = ref(false);
+const restoringArtwork = ref(false);
+const restoreTrigger = ref(null);
+const restoreCancelButton = ref(null);
+const restoreConfirmButton = ref(null);
 
 function schemaAvailability(status) {
   const values = {
@@ -1009,6 +1071,65 @@ async function confirmArtworkArchive() {
     await refresh();
   } finally {
     archivingArtwork.value = false;
+  }
+}
+
+async function openRestoreDialog() {
+  managementMessage.value = "";
+  managementMessageTone.value = "error";
+  restoreDialogOpen.value = true;
+  await nextTick();
+  restoreCancelButton.value?.focus();
+}
+
+async function closeRestoreDialog() {
+  if (restoringArtwork.value) return;
+  restoreDialogOpen.value = false;
+  await nextTick();
+  restoreTrigger.value?.focus();
+}
+
+function trapRestoreDialogFocus(event) {
+  const firstButton = restoreCancelButton.value;
+  const lastButton = restoreConfirmButton.value;
+  if (!firstButton || !lastButton) return;
+
+  if (event.shiftKey && document.activeElement === firstButton) {
+    event.preventDefault();
+    lastButton.focus();
+  } else if (!event.shiftKey && document.activeElement === lastButton) {
+    event.preventDefault();
+    firstButton.focus();
+  }
+}
+
+async function confirmArtworkRestore() {
+  const expectedVersion = artwork.value?.management?.lifecycle?.version;
+  if (!artwork.value?.id || !expectedVersion || restoringArtwork.value) return;
+
+  restoringArtwork.value = true;
+  managementMessage.value = "";
+
+  try {
+    const csrf = await $fetch("/api/v1/security/csrf-token", { credentials: "include" });
+    const response = await $fetch(`/api/artists/me/artworks/${artwork.value.id}/restore`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "x-csrf-token": csrf.csrfToken },
+      body: { expectedVersion }
+    });
+    data.value = { ...data.value, artwork: response.artwork };
+    restoreDialogOpen.value = false;
+    managementMessageTone.value = "success";
+    managementMessage.value = response.message;
+  } catch (restoreError) {
+    restoreDialogOpen.value = false;
+    managementMessageTone.value = "error";
+    managementMessage.value =
+      restoreError?.data?.message || "Impossible de restaurer cette œuvre pour le moment.";
+    await refresh();
+  } finally {
+    restoringArtwork.value = false;
   }
 }
 
