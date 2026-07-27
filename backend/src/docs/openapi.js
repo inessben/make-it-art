@@ -1414,10 +1414,27 @@ const artistWorkspacePaths = {
     }
   },
   "/artists/me/artworks/{id}": {
+    get: {
+      tags: ["Artist Workspace"],
+      summary: "Get one owned artwork with private management capabilities",
+      security: sessionOnlySecurity,
+      parameters: [{ $ref: "#/components/parameters/ArtworkId" }],
+      responses: {
+        200: jsonResponse("Owned artwork", {
+          type: "object",
+          properties: {
+            artwork: { $ref: "#/components/schemas/ArtworkSummary" }
+          }
+        }),
+        401: jsonResponse("Authentication required", errorSchema),
+        403: jsonResponse("Verified artist account required", errorSchema),
+        404: jsonResponse("Artwork not found", errorSchema)
+      }
+    },
     patch: {
       tags: ["Artist Workspace"],
       summary: "Update one artist artwork",
-      security: sessionOnlySecurity,
+      security: sessionAndCsrfSecurity,
       parameters: [{ $ref: "#/components/parameters/ArtworkId" }],
       requestBody: {
         required: true,
@@ -1448,13 +1465,57 @@ const artistWorkspacePaths = {
     delete: {
       tags: ["Artist Workspace"],
       summary: "Delete one artist artwork",
-      security: sessionOnlySecurity,
+      security: sessionAndCsrfSecurity,
       parameters: [{ $ref: "#/components/parameters/ArtworkId" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["expectedVersion"],
+              properties: {
+                expectedVersion: { type: "integer", minimum: 1 }
+              }
+            }
+          }
+        }
+      },
       responses: {
         200: jsonResponse("Artwork deleted", messageSchema),
         401: jsonResponse("Authentication required", errorSchema),
         403: jsonResponse("Verified artist account required", errorSchema),
         404: jsonResponse("Artwork not found", errorSchema)
+      }
+    }
+  },
+  "/artists/me/artworks/{id}/hide": {
+    post: {
+      tags: ["Artist Workspace"],
+      summary: "Hide a published artwork from public spaces and new checkouts",
+      security: sessionAndCsrfSecurity,
+      parameters: [{ $ref: "#/components/parameters/ArtworkId" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["expectedVersion"],
+              properties: {
+                expectedVersion: { type: "integer", minimum: 1 }
+              }
+            }
+          }
+        }
+      },
+      responses: {
+        200: jsonResponse("Artwork hidden", genericObjectSchema),
+        400: jsonResponse("Artwork version required", errorSchema),
+        401: jsonResponse("Authentication required", errorSchema),
+        403: jsonResponse("Verified artist account required", errorSchema),
+        404: jsonResponse("Artwork not found", errorSchema),
+        409: jsonResponse("Artwork lifecycle conflict", errorSchema)
       }
     }
   }

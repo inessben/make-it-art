@@ -32,6 +32,10 @@ function getArtworkIssue(artwork, quantity, buyerUserId = null) {
     return "SELF_PURCHASE_NOT_ALLOWED";
   }
 
+  if (artwork.visibility !== "PUBLISHED") {
+    return "ARTWORK_NOT_AVAILABLE";
+  }
+
   if (artwork.saleStatus !== "AVAILABLE") {
     return "ARTWORK_NOT_AVAILABLE";
   }

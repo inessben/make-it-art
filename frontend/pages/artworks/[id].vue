@@ -275,6 +275,15 @@
                 </ul>
 
                 <div class="mt-5 flex flex-wrap gap-3">
+                  <button
+                    v-if="artwork.management.capabilities.canHide"
+                    ref="hideTrigger"
+                    type="button"
+                    class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#6F5C23] bg-[#2B220E] px-6 text-sm font-semibold text-[#F7D990] transition hover:border-[#A78931]"
+                    @click="openHideDialog"
+                  >
+                    Masquer
+                  </button>
                   <NuxtLink
                     v-if="artwork.management.capabilities.canEdit"
                     :to="`/artworks/${artwork.id}/edit`"
@@ -294,7 +303,12 @@
                 </div>
                 <p
                   v-if="managementMessage"
-                  class="mt-4 rounded-2xl border border-[#7A3131] bg-[#2A1010] p-4 text-sm text-[#FFB4B4]"
+                  class="mt-4 rounded-2xl border p-4 text-sm"
+                  :class="
+                    managementMessageTone === 'success'
+                      ? 'border-[#24543A] bg-[#10261A] text-[#9DE2B4]'
+                      : 'border-[#7A3131] bg-[#2A1010] text-[#FFB4B4]'
+                  "
                   role="alert"
                 >
                   {{ managementMessage }}
@@ -480,6 +494,52 @@
       </section>
     </div>
   </Teleport>
+
+  <Teleport to="body">
+    <div v-if="hideDialogOpen" class="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4">
+      <section
+        class="w-full max-w-lg rounded-[28px] border border-[#6F5C23] bg-[#090D18] p-6 shadow-2xl sm:p-8"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="hide-artwork-title"
+        aria-describedby="hide-artwork-description"
+        @keydown.esc.prevent.stop="closeHideDialog"
+        @keydown.tab="trapHideDialogFocus"
+      >
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#F7D990]">
+          Suspension de la publication
+        </p>
+        <h2 id="hide-artwork-title" class="mt-3 text-2xl font-semibold text-white">
+          Masquer « {{ artwork?.title }} » ?
+        </h2>
+        <p id="hide-artwork-description" class="mt-4 text-sm leading-6 text-[#B7C5DD]">
+          L’œuvre disparaîtra immédiatement des espaces publics et aucune nouvelle tentative d’achat
+          ne sera acceptée. Les paiements déjà engagés et les droits acquis continueront
+          normalement.
+        </p>
+        <div class="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            ref="hideCancelButton"
+            type="button"
+            class="min-h-12 rounded-2xl border border-[#34415A] px-5 text-sm font-semibold text-white transition hover:border-[#61708E] disabled:opacity-50"
+            :disabled="hidingArtwork"
+            @click="closeHideDialog"
+          >
+            Annuler
+          </button>
+          <button
+            ref="hideConfirmButton"
+            type="button"
+            class="min-h-12 rounded-2xl bg-[#D2A83E] px-5 text-sm font-semibold text-black transition hover:bg-[#E7C25F] disabled:cursor-wait disabled:opacity-50"
+            :disabled="hidingArtwork"
+            @click="confirmArtworkHide"
+          >
+            {{ hidingArtwork ? "Masquage…" : "Masquer l’œuvre" }}
+          </button>
+        </div>
+      </section>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
@@ -509,11 +569,17 @@ const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : unde
 const cartMessage = ref("");
 const cartMessageType = ref("success");
 const managementMessage = ref("");
+const managementMessageTone = ref("error");
 const deleteDialogOpen = ref(false);
 const deletingArtwork = ref(false);
 const deleteTrigger = ref(null);
 const deleteCancelButton = ref(null);
 const deleteConfirmButton = ref(null);
+const hideDialogOpen = ref(false);
+const hidingArtwork = ref(false);
+const hideTrigger = ref(null);
+const hideCancelButton = ref(null);
+const hideConfirmButton = ref(null);
 
 function schemaAvailability(status) {
   const values = {
@@ -720,9 +786,70 @@ const { trackEvent } = useAnalyticsEvent();
 
 async function openDeleteDialog() {
   managementMessage.value = "";
+  managementMessageTone.value = "error";
   deleteDialogOpen.value = true;
   await nextTick();
   deleteCancelButton.value?.focus();
+}
+
+async function openHideDialog() {
+  managementMessage.value = "";
+  managementMessageTone.value = "error";
+  hideDialogOpen.value = true;
+  await nextTick();
+  hideCancelButton.value?.focus();
+}
+
+async function closeHideDialog() {
+  if (hidingArtwork.value) return;
+  hideDialogOpen.value = false;
+  await nextTick();
+  hideTrigger.value?.focus();
+}
+
+function trapHideDialogFocus(event) {
+  const firstButton = hideCancelButton.value;
+  const lastButton = hideConfirmButton.value;
+  if (!firstButton || !lastButton) return;
+
+  if (event.shiftKey && document.activeElement === firstButton) {
+    event.preventDefault();
+    lastButton.focus();
+  } else if (!event.shiftKey && document.activeElement === lastButton) {
+    event.preventDefault();
+    firstButton.focus();
+  }
+}
+
+async function confirmArtworkHide() {
+  const expectedVersion = artwork.value?.management?.lifecycle?.version;
+  if (!artwork.value?.id || !expectedVersion || hidingArtwork.value) return;
+
+  hidingArtwork.value = true;
+  managementMessage.value = "";
+
+  try {
+    const csrf = await $fetch("/api/v1/security/csrf-token", { credentials: "include" });
+    const response = await $fetch(`/api/artists/me/artworks/${artwork.value.id}/hide`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "x-csrf-token": csrf.csrfToken },
+      body: { expectedVersion }
+    });
+    data.value = { ...data.value, artwork: response.artwork };
+    cart.removeArtwork(response.artwork.id);
+    hideDialogOpen.value = false;
+    managementMessageTone.value = "success";
+    managementMessage.value = response.message;
+  } catch (hideError) {
+    hideDialogOpen.value = false;
+    managementMessageTone.value = "error";
+    managementMessage.value =
+      hideError?.data?.message || "Impossible de masquer cette œuvre pour le moment.";
+    await refresh();
+  } finally {
+    hidingArtwork.value = false;
+  }
 }
 
 async function closeDeleteDialog() {

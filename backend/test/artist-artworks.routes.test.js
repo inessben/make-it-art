@@ -68,6 +68,7 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
     findOwnedArtwork: [],
     updateArtwork: [],
     deleteArtwork: [],
+    hideArtwork: [],
     deleteArtworkMediaAssets: []
   };
   const originalArtistRequired = require.cache[artistRequiredPath];
@@ -145,6 +146,11 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
         if (overrides.deleteArtworkError) throw overrides.deleteArtworkError;
         if (hasOverride(overrides, "deleteArtworkResult")) return overrides.deleteArtworkResult;
         throw new Error("ARTWORK_NOT_FOUND");
+      },
+      async hideArtwork(payload) {
+        calls.hideArtwork.push(payload);
+        if (overrides.hideArtworkError) throw overrides.hideArtworkError;
+        return overrides.hideArtworkResult || overrides.findOwnedArtworkResult;
       }
     },
     [categoryRepositoryPath]: {
@@ -664,4 +670,54 @@ test("DELETE /artists/me/artworks/:id exposes purchase conflicts without deletin
   assert.equal(response.status, 409);
   assert.equal(response.body.code, "ARTWORK_HAS_PURCHASES");
   assert.equal(calls.deleteArtworkMediaAssets.length, 0);
+});
+
+test("POST /artists/me/artworks/:id/hide hides a published artwork with version control", async (t) => {
+  const hiddenArtwork = {
+    id: 42,
+    artistId: verifiedArtist.id,
+    title: "Hidden artwork",
+    version: 4,
+    visibility: "HIDDEN",
+    priceAmount: 12000,
+    currency: "EUR",
+    licenseType: "PERSONAL",
+    saleStatus: "AVAILABLE",
+    moderationStatus: "approved",
+    stockQuantity: 0,
+    reservedQuantity: 0,
+    orderItems: [{ order: { status: "PAID" } }],
+    reservations: [],
+    artist: verifiedArtist,
+    category: { id: 9, name: "Illustration" }
+  };
+  const { baseUrl, calls } = await startArtistArtworkRoutesApp(t, {
+    hideArtworkResult: hiddenArtwork
+  });
+
+  const response = await requestJson(baseUrl, "/artists/me/artworks/42/hide", {
+    method: "POST",
+    body: { expectedVersion: 3 }
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.artwork.visibility, "HIDDEN");
+  assert.equal(response.body.artwork.management.capabilities.canHide, false);
+  assert.deepEqual(calls.hideArtwork, [
+    { artworkId: 42, artistId: verifiedArtist.id, expectedVersion: 3 }
+  ]);
+});
+
+test("POST /artists/me/artworks/:id/hide reports concurrent changes", async (t) => {
+  const { baseUrl } = await startArtistArtworkRoutesApp(t, {
+    hideArtworkError: new Error("ARTWORK_VERSION_CONFLICT")
+  });
+
+  const response = await requestJson(baseUrl, "/artists/me/artworks/42/hide", {
+    method: "POST",
+    body: { expectedVersion: 2 }
+  });
+
+  assert.equal(response.status, 409);
+  assert.equal(response.body.code, "ARTWORK_VERSION_CONFLICT");
 });

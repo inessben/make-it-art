@@ -244,3 +244,44 @@ test("artwork deletion rejects a stale version before cleaning references", asyn
   assert.equal(loaded.calls.cartItems.length, 0);
   loaded.restore();
 });
+
+test("artwork hiding is allowed with purchase history and updates visibility atomically", async () => {
+  const loaded = loadRepository({
+    existing: existingArtwork({ orderItems: [{ order: { status: "PAID" } }] })
+  });
+
+  await loaded.repository.hideArtwork({ artworkId: 42, artistId: 3, expectedVersion: 2 });
+
+  assert.deepEqual(loaded.calls.transactionOptions, { isolationLevel: "Serializable" });
+  assert.deepEqual(loaded.calls.updateMany, [
+    {
+      where: {
+        id: 42,
+        artistId: 3,
+        visibility: "PUBLISHED",
+        version: 2
+      },
+      data: {
+        visibility: "HIDDEN",
+        version: { increment: 1 }
+      }
+    }
+  ]);
+  loaded.restore();
+});
+
+test("artwork hiding is idempotent even when the repeated request has an old version", async () => {
+  const loaded = loadRepository({
+    existing: existingArtwork({ visibility: "HIDDEN", version: 3 })
+  });
+
+  const artwork = await loaded.repository.hideArtwork({
+    artworkId: 42,
+    artistId: 3,
+    expectedVersion: 2
+  });
+
+  assert.equal(artwork.visibility, "HIDDEN");
+  assert.equal(loaded.calls.updateMany.length, 0);
+  loaded.restore();
+});
