@@ -4,10 +4,44 @@ import {
   buildPaymentReturnUrl,
   canMountPaymentElement,
   createSecureUuid,
+  getCustomerSessionClientSecret,
   getOrCreateIdempotencyKey,
   getSafePaymentError,
   isPublishableStripeKey
 } from "../utils/checkout-security.js";
+
+test("a Customer Session secret is accepted only when saved methods are enabled", () => {
+  const secret = "cuss_secret_public123";
+
+  assert.equal(
+    getCustomerSessionClientSecret({
+      savedPaymentMethodsAvailable: true,
+      customerSessionClientSecret: secret
+    }),
+    secret
+  );
+  assert.equal(
+    getCustomerSessionClientSecret({
+      savedPaymentMethodsAvailable: false,
+      customerSessionClientSecret: secret
+    }),
+    null
+  );
+  assert.equal(
+    getCustomerSessionClientSecret({
+      savedPaymentMethodsAvailable: true,
+      customerSessionClientSecret: "pi_test_123_secret_wrong_scope"
+    }),
+    null
+  );
+  assert.equal(
+    getCustomerSessionClientSecret({
+      savedPaymentMethodsAvailable: true,
+      customerSessionClientSecret: "cuss_test_123_secret_outdated_shape"
+    }),
+    null
+  );
+});
 
 test("the Payment Element mounts only for a reusable server-approved intent", () => {
   assert.equal(
@@ -124,6 +158,10 @@ test("payment errors never expose a client secret", () => {
   assert.equal(
     getSafePaymentError({ message: "Your card was declined." }),
     "Your card was declined."
+  );
+  assert.equal(
+    getSafePaymentError({ message: "Failed for cuss_secret_sensitive" }),
+    "The payment could not be confirmed. Please review your details and try again."
   );
 });
 

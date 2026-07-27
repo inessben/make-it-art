@@ -72,7 +72,8 @@ const sections = [
         title: "2.2 Payment and Financial Data",
         items: [
           "Billing and shipping address.",
-          "Credit card number (NOT STORED: processed directly by Stripe).",
+          "Credit card number and security code (never stored by Make It Art; processed and, with your consent, retained by Stripe).",
+          "For a saved card: Stripe identifiers, card brand, last four digits, expiration date, and a minimal record of your consent.",
           "Bank details for transfers.",
           "Crypto wallet address, including MetaMask, WalletConnect, and similar services.",
           "Transaction and purchase history."

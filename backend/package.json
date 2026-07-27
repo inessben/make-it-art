@@ -3,6 +3,7 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
+    "postinstall": "prisma generate --schema prisma/schema.prisma",
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "payments:expire-checkouts": "node src/jobs/expire-checkouts.js",
@@ -12,8 +13,9 @@
     "payments:validate-sandbox": "node src/scripts/validate-payment-sandbox.js",
     "payments:validate-go-live": "node src/scripts/validate-go-live.js",
     "payments:scan-secrets": "node src/scripts/validate-payment-sandbox.js",
+    "payments:qa-saved-methods": "node src/scripts/qa-saved-payment-methods-sandbox.js",
     "payments:seed-test": "node src/scripts/seed-payment-fixture.js",
-    "security:audit": "npm audit --omit=dev --omit=optional --audit-level=high",
+    "security:audit": "npm audit --workspaces=false --omit=dev --omit=optional --audit-level=high",
     "test": "node --test \"test/**/*.test.js\"",
     "test:coverage": "node --test --experimental-test-coverage \"test/**/*.test.js\"",
     "lint": "eslint \"src/**/*.js\" \"test/**/*.js\" --max-warnings=0",

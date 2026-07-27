@@ -21,6 +21,7 @@ function validConfiguration() {
         secretKey: ["rk", "live", "restrictedpaymentkey"].join("_"),
         webhookSecret: "whsec_liveendpointsecret",
         paymentMethodConfigurationId: "pmc_launchcardsonly",
+        savedPaymentMethodConsentVersion: "2026-07-26",
         checkoutExpirationSweepMs: 60000
       },
       commerce: {

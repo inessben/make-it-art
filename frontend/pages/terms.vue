@@ -130,7 +130,8 @@ const sections = [
       {
         title: "6.1 Payment Methods",
         paragraphs: [
-          "Credit card, Google Pay, Apple Pay, Paylib, and bank transfer via Stripe or Revolut for euro or USD payments; crypto wallets such as MetaMask and WalletConnect for NFT transactions."
+          "Credit card, Google Pay, Apple Pay, Paylib, and bank transfer via Stripe or Revolut for euro or USD payments; crypto wallets such as MetaMask and WalletConnect for NFT transactions.",
+          "When Stripe offers the option, a Buyer may expressly ask Stripe to save a card for future purchases. The saved card is used only while the Buyer is present and confirms a new checkout; Make It Art does not initiate automatic charges. The Buyer can remove it at any time from Payment methods in their account."
         ]
       },
       {

@@ -12,6 +12,7 @@ const { getStripeClient } = require("../lib/stripe");
 const { getCartSummary, withLockedPayableCart } = require("./cart.service");
 const { cancelSupersededCheckouts, CheckoutRecoveryError } = require("./checkout-recovery.service");
 const { reconcilePaymentIntent } = require("./payment-monitoring.service");
+const { tryCreatePaymentCustomerContext } = require("./saved-payment-method.service");
 
 const orderRepository = require("../repositories/order.repository");
 const notificationRepository = require("../repositories/notification.repository");
@@ -237,11 +238,18 @@ async function createPendingCheckout({
   );
 }
 
-function assertStripeIntentMatchesOrder(paymentIntent, order) {
+function stripeId(value) {
+  return typeof value === "string" ? value : value?.id;
+}
+
+function assertStripeIntentMatchesOrder(paymentIntent, order, expectedCustomerId) {
+  const intentCustomerId = stripeId(paymentIntent.customer);
+
   return (
     paymentIntent.amount === order.totalAmount &&
     paymentIntent.currency === order.currency.toLowerCase() &&
-    paymentIntent.metadata?.order_id === order.publicId
+    paymentIntent.metadata?.order_id === order.publicId &&
+    (!intentCustomerId || !expectedCustomerId || intentCustomerId === expectedCustomerId)
   );
 }
 
@@ -295,6 +303,17 @@ async function renewCanceledCheckoutSnapshot({ userId, expectedVersion }) {
 async function createOrRetrievePaymentIntent(stripeClient, checkout) {
   const { order, payment } = checkout;
   let paymentIntent;
+  const customerContext = await tryCreatePaymentCustomerContext({
+    userId: order.userId,
+    stripeClient,
+    prismaClient: prisma
+  });
+
+  if (customerContext.errorCode) {
+    console.warn("Stripe saved payment methods are unavailable for this checkout", {
+      code: customerContext.errorCode
+    });
+  }
 
   try {
     if (payment.providerPaymentId) {
@@ -305,6 +324,7 @@ async function createOrRetrievePaymentIntent(stripeClient, checkout) {
           amount: order.totalAmount,
           currency: order.currency.toLowerCase(),
           receipt_email: order.billingSnapshot?.email || undefined,
+          ...(customerContext.customerId ? { customer: customerContext.customerId } : {}),
           ...(env.stripe.paymentMethodConfigurationId
             ? { payment_method_configuration: env.stripe.paymentMethodConfigurationId }
             : {}),
@@ -335,7 +355,7 @@ async function createOrRetrievePaymentIntent(stripeClient, checkout) {
     throw checkoutError;
   }
 
-  if (!assertStripeIntentMatchesOrder(paymentIntent, order)) {
+  if (!assertStripeIntentMatchesOrder(paymentIntent, order, customerContext.customerId)) {
     await markOrderForReview(order.id);
     throw new CheckoutError(
       "CHECKOUT_REVIEW_REQUIRED",
@@ -345,6 +365,11 @@ async function createOrRetrievePaymentIntent(stripeClient, checkout) {
   }
 
   const requiresConfirmation = isPaymentIntentReusable(paymentIntent.status);
+  const intentCustomerId = stripeId(paymentIntent.customer);
+  const customerSessionClientSecret =
+    requiresConfirmation && intentCustomerId && intentCustomerId === customerContext.customerId
+      ? customerContext.customerSessionClientSecret
+      : null;
 
   if (requiresConfirmation && !paymentIntent.client_secret) {
     throw new CheckoutError(
@@ -383,7 +408,9 @@ async function createOrRetrievePaymentIntent(stripeClient, checkout) {
     paymentIntent,
     orderStatus: synchronizedOrder.status,
     requiresConfirmation,
-    clientSecret: requiresConfirmation ? paymentIntent.client_secret : null
+    clientSecret: requiresConfirmation ? paymentIntent.client_secret : null,
+    customerSessionClientSecret,
+    savedPaymentMethodsAvailable: Boolean(customerSessionClientSecret)
   };
 }
 
@@ -469,7 +496,9 @@ async function initializeCheckout({
     billingDetails: checkout.order.billingSnapshot,
     paymentStatus: paymentState.paymentIntent.status,
     requiresConfirmation: paymentState.requiresConfirmation,
-    clientSecret: paymentState.clientSecret
+    clientSecret: paymentState.clientSecret,
+    customerSessionClientSecret: paymentState.customerSessionClientSecret,
+    savedPaymentMethodsAvailable: paymentState.savedPaymentMethodsAvailable
   };
 }
 

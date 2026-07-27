@@ -5,6 +5,7 @@ const { getStripeClient } = require("../lib/stripe");
 const { canTransitionOrder, canTransitionPayment } = require("../domain/payment-state");
 const { getCartSummary } = require("./cart.service");
 const { reconcilePaymentIntent } = require("./payment-monitoring.service");
+const { createPaymentElementCustomerSession } = require("./saved-payment-method.service");
 
 const OPEN_ORDER_STATUSES = ["PENDING_PAYMENT", "PAYMENT_PROCESSING", "PAYMENT_FAILED"];
 
@@ -23,11 +24,17 @@ function cancellationIdempotencyKey(paymentIntentId, reason) {
 }
 
 function intentMatchesOrder(intent, order) {
+  const intentCustomerId =
+    typeof intent.customer === "string" ? intent.customer : intent.customer?.id;
+
   return (
     intent.id === order.payments[0]?.providerPaymentId &&
     intent.amount === order.totalAmount &&
     intent.currency === order.currency.toLowerCase() &&
-    intent.metadata?.order_id === order.publicId
+    intent.metadata?.order_id === order.publicId &&
+    (!intentCustomerId ||
+      !order.user?.stripeCustomerId ||
+      intentCustomerId === order.user.stripeCustomerId)
   );
 }
 
@@ -242,7 +249,10 @@ async function resumeCheckout({
 }) {
   const order = await prismaClient.order.findFirst({
     where: { publicId, userId },
-    include: { payments: { orderBy: { checkoutVersion: "desc" } } }
+    include: {
+      payments: { orderBy: { checkoutVersion: "desc" } },
+      user: { select: { stripeCustomerId: true } }
+    }
   });
 
   if (!order) return null;
@@ -331,7 +341,9 @@ async function resumeCheckout({
       billingDetails: synchronizedOrder.billingSnapshot,
       paymentStatus: intent.status,
       requiresConfirmation: false,
-      clientSecret: null
+      clientSecret: null,
+      customerSessionClientSecret: null,
+      savedPaymentMethodsAvailable: false
     };
   }
 
@@ -366,6 +378,23 @@ async function resumeCheckout({
     })
   ]);
 
+  const intentCustomerId =
+    typeof intent.customer === "string" ? intent.customer : intent.customer?.id;
+  let customerSessionClientSecret = null;
+
+  if (intentCustomerId && intentCustomerId === order.user?.stripeCustomerId) {
+    try {
+      customerSessionClientSecret = await createPaymentElementCustomerSession({
+        customerId: intentCustomerId,
+        stripeClient
+      });
+    } catch (error) {
+      console.warn("Stripe saved payment methods are unavailable for this resumed checkout", {
+        code: error?.code || error?.type || "STRIPE_REQUEST_FAILED"
+      });
+    }
+  }
+
   return {
     orderId: synchronizedOrder.publicId,
     orderStatus: nextOrderStatus,
@@ -374,7 +403,9 @@ async function resumeCheckout({
     billingDetails: synchronizedOrder.billingSnapshot,
     paymentStatus: intent.status,
     requiresConfirmation,
-    clientSecret: requiresConfirmation ? intent.client_secret : null
+    clientSecret: requiresConfirmation ? intent.client_secret : null,
+    customerSessionClientSecret,
+    savedPaymentMethodsAvailable: Boolean(customerSessionClientSecret)
   };
 }
 
