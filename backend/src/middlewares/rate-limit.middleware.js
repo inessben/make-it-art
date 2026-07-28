@@ -126,9 +126,23 @@ const paymentOperationsRateLimit = asExpressMiddleware(
   })
 );
 
+const walletWriteRateLimit = asExpressMiddleware(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: isProduction ? 20 : 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => ipKeyGenerator(req.ip),
+    message: {
+      message: "Too many wallet operations. Please try again later.",
+      code: "WALLET_RATE_LIMITED"
+    }
+  })
+);
 module.exports = {
   authRateLimit,
   strictAuthRateLimit,
+  walletWriteRateLimit,
   cartRateLimit,
   checkoutIpRateLimit,
   checkoutUserRateLimit,
