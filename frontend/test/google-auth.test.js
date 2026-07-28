@@ -25,6 +25,17 @@ describe("google auth helpers", () => {
     assert.equal(getGoogleLoginUrl(), "/api/auth/google");
   });
 
+  test("carries only safe post-auth destinations into Google sign-in", () => {
+    assert.equal(
+      getGoogleLoginUrl("", "/become-artist"),
+      "/api/auth/google?redirect=%2Fbecome-artist"
+    );
+    assert.equal(
+      getGoogleLoginUrl("http://localhost:3000", "/become-artist"),
+      "http://localhost/api/auth/google?redirect=%2Fbecome-artist"
+    );
+    assert.equal(getGoogleLoginUrl("", "https://example.com"), "/api/auth/google");
+  });
   test("returns a clear message when Google sign-in is cancelled", () => {
     assert.equal(getGoogleLoginMessage("cancelled"), "Google sign-in was cancelled.");
   });

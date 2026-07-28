@@ -1,7 +1,8 @@
 import { defineNuxtRouteMiddleware, navigateTo } from "#app";
 import { useAuthStore } from "~/stores/auth";
+import { buildLoginLocation } from "~/utils/post-auth-redirect";
 
-export default defineNuxtRouteMiddleware(async () => {
+export default defineNuxtRouteMiddleware(async (to) => {
   if (import.meta.server) {
     return;
   }
@@ -11,7 +12,7 @@ export default defineNuxtRouteMiddleware(async () => {
   try {
     await auth.fetchCurrentUser();
   } catch {
-    return navigateTo("/login");
+    return navigateTo(buildLoginLocation(to.fullPath));
   }
 
   if (auth.isAdmin) {

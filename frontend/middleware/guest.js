@@ -1,7 +1,8 @@
 import { defineNuxtRouteMiddleware, navigateTo } from "#app";
 import { useAuthStore } from "~/stores/auth";
+import { resolvePostAuthDestination } from "~/utils/post-auth-redirect";
 
-export default defineNuxtRouteMiddleware(async () => {
+export default defineNuxtRouteMiddleware(async (to) => {
   if (import.meta.server) {
     return;
   }
@@ -12,7 +13,11 @@ export default defineNuxtRouteMiddleware(async () => {
     await auth.fetchCurrentUser();
 
     if (auth.isAuthenticated) {
-      return navigateTo(auth.defaultAuthenticatedRoute, { replace: true });
+      const destination = auth.isAdmin
+        ? auth.defaultAuthenticatedRoute
+        : resolvePostAuthDestination(to.query.redirect, "", auth.defaultAuthenticatedRoute);
+
+      return navigateTo(destination, { replace: true });
     }
   } catch {
     auth.user = null;
