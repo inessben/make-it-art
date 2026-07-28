@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import {
   buildLoginLocation,
+  buildRegisterLocation,
   resolvePostAuthDestination,
   sanitizePostAuthRedirect
 } from "../utils/post-auth-redirect.js";
@@ -30,6 +31,11 @@ describe("post-auth redirect helpers", () => {
       query: { redirect: "/become-artist" }
     });
     assert.equal(buildLoginLocation("https://example.com"), "/login");
+    assert.deepEqual(buildRegisterLocation("/become-artist"), {
+      path: "/register",
+      query: { redirect: "/become-artist" }
+    });
+    assert.equal(buildRegisterLocation(undefined), "/register");
   });
 
   test("prioritizes the requested page and falls back safely", () => {

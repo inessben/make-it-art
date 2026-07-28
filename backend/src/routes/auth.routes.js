@@ -291,7 +291,7 @@ router.post("/auth/google/link", authRateLimit, async (req, res) => {
 
 router.post("/auth/register", authRateLimit, async (req, res) => {
   try {
-    const { username, email, phone, password, confirmPassword } = req.body;
+    const { username, email, phone, password, confirmPassword, redirect } = req.body;
 
     if (!username || !email || !phone || !password || !confirmPassword) {
       return res.status(400).json({
@@ -321,7 +321,8 @@ router.post("/auth/register", authRateLimit, async (req, res) => {
       username,
       email,
       phone,
-      password
+      password,
+      redirectTo: sanitizePostAuthRedirect(redirect)
     });
 
     return res.status(201).json({
@@ -350,7 +351,7 @@ router.post("/auth/register", authRateLimit, async (req, res) => {
 
 router.post("/auth/resend-verification-email", authRateLimit, async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, redirect } = req.body;
 
     if (!email) {
       return res.status(400).json({
@@ -358,7 +359,7 @@ router.post("/auth/resend-verification-email", authRateLimit, async (req, res) =
       });
     }
 
-    await resendVerificationEmail(email);
+    await resendVerificationEmail(email, sanitizePostAuthRedirect(redirect));
 
     return res.status(200).json({
       message: "Verification email sent. Please check your inbox."

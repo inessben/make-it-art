@@ -57,6 +57,12 @@ export function buildLoginLocation(target) {
   return redirect ? { path: "/login", query: { redirect } } : "/login";
 }
 
+export function buildRegisterLocation(target) {
+  const redirect = sanitizePostAuthRedirect(target);
+
+  return redirect ? { path: "/register", query: { redirect } } : "/register";
+}
+
 export function resolvePostAuthDestination(requested, serverRedirect, fallback = "/") {
   return (
     sanitizePostAuthRedirect(requested) ||

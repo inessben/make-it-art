@@ -57,7 +57,7 @@
 
       <p class="auth-link">
         Don't have an account?
-        <NuxtLink to="/register">Create one</NuxtLink>
+        <NuxtLink :to="registerLocation">Create one</NuxtLink>
       </p>
     </template>
 
@@ -100,7 +100,7 @@ import {
   GOOGLE_LOGIN_LABEL,
   isGoogleLinkRequired
 } from "~/utils/google-auth";
-import { resolvePostAuthDestination } from "~/utils/post-auth-redirect";
+import { buildRegisterLocation, resolvePostAuthDestination } from "~/utils/post-auth-redirect";
 
 definePageMeta({
   middleware: "guest"
@@ -122,6 +122,7 @@ const passwordWarningHasSession = ref(false);
 const passwordWarningRedirectTo = ref("");
 const route = useRoute();
 const requestedRedirect = computed(() => route.query.redirect);
+const registerLocation = computed(() => buildRegisterLocation(requestedRedirect.value));
 
 function authenticatedDestination(serverRedirect = "") {
   if (serverRedirect === "/admin" || auth.isAdmin) {
@@ -333,7 +334,8 @@ async function handleResendVerification() {
       method: "POST",
       credentials: "include",
       body: {
-        email: email.value
+        email: email.value,
+        redirect: requestedRedirect.value
       }
     });
 

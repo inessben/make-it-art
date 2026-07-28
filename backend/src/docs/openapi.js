@@ -380,7 +380,12 @@ const authenticationPaths = {
               type: "object",
               required: ["email"],
               properties: {
-                email: { type: "string", format: "email" }
+                email: { type: "string", format: "email" },
+                redirect: {
+                  type: "string",
+                  description:
+                    "Optional safe internal path restored after verification and sign-in."
+                }
               }
             }
           }
@@ -3270,7 +3275,11 @@ const openApiSpec = {
           email: { type: "string", format: "email" },
           phone: { type: "string" },
           password: { type: "string", format: "password" },
-          confirmPassword: { type: "string", format: "password" }
+          confirmPassword: { type: "string", format: "password" },
+          redirect: {
+            type: "string",
+            description: "Optional safe internal path restored after verification and sign-in."
+          }
         }
       },
       UpdateProfileRequest: {

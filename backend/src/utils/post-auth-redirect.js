@@ -51,4 +51,17 @@ function sanitizePostAuthRedirect(value) {
   }
 }
 
-module.exports = { sanitizePostAuthRedirect };
+function buildEmailVerificationUrl(appBaseUrl, token, requestedRedirect = "") {
+  const url = new URL("/verify-email", appBaseUrl);
+  const redirect = sanitizePostAuthRedirect(requestedRedirect);
+
+  url.searchParams.set("token", token);
+
+  if (redirect) {
+    url.searchParams.set("redirect", redirect);
+  }
+
+  return url.toString();
+}
+
+module.exports = { buildEmailVerificationUrl, sanitizePostAuthRedirect };
