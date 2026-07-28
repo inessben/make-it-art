@@ -5,16 +5,29 @@ import {
   screenCaptureSource
 } from "~/utils/screenCaptureGuard";
 
-const shortcutBlackout = ref(false);
-const focusBlackout = ref(false);
-
+/**
+ * Black out protected artworks when a capture tool / focus loss / shortcut is detected.
+ * No mandatory cooldown — the user can re-show as soon as the page is focused again.
+ */
+const stickyBlackout = ref(false);
+const shortcutPulse = ref(false);
+const pageFocused = ref(true);
 const activeGuards = ref(0);
 
 let listenersBound = false;
-let blackoutTimer = null;
+let pulseTimer = null;
 let clipboardClearTimer = null;
+let safetyLoopId = 0;
 
-const BLACKOUT_MS = 1800;
+const PULSE_MS = 2000;
+
+function pageIsHidden() {
+  if (import.meta.server) return false;
+  return (
+    document.visibilityState === "hidden" ||
+    (typeof document.hasFocus === "function" && !document.hasFocus())
+  );
+}
 
 function isTypingTarget(target) {
   if (!(target instanceof HTMLElement)) return false;
@@ -30,11 +43,12 @@ function isCaptureShortcut(event) {
     return true;
   }
 
-  if (event.metaKey && event.shiftKey && ["3", "4", "5", "6"].includes(event.key)) {
+  // Win+Shift+S: Win key often not exposed — Shift+S outside inputs ≈ capture tool.
+  if (event.shiftKey && (key === "s" || code === "KeyS")) {
     return true;
   }
 
-  if (event.shiftKey && (event.metaKey || event.ctrlKey) && key === "s") {
+  if (event.metaKey && event.shiftKey && ["3", "4", "5", "6"].includes(event.key)) {
     return true;
   }
 
@@ -51,6 +65,7 @@ function clearClipboardSoon() {
 }
 
 function syncDocumentGuardClass(isActive) {
+  if (import.meta.server) return;
   if (isActive) {
     document.documentElement.classList.add("mia-screenshot-guard-active");
     return;
@@ -58,34 +73,59 @@ function syncDocumentGuardClass(isActive) {
   document.documentElement.classList.remove("mia-screenshot-guard-active");
 }
 
-function triggerShortcutBlackout() {
+function isContentHidden() {
+  return stickyBlackout.value || shortcutPulse.value || screenCaptureActive.value;
+}
+
+function engageStickyBlackout() {
+  if (import.meta.server || activeGuards.value < 1) return;
+  stickyBlackout.value = true;
+  syncDocumentGuardClass(true);
+  clearClipboardSoon();
+}
+
+function onCaptureDetected() {
   if (import.meta.server || activeGuards.value < 1) return;
 
-  shortcutBlackout.value = true;
+  engageStickyBlackout();
+  shortcutPulse.value = true;
   syncDocumentGuardClass(true);
   clearClipboardSoon();
 
-  window.clearTimeout(blackoutTimer);
-  blackoutTimer = window.setTimeout(() => {
-    shortcutBlackout.value = false;
+  window.clearTimeout(pulseTimer);
+  pulseTimer = window.setTimeout(() => {
+    shortcutPulse.value = false;
     syncDocumentGuardClass(isContentHidden());
-  }, BLACKOUT_MS);
+  }, PULSE_MS);
 }
 
-function isContentHidden() {
-  return focusBlackout.value || screenCaptureActive.value || shortcutBlackout.value;
+function dismissStickyBlackout() {
+  if (import.meta.server) return;
+  if (screenCaptureActive.value) return;
+  if (pageIsHidden()) return;
+
+  stickyBlackout.value = false;
+  shortcutPulse.value = false;
+  pageFocused.value = true;
+  window.clearTimeout(pulseTimer);
+  syncDocumentGuardClass(false);
 }
 
 function syncFocusBlackout() {
   if (import.meta.server || activeGuards.value < 1) {
-    focusBlackout.value = false;
     return;
   }
 
-  focusBlackout.value =
-    document.visibilityState === "hidden" ||
-    (typeof document.hasFocus === "function" && !document.hasFocus());
+  const hidden = pageIsHidden();
+  pageFocused.value = !hidden;
 
+  if (hidden) {
+    // Leaving the page / opening Snipping Tool → black out immediately.
+    engageStickyBlackout();
+    return;
+  }
+
+  // Stay black until the user dismisses (do not auto-reveal on focus).
   syncDocumentGuardClass(isContentHidden());
 }
 
@@ -94,22 +134,22 @@ function onKeyDown(event) {
 
   if (isCaptureShortcut(event)) {
     event.preventDefault();
-    triggerShortcutBlackout();
+    onCaptureDetected();
     return;
   }
 
   const key = String(event.key || "").toLowerCase();
-  if ((event.ctrlKey || event.metaKey) && ["s", "p"].includes(key)) {
+  if ((event.ctrlKey || event.metaKey) && ["s", "p"].includes(key) && !event.shiftKey) {
     event.preventDefault();
-    triggerShortcutBlackout();
+    onCaptureDetected();
   }
 }
 
 function onKeyUp(event) {
-  if (activeGuards.value < 1) return;
+  if (activeGuards.value < 1 || isTypingTarget(event.target)) return;
   if (isCaptureShortcut(event)) {
     event.preventDefault();
-    triggerShortcutBlackout();
+    onCaptureDetected();
   }
 }
 
@@ -127,8 +167,7 @@ function onWindowFocus() {
 
 function onPageFreeze() {
   if (activeGuards.value < 1) return;
-  focusBlackout.value = true;
-  syncDocumentGuardClass(true);
+  engageStickyBlackout();
 }
 
 function onPageResume() {
@@ -138,7 +177,25 @@ function onPageResume() {
 function onCopy(event) {
   if (activeGuards.value < 1 || isTypingTarget(event.target)) return;
   event.preventDefault();
-  triggerShortcutBlackout();
+  onCaptureDetected();
+}
+
+function startSafetyLoop() {
+  if (safetyLoopId || import.meta.server) return;
+  safetyLoopId = window.setInterval(() => {
+    if (activeGuards.value < 1) return;
+    if (screenCaptureActive.value || pageIsHidden()) {
+      engageStickyBlackout();
+      return;
+    }
+    syncDocumentGuardClass(isContentHidden());
+  }, 400);
+}
+
+function stopSafetyLoop() {
+  if (!safetyLoopId) return;
+  window.clearInterval(safetyLoopId);
+  safetyLoopId = 0;
 }
 
 function bindListeners() {
@@ -146,6 +203,7 @@ function bindListeners() {
   listenersBound = true;
 
   installScreenCaptureGuard();
+  startSafetyLoop();
 
   window.addEventListener("keydown", onKeyDown, true);
   window.addEventListener("keyup", onKeyUp, true);
@@ -161,6 +219,7 @@ function bindListeners() {
 function unbindListeners() {
   if (!listenersBound || import.meta.server) return;
   listenersBound = false;
+  stopSafetyLoop();
 
   window.removeEventListener("keydown", onKeyDown, true);
   window.removeEventListener("keyup", onKeyUp, true);
@@ -172,47 +231,15 @@ function unbindListeners() {
   document.removeEventListener("freeze", onPageFreeze);
   document.removeEventListener("resume", onPageResume);
 
-  window.clearTimeout(blackoutTimer);
+  window.clearTimeout(pulseTimer);
   window.clearTimeout(clipboardClearTimer);
-  shortcutBlackout.value = false;
-  focusBlackout.value = false;
+  stickyBlackout.value = false;
+  shortcutPulse.value = false;
   syncDocumentGuardClass(false);
 }
 
-const isBlackedOut = computed(() => {
-  if (activeGuards.value < 1) {
-    return false;
-  }
-  return shortcutBlackout.value || focusBlackout.value || screenCaptureActive.value;
-});
-
-const blackoutMessage = computed(() => {
-  if (screenCaptureActive.value) {
-    return "Contenu masqué pendant le partage d'écran ou l'enregistrement";
-  }
-  if (focusBlackout.value) {
-    return "Contenu masqué — revenez sur cet onglet pour continuer";
-  }
-  return "Capture bloquée";
-});
-
-const blackoutMode = computed(() => {
-  if (screenCaptureActive.value) {
-    return screenCaptureSource.value === "cast" ? "cast" : "screen-share";
-  }
-  if (focusBlackout.value) {
-    return "focus";
-  }
-  if (shortcutBlackout.value) {
-    return "shortcut";
-  }
-  return "none";
-});
-
 /**
- * Best-effort deterrents for screenshots and in-browser capture/streaming.
- * True Netflix-style blocking during Discord/Teams desktop capture requires DRM video;
- * static images cannot be fully protected at the OS compositor level from JavaScript alone.
+ * Best-effort deterrents: black out when capture tools / focus loss are detected.
  */
 export function useScreenshotGuard() {
   let stopCaptureWatch = null;
@@ -222,10 +249,13 @@ export function useScreenshotGuard() {
     bindListeners();
     syncFocusBlackout();
 
-    stopCaptureWatch = watch(screenCaptureActive, () => {
-      if (activeGuards.value > 0) {
-        syncDocumentGuardClass(isContentHidden());
+    stopCaptureWatch = watch(screenCaptureActive, (active) => {
+      if (activeGuards.value < 1) return;
+      if (active) {
+        engageStickyBlackout();
+        return;
       }
+      syncDocumentGuardClass(isContentHidden());
     });
   });
 
@@ -234,13 +264,49 @@ export function useScreenshotGuard() {
     activeGuards.value = Math.max(0, activeGuards.value - 1);
     if (activeGuards.value === 0) {
       unbindListeners();
+    } else {
+      syncDocumentGuardClass(isContentHidden());
     }
   });
+
+  const isBlackedOut = computed(() => {
+    if (activeGuards.value < 1) return false;
+    return stickyBlackout.value || shortcutPulse.value || screenCaptureActive.value;
+  });
+
+  const blackoutMessage = computed(() => {
+    if (screenCaptureActive.value) {
+      return "Contenu masqué pendant le partage d'écran ou l'enregistrement";
+    }
+    if (stickyBlackout.value) {
+      return "Capture détectée — aperçu masqué";
+    }
+    return "Capture bloquée";
+  });
+
+  const blackoutMode = computed(() => {
+    if (screenCaptureActive.value) {
+      return screenCaptureSource.value === "cast" ? "cast" : "screen-share";
+    }
+    if (stickyBlackout.value) {
+      return "sticky";
+    }
+    if (shortcutPulse.value) {
+      return "shortcut";
+    }
+    return "none";
+  });
+
+  const canDismissBlackout = computed(
+    () => stickyBlackout.value && !screenCaptureActive.value && pageFocused.value
+  );
 
   return {
     isBlackedOut,
     blackoutMessage,
     blackoutMode,
-    triggerBlackout: triggerShortcutBlackout
+    canDismissBlackout,
+    dismissBlackout: dismissStickyBlackout,
+    triggerBlackout: onCaptureDetected
   };
 }
