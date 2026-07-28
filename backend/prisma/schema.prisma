@@ -23,6 +23,12 @@ enum ArtworkLicenseType {
   EXCLUSIVE
 }
 
+enum ArtworkVisibility {
+  PUBLISHED
+  HIDDEN
+  ARCHIVED
+}
+
 enum OrderStatus {
   PENDING_PAYMENT
   PAYMENT_PROCESSING
@@ -139,10 +145,10 @@ model User {
   rememberedDevices          RememberedDevice[]          @relation("rememberedDevices")
   galleries                  UserGallery[]
   cart                       Cart?
-  refundsRequested           Refund[]                 @relation("refundRequestedBy")
-  requestedArtistWithdrawals ArtistWithdrawal[]       @relation("artistWithdrawalRequestedBy")
-  reviewedArtistWithdrawals  ArtistWithdrawal[]       @relation("artistWithdrawalReviewedBy")
-  disputeEvidenceAudits      DisputeEvidenceAudit[]   @relation("disputeEvidenceAuditCapturedBy")
+  refundsRequested           Refund[]                    @relation("refundRequestedBy")
+  requestedArtistWithdrawals ArtistWithdrawal[]          @relation("artistWithdrawalRequestedBy")
+  reviewedArtistWithdrawals  ArtistWithdrawal[]          @relation("artistWithdrawalReviewedBy")
+  disputeEvidenceAudits      DisputeEvidenceAudit[]      @relation("disputeEvidenceAuditCapturedBy")
   digitalEntitlements        DigitalEntitlement[]
   ownershipCertificates      OwnershipCertificate[]
   savedPaymentMethodConsents SavedPaymentMethodConsent[]
@@ -179,14 +185,14 @@ model ArtistApplicationDraft {
 }
 
 model Artist {
-  id          Int          @id @default(autoincrement())
-  userId      Int          @unique @map("user_id")
-  displayName String?      @map("display_name")
-  avatarPath  String?      @map("avatar_path")
-  coverPath   String?      @map("cover_path")
+  id          Int                @id @default(autoincrement())
+  userId      Int                @unique @map("user_id")
+  displayName String?            @map("display_name")
+  avatarPath  String?            @map("avatar_path")
+  coverPath   String?            @map("cover_path")
   verified    Boolean?
-  createdAt   DateTime?    @map("created_at")
-  user        User         @relation(fields: [userId], references: [id])
+  createdAt   DateTime?          @map("created_at")
+  user        User               @relation(fields: [userId], references: [id])
   artworks    Artwork[]
   collections Collection[]
   followers   Follow[]
@@ -243,9 +249,14 @@ model Artwork {
   digitalEntitlements   DigitalEntitlement[]
   ownershipCertificates OwnershipCertificate[]
   saleStatus            ArtworkSaleStatus      @default(DRAFT) @map("sale_status")
+  visibility            ArtworkVisibility      @default(PUBLISHED)
+  archivedAt            DateTime?              @map("archived_at") @db.Timestamp(6)
+  version               Int                    @default(1)
+  updatedAt             DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
   stockQuantity         Int                    @default(0) @map("stock_quantity")
   reservedQuantity      Int                    @default(0) @map("reserved_quantity")
 
+  @@index([visibility, moderationStatus, createdAt])
   @@map("artwork")
 }
 
@@ -391,7 +402,7 @@ model Order {
 model OrderItem {
   id                   Int                   @id @default(autoincrement())
   orderId              Int                   @map("order_id")
-  artworkId            Int                   @map("artwork_id")
+  artworkId            Int?                  @map("artwork_id")
   // Legacy display field; Stripe totals are unitAmount/subtotalAmount.
   priceTokens          String?               @map("price_tokens")
   artworkTitle         String                @map("artwork_title")
@@ -408,7 +419,7 @@ model OrderItem {
   commissionRateBps    Int                   @default(700) @map("commission_rate_bps")
   currency             Currency              @default(EUR)
   createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamp(6)
-  artwork              Artwork               @relation(fields: [artworkId], references: [id])
+  artwork              Artwork?              @relation(fields: [artworkId], references: [id], onDelete: SetNull)
   order                Order                 @relation(fields: [orderId], references: [id])
   digitalEntitlement   DigitalEntitlement?
   ownershipCertificate OwnershipCertificate?
@@ -452,21 +463,25 @@ model InvoiceSequence {
 }
 
 model DigitalEntitlement {
-  id            Int                   @id @default(autoincrement())
-  orderId       Int                   @map("order_id")
-  orderItemId   Int                   @unique @map("order_item_id")
-  userId        Int                   @map("user_id")
-  artworkId     Int                   @map("artwork_id")
-  status        DigitalDeliveryStatus @default(ACTIVE)
-  sourceTaskKey String                @map("source_task_key")
-  grantedAt     DateTime              @default(now()) @map("granted_at") @db.Timestamp(6)
-  suspendedAt   DateTime?             @map("suspended_at") @db.Timestamp(6)
-  revokedAt     DateTime?             @map("revoked_at") @db.Timestamp(6)
-  updatedAt     DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
-  order         Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderItem     OrderItem             @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
-  user          User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
-  artwork       Artwork               @relation(fields: [artworkId], references: [id], onDelete: Restrict)
+  id               Int                   @id @default(autoincrement())
+  orderId          Int                   @map("order_id")
+  orderItemId      Int                   @unique @map("order_item_id")
+  userId           Int                   @map("user_id")
+  artworkId        Int                   @map("artwork_id")
+  status           DigitalDeliveryStatus @default(ACTIVE)
+  sourceTaskKey    String                @map("source_task_key")
+  downloadCount    Int                   @default(0) @map("download_count")
+  downloadLimit    Int                   @default(5) @map("download_limit")
+  downloadExpiresAt DateTime?            @map("download_expires_at") @db.Timestamp(6)
+  lastDownloadedAt DateTime?             @map("last_downloaded_at") @db.Timestamp(6)
+  grantedAt        DateTime              @default(now()) @map("granted_at") @db.Timestamp(6)
+  suspendedAt      DateTime?             @map("suspended_at") @db.Timestamp(6)
+  revokedAt        DateTime?             @map("revoked_at") @db.Timestamp(6)
+  updatedAt        DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  order            Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem        OrderItem             @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  user             User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  artwork          Artwork               @relation(fields: [artworkId], references: [id], onDelete: Restrict)
 
   @@index([userId, status])
   @@index([orderId, status])
@@ -661,24 +676,24 @@ model FulfillmentTask {
 }
 
 model ArtistWithdrawal {
-  id                Int                   @id @default(autoincrement())
-  publicId          String                @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
-  artistId          Int                   @map("artist_id")
-  requestedByUserId Int                   @map("requested_by_user_id")
-  reviewedByUserId  Int?                  @map("reviewed_by_user_id")
+  id                Int                    @id @default(autoincrement())
+  publicId          String                 @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  artistId          Int                    @map("artist_id")
+  requestedByUserId Int                    @map("requested_by_user_id")
+  reviewedByUserId  Int?                   @map("reviewed_by_user_id")
   amount            Int
-  currency          Currency              @default(EUR)
+  currency          Currency               @default(EUR)
   status            ArtistWithdrawalStatus @default(REQUESTED)
   note              String?
-  adminNote         String?               @map("admin_note")
-  payoutReference   String?               @map("payout_reference")
-  createdAt         DateTime              @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt         DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
-  reviewedAt        DateTime?             @map("reviewed_at") @db.Timestamp(6)
-  paidAt            DateTime?             @map("paid_at") @db.Timestamp(6)
-  artist            Artist                @relation(fields: [artistId], references: [id], onDelete: Cascade)
-  requestedBy       User                  @relation("artistWithdrawalRequestedBy", fields: [requestedByUserId], references: [id], onDelete: Restrict)
-  reviewedBy        User?                 @relation("artistWithdrawalReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+  adminNote         String?                @map("admin_note")
+  payoutReference   String?                @map("payout_reference")
+  createdAt         DateTime               @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt         DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  reviewedAt        DateTime?              @map("reviewed_at") @db.Timestamp(6)
+  paidAt            DateTime?              @map("paid_at") @db.Timestamp(6)
+  artist            Artist                 @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  requestedBy       User                   @relation("artistWithdrawalRequestedBy", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  reviewedBy        User?                  @relation("artistWithdrawalReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
 
   @@index([artistId, status, createdAt])
   @@index([status, createdAt])
@@ -782,15 +797,19 @@ model RefreshToken {
 }
 
 model AuditLog {
-  id         Int       @id @default(autoincrement())
-  userId     Int?      @map("user_id")
-  action     String?
-  entityType String?   @map("entity_type")
-  entityId   String?   @map("entity_id")
-  ipAddress  String?   @map("ip_address")
-  createdAt  DateTime? @map("created_at")
-  user       User?     @relation(fields: [userId], references: [id])
+  id            Int       @id @default(autoincrement())
+  userId        Int?      @map("user_id")
+  action        String?
+  entityType    String?   @map("entity_type")
+  entityId      String?   @map("entity_id")
+  ipAddress     String?   @map("ip_address")
+  correlationId String?   @map("correlation_id") @db.VarChar(64)
+  metadata      Json?     @db.JsonB
+  createdAt     DateTime? @map("created_at")
+  user          User?     @relation(fields: [userId], references: [id])
 
+  @@index([entityType, entityId, createdAt])
+  @@index([correlationId])
   @@map("audit_logs")
 }
 

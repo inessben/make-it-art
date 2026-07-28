@@ -1,8 +1,9 @@
 <template>
   <div
-    v-if="!hasChosen"
+    v-if="ready && !hasChosen"
     class="fixed inset-x-0 bottom-0 z-50 border-t border-slate-800 bg-slate-950/95 px-4 py-5 backdrop-blur sm:px-6"
     role="dialog"
+    aria-modal="false"
     aria-live="polite"
     aria-label="Cookie consent"
   >
@@ -28,7 +29,13 @@
 </template>
 
 <script setup>
+import { onMounted, ref } from "vue";
 import { useCookieConsent } from "~/composables/useCookieConsent";
 
 const { hasChosen, accept, reject } = useCookieConsent();
+const ready = ref(false);
+
+onMounted(() => {
+  ready.value = true;
+});
 </script>

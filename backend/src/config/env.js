@@ -32,6 +32,7 @@ module.exports = {
   appBaseUrl: process.env.APP_BASE_URL || "http://localhost",
   paymentAlertEmail: process.env.PAYMENT_ALERT_EMAIL || "",
   checkoutEnabled: process.env.CHECKOUT_ENABLED !== "false",
+  artworkDownloadLimit: Number(process.env.ARTWORK_DOWNLOAD_LIMIT || 5),
   jwtSecret: process.env.JWT_SECRET || "dev_secret_change_me",
   sessionCookieName: process.env.SESSION_COOKIE_NAME || "mia_session",
   refreshCookieName: process.env.REFRESH_COOKIE_NAME || "mia_refresh",
@@ -127,8 +128,12 @@ module.exports = {
     pythonPath: process.env.PDF_PYTHON_PATH || process.env.ARTWORK_PYTHON_PATH || "python3",
     previewMaxWidth: Number(process.env.ARTWORK_PREVIEW_MAX_WIDTH || 1600),
     previewQuality: Number(process.env.ARTWORK_PREVIEW_QUALITY || 82),
-    watermarkText: process.env.ARTWORK_WATERMARK_TEXT || "Make It Art",
+    watermarkText: process.env.ARTWORK_WATERMARK_TEXT || "Make It Art · Preview · No AI training",
     watermarkPublicPreviews: process.env.ARTWORK_WATERMARK_PUBLIC_PREVIEWS !== "false",
+    forensicWatermarkSecret: process.env.ARTWORK_FORENSIC_WATERMARK_SECRET || "",
+    forensicWatermarkEnabled: process.env.ARTWORK_FORENSIC_WATERMARK_ENABLED !== "false",
+    imageDrmSecret: process.env.ARTWORK_IMAGE_DRM_SECRET || "",
+    imageDrmEnabled: process.env.ARTWORK_IMAGE_DRM_ENABLED !== "false",
     s3: {
       bucket: process.env.AWS_S3_BUCKET || "",
       region: process.env.AWS_S3_REGION || "",
@@ -148,7 +153,11 @@ module.exports = {
       ? process.env.WALLET_FEATURE_ENABLED === "true"
       : nodeEnv !== "production",
     projectId: process.env.CDP_PROJECT_ID || "",
-    authIssuer: process.env.CDP_AUTH_ISSUER || "make-it-art",
+    authIssuer:
+      process.env.CDP_AUTH_ISSUER ||
+      (nodeEnv === "production"
+        ? process.env.APP_BASE_URL || "https://www.makeitart.io"
+        : "make-it-art"),
     authAudience: process.env.CDP_AUTH_AUDIENCE || "",
     authKeyId: process.env.CDP_AUTH_KEY_ID || "",
     authPrivateKey: (process.env.CDP_AUTH_PRIVATE_KEY || "").replace(/\\n/g, "\n"),

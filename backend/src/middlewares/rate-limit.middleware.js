@@ -129,16 +129,76 @@ const paymentOperationsRateLimit = asExpressMiddleware(
 const walletWriteRateLimit = asExpressMiddleware(
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: isProduction ? 20 : 100,
+    limit: isProduction ? 60 : 200,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => ipKeyGenerator(req.ip),
+    keyGenerator: (req) => (req.user ? `wallet-user:${req.user.id}` : ipKeyGenerator(req.ip)),
     message: {
       message: "Too many wallet operations. Please try again later.",
       code: "WALLET_RATE_LIMITED"
     }
   })
 );
+
+const artworkMediaRateLimit = asExpressMiddleware(
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: isProduction ? 60 : 600,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: ipKeyGenerator,
+    message: {
+      message: "Too many artwork media requests. Please try again later.",
+      code: "ARTWORK_MEDIA_RATE_LIMITED"
+    }
+  })
+);
+
+const artworkCatalogRateLimit = asExpressMiddleware(
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: isProduction ? 90 : 900,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) =>
+      req.user ? `artwork-catalog-user:${req.user.id}` : ipKeyGenerator(req.ip),
+    message: {
+      message: "Too many artwork catalog requests. Please try again later.",
+      code: "ARTWORK_CATALOG_RATE_LIMITED"
+    }
+  })
+);
+
+const artworkManagementRateLimit = asExpressMiddleware(
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: isProduction ? 30 : 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) =>
+      req.user ? `artwork-management-user:${req.user.id}` : ipKeyGenerator(req.ip),
+    message: {
+      message: "Trop de demandes de gestion d'oeuvre. Reessayez dans quelques instants.",
+      code: "ARTWORK_MANAGEMENT_RATE_LIMITED"
+    }
+  })
+);
+
+const artworkDownloadRateLimit = asExpressMiddleware(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: isProduction ? 20 : 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) =>
+      req.user ? `artwork-download-user:${req.user.id}` : ipKeyGenerator(req.ip),
+    message: {
+      message: "Too many artwork download requests. Please try again later.",
+      code: "ARTWORK_DOWNLOAD_RATE_LIMITED"
+    }
+  })
+);
+
 module.exports = {
   authRateLimit,
   strictAuthRateLimit,
@@ -148,5 +208,9 @@ module.exports = {
   checkoutUserRateLimit,
   securityRateLimit,
   refundRateLimit,
-  paymentOperationsRateLimit
+  paymentOperationsRateLimit,
+  artworkManagementRateLimit,
+  artworkMediaRateLimit,
+  artworkCatalogRateLimit,
+  artworkDownloadRateLimit
 };

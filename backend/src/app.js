@@ -25,7 +25,8 @@ app.use(
         return callback(null, true);
       }
 
-      return callback(new Error("Origin is not allowed"));
+      // Reject without throwing: a thrown Error becomes an Express 500.
+      return callback(null, false);
     },
     credentials: true
   })

@@ -226,6 +226,15 @@ function buildArtworkInclude(viewerId) {
 function buildCollectionInclude(userId) {
   return {
     items: {
+      where: {
+        artwork: {
+          visibility: "PUBLISHED",
+          moderationStatus: "approved",
+          artist: {
+            verified: true
+          }
+        }
+      },
       orderBy: [
         {
           id: "desc"
@@ -244,6 +253,8 @@ async function ensurePublicArtwork(artworkId) {
   const artwork = await prisma.artwork.findFirst({
     where: {
       id: artworkId,
+      visibility: "PUBLISHED",
+      moderationStatus: "approved",
       artist: {
         verified: true
       }
@@ -318,7 +329,14 @@ async function listFavoriteArtworks(userId) {
 
   const favorites = await prisma.favorite.findMany({
     where: {
-      userId
+      userId,
+      artwork: {
+        visibility: "PUBLISHED",
+        moderationStatus: "approved",
+        artist: {
+          verified: true
+        }
+      }
     },
     orderBy: [
       {

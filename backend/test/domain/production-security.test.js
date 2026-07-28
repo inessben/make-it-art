@@ -120,6 +120,35 @@ test("production refuses unsafe payment anomaly monitoring settings", () => {
   }
 });
 
+test("production validates every enabled CDP wallet setting", () => {
+  const validCdp = {
+    walletFeatureEnabled: true,
+    projectId: "c7a553d9-e0f5-483d-ac05-57c48d31a930",
+    authIssuer: "https://www.makeitart.io",
+    authAudience: "c7a553d9-e0f5-483d-ac05-57c48d31a930",
+    authKeyId: "make-it-art-production-2026-01",
+    authPrivateKey:
+      "-----BEGIN PRIVATE KEY-----\nZmFrZS1rZXktZm9yLXZhbGlkYXRpb24=\n-----END PRIVATE KEY-----",
+    apiKeyId: "organizations/example/apiKeys/example",
+    apiKeySecret: "a-valid-cdp-api-secret",
+    requestTimeoutMs: 8000
+  };
+
+  assert.doesNotThrow(() => validateProductionConfig(productionConfig({ cdp: validCdp })));
+
+  for (const cdp of [
+    { ...validCdp, authIssuer: "make-it-art" },
+    { ...validCdp, authAudience: "another-project" },
+    { ...validCdp, authPrivateKey: "invalid" },
+    { ...validCdp, apiKeySecret: "replace_with_cdp_api_key_secret" }
+  ]) {
+    assert.throws(
+      () => validateProductionConfig(productionConfig({ cdp })),
+      /Unsafe production configuration/
+    );
+  }
+});
+
 test("Stripe requests are pinned to the reviewed API version", () => {
   assert.equal(STRIPE_API_VERSION, "2026-06-24.dahlia");
 });

@@ -100,6 +100,14 @@ function assertArtworkCanBeAdded(artwork, quantity, userId) {
     );
   }
 
+  if (artwork.visibility !== "PUBLISHED") {
+    throw new CartError(
+      "ARTWORK_NOT_AVAILABLE",
+      "Cette oeuvre n'est plus disponible. Actualisez votre panier.",
+      409
+    );
+  }
+
   if (artwork.saleStatus !== "AVAILABLE") {
     throw new CartError("ARTWORK_NOT_AVAILABLE", "Artwork is not available for purchase", 409);
   }

@@ -1,9 +1,20 @@
 const crypto = require("node:crypto");
-const prisma = require("../lib/prisma");
 const env = require("../config/env");
+const prisma = require("../lib/prisma");
 
 const ELIGIBLE_ORDER_STATUSES = new Set(["PAID", "PARTIALLY_REFUNDED"]);
 const OPEN_DISPUTE_STATUSES = new Set(["NEEDS_RESPONSE", "UNDER_REVIEW"]);
+const DEFAULT_DOWNLOAD_LIMIT = 5;
+const DOWNLOAD_LINK_TTL_DAYS = 30;
+
+function resolveDownloadLimit() {
+  const configured = Number(env.artworkDownloadLimit || DEFAULT_DOWNLOAD_LIMIT);
+  return Number.isSafeInteger(configured) && configured > 0 ? configured : DEFAULT_DOWNLOAD_LIMIT;
+}
+
+function downloadExpiresAt(fromDate) {
+  return new Date(fromDate.getTime() + DOWNLOAD_LINK_TTL_DAYS * 24 * 60 * 60 * 1000);
+}
 
 class DigitalDeliveryError extends Error {
   constructor(code, message, { retryable = true, canceled = false } = {}) {
@@ -110,6 +121,9 @@ async function grantDownloadRights({
           artworkId: item.artworkId,
           status,
           sourceTaskKey: task.taskKey,
+          downloadCount: 0,
+          downloadLimit: resolveDownloadLimit(),
+          downloadExpiresAt: downloadExpiresAt(now),
           grantedAt: now,
           ...(status === "SUSPENDED" ? { suspendedAt: now } : {}),
           ...(status === "REVOKED" ? { revokedAt: now } : {})

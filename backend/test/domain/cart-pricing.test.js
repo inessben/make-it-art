@@ -16,6 +16,7 @@ function createCart(overrides = {}) {
           priceAmount: 1250,
           currency: "EUR",
           licenseType: "EXCLUSIVE",
+          visibility: "PUBLISHED",
           saleStatus: "AVAILABLE",
           stockQuantity: 3,
           reservedQuantity: 0,
@@ -53,6 +54,15 @@ test("the 7 percent commission is calculated from the amount excluding tax", () 
 test("an unavailable artwork makes the cart non-payable", () => {
   const cartData = createCart();
   cartData.items[0].artwork.saleStatus = "UNLISTED";
+  const cart = buildCartSummary(cartData);
+
+  assert.equal(cart.payable, false);
+  assert.deepEqual(cart.issues, [{ artworkId: 10, code: "ARTWORK_NOT_AVAILABLE" }]);
+});
+
+test("a hidden artwork makes an existing cart non-payable", () => {
+  const cartData = createCart();
+  cartData.items[0].artwork.visibility = "HIDDEN";
   const cart = buildCartSummary(cartData);
 
   assert.equal(cart.payable, false);

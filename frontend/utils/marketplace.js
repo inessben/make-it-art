@@ -70,6 +70,62 @@ const ARTWORK_AVAILABILITY = Object.freeze({
   UNAVAILABLE: { status: "UNAVAILABLE", label: "Indisponible", tone: "unavailable" }
 });
 
+const ARTWORK_VISIBILITY = Object.freeze({
+  PUBLISHED: { label: "Publiée", tone: "published" },
+  HIDDEN: { label: "Masquée", tone: "hidden" },
+  ARCHIVED: { label: "Archivée", tone: "archived" }
+});
+
+export const ARTIST_ARTWORK_VISIBILITY_FILTERS = Object.freeze([
+  Object.freeze({ value: "PUBLISHED", label: "Actives" }),
+  Object.freeze({ value: "HIDDEN", label: "Masquées" }),
+  Object.freeze({ value: "ARCHIVED", label: "Archivées" })
+]);
+
+export function filterArtistArtworksByVisibility(artworks, visibility) {
+  const normalizedVisibility = String(visibility || "PUBLISHED").toUpperCase();
+  return (Array.isArray(artworks) ? artworks : []).filter(
+    (artwork) => String(artwork?.visibility || "PUBLISHED").toUpperCase() === normalizedVisibility
+  );
+}
+
+export function normalizeArtistArtworkCounts(source) {
+  const counts = source && typeof source === "object" ? source : {};
+  const normalizeCount = (value) => (Number.isSafeInteger(value) && value >= 0 ? value : 0);
+  const normalized = {
+    PUBLISHED: normalizeCount(counts.PUBLISHED),
+    HIDDEN: normalizeCount(counts.HIDDEN),
+    ARCHIVED: normalizeCount(counts.ARCHIVED)
+  };
+
+  return {
+    ...normalized,
+    total: Number.isSafeInteger(counts.total)
+      ? Math.max(0, counts.total)
+      : normalized.PUBLISHED + normalized.HIDDEN + normalized.ARCHIVED
+  };
+}
+
+const ARTWORK_MANAGEMENT_REASON_LABELS = Object.freeze({
+  ARTWORK_ARCHIVED: "Restaurez d'abord cette œuvre.",
+  ARTWORK_HAS_PURCHASES: "Cette œuvre a déjà été achetée.",
+  ARTWORK_TRANSACTION_IN_PROGRESS: "Un paiement ou une réservation est en cours.",
+  ARTWORK_NOT_PUBLISHED: "Cette œuvre n'est pas publiée.",
+  ARTWORK_ALREADY_ARCHIVED: "Cette œuvre est déjà archivée.",
+  ARTWORK_NOT_HIDDEN: "Seule une œuvre masquée peut être republiée.",
+  ARTWORK_MODERATION_BLOCKED: "La modération ne permet pas la republication.",
+  ARTWORK_NOT_ARCHIVED: "Seule une œuvre archivée peut être restaurée."
+});
+
+export function getArtworkVisibilityPresentation(value) {
+  const visibility = String(value || "PUBLISHED").toUpperCase();
+  return ARTWORK_VISIBILITY[visibility] || ARTWORK_VISIBILITY.PUBLISHED;
+}
+
+export function formatArtworkManagementReason(value) {
+  return ARTWORK_MANAGEMENT_REASON_LABELS[String(value || "")] || "Action indisponible.";
+}
+
 export function getArtworkAvailabilityPresentation(artwork) {
   const fallbackStatus = artwork?.isAvailableForPurchase ? "AVAILABLE" : "UNAVAILABLE";
   const status = String(artwork?.availabilityStatus || fallbackStatus).toUpperCase();
@@ -96,4 +152,45 @@ export function isArtworkOwnedByArtist(artwork, user) {
     userArtistId > 0 &&
     artworkArtistId === userArtistId
   );
+}
+
+export function shouldSynchronizeArtworkManagement(artwork, user) {
+  if (!user) return true;
+
+  return isArtworkOwnedByArtist(artwork, user) && !artwork?.management;
+}
+
+function normalizeArtworkCategoryName(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .trim()
+    .toLowerCase();
+}
+
+export function resolveArtworkCategoryId(artwork, categories) {
+  const availableCategories = Array.isArray(categories) ? categories : [];
+  const artworkCategory = artwork?.category;
+  const currentCategoryId =
+    artwork?.categoryId ??
+    (artworkCategory && typeof artworkCategory === "object" ? artworkCategory.id : null);
+
+  if (currentCategoryId !== null && currentCategoryId !== undefined) {
+    const categoryById = availableCategories.find(
+      (category) => String(category?.id) === String(currentCategoryId)
+    );
+
+    if (categoryById) return String(categoryById.id);
+  }
+
+  const currentCategoryName =
+    typeof artworkCategory === "string" ? artworkCategory : artworkCategory?.name;
+  const normalizedCurrentName = normalizeArtworkCategoryName(currentCategoryName);
+  if (!normalizedCurrentName) return "";
+
+  const categoryByName = availableCategories.find(
+    (category) => normalizeArtworkCategoryName(category?.name) === normalizedCurrentName
+  );
+
+  return categoryByName ? String(categoryByName.id) : "";
 }

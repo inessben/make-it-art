@@ -1,4 +1,7 @@
 import { defineStore } from "pinia";
+import { createCurrentUserSynchronizer } from "~/utils/auth-session";
+
+const synchronizeCurrentUser = createCurrentUserSynchronizer();
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
@@ -22,7 +25,13 @@ export const useAuthStore = defineStore("auth", {
         return false;
       }
 
-      return Boolean(state.user?.artist?.verified);
+      if (state.user?.artist?.verified === true) {
+        return true;
+      }
+
+      // An approved application with an artist profile unlocks the workspace
+      // even if a previous session payload still has verified=false.
+      return Boolean(state.user?.artist && state.user?.artistApplication?.status === "approved");
     },
     hasArtistApplication(state) {
       if (this.isAdmin) {
@@ -47,36 +56,8 @@ export const useAuthStore = defineStore("auth", {
   },
 
   actions: {
-    async fetchCurrentUser() {
-      this.loading = true;
-
-      try {
-        const response = await $fetch("/api/auth/me", {
-          credentials: "include"
-        });
-        this.user = response.user;
-
-        return this.user;
-      } catch (error) {
-        if (error?.statusCode !== 401) {
-          this.user = null;
-          throw error;
-        }
-
-        await $fetch("/api/auth/refresh", {
-          method: "POST",
-          credentials: "include"
-        });
-
-        const retryResponse = await $fetch("/api/auth/me", {
-          credentials: "include"
-        });
-        this.user = retryResponse.user;
-
-        return this.user;
-      } finally {
-        this.loading = false;
-      }
+    fetchCurrentUser() {
+      return synchronizeCurrentUser(this, $fetch);
     },
 
     async logout() {

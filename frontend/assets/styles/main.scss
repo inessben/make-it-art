@@ -4,6 +4,60 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  body {
+    @apply bg-black text-slate-100;
+  }
+
+  :where(
+    a,
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [tabindex]:not([tabindex="-1"])
+  ):focus-visible {
+    outline: 3px solid theme("colors.violet.400") !important;
+    outline-offset: 3px !important;
+  }
+
+  :where(input, select, textarea):focus-visible {
+    border-color: theme("colors.violet.400") !important;
+  }
+
+  ::selection {
+    @apply bg-violet-400 text-slate-950;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+.skip-link {
+  @apply fixed left-4 top-4 z-[200] -translate-y-24 bg-slate-100 px-5 py-3 font-semibold text-slate-950 shadow-2xl transition-transform;
+}
+.skip-link:focus {
+  @apply translate-y-0;
+}
+#main-content:focus {
+  outline: none;
+}
+
 $color-bg: theme("colors.slate.950");
 $color-card: theme("colors.slate.900");
 $color-brand: theme("colors.violet.700");
@@ -41,7 +95,7 @@ $color-brand: theme("colors.violet.700");
   }
 
   .ui-field {
-    @apply min-h-12 w-full border border-slate-800 bg-slate-900 px-4 text-body-1 text-slate-100 outline-none transition-colors placeholder:text-slate-500 focus:border-violet-600;
+    @apply min-h-12 w-full border border-slate-800 bg-slate-900 px-4 text-body-1 text-slate-100 outline-none transition-colors placeholder:text-slate-400 focus:border-violet-400;
   }
 
   .ui-button {
@@ -49,10 +103,32 @@ $color-brand: theme("colors.violet.700");
   }
 
   .ui-button-primary {
-    @apply ui-button border-violet-600 bg-violet-600 text-slate-100 hover:bg-violet-400;
+    @apply ui-button border-violet-600 bg-violet-600 text-white hover:border-violet-400 hover:bg-violet-700;
   }
 
   .ui-button-secondary {
     @apply ui-button border-slate-700 bg-transparent text-slate-100 hover:border-violet-600;
   }
+}
+
+/* While artwork screenshot guard is active: force-hide every protected pixel site-wide. */
+html.mia-screenshot-guard-active {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+html.mia-screenshot-guard-active .mia-protected-media {
+  background: #000 !important;
+}
+
+html.mia-screenshot-guard-active .mia-protected-media__image,
+html.mia-screenshot-guard-active .mia-protected-media__watermark,
+html.mia-screenshot-guard-active .mia-protected-media__viewer-badge {
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+html.mia-screenshot-guard-active .mia-protected-media__blackout {
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }

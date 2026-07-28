@@ -109,6 +109,10 @@ export function getWalletStatusLabel(status) {
 }
 
 export function getWalletFailureCode(error) {
+  if (error?.statusCode === 429 || error?.data?.code === "WALLET_RATE_LIMITED") {
+    return "WALLET_RATE_LIMITED";
+  }
+
   if (
     error?.code === "CDP_TIMEOUT" ||
     error?.name === "WalletCreationTimeoutError" ||

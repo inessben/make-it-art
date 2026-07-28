@@ -1,22 +1,35 @@
 import { defineNuxtPlugin, useRuntimeConfig, useState } from "#app";
+import { createCoinbaseCdpStub } from "~/utils/coinbase-cdp-stub";
+import { loadCoinbaseCdpCore } from "~/utils/coinbase-cdp-sdk";
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
   const projectId = config.public.cdpProjectId;
+
+  if (!projectId) {
+    return {
+      provide: {
+        coinbaseCdp: createCoinbaseCdpStub()
+      }
+    };
+  }
+
   const pendingWalletId = useState("embedded-wallet:pending-id", () => null);
   let sdkPromise;
   let initializationPromise;
 
   function loadSdk() {
-    sdkPromise ||= import("@coinbase/cdp-core");
+    sdkPromise ||= loadCoinbaseCdpCore().catch((error) => {
+      sdkPromise = undefined;
+      throw new Error(
+        "Le SDK Coinbase CDP (@coinbase/cdp-core) est introuvable. Executez npm ci dans frontend/ ou reconstruisez l'image Docker frontend.",
+        { cause: error }
+      );
+    });
     return sdkPromise;
   }
 
   async function ensureInitialized() {
-    if (!projectId) {
-      throw new Error("Coinbase CDP is not configured");
-    }
-
     initializationPromise ||= loadSdk().then(async ({ initialize }) => {
       await initialize({
         projectId,
@@ -34,6 +47,7 @@ export default defineNuxtPlugin(() => {
             return response.token;
           }
         },
+        ethereum: { createOnLogin: "eoa" },
         disableAnalytics: true
       });
     });
@@ -55,7 +69,7 @@ export default defineNuxtPlugin(() => {
           const sdk = await ensureInitialized();
           return sdk.authenticateWithJWT(options);
         },
-        configured: Boolean(projectId),
+        configured: true,
         async createEvmEoaAccount(options) {
           const sdk = await ensureInitialized();
           return sdk.createEvmEoaAccount(options);

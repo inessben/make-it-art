@@ -16,10 +16,24 @@ async function ensureVerifiedArtist(req, res, next) {
     });
   }
 
-  if (!artist.verified) {
+  const applicationStatus = req.user?.artistApplicationDraft?.status;
+  const isApprovedApplication = applicationStatus === "approved";
+
+  if (!artist.verified && !isApprovedApplication) {
     return res.status(403).json({
       message: "Votre profil artiste doit etre valide avant de publier des oeuvres."
     });
+  }
+
+  // Heal profiles that were approved in the application workflow but still
+  // marked unverified (legacy or partial activation).
+  if (!artist.verified && isApprovedApplication) {
+    const healed = await artistRepository.updateArtistVerification({
+      artistId: artist.id,
+      verified: true
+    });
+    req.artist = healed;
+    return next();
   }
 
   req.artist = artist;

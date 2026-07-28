@@ -1,21 +1,28 @@
 <template>
   <div class="grid gap-3">
+    <p :id="instructionsId" class="text-sm text-slate-300">
+      Sign with a mouse or finger. With a keyboard, press Space to start or stop drawing, then use
+      the arrow keys to move the pen.
+    </p>
     <div class="rounded-[20px] border border-slate-800 bg-slate-950 p-4">
       <canvas
         ref="canvasRef"
         class="signature-canvas h-44 w-full touch-none rounded-2xl bg-slate-50"
+        role="img"
+        tabindex="0"
+        aria-label="Signature drawing area"
+        :aria-describedby="instructionsId"
         @pointerdown="handlePointerDown"
         @pointermove="handlePointerMove"
         @pointerup="handlePointerUp"
         @pointerleave="handlePointerUp"
         @pointercancel="handlePointerUp"
+        @keydown="handleKeyDown"
       />
     </div>
 
     <div class="flex flex-wrap items-center justify-between gap-3 text-sm">
-      <p class="text-slate-400">
-        Sign with your mouse or finger. Your signature will be embedded in the final PDF.
-      </p>
+      <p class="text-slate-300" aria-live="polite">{{ keyboardStatus }}</p>
 
       <button
         type="button"
@@ -41,9 +48,15 @@ const props = defineProps({
 const emit = defineEmits(["update:modelValue"]);
 
 const canvasRef = ref(null);
+const instructionsId = `signature-instructions-${Math.random().toString(36).slice(2)}`;
+const keyboardStatus = ref(
+  "Your signature will be embedded in the final PDF. The signature area is blank."
+);
 let context = null;
 let drawing = false;
 let resizeObserver = null;
+let keyboardDrawing = false;
+let keyboardPosition = { x: 24, y: 24 };
 
 function setupCanvas() {
   const canvas = canvasRef.value;
@@ -129,6 +142,42 @@ function handlePointerUp() {
   emitSignature();
 }
 
+function handleKeyDown(event) {
+  if (!context || !canvasRef.value) return;
+  if (event.key === " ") {
+    event.preventDefault();
+    keyboardDrawing = !keyboardDrawing;
+    context.beginPath();
+    context.moveTo(keyboardPosition.x, keyboardPosition.y);
+    keyboardStatus.value = keyboardDrawing
+      ? "Keyboard drawing started. Use the arrow keys and press Space to stop."
+      : "Keyboard drawing stopped. Signature recorded.";
+    if (!keyboardDrawing) emitSignature();
+    return;
+  }
+  const movement = {
+    ArrowUp: [0, -4],
+    ArrowDown: [0, 4],
+    ArrowLeft: [-4, 0],
+    ArrowRight: [4, 0]
+  }[event.key];
+  if (!movement) return;
+  event.preventDefault();
+  const nextX = Math.min(
+    Math.max(keyboardPosition.x + movement[0], 0),
+    canvasRef.value.clientWidth
+  );
+  const nextY = Math.min(
+    Math.max(keyboardPosition.y + movement[1], 0),
+    canvasRef.value.clientHeight
+  );
+  if (keyboardDrawing) {
+    context.lineTo(nextX, nextY);
+    context.stroke();
+  }
+  keyboardPosition = { x: nextX, y: nextY };
+}
+
 function emitSignature() {
   const canvas = canvasRef.value;
 
@@ -137,6 +186,7 @@ function emitSignature() {
   }
 
   emit("update:modelValue", canvas.toDataURL("image/png"));
+  keyboardStatus.value = "Signature recorded. Use Clear to start again.";
 }
 
 function clearSignature() {
@@ -151,6 +201,9 @@ function clearSignature() {
   context.fillStyle = getCanvasToken("--signature-fill");
   context.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
   emit("update:modelValue", "");
+  keyboardDrawing = false;
+  keyboardPosition = { x: 24, y: 24 };
+  keyboardStatus.value = "Signature cleared. The signature area is blank.";
 }
 
 function restoreSignature(dataUrl) {
