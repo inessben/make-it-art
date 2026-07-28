@@ -57,7 +57,7 @@
 
       <p class="auth-link">
         Don't have an account?
-        <NuxtLink to="/register">Create one</NuxtLink>
+        <NuxtLink :to="registerLocation">Create one</NuxtLink>
       </p>
     </template>
 
@@ -92,7 +92,7 @@
 
 <script setup>
 import { navigateTo } from "#app";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useAuthStore } from "~/stores/auth";
 import {
   getGoogleLoginMessage,
@@ -100,6 +100,7 @@ import {
   GOOGLE_LOGIN_LABEL,
   isGoogleLinkRequired
 } from "~/utils/google-auth";
+import { buildRegisterLocation, resolvePostAuthDestination } from "~/utils/post-auth-redirect";
 
 definePageMeta({
   middleware: "guest"
@@ -120,6 +121,20 @@ const passwordWarningOpen = ref(false);
 const passwordWarningHasSession = ref(false);
 const passwordWarningRedirectTo = ref("");
 const route = useRoute();
+const requestedRedirect = computed(() => route.query.redirect);
+const registerLocation = computed(() => buildRegisterLocation(requestedRedirect.value));
+
+function authenticatedDestination(serverRedirect = "") {
+  if (serverRedirect === "/admin" || auth.isAdmin) {
+    return auth.defaultAuthenticatedRoute;
+  }
+
+  return resolvePostAuthDestination(
+    requestedRedirect.value,
+    serverRedirect,
+    auth.defaultAuthenticatedRoute
+  );
+}
 
 onMounted(() => {
   const googleMessage = getGoogleLoginMessage(route.query.google);
@@ -150,7 +165,7 @@ async function handleSubmit() {
 }
 
 function startGoogleLogin() {
-  window.location.assign(getGoogleLoginUrl(window.location.origin));
+  window.location.assign(getGoogleLoginUrl(window.location.origin, requestedRedirect.value));
 }
 
 async function handleGoogleLink() {
@@ -173,7 +188,7 @@ async function handleGoogleLink() {
     });
 
     linkedUser = response.user;
-    redirectTo = response.redirectTo || "";
+    redirectTo = authenticatedDestination(response.redirectTo);
   } catch (error) {
     message.value = error?.data?.message || "Unable to complete Google sign-in.";
   } finally {
@@ -221,7 +236,7 @@ async function handleLogin() {
     }
 
     auth.user = response.user;
-    redirectTo = response.redirectTo || auth.defaultAuthenticatedRoute;
+    redirectTo = authenticatedDestination(response.redirectTo);
     password.value = "";
 
     if (response.passwordCompromised) {
@@ -292,7 +307,7 @@ async function handleVerifyCode() {
     });
 
     verifiedUser = response.user;
-    redirectTo = response.redirectTo || "";
+    redirectTo = authenticatedDestination(response.redirectTo);
   } catch (error) {
     message.value =
       error?.statusCode === 400
@@ -319,7 +334,8 @@ async function handleResendVerification() {
       method: "POST",
       credentials: "include",
       body: {
-        email: email.value
+        email: email.value,
+        redirect: requestedRedirect.value
       }
     });
 

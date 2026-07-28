@@ -1,22 +1,26 @@
+import { sanitizePostAuthRedirect } from "./post-auth-redirect.js";
+
 export const GOOGLE_LOGIN_LABEL = "Sign in with Google";
 export const GOOGLE_LOGIN_URL = "/api/auth/google";
 
-export function getGoogleLoginUrl(origin = "") {
-  if (!origin) {
-    return GOOGLE_LOGIN_URL;
-  }
+export function getGoogleLoginUrl(origin = "", requestedRedirect = "") {
+  let loginUrl = GOOGLE_LOGIN_URL;
 
-  try {
-    const url = new URL(origin);
+  if (origin) {
+    try {
+      const url = new URL(origin);
 
-    if ((url.hostname === "localhost" || url.hostname === "127.0.0.1") && url.port === "3000") {
-      return `http://localhost${GOOGLE_LOGIN_URL}`;
+      if ((url.hostname === "localhost" || url.hostname === "127.0.0.1") && url.port === "3000") {
+        loginUrl = "http://localhost" + GOOGLE_LOGIN_URL;
+      }
+    } catch {
+      return GOOGLE_LOGIN_URL;
     }
-  } catch {
-    return GOOGLE_LOGIN_URL;
   }
 
-  return GOOGLE_LOGIN_URL;
+  const redirect = sanitizePostAuthRedirect(requestedRedirect);
+
+  return redirect ? loginUrl + "?redirect=" + encodeURIComponent(redirect) : loginUrl;
 }
 
 export function getGoogleLoginMessage(status) {

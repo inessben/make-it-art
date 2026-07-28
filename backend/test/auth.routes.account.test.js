@@ -85,8 +85,8 @@ async function startAuthRoutesApp(t, overrides = {}) {
 
       return overrides.registerUserResult || authUser;
     },
-    async resendVerificationEmail(email) {
-      calls.resendVerificationEmail.push(email);
+    async resendVerificationEmail(email, redirectTo) {
+      calls.resendVerificationEmail.push({ email, redirectTo });
 
       if (overrides.resendVerificationError) {
         throw new Error(overrides.resendVerificationError);
@@ -372,7 +372,8 @@ test("POST /auth/register creates an account", async (t) => {
       username: "Ada",
       email: "artist@example.com",
       phone: "0102030405",
-      password: VALID_PASSWORD
+      password: VALID_PASSWORD,
+      redirectTo: ""
     }
   ]);
   assert.deepEqual(calls.validateNewPassword, [
@@ -381,6 +382,32 @@ test("POST /auth/register creates an account", async (t) => {
       userInputs: ["Ada", "artist@example.com"]
     }
   ]);
+});
+
+test("POST /auth/register forwards only a safe requested page", async (t) => {
+  const safeApp = await startAuthRoutesApp(t);
+  const unsafeApp = await startAuthRoutesApp(t);
+  const payload = {
+    username: "Ada",
+    email: "artist@example.com",
+    phone: "0102030405",
+    password: VALID_PASSWORD,
+    confirmPassword: VALID_PASSWORD
+  };
+
+  const safeResponse = await requestJson(safeApp.baseUrl, "POST", "/auth/register", {
+    ...payload,
+    redirect: "/become-artist"
+  });
+  const unsafeResponse = await requestJson(unsafeApp.baseUrl, "POST", "/auth/register", {
+    ...payload,
+    redirect: "https://example.com"
+  });
+
+  assert.equal(safeResponse.status, 201);
+  assert.equal(unsafeResponse.status, 201);
+  assert.equal(safeApp.calls.registerUser[0].redirectTo, "/become-artist");
+  assert.equal(unsafeApp.calls.registerUser[0].redirectTo, "");
 });
 
 test("POST /auth/register maps duplicate emails to 409", async (t) => {
@@ -438,13 +465,19 @@ test("POST /auth/resend-verification-email validates email and handles service o
     "POST",
     "/auth/resend-verification-email",
     {
-      email: "artist@example.com"
+      email: "artist@example.com",
+      redirect: "/become-artist"
     }
   );
 
   assert.equal(successResponse.status, 200);
   assert.equal(successResponse.body.message, "Verification email sent. Please check your inbox.");
-  assert.deepEqual(successApp.calls.resendVerificationEmail, ["artist@example.com"]);
+  assert.deepEqual(successApp.calls.resendVerificationEmail, [
+    {
+      email: "artist@example.com",
+      redirectTo: "/become-artist"
+    }
+  ]);
 
   const verifiedApp = await startAuthRoutesApp(t, {
     resendVerificationError: "Email already verified"

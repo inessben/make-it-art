@@ -256,7 +256,9 @@ const savingProfile = ref(false);
 const savingPassword = ref(false);
 const successMessage = ref("");
 const errorMessage = ref("");
-const showArtistWorkspaceSection = computed(() => !auth.isAdmin);
+const showArtistWorkspaceSection = computed(
+  () => !auth.isAdmin && (auth.isArtist || auth.hasArtistApplication)
+);
 const artistWorkspaceRoute = computed(() =>
   auth.isVerifiedArtist
     ? "/artist"

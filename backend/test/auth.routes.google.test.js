@@ -202,18 +202,34 @@ function getSetCookieHeaders(headers) {
   return setCookie ? [setCookie] : [];
 }
 
+function getCookieValue(headers, name) {
+  const pattern = new RegExp("(?:^|,\\s*)" + name + "=([^;]+)");
+
+  for (const header of getSetCookieHeaders(headers)) {
+    const match = header.match(pattern);
+
+    if (match) {
+      return decodeURIComponent(match[1]);
+    }
+  }
+
+  return "";
+}
+
 test("GET /auth/google redirects to Google and stores the OAuth state", async (t) => {
   const { baseUrl } = await startAuthRoutesApp(t);
 
   const response = await request(baseUrl, "/auth/google");
-  const cookies = getSetCookieHeaders(response.headers);
 
   assert.equal(response.status, 302);
   assert.equal(
     response.headers.get("location"),
     "https://accounts.google.test/oauth?client_id=test-client"
   );
-  assert.ok(cookies.some((cookie) => cookie.startsWith("mia_google_oauth_state=state-token")));
+  assert.deepEqual(JSON.parse(getCookieValue(response.headers, "mia_google_oauth_state")), {
+    state: "state-token",
+    redirectTo: ""
+  });
 });
 
 test("GET /auth/google redirects back with an unavailable message when not configured", async (t) => {
@@ -268,6 +284,23 @@ test("GET /auth/google/callback logs in successful OAuth users", async (t) => {
   assert.ok(cookies.some((cookie) => cookie.startsWith("mia_refresh=refresh-token")));
 });
 
+test("GET /auth/google/callback restores a safe page requested before OAuth", async (t) => {
+  const { baseUrl, calls } = await startAuthRoutesApp(t);
+
+  const startResponse = await request(baseUrl, "/auth/google?redirect=%2Fbecome-artist");
+  const stateCookie = getCookieValue(startResponse.headers, "mia_google_oauth_state");
+
+  const response = await request(baseUrl, "/auth/google/callback?code=code&state=state-token", {
+    headers: {
+      cookie: "mia_google_oauth_state=" + encodeURIComponent(stateCookie)
+    }
+  });
+
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get("location"), "http://localhost/become-artist");
+  assert.deepEqual(calls.authenticateGoogleCode, ["code"]);
+});
+
 test("GET /auth/google/callback redirects admins to the admin dashboard", async (t) => {
   const { baseUrl } = await startAuthRoutesApp(t, {
     authenticateGoogleCodeResult: {
@@ -283,7 +316,14 @@ test("GET /auth/google/callback redirects admins to the admin dashboard", async 
 
   const response = await request(baseUrl, "/auth/google/callback?code=code&state=state-token", {
     headers: {
-      cookie: "mia_google_oauth_state=state-token"
+      cookie:
+        "mia_google_oauth_state=" +
+        encodeURIComponent(
+          JSON.stringify({
+            state: "state-token",
+            redirectTo: "/become-artist"
+          })
+        )
     }
   });
 
@@ -302,7 +342,14 @@ test("GET /auth/google/callback redirects to password linking when required", as
 
   const response = await request(baseUrl, "/auth/google/callback?code=code&state=state-token", {
     headers: {
-      cookie: "mia_google_oauth_state=state-token"
+      cookie:
+        "mia_google_oauth_state=" +
+        encodeURIComponent(
+          JSON.stringify({
+            state: "state-token",
+            redirectTo: "/become-artist"
+          })
+        )
     }
   });
   const cookies = getSetCookieHeaders(response.headers);
@@ -310,7 +357,7 @@ test("GET /auth/google/callback redirects to password linking when required", as
   assert.equal(response.status, 302);
   assert.equal(
     response.headers.get("location"),
-    "http://localhost/login?googleLink=required&email=artist%40example.com"
+    "http://localhost/login?googleLink=required&email=artist%40example.com&redirect=%2Fbecome-artist"
   );
   assert.ok(cookies.some((cookie) => cookie.startsWith("mia_google_oauth_link=link-token")));
 });

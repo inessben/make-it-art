@@ -225,7 +225,12 @@ useHead({
 });
 
 onMounted(async () => {
-  if (auth.user || auth.loading) {
+  if (auth.initialized || auth.loading) {
+    return;
+  }
+
+  if (auth.user) {
+    auth.initialized = true;
     return;
   }
 

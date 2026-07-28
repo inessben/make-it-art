@@ -79,7 +79,12 @@ function serializeOrder(order) {
                 downloadCount,
                 downloadLimit,
                 remainingDownloads: Math.max(0, downloadLimit - downloadCount),
-                lastDownloadedAt: entitlement.lastDownloadedAt || null
+                lastDownloadedAt: entitlement.lastDownloadedAt || null,
+                ...(entitlement.status === "ACTIVE"
+                  ? {
+                      downloadUrl: `/api/v1/orders/${encodeURIComponent(order.publicId)}/download/${encodeURIComponent(item.id)}`
+                    }
+                  : {})
               }
             : null,
           certificate: certificate

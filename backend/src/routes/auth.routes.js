@@ -21,6 +21,7 @@ const userRepository = require("../repositories/user.repository");
 const { validateNewPassword } = require("../services/password-security.service");
 const { getPasswordConfirmationError } = require("../utils/password-validation");
 const { serializeAuthUser } = require("../utils/serialize-auth-user");
+const { sanitizePostAuthRedirect } = require("../utils/post-auth-redirect");
 const { isAdminUser } = require("../middlewares/admin-required.middleware");
 const { AccountAccessError, USER_ACCOUNT_ERROR_CODES } = require("../utils/user-account-status");
 
@@ -62,8 +63,40 @@ function setAuthCookies(res, result) {
   res.cookie(env.refreshCookieName, result.refreshToken, getRefreshCookieOptions());
 }
 
-function getAuthenticatedAppPath(user) {
-  return isAdminUser(user) ? "/admin" : "/";
+function serializeGoogleOAuthState(state, redirectTo) {
+  return JSON.stringify({
+    state,
+    redirectTo: sanitizePostAuthRedirect(redirectTo)
+  });
+}
+
+function parseGoogleOAuthState(value) {
+  if (typeof value !== "string" || !value) {
+    return { state: "", redirectTo: "" };
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+
+    if (parsed && typeof parsed === "object") {
+      return {
+        state: typeof parsed.state === "string" ? parsed.state : "",
+        redirectTo: sanitizePostAuthRedirect(parsed.redirectTo)
+      };
+    }
+  } catch {
+    // Raw state cookies remain valid for OAuth attempts started before this deployment.
+  }
+
+  return { state: value, redirectTo: "" };
+}
+
+function getAuthenticatedAppPath(user, requestedRedirect = "") {
+  if (isAdminUser(user)) {
+    return "/admin";
+  }
+
+  return sanitizePostAuthRedirect(requestedRedirect) || "/";
 }
 
 router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
@@ -138,33 +171,50 @@ router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
 });
 
 router.get("/auth/google", authRateLimit, (req, res) => {
+  const redirectTo = sanitizePostAuthRedirect(req.query.redirect);
+
   try {
     const { authorizationUrl, state } = getGoogleAuthorizationUrl();
 
-    res.cookie(env.googleOAuth.stateCookieName, state, getGoogleOAuthStateCookieOptions());
+    res.cookie(
+      env.googleOAuth.stateCookieName,
+      serializeGoogleOAuthState(state, redirectTo),
+      getGoogleOAuthStateCookieOptions()
+    );
 
     return res.redirect(authorizationUrl);
   } catch (_error) {
-    return res.redirect(buildAppRedirect("/login", { google: "unavailable" }));
+    return res.redirect(
+      buildAppRedirect("/login", {
+        google: "unavailable",
+        redirect: redirectTo
+      })
+    );
   }
 });
 
 router.get("/auth/google/callback", authRateLimit, async (req, res) => {
   const { code, error, state } = req.query;
-  const stateCookie = req.cookies?.[env.googleOAuth.stateCookieName];
+  const stateCookie = parseGoogleOAuthState(req.cookies?.[env.googleOAuth.stateCookieName]);
 
   res.clearCookie(env.googleOAuth.stateCookieName, getClearGoogleOAuthStateCookieOptions());
 
   if (error) {
     return res.redirect(
       buildAppRedirect("/login", {
-        google: error === "access_denied" ? "cancelled" : "error"
+        google: error === "access_denied" ? "cancelled" : "error",
+        redirect: stateCookie.redirectTo
       })
     );
   }
 
-  if (!code || !state || !stateCookie || state !== stateCookie) {
-    return res.redirect(buildAppRedirect("/login", { google: "error" }));
+  if (!code || !state || !stateCookie.state || state !== stateCookie.state) {
+    return res.redirect(
+      buildAppRedirect("/login", {
+        google: "error",
+        redirect: stateCookie.redirectTo
+      })
+    );
   }
 
   try {
@@ -180,7 +230,8 @@ router.get("/auth/google/callback", authRateLimit, async (req, res) => {
       return res.redirect(
         buildAppRedirect("/login", {
           googleLink: "required",
-          email: result.email
+          email: result.email,
+          redirect: stateCookie.redirectTo
         })
       );
     }
@@ -188,9 +239,16 @@ router.get("/auth/google/callback", authRateLimit, async (req, res) => {
     setAuthCookies(res, result);
     res.clearCookie(env.googleOAuth.linkCookieName, getClearGoogleOAuthLinkCookieOptions());
 
-    return res.redirect(buildAppRedirect(getAuthenticatedAppPath(result.user)));
+    return res.redirect(
+      buildAppRedirect(getAuthenticatedAppPath(result.user, stateCookie.redirectTo))
+    );
   } catch (_error) {
-    return res.redirect(buildAppRedirect("/login", { google: "error" }));
+    return res.redirect(
+      buildAppRedirect("/login", {
+        google: "error",
+        redirect: stateCookie.redirectTo
+      })
+    );
   }
 });
 
@@ -233,7 +291,7 @@ router.post("/auth/google/link", authRateLimit, async (req, res) => {
 
 router.post("/auth/register", authRateLimit, async (req, res) => {
   try {
-    const { username, email, phone, password, confirmPassword } = req.body;
+    const { username, email, phone, password, confirmPassword, redirect } = req.body;
 
     if (!username || !email || !phone || !password || !confirmPassword) {
       return res.status(400).json({
@@ -263,7 +321,8 @@ router.post("/auth/register", authRateLimit, async (req, res) => {
       username,
       email,
       phone,
-      password
+      password,
+      redirectTo: sanitizePostAuthRedirect(redirect)
     });
 
     return res.status(201).json({
@@ -292,7 +351,7 @@ router.post("/auth/register", authRateLimit, async (req, res) => {
 
 router.post("/auth/resend-verification-email", authRateLimit, async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, redirect } = req.body;
 
     if (!email) {
       return res.status(400).json({
@@ -300,7 +359,7 @@ router.post("/auth/resend-verification-email", authRateLimit, async (req, res) =
       });
     }
 
-    await resendVerificationEmail(email);
+    await resendVerificationEmail(email, sanitizePostAuthRedirect(redirect));
 
     return res.status(200).json({
       message: "Verification email sent. Please check your inbox."
