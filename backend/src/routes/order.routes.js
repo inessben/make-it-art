@@ -9,6 +9,9 @@ const { assertCheckoutEnabled } = require("../services/checkout-availability.ser
 const { CommercePolicyError } = require("../domain/commerce-policy");
 const { getOwnedSaleInvoicePdf } = require("../services/invoice.service");
 const {
+  getOwnedOwnershipCertificatePdf
+} = require("../services/ownership-certificate-pdf.service");
+const {
   checkoutIpRateLimit,
   checkoutUserRateLimit,
   artworkDownloadRateLimit
@@ -259,6 +262,40 @@ router.get("/orders/:publicId/invoices/:invoicePublicId.pdf", authRequired, asyn
     return res.status(500).json({ message: "Invoice is temporarily unavailable" });
   }
 });
+
+router.get(
+  "/orders/:publicId/certificates/:certificatePublicId.pdf",
+  authRequired,
+  async (req, res) => {
+    res.set("Cache-Control", "private, no-store");
+    if (
+      !UUID_V4_PATTERN.test(req.params.publicId) ||
+      !UUID_V4_PATTERN.test(req.params.certificatePublicId)
+    ) {
+      return res.status(404).json({ message: "Certificate not found" });
+    }
+
+    try {
+      const certificate = await getOwnedOwnershipCertificatePdf({
+        userId: req.user.id,
+        orderPublicId: req.params.publicId,
+        certificatePublicId: req.params.certificatePublicId
+      });
+      if (!certificate) return res.status(404).json({ message: "Certificate not found" });
+
+      const safeNumber = certificate.number.replace(/[^A-Za-z0-9_-]/g, "_");
+      res.set("Content-Type", "application/pdf");
+      res.set("Content-Disposition", `attachment; filename="certificat-achat-${safeNumber}.pdf"`);
+      return res.status(200).send(certificate.pdf);
+    } catch (error) {
+      console.error("Ownership certificate download failed", {
+        name: error.name,
+        code: error.code
+      });
+      return res.status(500).json({ message: "Certificate is temporarily unavailable" });
+    }
+  }
+);
 
 router.get(
   "/orders/:publicId/download/:itemId(\\d+)",

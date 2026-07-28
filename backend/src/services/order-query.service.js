@@ -94,7 +94,8 @@ function serializeOrder(order) {
                 status: certificate.status,
                 fingerprint: certificate.fingerprint,
                 issuedAt: certificate.issuedAt,
-                snapshot: certificate.snapshot
+                snapshot: certificate.snapshot,
+                downloadUrl: `/api/v1/orders/${encodeURIComponent(order.publicId)}/certificates/${encodeURIComponent(certificate.publicId)}.pdf`
               }
             : null
         }
