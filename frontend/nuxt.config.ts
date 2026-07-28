@@ -3,6 +3,11 @@ const environment =
 
 export default defineNuxtConfig({
   modules: ["@nuxtjs/tailwindcss", "@pinia/nuxt"],
+  vite: {
+    resolve: {
+      alias: [{ find: /^zustand$/, replacement: "zustand/vanilla" }]
+    }
+  },
   css: ["~/assets/styles/main.scss"],
   devtools: { enabled: true },
   app: {
@@ -30,6 +35,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBase: environment.NUXT_PUBLIC_API_BASE || "/api",
+      cdpProjectId: environment.NUXT_PUBLIC_CDP_PROJECT_ID || "",
       umamiWebsiteId: environment.NUXT_PUBLIC_UMAMI_WEBSITE_ID || "",
       siteUrl: environment.NUXT_PUBLIC_SITE_URL || "https://www.makeitart.io",
       appBaseUrl: environment.NUXT_PUBLIC_APP_BASE_URL || "http://localhost",

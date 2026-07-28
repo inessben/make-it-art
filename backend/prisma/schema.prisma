@@ -146,6 +146,8 @@ model User {
   digitalEntitlements        DigitalEntitlement[]
   ownershipCertificates      OwnershipCertificate[]
   savedPaymentMethodConsents SavedPaymentMethodConsent[]
+  wallets                    Wallet[]
+  walletConsents             WalletConsent[]
 
   @@unique([oauthProvider, oauthSubject])
   @@map("user")
@@ -864,4 +866,72 @@ model Notification {
 
   @@index([userId, createdAt])
   @@map("notification")
+}
+enum WalletProvider {
+  COINBASE_CDP
+  LEGACY_IMPORT
+
+  @@map("wallet_provider")
+}
+
+enum WalletNetwork {
+  BASE
+  UNKNOWN
+
+  @@map("wallet_network")
+}
+
+enum WalletOrigin {
+  EMBEDDED
+  EXTERNAL
+  LEGACY
+
+  @@map("wallet_origin")
+}
+
+enum WalletStatus {
+  PENDING
+  ACTIVE
+  FAILED
+  RETRY_REQUIRED
+  DETACHED
+  UNVERIFIED
+
+  @@map("wallet_status")
+}
+
+model Wallet {
+  id               Int            @id @default(autoincrement())
+  userId           Int            @map("user_id")
+  address          String?
+  providerWalletId String?        @map("provider_wallet_id")
+  provider         WalletProvider
+  network          WalletNetwork
+  origin           WalletOrigin
+  status           WalletStatus
+  idempotencyKey   String         @unique @map("idempotency_key")
+  consentedAt      DateTime?      @map("consented_at") @db.Timestamp(6)
+  lastErrorCode    String?        @map("last_error_code")
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt        DateTime       @updatedAt @map("updated_at") @db.Timestamp(6)
+  detachedAt       DateTime?      @map("detached_at") @db.Timestamp(6)
+  user             User           @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([provider, providerWalletId])
+  @@unique([network, address])
+  @@index([userId, status])
+  @@map("wallet")
+}
+
+model WalletConsent {
+  id             Int       @id @default(autoincrement())
+  userId         Int       @map("user_id")
+  accepted       Boolean
+  consentVersion String    @map("consent_version")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  revokedAt      DateTime? @map("revoked_at") @db.Timestamp(6)
+  user           User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([userId, createdAt])
+  @@map("wallet_consent")
 }

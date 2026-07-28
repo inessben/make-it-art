@@ -40,6 +40,7 @@ function serializeAuthUser(user) {
   return {
     id: user.id,
     email: user.email,
+    verified: Boolean(user.verified),
     username: user.username,
     bio: user.bio,
     phone: user.phone,
