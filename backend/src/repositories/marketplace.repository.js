@@ -442,6 +442,34 @@ async function findPublicArtistById({ artistId, viewerId = null }) {
   return artist;
 }
 
+async function findPublicMemberById({ userId }) {
+  const member = await prisma.user.findUnique({
+    where: {
+      id: userId
+    },
+    include: {
+      admin: true,
+      artist: {
+        include: {
+          _count: {
+            select: {
+              artworks: true,
+              followers: true,
+              collections: true
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (!member || member.admin || member.role === "admin") {
+    return null;
+  }
+
+  return member;
+}
+
 async function getMarketplaceOverview({ viewerId = null } = {}) {
   const [artworks, artists, artworksCount, artistsCount] = await Promise.all([
     listPublicArtworks({
@@ -493,6 +521,7 @@ module.exports = {
   listRelatedArtworks,
   listPublicArtists,
   findPublicArtistById,
+  findPublicMemberById,
   getMarketplaceOverview,
   listCollectionArtworkOptions
 };

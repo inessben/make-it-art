@@ -5,6 +5,7 @@ const { getUserFromRequest } = require("../services/session.service");
 const marketplaceRepository = require("../repositories/marketplace.repository");
 const collectorRepository = require("../repositories/collector.repository");
 const categoryRepository = require("../repositories/category.repository");
+const notificationRepository = require("../repositories/notification.repository");
 const {
   serializeArtwork,
   serializeArtistSummary,
@@ -54,6 +55,34 @@ function normalizeLimit(value, fallback, max) {
 
 function serializeCollections(collections) {
   return collections.map((collection) => serializeCollection(collection)).filter(Boolean);
+}
+
+function serializePublicMember(member) {
+  const publicArtist = member?.artist?.verified ? member.artist : null;
+  const displayName =
+    normalizeText(publicArtist?.displayName) || normalizeText(member?.username) || "Member";
+  const username = normalizeText(member?.username);
+
+  return {
+    id: member.id,
+    displayName,
+    username,
+    bio: normalizeText(member?.bio),
+    avatarUrl: buildUploadedImageUrl(publicArtist?.avatarPath),
+    coverUrl: buildUploadedImageUrl(publicArtist?.coverPath),
+    isArtist: Boolean(publicArtist),
+    artistId: publicArtist?.id || null,
+    verifiedArtist: Boolean(publicArtist),
+    stats: publicArtist
+      ? {
+          artworks: publicArtist._count?.artworks || 0,
+          followers: publicArtist._count?.followers || 0,
+          collections: publicArtist._count?.collections || 0
+        }
+      : null,
+    joinedAt: member.createdAt || null,
+    profileUrl: publicArtist ? `/artists/${publicArtist.id}` : `/members/${member.id}`
+  };
 }
 
 function mapRepositoryError(error) {
@@ -336,6 +365,37 @@ router.get("/artists/:id(\\d+)", attachViewer, async (req, res) => {
   }
 });
 
+router.get("/members/:id(\\d+)", async (req, res) => {
+  try {
+    const memberId = normalizeResourceId(req.params.id);
+
+    if (!memberId) {
+      return res.status(404).json({
+        message: "Member not found."
+      });
+    }
+
+    const member = await marketplaceRepository.findPublicMemberById({
+      userId: memberId
+    });
+
+    if (!member) {
+      return res.status(404).json({
+        message: "Member not found."
+      });
+    }
+
+    return res.status(200).json({
+      member: serializePublicMember(member)
+    });
+  } catch (error) {
+    console.error("Public member detail error:", error);
+    return res.status(500).json({
+      message: "Unable to load this member profile."
+    });
+  }
+});
+
 router.post("/artists/:id(\\d+)/follow", authRequired, ensureCollectorAccount, async (req, res) => {
   try {
     const artistId = normalizeResourceId(req.params.id);
@@ -346,10 +406,37 @@ router.post("/artists/:id(\\d+)/follow", authRequired, ensureCollectorAccount, a
       });
     }
 
-    await collectorRepository.followArtist({
+    const followResult = await collectorRepository.followArtist({
       userId: req.user.id,
       artistId
     });
+
+    if (followResult?.created && followResult.artist?.userId) {
+      const followerLabel = normalizeText(req.user.username) || normalizeText(req.user.email);
+      const followerProfileUrl =
+        req.user.artist?.verified && req.user.artist?.id
+          ? `/artists/${req.user.artist.id}`
+          : `/members/${req.user.id}`;
+
+      try {
+        await notificationRepository.createNotification({
+          userId: followResult.artist.userId,
+          type: "follower",
+          title: "New follower",
+          message: `${followerLabel || "A collector"} started following your artist profile.`,
+          payload: {
+            artistId: followResult.artist.id,
+            followerUserId: req.user.id,
+            followerUsername: normalizeText(req.user.username) || null,
+            followerEmail: normalizeText(req.user.email) || null,
+            followerArtistId: req.user.artist?.verified ? req.user.artist.id : null,
+            profileUrl: followerProfileUrl
+          }
+        });
+      } catch (notificationError) {
+        console.error("Follow notification error:", notificationError);
+      }
+    }
 
     return res.status(200).json({
       message: "Vous suivez maintenant cet artiste."

@@ -190,12 +190,20 @@
             {{ artist.stats.artworks }}
           </p>
         </article>
-        <article class="rounded-[24px] border border-slate-800 bg-slate-800 p-6 text-center">
+        <NuxtLink
+          to="/follows?tab=followers"
+          class="group rounded-[24px] border border-slate-800 bg-slate-800 p-6 text-center transition hover:border-violet-700/40 hover:bg-slate-750"
+        >
           <p class="text-sm uppercase tracking-widest text-violet-700">Followers</p>
           <p class="mt-4 text-3xl font-semibold text-white">
             {{ artist.stats.followers }}
           </p>
-        </article>
+          <p
+            class="mt-3 text-xs uppercase tracking-[0.18em] text-slate-500 transition group-hover:text-slate-300"
+          >
+            Open follower list
+          </p>
+        </NuxtLink>
         <article class="rounded-[24px] border border-slate-800 bg-slate-800 p-6 text-center">
           <p class="text-sm uppercase tracking-widest text-violet-700">Collections</p>
           <p class="mt-4 text-3xl font-semibold text-white">

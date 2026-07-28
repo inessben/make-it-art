@@ -727,7 +727,16 @@ router.get("/artists/me/followers", async (req, res) => {
           select: {
             id: true,
             username: true,
-            email: true
+            email: true,
+            bio: true,
+            artist: {
+              select: {
+                id: true,
+                displayName: true,
+                avatarPath: true,
+                verified: true
+              }
+            }
           }
         }
       }
@@ -735,12 +744,28 @@ router.get("/artists/me/followers", async (req, res) => {
 
     return res.status(200).json({
       followers: followers
-        .map((follow) => follow.user)
-        .filter(Boolean)
-        .map((user) => ({
-          id: user.id,
-          username: user.username || "Utilisateur",
-          email: user.email || ""
+        .map((follow) => ({
+          user: follow.user,
+          followedAt: follow.createdAt
+        }))
+        .filter((follow) => Boolean(follow.user))
+        .map((follow) => ({
+          id: follow.user.id,
+          username: follow.user.username || "Collector",
+          displayName:
+            follow.user.artist?.verified && follow.user.artist?.displayName
+              ? follow.user.artist.displayName
+              : follow.user.username || "Collector",
+          email: follow.user.email || "",
+          bio: follow.user.bio || "",
+          avatarUrl: buildUploadedImageUrl(follow.user.artist?.avatarPath),
+          isArtist: Boolean(follow.user.artist?.verified),
+          artistId: follow.user.artist?.verified ? follow.user.artist.id : null,
+          profileUrl:
+            follow.user.artist?.verified && follow.user.artist.id
+              ? `/artists/${follow.user.artist.id}`
+              : `/members/${follow.user.id}`,
+          followedAt: follow.followedAt || null
         }))
     });
   } catch (error) {

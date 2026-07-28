@@ -23,6 +23,7 @@
         <span class="sr-only">Filter notifications</span>
         <select v-model="typeFilter" class="bg-transparent text-sm text-[#E6EDF7] outline-none">
           <option value="all">All</option>
+          <option value="follower">Followers</option>
           <option value="sale">Sales</option>
           <option value="withdrawal">Withdrawals</option>
           <option value="system">System</option>
@@ -136,6 +137,10 @@ onMounted(async () => {
 });
 
 function typeLabel(type) {
+  if (type === "follower") {
+    return "Follower";
+  }
+
   if (type === "sale") {
     return "Sale";
   }
@@ -148,6 +153,10 @@ function typeLabel(type) {
 }
 
 function typeClass(type) {
+  if (type === "follower") {
+    return "bg-[#1E2540] text-[#9DB2FF]";
+  }
+
   if (type === "sale") {
     return "bg-[#12301F] text-[#86EFAC]";
   }
@@ -160,6 +169,10 @@ function typeClass(type) {
 }
 
 function notificationRoute(notification) {
+  if (notification?.type === "follower" && auth.isVerifiedArtist) {
+    return notification?.payload?.profileUrl || "/follows?tab=followers";
+  }
+
   if (notification?.type === "sale" && auth.isVerifiedArtist) {
     return "/artist/sales";
   }
@@ -172,6 +185,10 @@ function notificationRoute(notification) {
 }
 
 function notificationActionLabel(type) {
+  if (type === "follower") {
+    return "View profile";
+  }
+
   if (type === "sale") {
     return "View sale";
   }
