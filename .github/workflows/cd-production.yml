@@ -80,6 +80,17 @@ jobs:
             exit 1
           fi
           docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml build --no-cache
-          docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml up -d
+          # The first deployment of this backdated migration may have recorded
+          # a failed attempt before its idempotency fix. Mark only that attempt
+          # as rolled back so Prisma can safely retry it.
+          docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml run --rm --no-deps backend \
+            sh -c 'npx prisma migrate resolve --rolled-back 20260726120000_artwork_ai_protection --config prisma.config.ts || true'
+          if ! docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml up -d; then
+            echo "Production containers failed to become healthy."
+            docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml ps -a
+            docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml logs --tail=200 --no-color backend
+            docker inspect --format '{{json .State.Health}}' make-it-art-prod-backend-1 || true
+            exit 1
+          fi
           docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml ps
           EOF
