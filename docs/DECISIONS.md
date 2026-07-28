@@ -1,59 +1,105 @@
-# Decisions techniques
+# Décisions d’architecture
 
-## 1) Docker Compose dans `infrastructure/`
+Ce registre synthétise les décisions structurantes actuellement visibles dans le dépôt. Une décision modifiée doit être remplacée par une nouvelle entrée ; son historique Git reste la trace du contexte précédent.
 
-Decision: le fichier compose reste dans `infrastructure/docker-compose.yml`.
+## D-001 — Monorepo Docker
 
-Raison: separer clairement le code applicatif (`frontend/`, `backend/`) et l'infra (`infrastructure/`).
+- Statut : Acceptée
+- Décision : regrouper frontend, backend, infrastructure et documentation dans un dépôt unique, avec Docker Compose comme environnement de référence.
+- Conséquences : versions coordonnées, démarrage reproductible et CI centralisée ; les changements transverses doivent valider toutes les couches concernées.
 
-## 2) Variables d'environnement
+## D-002 — Nuxt 4 et Vue 3 pour le frontend
 
-Decision: source unique pour Docker local = `infrastructure/.env`.
+- Statut : Acceptée
+- Décision : utiliser Nuxt 4, Vue 3, Pinia, Tailwind CSS 3 et Sass.
+- Conséquences : rendu hybride possible, composants accessibles réutilisables et SDK navigateur chargés uniquement côté client.
 
-Raison: eviter les conflits entre plusieurs `.env` au demarrage compose.
+## D-003 — API REST Express et Prisma
 
-## 3) Health endpoints
+- Statut : Acceptée
+- Décision : exposer une API REST Express sur Node.js 22, documentée avec OpenAPI, avec Prisma 7 pour PostgreSQL.
+- Conséquences : contrats HTTP explicites, migrations versionnées et validation des entrées aux frontières de l’API.
 
-Decision: endpoint backend `/health` + proxy `/api/health` via Nginx.
+## D-004 — PostgreSQL comme source de vérité et Redis comme service auxiliaire
 
-Raison: verification rapide du service en local et en CI/CD.
+- Statut : Acceptée
+- Décision : conserver les entités métier, consentements, commandes, paiements et audits dans PostgreSQL ; utiliser Redis pour les états temporaires ou distribués.
+- Conséquences : les opérations critiques restent transactionnelles en base et ne dépendent pas de Redis comme stockage durable.
 
-## 4) Quality gate
+## D-005 — Google OAuth complète l’authentification locale
 
-Decision: lint + format check obligatoires avant commit/push et avant `npm run dev`.
+- Statut : Acceptée
+- Décision : conserver inscription/connexion par e-mail tout en proposant Google OAuth 2.0.
+- Conséquences : un même compte doit être relié de manière sûre, l’e-mail doit être vérifié et les redirections doivent rester contrôlées.
 
-Raison: garantir un code propre et homogene dans l'equipe.
+## D-006 — Code de connexion renforcée par e-mail
 
-## 5) CI
+- Statut : Acceptée avec écart connu
+- Décision : sécuriser les connexions sensibles avec un code temporaire par e-mail et un appareil mémorisé.
+- Conséquences : ce mécanisme est opérationnel mais ne constitue pas un TOTP. L’exigence pédagogique TOTP doit être implémentée ou faire l’objet d’une équivalence validée.
 
-Decision: CI sur `develop` et PR vers `develop/main`.
+## D-007 — Stripe comme prestataire de paiement
 
-Raison: bloquer les regressions avant merge.
+- Statut : Acceptée
+- Décision : utiliser Stripe Checkout et les webhooks comme fondement du paiement, avec idempotence, rapprochement, remboursement et audit.
+- Conséquences : aucune donnée de carte brute ne transite par l’application ; une commande n’est finalisée que depuis un signal Stripe vérifié.
 
-## 6) Lancement Stripe France B2C
+## D-008 — Modèle commercial initial France B2C
 
-Décision du 24 juillet 2026 :
+- Statut : Acceptée pour le MVP
+- Décision : cadrer le premier passage en production sur un usage principalement B2C en France.
+- Conséquences : Stripe Connect, fiscalité internationale et B2B avancé restent hors périmètre tant qu’un cadrage juridique et comptable n’est pas établi.
 
-- Make It Art est le marchand officiel jusqu'à l'activation ultérieure de Stripe Connect. Make It Art porte la relation client, l'encaissement, les factures de vente, les remboursements, les litiges et les frais Stripe.
-- Le lancement accepte uniquement les particuliers disposant d'une adresse de facturation française. Toute donnée professionnelle ou adresse hors France est refusée côté serveur.
-- Les prix sont affichés et encaissés TTC. Le taux français, validé par le responsable fiscal, est configuré en points de base et figé avec les montants HT/TVA/TTC dans chaque commande.
-- Stripe Tax reste désactivé en phase 1. Une inscription fiscale active, les codes fiscaux des œuvres, la collecte des identifiants TVA et les tests sandbox sont obligatoires avant une vente professionnelle ou hors France.
-- Seule la carte est activée au lancement par une Payment Method Configuration Stripe dédiée. Apple Pay, Google Pay et les moyens asynchrones restent masqués jusqu'à une recette réelle de bout en bout.
-- La politique de litige est `SUSPEND_ON_OPEN` : les droits sont suspendus à l'ouverture, restaurés si le litige est gagné ou prévenu, et révoqués s'il est perdu.
-- Une facture de vente Make It Art → client est générée après paiement. La commission artiste de 7 % HT après réduction est déjà figée dans le snapshot, mais sa facturation reste désactivée jusqu'à la phase commission.
+## D-009 — Trois types de licences numériques
 
-Raison : lancer un périmètre étroit et vérifiable sans activer implicitement une responsabilité fiscale, un moyen de paiement ou un flux de fonds non validé.
+- Statut : Acceptée
+- Décision : proposer des licences personnelle, commerciale et exclusive, chacune avec ses contraintes métier.
+- Conséquences : le prix, la disponibilité et les droits livrés doivent être figés et traçables au moment de la commande.
 
-## 7) Migration vers Checkout Sessions custom
+## D-010 — Protection raisonnable des œuvres
 
-Décision du 24 juillet 2026 : le flux PaymentIntent + Payment Element actuel est conservé pour le lancement carte, puis migré vers Checkout Sessions avec `ui_mode: custom` avant Stripe Tax, remises, B2B, vente hors France ou ajout de nouveaux moyens de paiement.
+- Statut : Acceptée
+- Décision : combiner aperçus contrôlés, filigranes, métadonnées et livraison HD autorisée après achat.
+- Conséquences : l’application réduit les usages non autorisés sans prétendre empêcher toute capture ou copie côté client.
 
-La migration devra :
+## D-011 — Wallet Coinbase CDP facultatif sur Base
 
-- persister l'identifiant de Checkout Session à côté du PaymentIntent ;
-- conserver les snapshots, réservations, reprises et commandes PaymentIntent existantes ;
-- dédupliquer les webhooks Session et PaymentIntent vers une seule finalisation ;
-- être validée en sandbox sur succès, refus, 3DS, expiration, reprise, remboursement et rollback ;
-- continuer à utiliser les moyens dynamiques Stripe sans renseigner `payment_method_types`.
+- Statut : Acceptée
+- Décision : fournir un portefeuille intégré non custodial Coinbase CDP sur Base, uniquement après vérification e-mail et consentement explicite.
+- Conséquences : création idempotente, échec récupérable, adresse publique stockée, clé privée jamais reçue par Make It Art et export géré dans le cadre sécurisé de Coinbase.
 
-Raison : suivre l'API recommandée par Stripe pour les futures taxes et remises sans introduire ce changement structurel dans le lancement carte déjà testé.
+## D-012 — Authentification CDP personnalisée avec JWKS/JWT
+
+- Statut : Acceptée
+- Décision : signer des jetons utilisateur courts côté backend et publier la clé de vérification via JWKS.
+- Conséquences : issuer, audience, projet CDP, domaine autorisé et clés serveur doivent être strictement alignés par environnement.
+
+## D-013 — Consentement préalable pour Umami
+
+- Statut : Acceptée
+- Décision : ne charger l’analytique Umami qu’après acceptation explicite des cookies non essentiels.
+- Conséquences : la bannière reste visible sans décision, le refus est possible et le choix persiste sans activer le suivi.
+
+## D-014 — Accessibilité comme contrainte transversale
+
+- Statut : Acceptée
+- Décision : appliquer WCAG AA aux composants et parcours, notamment clavier, focus, contrastes, labels, alt, titres et noms accessibles.
+- Conséquences : toute nouvelle interface doit inclure ces critères dans sa définition de terminé et un audit final doit fournir les preuves de conformité.
+
+## D-015 — Nginx en local et Caddy en production
+
+- Statut : Acceptée
+- Décision : utiliser Nginx comme point d’entrée de l’environnement local et Caddy pour le reverse proxy TLS de production.
+- Conséquences : les en-têtes, routes `/api`, domaines, healthchecks et limites de taille doivent être vérifiés dans les deux configurations.
+
+## D-016 — Secrets exclusivement hors Git
+
+- Statut : Acceptée
+- Décision : injecter les secrets par fichiers `.env` ignorés, secrets GitHub Actions ou environnement du serveur.
+- Conséquences : les exemples ne contiennent que des noms et valeurs factices ; toute clé exposée doit être révoquée puis remplacée.
+
+## D-017 — Les documents canoniques remplacent les plans parallèles
+
+- Statut : Acceptée
+- Décision : conserver un document canonique par sujet et supprimer les anciennes copies de planification devenues redondantes.
+- Conséquences : `README.md`, le cahier des exigences, la roadmap, les guides spécialisés et le journal d’équipe ont chacun un rôle distinct.

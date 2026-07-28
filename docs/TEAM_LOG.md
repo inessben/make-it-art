@@ -4,6 +4,66 @@ Chaque membre ajoute une entree apres son travail.
 
 ## Entrees
 
+### 2026-XX-XX - Iness
+
+- Branche: `feature/WGAC`
+- Tache: Mise en conformite accessibilite du site et harmonisation de l'interface
+- Fichiers modifies: composants et pages frontend, styles globaux, configuration Tailwind et tests d'accessibilite
+- Impact:
+  - Amelioration des contrastes, du focus visible, de la navigation clavier et de la hierarchie des titres
+  - Ajout ou correction des labels, textes alternatifs, boutons accessibles et attributs ARIA utiles
+  - Correction du comportement de la banniere de cookies et harmonisation visuelle de la page wallet
+- Verification: lint, format, tests frontend/backend, typecheck et builds de production valides
+- Blocages: Aucun
+
+### 2026-XX-XX- Iness
+
+- Branche: `feature/blockchain`
+- Tache: Integration des wallets embarques Coinbase CDP sur le reseau Base
+- Fichiers modifies: schema et migrations Prisma, services/routes wallet, configuration CDP, page wallet, composants et tests associes
+- Impact:
+  - Creation d'un wallet uniquement apres verification de l'email et consentement explicite
+  - Authentification CDP par JWT/JWKS, creation idempotente, timeout, statut d'echec et relance securisee
+  - Affichage de l'adresse publique, lien BaseScan et export securise de la cle sans exposition au backend
+- Verification: tests wallet frontend/backend, 43 migrations Prisma, audits, CI et builds Docker de production valides
+- Blocages: Aucun
+
+### 2026-XX-XX - Iness
+
+- Branche: `feature/SEO`
+- Tache: Mise en place du referencement technique et des metadonnees du site
+- Fichiers modifies: `frontend/nuxt.config.ts`, pages publiques, manifest, `robots.txt`, sitemaps et configuration Caddy
+- Impact:
+  - Ajout des metadonnees SEO et sociales sur les pages principales
+  - Generation des sitemaps pages/images et declaration des regles d'indexation
+  - Ajout du manifest web et amelioration des liens semantiques
+- Verification: build Nuxt, lint, format et routes sitemap valides
+- Blocages: Aucun
+
+### 2026-XX-XX - Iness
+
+- Branche: `feauture/analytics`
+- Tache: Integration d'Umami et ajout des statistiques dans l'administration
+- Fichiers modifies: composant analytics, dashboard admin, configuration Nuxt, variables d'environnement et proxy
+- Impact:
+  - Activation d'analytics respectueux du consentement utilisateur
+  - Ajout d'un onglet de statistiques Umami dans le dashboard admin
+  - Correction des erreurs ESLint et Prettier detectees par la CI
+- Verification: lint, format, tests frontend et chargement conditionnel du suivi valides
+- Blocages: Aucun
+
+### 2026-XX-XX - Iness
+
+- Branche: `feature/onlyFrontEnd`
+- Tache: Realisation et harmonisation du frontend a partir des maquettes Figma
+- Fichiers modifies: pages publiques, authentification, marketplace, compte, administration, composants partages, styles et configuration Tailwind
+- Impact:
+  - Creation des interfaces principales et des composants reutilisables
+  - Harmonisation du header, footer, formulaires, cartes, etats de chargement et navigation responsive
+  - Ajout des pages legales et de la gestion du consentement aux cookies
+- Verification: controle visuel, lint, format et tests frontend valides
+- Blocages: Aucun
+
 ### 2026-06-20 - Mariam
 
 - Branche: `feature/admin`
