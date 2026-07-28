@@ -103,7 +103,8 @@ services:
     environment:
       NODE_ENV: development
       PORT: 4000
-      CORS_ORIGIN: http://localhost
+      # Allow direct Nuxt (:3000) and nginx (:80) origins in local dev.
+      CORS_ORIGIN: http://localhost,http://localhost:3000,http://127.0.0.1,http://127.0.0.1:3000
       APP_BASE_URL: http://localhost
       JWT_SECRET: ${JWT_SECRET:-dev_secret_change_me}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}

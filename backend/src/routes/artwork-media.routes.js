@@ -1,12 +1,35 @@
-const express = require("express");
+﻿const express = require("express");
+const path = require("path");
+const fsp = require("node:fs/promises");
 const prisma = require("../lib/prisma");
 const { authRequired } = require("../middlewares/auth-required.middleware");
+const { authOptional } = require("../middlewares/auth-optional.middleware");
 const { getUserFromRequest } = require("../services/session.service");
+const { artworkMediaRateLimit } = require("../middlewares/rate-limit.middleware");
+const {
+  blockAiTrainingBots,
+  artworkAntiScrapingGuard
+} = require("../middlewares/artwork-media-guard.middleware");
+const {
+  assertSafeArtworkFilename,
+  assertSafeRelativeUploadPath,
+  applyArtworkMediaHeaders,
+  ensureArtworkPreviewFile,
+  UPLOADS_ROOT
+} = require("../services/artwork-media.service");
+const { ensureWatermarkedPreview } = require("../services/artwork-watermark.service");
 const {
   ArtworkMediaAccessError,
   assertCanAccessHd,
   openArtworkMediaStream
 } = require("../services/artwork-download.service");
+const {
+  FORENSIC_COOKIE,
+  createGuestViewerToken,
+  personalizePreviewBuffer,
+  readStreamToBuffer
+} = require("../services/forensic-watermark.service");
+const env = require("../config/env");
 
 const router = express.Router();
 
@@ -31,7 +54,13 @@ async function loadArtwork(req, res, next) {
         watermarkApplied: true,
         mediaStatus: true,
         visibility: true,
-        moderationStatus: true
+        moderationStatus: true,
+        artist: {
+          select: {
+            displayName: true,
+            user: { select: { username: true } }
+          }
+        }
       }
     });
 
@@ -56,6 +85,8 @@ function pipeMedia(
     "Cache-Control",
     cacheControl || (disposition === "inline" ? "public, max-age=86400" : "private")
   );
+  res.setHeader("X-Robots-Tag", "noindex, nofollow, noai, noimageai");
+  res.setHeader("Cross-Origin-Resource-Policy", "same-site");
   if (filename) {
     res.setHeader(
       "Content-Disposition",
@@ -72,6 +103,33 @@ function pipeMedia(
   stream.pipe(res);
 }
 
+async function findArtworkByPreviewFilename(filename) {
+  const previewPath = `artworks/previews/${filename}`;
+  const baseName = path.basename(filename, path.extname(filename));
+
+  return prisma.artwork.findFirst({
+    where: {
+      OR: [
+        { previewPath },
+        { previewPath: `artworks/preview/${filename}` },
+        { imagePath: { startsWith: `artworks/${baseName}.` } }
+      ]
+    },
+    select: {
+      id: true,
+      title: true,
+      imagePath: true,
+      previewPath: true,
+      artist: {
+        select: {
+          displayName: true,
+          user: { select: { username: true } }
+        }
+      }
+    }
+  });
+}
+
 function isPublicArtworkPreview(artwork) {
   return (
     artwork?.visibility === "PUBLISHED" &&
@@ -80,7 +138,7 @@ function isPublicArtworkPreview(artwork) {
 }
 
 async function canAccessPrivatePreview(req) {
-  const user = await getUserFromRequest(req);
+  const user = req.user || (await getUserFromRequest(req));
 
   if (!user) {
     return false;
@@ -94,7 +152,30 @@ async function canAccessPrivatePreview(req) {
   }
 }
 
-router.get("/artworks/:id(\\d+)/media/preview", loadArtwork, async (req, res) => {
+function resolveForensicViewer(req, res) {
+  if (req.user?.id) {
+    return { userId: req.user.id, guestToken: null };
+  }
+
+  let guestToken = String(req.cookies?.[FORENSIC_COOKIE] || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+
+  if (!guestToken) {
+    guestToken = createGuestViewerToken();
+    res.cookie(FORENSIC_COOKIE, guestToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: env.nodeEnv === "production",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      path: "/"
+    });
+  }
+
+  return { userId: null, guestToken };
+}
+
+router.get("/artworks/:id(\\d+)/media/preview", authOptional, loadArtwork, async (req, res) => {
   try {
     const publicPreview = isPublicArtworkPreview(req.artworkMedia);
 
@@ -103,16 +184,42 @@ router.get("/artworks/:id(\\d+)/media/preview", loadArtwork, async (req, res) =>
       return res.status(404).json({ message: "Artwork not found." });
     }
 
+    req.artworkMedia = await ensureWatermarkedPreview(req.artworkMedia);
     const payload = await openArtworkMediaStream(req.artworkMedia, "preview");
-    if (!publicPreview) {
-      res.setHeader("X-Robots-Tag", "noindex, noarchive");
+    const plaintext = await readStreamToBuffer(payload.stream);
+    const viewer = resolveForensicViewer(req, res);
+
+    let body = plaintext;
+    let forensicId = null;
+
+    if (env.artworkMedia.forensicWatermarkEnabled !== false) {
+      try {
+        const personalized = await personalizePreviewBuffer(plaintext, {
+          userId: viewer.userId,
+          guestToken: viewer.guestToken,
+          artworkId: req.artworkMedia.id
+        });
+        body = personalized.buffer;
+        forensicId = personalized.visibleId;
+      } catch (forensicError) {
+        console.error("Forensic watermark embed failed, serving base preview:", forensicError);
+      }
     }
-    return pipeMedia(res, {
-      stream: payload.stream,
-      contentType: payload.contentType,
-      filename: `artwork-${req.artworkMedia.id}-preview.jpg`,
-      cacheControl: publicPreview ? "public, max-age=86400" : "private, no-store"
-    });
+
+    applyArtworkMediaHeaders(res);
+    const forensicActive = Boolean(forensicId);
+    res.set("Content-Type", forensicActive ? "image/png" : "image/jpeg");
+    res.set("Cache-Control", "private, no-store");
+    res.set(
+      "Content-Disposition",
+      `inline; filename="artwork-${req.artworkMedia.id}-preview.${forensicActive ? "png" : "jpg"}"`
+    );
+    if (forensicActive) {
+      res.set("X-MIA-Forensic-Watermark", "1");
+      res.set("X-MIA-Trace-Id", forensicId);
+    }
+
+    return res.status(200).send(body);
   } catch (error) {
     if (error instanceof ArtworkMediaAccessError) {
       return res.status(error.status).json({ message: error.message, code: error.code });
@@ -143,4 +250,112 @@ router.get("/artworks/:id(\\d+)/media/hd", authRequired, loadArtwork, async (req
   }
 });
 
+router.get(
+  "/artworks/previews/:filename",
+  blockAiTrainingBots,
+  artworkAntiScrapingGuard,
+  artworkMediaRateLimit,
+  async (req, res) => {
+    try {
+      const filename = assertSafeArtworkFilename(req.params.filename);
+      const previewRelativePath = `artworks/previews/${filename}`;
+      let absolutePreviewPath;
+
+      try {
+        ({ absolutePath: absolutePreviewPath } = assertSafeRelativeUploadPath(previewRelativePath));
+        await fsp.access(absolutePreviewPath);
+      } catch (_missingPreview) {
+        const artwork = await findArtworkByPreviewFilename(filename);
+        if (!artwork?.imagePath) {
+          return res.status(404).json({
+            message: "Artwork preview not found",
+            code: "ARTWORK_PREVIEW_NOT_FOUND"
+          });
+        }
+
+        const artistName =
+          artwork.artist?.displayName || artwork.artist?.user?.username || "Make it Art artist";
+        const ensuredPreviewPath = await ensureArtworkPreviewFile({
+          imagePath: artwork.imagePath,
+          previewPath: artwork.previewPath,
+          title: artwork.title,
+          artistName,
+          copyrightHolder: artistName
+        });
+
+        if (ensuredPreviewPath && ensuredPreviewPath !== artwork.previewPath) {
+          await prisma.artwork.update({
+            where: { id: artwork.id },
+            data: {
+              previewPath: ensuredPreviewPath,
+              watermarkApplied: true
+            }
+          });
+        } else if (ensuredPreviewPath) {
+          await prisma.artwork.update({
+            where: { id: artwork.id },
+            data: { watermarkApplied: true }
+          });
+        }
+
+        ({ absolutePath: absolutePreviewPath } = assertSafeRelativeUploadPath(
+          ensuredPreviewPath || previewRelativePath
+        ));
+      }
+
+      applyArtworkMediaHeaders(res);
+      return res.sendFile(absolutePreviewPath);
+    } catch (error) {
+      if (error.message === "INVALID_UPLOAD_PATH") {
+        return res.status(400).json({
+          message: "Invalid artwork media path",
+          code: "INVALID_UPLOAD_PATH"
+        });
+      }
+
+      console.error("Artwork preview serve failed:", error);
+      return res.status(500).json({
+        message: "Artwork preview is temporarily unavailable",
+        code: "ARTWORK_PREVIEW_UNAVAILABLE"
+      });
+    }
+  }
+);
+
+router.get(
+  "/artworks/hd/:filename",
+  blockAiTrainingBots,
+  artworkMediaRateLimit,
+  async (_req, res) => {
+    res.set("X-Robots-Tag", "noindex, nofollow, noai, noimageai");
+    return res.status(403).json({
+      message: "Original artwork files are protected. Use an entitled HD download endpoint.",
+      code: "ARTWORK_ORIGINAL_PROTECTED"
+    });
+  }
+);
+
+router.get("/artworks/:filename", blockAiTrainingBots, artworkMediaRateLimit, async (req, res) => {
+  res.set("X-Robots-Tag", "noindex, nofollow, noai, noimageai");
+  return res.status(403).json({
+    message:
+      "Original artwork files are protected. Use the marketplace preview or an entitled download.",
+    code: "ARTWORK_ORIGINAL_PROTECTED"
+  });
+});
+
+// Static files must only be mounted under `/uploads` (see routes/index.js).
+// Attaching them on the shared router would swallow `/admin/*` and other API routes
+// when this router is also mounted at the API root.
+const uploadsStatic = express.static(path.resolve(UPLOADS_ROOT), {
+  fallthrough: false,
+  maxAge: "1h",
+  setHeaders(res) {
+    res.set("X-Robots-Tag", "noindex, nofollow, noai, noimageai");
+    res.set("Cross-Origin-Resource-Policy", "same-site");
+    res.set("Cache-Control", "private, max-age=3600, no-transform");
+  }
+});
+
 module.exports = router;
+module.exports.uploadsStatic = uploadsStatic;

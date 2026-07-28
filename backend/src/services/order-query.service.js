@@ -49,7 +49,15 @@ function serializeOrder(order) {
       const publicDetailAvailable =
         item.artwork?.visibility === "PUBLISHED" &&
         String(item.artwork?.moderationStatus || "").toLowerCase() === "approved";
+      const downloadLimit =
+        entitlement &&
+        Number.isSafeInteger(entitlement.downloadLimit) &&
+        entitlement.downloadLimit > 0
+          ? entitlement.downloadLimit
+          : 5;
+      const downloadCount = entitlement?.downloadCount ?? 0;
       return {
+        id: item.id,
         artworkId: item.artworkId,
         title: item.artworkTitle,
         artistName: item.artistName,
@@ -68,10 +76,10 @@ function serializeOrder(order) {
                 grantedAt: entitlement.grantedAt,
                 suspendedAt: entitlement.suspendedAt,
                 revokedAt: entitlement.revokedAt,
-                downloadUrl:
-                  entitlement.status === "ACTIVE" && item.artworkId
-                    ? `/api/artworks/${item.artworkId}/media/hd`
-                    : null
+                downloadCount,
+                downloadLimit,
+                remainingDownloads: Math.max(0, downloadLimit - downloadCount),
+                lastDownloadedAt: entitlement.lastDownloadedAt || null
               }
             : null,
           certificate: certificate

@@ -19,6 +19,14 @@ export default defineNuxtRouteMiddleware(async () => {
   }
 
   if (!auth.isVerifiedArtist) {
-    return navigateTo("/artist-profile", { replace: true });
+    if (
+      auth.artistApplicationStatus === "approved" ||
+      auth.artistApplicationStatus === "pending" ||
+      auth.isArtist
+    ) {
+      return navigateTo("/artist-profile", { replace: true });
+    }
+
+    return navigateTo("/become-artist", { replace: true });
   }
 });

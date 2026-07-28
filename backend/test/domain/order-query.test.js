@@ -57,6 +57,9 @@ test("the public order serializer excludes all provider and secret fields", () =
         orderItemId: 1,
         status: "ACTIVE",
         sourceTaskKey: "internal-task-key",
+        downloadCount: 1,
+        downloadLimit: 5,
+        lastDownloadedAt: new Date("2026-07-18T10:05:00Z"),
         grantedAt: new Date("2026-07-18T10:02:00Z"),
         suspendedAt: null,
         revokedAt: null
@@ -89,11 +92,11 @@ test("the public order serializer excludes all provider and secret fields", () =
   assert.equal(serialized.refunds[0].reference, "safe-refund-reference");
   assert.equal(serialized.items[0].artworkId, 42);
   assert.equal(serialized.items[0].licenseType, "COMMERCIAL");
+  assert.equal(serialized.items[0].id, 1);
   assert.equal(serialized.items[0].delivery.downloadRights.status, "ACTIVE");
-  assert.equal(
-    serialized.items[0].delivery.downloadRights.downloadUrl,
-    "/api/artworks/42/media/hd"
-  );
+  assert.equal(serialized.items[0].delivery.downloadRights.downloadCount, 1);
+  assert.equal(serialized.items[0].delivery.downloadRights.downloadLimit, 5);
+  assert.equal(serialized.items[0].delivery.downloadRights.remainingDownloads, 4);
   assert.equal(serialized.items[0].delivery.certificate.number, "MIA-0123456789ABCDEF0123");
   assert.deepEqual(serialized.items[0].delivery.certificate.snapshot, {
     version: 1,

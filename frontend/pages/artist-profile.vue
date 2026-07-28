@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <ArtistShell
     eyebrow="Artist workspace"
     title="Artist public profile"
@@ -130,6 +130,20 @@
       {{ errorMessage }}
     </section>
 
+    <section
+      v-else-if="approvedApplication && !artist"
+      class="grid gap-6 rounded-[24px] border border-slate-800 bg-violet-950 p-7"
+    >
+      <div>
+        <p class="text-xs uppercase tracking-widest text-violet-700">Artist application</p>
+        <h1 class="mt-4 text-3xl font-semibold text-white">Application approved</h1>
+        <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
+          Your application was approved. Refresh the page if your artist workspace is not visible
+          yet.
+        </p>
+      </div>
+    </section>
+
     <template v-else>
       <header class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
         <div class="flex flex-col gap-6 sm:flex-row sm:items-start">
@@ -153,12 +167,12 @@
               <span
                 class="rounded-full px-4 py-2 text-sm font-semibold"
                 :class="
-                  artist.verified
+                  artist.verified || approvedApplication
                     ? 'bg-violet-700/10 text-violet-400'
                     : 'bg-amber-950 text-amber-300'
                 "
               >
-                {{ artist.verified ? "Verified" : "Pending" }}
+                {{ artist.verified || approvedApplication ? "Verified" : "Pending" }}
               </span>
             </div>
             <p class="mt-4 max-w-2xl text-slate-400 leading-7">
@@ -168,7 +182,7 @@
           </div>
         </div>
 
-        <div v-if="artist.verified" class="flex flex-wrap gap-3">
+        <div v-if="artist.verified || approvedApplication" class="flex flex-wrap gap-3">
           <NuxtLink
             to="/artist"
             class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6d8bff]"
@@ -410,7 +424,7 @@
               </p>
             </div>
             <NuxtLink
-              v-if="artist.verified"
+              v-if="artist.verified || approvedApplication"
               to="/artworks/new"
               class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#4A6CF7] bg-[#4A6CF7]/10 px-5 text-sm font-semibold text-[#D5E0FF] transition hover:bg-[#4A6CF7]/20"
             >
@@ -419,7 +433,7 @@
           </div>
 
           <div
-            v-if="artist.verified"
+            v-if="artist.verified || approvedApplication"
             class="mt-6 flex flex-wrap gap-2"
             role="tablist"
             aria-label="Filter my artworks by status"
@@ -460,7 +474,7 @@
             :aria-labelledby="`artwork-filter-${selectedArtworkVisibility.toLowerCase()}`"
             class="mt-6 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 text-sm leading-6 text-[#A0ADB4]"
           >
-            <template v-if="artist.verified">
+            <template v-if="artist.verified || approvedApplication">
               <p class="font-semibold text-white">{{ emptyArtworkState.title }}</p>
               <p class="mt-2">{{ emptyArtworkState.description }}</p>
               <NuxtLink
@@ -491,11 +505,13 @@
                 <div
                   class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-[#1A2336] bg-[#03060D]"
                 >
-                  <img
+                  <ProtectedArtworkMedia
                     v-if="artwork.imageUrl"
                     :src="artwork.imageUrl"
                     :alt="artwork.title"
-                    class="h-full w-full object-cover"
+                    :artwork-id="artwork.id"
+                    img-class="h-full w-full object-cover"
+                    class="h-full w-full"
                   />
                   <div
                     v-else
@@ -509,7 +525,7 @@
                     {{ artwork.title }}
                   </p>
                   <p class="mt-2 text-sm text-[#A0ADB4]">
-                    {{ artwork.category?.name || "Sans categorie" }} ·
+                    {{ artwork.category?.name || "Sans categorie" }} ┬À
                     {{ formatArtworkPrice(artwork) }}
                   </p>
                   <p class="mt-1 text-sm text-[#A0ADB4]">
@@ -534,7 +550,7 @@
                 </div>
                 <div class="text-sm leading-6 text-[#A0ADB4] xl:text-right">
                   <p v-if="artwork.management?.lifecycle?.hasConfirmedPurchase">
-                    Purchase recorded — history preserved
+                    Purchase recorded ÔÇö history preserved
                   </p>
                   <p v-else>No purchase recorded</p>
                   <p
@@ -601,7 +617,7 @@ const selectedCoverPreviewUrl = ref("");
 const profileSuccessMessage = ref("");
 const profileErrorMessage = ref("");
 const deletionSuccessMessage = computed(() =>
-  route.query.artworkDeleted === "1" ? "L’œuvre a été supprimée définitivement." : ""
+  route.query.artworkDeleted === "1" ? "L'œuvre a été supprimée définitivement." : ""
 );
 const profileForm = reactive({
   displayName: "",
@@ -615,6 +631,9 @@ const pendingApplication = computed(() =>
 );
 const rejectedApplication = computed(() =>
   application.value?.status === "rejected" ? application.value : null
+);
+const approvedApplication = computed(() =>
+  application.value?.status === "approved" ? application.value : null
 );
 const artworkFilters = computed(() =>
   ARTIST_ARTWORK_VISIBILITY_FILTERS.map((filter) => ({
@@ -761,7 +780,7 @@ function syncProfileForm(source) {
 }
 
 async function loadArtistArtworks() {
-  if (!artist.value?.verified) {
+  if (!artist.value?.verified && application.value?.status !== "approved") {
     artistArtworks.value = [];
     artworkCounts.value = normalizeArtistArtworkCounts(null);
     return;

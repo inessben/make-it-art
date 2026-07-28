@@ -164,7 +164,10 @@
           class="flex items-center gap-3 rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-sm text-[#D7E3FF]"
         >
           <input v-model="form.protection" type="checkbox" />
-          <span>Activer la protection de l'oeuvre</span>
+          <span>
+            Protection anti-IA renforcée (badge catalogue). Le filigrane anti-copie est déjà appliqué
+            sur toutes les prévisualisations publiques.
+          </span>
         </label>
 
         <div

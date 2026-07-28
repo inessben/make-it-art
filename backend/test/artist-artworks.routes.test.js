@@ -128,6 +128,7 @@ async function startArtistArtworkRoutesApp(t, overrides = {}) {
             favoriteCount: 0,
             protection: payload.protection,
             imagePath: payload.imagePath || null,
+            previewPath: payload.previewPath || null,
             moderationStatus: "approved",
             moderationNote: null,
             moderatedAt: null,

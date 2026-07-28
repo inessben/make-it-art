@@ -1,10 +1,12 @@
 const { extractArtistApplicationPayload } = require("../services/artist-contract.service");
-const { buildArtworkImageUrl } = require("../services/artwork-media.service");
+const {
+  buildArtworkImageUrl,
+  buildArtworkPreviewUrl
+} = require("../services/artwork-media.service");
 const { buildUploadedImageUrl } = require("../services/uploaded-image.service");
 const { isUnlimitedArtworkLicenseType } = require("../constants/artwork-license-types");
 const { normalizeArtworkVisibility } = require("../constants/artwork-visibility");
 const { buildArtworkManagement } = require("../services/artwork-lifecycle.service");
-
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -118,6 +120,10 @@ function serializeArtwork(artwork, { includeArtist = true, includeManagement = f
   const price = hasFiatPrice
     ? `${priceValue.toFixed(2).replace(".", ",")} €`
     : normalizeText(artwork.price) || normalizeText(artwork.priceTokens);
+  const previewUrl = artwork.id
+    ? `/api/artworks/${artwork.id}/media/preview`
+    : buildArtworkPreviewUrl(artwork.previewPath, artwork.imagePath) ||
+      buildArtworkImageUrl(artwork.previewPath || artwork.imagePath);
 
   return {
     id: artwork.id,
@@ -131,17 +137,9 @@ function serializeArtwork(artwork, { includeArtist = true, includeManagement = f
     isUnlimited,
     protection: Boolean(artwork.protection),
     createdAt: artwork.createdAt || null,
-    imageUrl:
-      (normalizeText(artwork.storageProvider) || "local") === "local" && artwork.id
-        ? `/api/artworks/${artwork.id}/media/preview`
-        : buildArtworkImageUrl(artwork.previewPath || artwork.imagePath) ||
-          (artwork.id ? `/api/artworks/${artwork.id}/media/preview` : null),
-    previewUrl:
-      (normalizeText(artwork.storageProvider) || "local") === "local" && artwork.id
-        ? `/api/artworks/${artwork.id}/media/preview`
-        : buildArtworkImageUrl(artwork.previewPath || artwork.imagePath) ||
-          (artwork.id ? `/api/artworks/${artwork.id}/media/preview` : null),
-    hasHdFile: Boolean(artwork.hdPath),
+    imageUrl: previewUrl,
+    previewUrl,
+    forensicWatermark: Boolean(artwork.id),    hasHdFile: Boolean(artwork.hdPath),
     hdDownloadUrl: artwork.hdPath ? `/api/artworks/${artwork.id}/media/hd` : null,
     storageProvider: normalizeText(artwork.storageProvider) || "local",
     mediaStatus: normalizeText(artwork.mediaStatus) || "ready",
