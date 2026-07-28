@@ -434,6 +434,14 @@ import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
 import { useAuthStore } from "~/stores/auth";
 import { useCartStore } from "~/stores/cart";
 import {
+  buildMarketplaceCategorySelection,
+  categoryLabelFromValue,
+  MARKETPLACE_CATEGORY_GROUPS,
+  normalizeMarketplaceCategoryKey,
+  resolveArtworkCategoryGroup,
+  resolveMarketplaceCategoryGroupValue
+} from "~/utils/marketplace-categories";
+import {
   formatMarketplacePrice,
   getArtistInitials,
   isArtworkOwnedByArtist
@@ -453,29 +461,6 @@ const selectedFileTypes = ref([]);
 const cartLoading = ref({});
 const pageSize = 12;
 
-const categoryGroups = [
-  {
-    value: "digital-illustrations",
-    label: "Digital Illustrations",
-    matches: ["illustration", "peinture numerique", "digital art", "digital arts"]
-  },
-  {
-    value: "3d-motion",
-    label: "3D Motion",
-    matches: ["art 3d", "3d", "animation", "motion"]
-  },
-  {
-    value: "assets",
-    label: "Assets",
-    matches: ["graphic", "graphics", "art generatif", "collage", "mix media", "asset"]
-  },
-  {
-    value: "photography",
-    label: "Photography",
-    matches: ["photographie", "photography", "photo"]
-  }
-];
-
 const fileTypeOptions = [
   { label: "GIF", value: "gif" },
   { label: "SVG", value: "svg" },
@@ -492,7 +477,7 @@ const initialCategoryQuery =
       : "";
 
 const searchTerm = ref(initialSearch);
-const selectedCategories = ref(buildCategorySelection(initialCategoryQuery));
+const selectedCategories = ref(buildMarketplaceCategorySelection(initialCategoryQuery));
 
 const { data, pending, error, refresh } = await useFetch("/api/artworks", {
   headers: requestHeaders,
@@ -512,7 +497,7 @@ const errorMessage = computed(() =>
     : ""
 );
 
-const categoryOptions = computed(() => categoryGroups);
+const categoryOptions = computed(() => MARKETPLACE_CATEGORY_GROUPS);
 
 const hasActiveFilters = computed(
   () =>
@@ -689,7 +674,7 @@ watch(
 
     const categoryQuery =
       typeof artType === "string" ? artType : typeof category === "string" ? category : "";
-    selectedCategories.value = buildCategorySelection(categoryQuery);
+    selectedCategories.value = buildMarketplaceCategorySelection(categoryQuery);
   }
 );
 
@@ -706,51 +691,7 @@ onMounted(async () => {
   }
 });
 
-function normalizeKey(value) {
-  return String(value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase();
-}
-
-function categoryLabelFromValue(value) {
-  return categoryGroups.find((group) => group.value === value)?.label || "";
-}
-
-function buildCategorySelection(rawValue) {
-  const resolved = resolveCategoryGroupValue(rawValue);
-  return resolved ? [resolved] : [];
-}
-
-function resolveCategoryGroupValue(rawValue) {
-  const normalized = normalizeKey(rawValue).replace(/_/g, "-");
-  const exact = categoryGroups.find((group) => group.value === normalized);
-
-  if (exact) {
-    return exact.value;
-  }
-
-  const partial = categoryGroups.find((group) =>
-    group.matches.some((match) => normalized.includes(match))
-  );
-
-  return partial?.value || "";
-}
-
-function resolveArtworkCategoryGroup(artwork) {
-  const sources = [
-    normalizeKey(artwork?.category?.name),
-    normalizeKey(artwork?.artist?.artType),
-    normalizeKey(artwork?.title)
-  ].filter(Boolean);
-
-  const found = categoryGroups.find((group) =>
-    sources.some((source) => group.matches.some((match) => source.includes(match)))
-  );
-
-  return found?.value || categoryGroups[0].value;
-}
+const normalizeKey = normalizeMarketplaceCategoryKey;
 
 function resolveArtworkFileType(artwork) {
   const candidateUrl = artwork?.previewUrl || artwork?.imageUrl || "";
