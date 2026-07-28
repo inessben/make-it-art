@@ -5,6 +5,7 @@
       class="password-warning-backdrop"
       role="presentation"
       @keydown.esc="$emit('continue')"
+      @keydown.tab="trapFocus"
     >
       <section
         ref="dialog"
@@ -49,16 +50,44 @@ const props = defineProps({
 defineEmits(["change-password", "continue"]);
 
 const dialog = ref(null);
+let previouslyFocusedElement = null;
+
+function focusableElements() {
+  return [
+    ...(dialog.value?.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    ) || [])
+  ];
+}
+
+function trapFocus(event) {
+  const elements = focusableElements();
+  if (!elements.length) return;
+  const first = elements[0];
+  const last = elements[elements.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
 
 watch(
   () => props.open,
   async (open) => {
     if (!open) {
+      previouslyFocusedElement?.focus?.();
+      previouslyFocusedElement = null;
       return;
     }
 
+    previouslyFocusedElement = document.activeElement;
     await nextTick();
-    dialog.value?.focus();
+    const firstFocusableElement = focusableElements()[0];
+    if (firstFocusableElement) firstFocusableElement.focus();
+    else dialog.value?.focus();
   }
 );
 </script>

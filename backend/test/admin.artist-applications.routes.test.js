@@ -15,6 +15,7 @@ const artworkRepositoryPath = require.resolve("../src/repositories/artwork.repos
 const orderRepositoryPath = require.resolve("../src/repositories/order.repository");
 const paymentRepositoryPath = require.resolve("../src/repositories/payment.repository");
 const auditLogRepositoryPath = require.resolve("../src/repositories/audit-log.repository");
+const notificationRepositoryPath = require.resolve("../src/repositories/notification.repository");
 const prismaPath = require.resolve("../src/lib/prisma");
 const authServicePath = require.resolve("../src/services/auth.service");
 const adminAuditServicePath = require.resolve("../src/services/admin-audit.service");
@@ -247,6 +248,14 @@ async function startAdminRoutesApp(t, overrides = {}) {
       async writeAdminAuditLog(_prismaClient, payload) {
         calls.auditLogs.push(payload);
         return null;
+      }
+    },
+    [notificationRepositoryPath]: {
+      async createNotification() {
+        return null;
+      },
+      async createNotificationOnce() {
+        return true;
       }
     },
     [adminUserManagementServicePath]: {

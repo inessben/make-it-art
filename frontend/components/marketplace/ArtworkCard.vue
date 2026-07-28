@@ -6,11 +6,12 @@
       :to="`/artworks/${artwork.id}`"
       class="block overflow-hidden rounded-[20px] border border-[#1A2336] bg-[#050912]"
     >
-      <img
+      <ProtectedArtworkMedia
         v-if="artwork.imageUrl"
         :src="artwork.imageUrl"
         :alt="artwork.title"
-        class="aspect-[4/5] w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+        :artwork-id="artwork.id"
+        img-class="aspect-[4/5] w-full object-cover transition duration-300 group-hover:scale-[1.02]"
       />
       <div
         v-else

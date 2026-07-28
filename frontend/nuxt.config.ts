@@ -1,11 +1,31 @@
+import { fileURLToPath } from "node:url";
+import { join, dirname } from "node:path";
+import { existsSync } from "node:fs";
+
 const environment =
   (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env || {};
+
+const frontendRoot = dirname(fileURLToPath(import.meta.url));
+const cdpCoreInstalled = existsSync(
+  join(frontendRoot, "node_modules/@coinbase/cdp-core/package.json")
+);
+const cdpMissingStub = join(frontendRoot, "utils/coinbase-cdp-missing.js");
 
 export default defineNuxtConfig({
   modules: ["@nuxtjs/tailwindcss", "@pinia/nuxt"],
   vite: {
     resolve: {
-      alias: [{ find: /^zustand$/, replacement: "zustand/vanilla" }]
+      alias: [
+        { find: /^zustand$/, replacement: "zustand/vanilla" },
+        ...(cdpCoreInstalled
+          ? []
+          : [
+              {
+                find: "@coinbase/cdp-core",
+                replacement: cdpMissingStub
+              }
+            ])
+      ]
     }
   },
   css: ["~/assets/styles/main.scss"],

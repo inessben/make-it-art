@@ -46,7 +46,18 @@ function serializeOrder(order) {
     items: order.items.map((item) => {
       const entitlement = entitlements.get(item.id) || null;
       const certificate = certificates.get(item.id) || null;
+      const publicDetailAvailable =
+        item.artwork?.visibility === "PUBLISHED" &&
+        String(item.artwork?.moderationStatus || "").toLowerCase() === "approved";
+      const downloadLimit =
+        entitlement &&
+        Number.isSafeInteger(entitlement.downloadLimit) &&
+        entitlement.downloadLimit > 0
+          ? entitlement.downloadLimit
+          : 5;
+      const downloadCount = entitlement?.downloadCount ?? 0;
       return {
+        id: item.id,
         artworkId: item.artworkId,
         title: item.artworkTitle,
         artistName: item.artistName,
@@ -54,13 +65,21 @@ function serializeOrder(order) {
         quantity: item.quantity,
         unitAmount: item.unitAmount,
         currency: item.currency,
+        publicAccess: {
+          publicDetailAvailable,
+          withdrawnFromPublic: !publicDetailAvailable
+        },
         delivery: {
           downloadRights: entitlement
             ? {
                 status: entitlement.status,
                 grantedAt: entitlement.grantedAt,
                 suspendedAt: entitlement.suspendedAt,
-                revokedAt: entitlement.revokedAt
+                revokedAt: entitlement.revokedAt,
+                downloadCount,
+                downloadLimit,
+                remainingDownloads: Math.max(0, downloadLimit - downloadCount),
+                lastDownloadedAt: entitlement.lastDownloadedAt || null
               }
             : null,
           certificate: certificate
@@ -81,7 +100,15 @@ function serializeOrder(order) {
 
 const safeOrderInclude = {
   items: {
-    orderBy: { id: "asc" }
+    orderBy: { id: "asc" },
+    include: {
+      artwork: {
+        select: {
+          visibility: true,
+          moderationStatus: true
+        }
+      }
+    }
   },
   payments: {
     orderBy: { checkoutVersion: "desc" },

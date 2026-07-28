@@ -605,9 +605,16 @@ const legalAddressSummary = computed(
 
 onMounted(async () => {
   prefillFromUser();
+
+  try {
+    await auth.fetchCurrentUser();
+  } catch {
+    // Auth middleware already guards the page.
+  }
+
   await loadArtistState();
 
-  if (auth.isArtist) {
+  if (auth.isVerifiedArtist || auth.isArtist || applicationState.value?.status === "approved") {
     await navigateTo("/artist-profile");
     return;
   }

@@ -22,8 +22,8 @@ const config: Partial<Config> = {
           850: "#0C1120",
           800: "#1A1F2A",
           750: "#262D3D",
-          500: "#6C7380",
-          400: "#A0A7B4",
+          500: "#838C9B",
+          400: "#AEB6C3",
           100: "#E6EDF7"
         },
         violet: {
@@ -39,23 +39,23 @@ const config: Partial<Config> = {
         sans: ["Hanken Grotesk", "ui-sans-serif", "system-ui", "sans-serif"]
       },
       fontSize: {
-        "big-title-1": ["200px", { lineHeight: "normal", fontWeight: "900" }],
-        "big-title-2": ["148px", { lineHeight: "normal", fontWeight: "200" }],
-        "big-title-3": ["120px", { lineHeight: "normal", fontWeight: "400" }],
-        "big-title-4": ["96px", { lineHeight: "normal", fontWeight: "700" }],
-        "title-1": ["64px", { lineHeight: "normal", fontWeight: "700" }],
-        "title-2": ["40px", { lineHeight: "normal", fontWeight: "700" }],
-        "title-3": ["24px", { lineHeight: "normal", fontWeight: "600" }],
-        "title-4": ["16px", { lineHeight: "normal", fontWeight: "700" }],
-        "title-5": ["24px", { lineHeight: "normal", fontWeight: "500" }],
-        "body-1": ["16px", { lineHeight: "normal", fontWeight: "400" }],
-        "body-2": ["16px", { lineHeight: "normal", fontWeight: "700" }],
-        "subtitle-1": ["24px", { lineHeight: "normal", fontWeight: "500" }],
-        "subtitle-2": ["12px", { lineHeight: "normal", fontWeight: "400" }],
-        "subtitle-3": ["10px", { lineHeight: "normal", fontWeight: "400" }],
-        "button-1": ["24px", { lineHeight: "normal", fontWeight: "600" }],
-        "button-2": ["18px", { lineHeight: "normal", fontWeight: "600" }],
-        footer: ["16px", { lineHeight: "normal", fontWeight: "400" }]
+        "big-title-1": ["clamp(3.5rem, 8vw, 6rem)", { lineHeight: "1", fontWeight: "900" }],
+        "big-title-2": ["clamp(3rem, 7vw, 5rem)", { lineHeight: "1.05", fontWeight: "300" }],
+        "big-title-3": ["clamp(2.75rem, 6vw, 4.5rem)", { lineHeight: "1.05", fontWeight: "400" }],
+        "big-title-4": ["clamp(2.5rem, 5vw, 4rem)", { lineHeight: "1.1", fontWeight: "700" }],
+        "title-1": ["clamp(2.25rem, 4vw, 3rem)", { lineHeight: "1.1", fontWeight: "700" }],
+        "title-2": ["clamp(1.875rem, 3vw, 2.25rem)", { lineHeight: "1.15", fontWeight: "700" }],
+        "title-3": ["1.5rem", { lineHeight: "1.3", fontWeight: "600" }],
+        "title-4": ["1.125rem", { lineHeight: "1.4", fontWeight: "700" }],
+        "title-5": ["1.25rem", { lineHeight: "1.4", fontWeight: "500" }],
+        "body-1": ["1rem", { lineHeight: "1.5", fontWeight: "400" }],
+        "body-2": ["1rem", { lineHeight: "1.5", fontWeight: "700" }],
+        "subtitle-1": ["1.25rem", { lineHeight: "1.5", fontWeight: "500" }],
+        "subtitle-2": ["0.875rem", { lineHeight: "1.4", fontWeight: "400" }],
+        "subtitle-3": ["0.75rem", { lineHeight: "1.4", fontWeight: "400" }],
+        "button-1": ["1rem", { lineHeight: "1.25", fontWeight: "600" }],
+        "button-2": ["0.875rem", { lineHeight: "1.25", fontWeight: "600" }],
+        footer: ["0.875rem", { lineHeight: "1.5", fontWeight: "400" }]
       }
     }
   },

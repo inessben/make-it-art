@@ -18,6 +18,7 @@ const userRepository = require("../repositories/user.repository");
 const artistRepository = require("../repositories/artist.repository");
 const artworkRepository = require("../repositories/artwork.repository");
 const categoryRepository = require("../repositories/category.repository");
+const notificationRepository = require("../repositories/notification.repository");
 const {
   createSingleImageUpload,
   getUploadedImagePath
@@ -34,6 +35,11 @@ const paymentRepository = require("../repositories/payment.repository");
 const { ensureBuffer } = require("../utils/ensure-buffer");
 const { inviteAdminUser } = require("../services/auth.service");
 const { writeAdminAuditLog } = require("../services/admin-audit.service");
+const multer = require("multer");
+const fsp = require("node:fs/promises");
+const os = require("node:os");
+const path = require("node:path");
+const { extractForensicWatermarkFromFile } = require("../services/forensic-watermark.service");
 const {
   AdminUserManagementError,
   removeAdminAccess,
@@ -566,6 +572,8 @@ function serializeAdminAuditLog(log) {
     entityLabel: getAdminAuditEntityLabel(log.entityType),
     entityId: log.entityId || "",
     ipAddress: log.ipAddress || "",
+    correlationId: log.correlationId || "",
+    metadata: log.metadata || null,
     createdAt: log.createdAt,
     actor: serializeAdminActor(log.user)
   };
@@ -1437,6 +1445,21 @@ router.patch("/admin/artists/:id/verification", authRequired, adminRequired, asy
         prismaClient: transaction
       });
 
+      if (verified) {
+        const pendingApplication = await transaction.artistApplicationDraft.findUnique({
+          where: { userId: updatedArtist.userId }
+        });
+
+        if (pendingApplication?.status === ARTIST_APPLICATION_STATUS.PENDING) {
+          await artistApplicationDraftRepository.markApproved({
+            applicationId: pendingApplication.id,
+            reviewedByAdminId: req.user.id,
+            reviewNote: "Activated from artist verification",
+            prismaClient: transaction
+          });
+        }
+      }
+
       await writeAdminAuditLog(transaction, {
         actorUser: req.user,
         action: verified ? "ARTIST_VERIFIED" : "ARTIST_UNVERIFIED",
@@ -1541,28 +1564,64 @@ router.patch("/admin/artist-applications/:id", authRequired, adminRequired, asyn
         ipAddress: req.ip
       });
 
-      if (
-        status === ARTIST_APPLICATION_STATUS.APPROVED &&
-        Number.isSafeInteger(reviewedApplication?.user?.artist?.id)
-      ) {
-        await writeAdminAuditLog(transaction, {
-          actorUser: req.user,
-          action: "ARTIST_PROFILE_ACTIVATED",
-          entityType: "ARTIST",
-          entityId: reviewedApplication.user.artist.id,
-          ipAddress: req.ip
-        });
+      if (status === ARTIST_APPLICATION_STATUS.APPROVED) {
+        let artistId = reviewedApplication?.user?.artist?.id;
+
+        if (!Number.isSafeInteger(artistId)) {
+          const ensuredArtist = await transaction.artist.findUnique({
+            where: { userId: reviewedApplication.userId },
+            select: { id: true, verified: true }
+          });
+          artistId = ensuredArtist?.id;
+
+          if (Number.isSafeInteger(artistId) && !ensuredArtist.verified) {
+            await transaction.artist.update({
+              where: { id: artistId },
+              data: { verified: true }
+            });
+          }
+        }
+
+        if (Number.isSafeInteger(artistId)) {
+          await writeAdminAuditLog(transaction, {
+            actorUser: req.user,
+            action: "ARTIST_PROFILE_ACTIVATED",
+            entityType: "ARTIST",
+            entityId: artistId,
+            ipAddress: req.ip
+          });
+        }
       }
 
       return reviewedApplication;
     });
+
+    if (status === ARTIST_APPLICATION_STATUS.APPROVED) {
+      try {
+        await notificationRepository.createNotification({
+          userId: application.userId,
+          type: "artist_application_approved",
+          title: "Profil artiste valide",
+          message:
+            "Votre candidature artiste a ete approuvee. Votre espace artiste est maintenant accessible.",
+          payload: {
+            applicationId,
+            artistId: application.user?.artist?.id || null
+          }
+        });
+      } catch (notificationError) {
+        console.error("Artist approval notification failed:", notificationError);
+      }
+    }
+
+    const refreshedApplication = await artistApplicationDraftRepository.findById(application.id);
 
     return res.status(200).json({
       message:
         status === ARTIST_APPLICATION_STATUS.APPROVED
           ? "Artist application approved"
           : "Artist application rejected",
-      application: serializeAdminArtistApplication(application)
+      application: serializeAdminArtistApplication(refreshedApplication || application)
     });
   } catch (error) {
     if (error.code === "P2025") {
@@ -1663,6 +1722,88 @@ router.get("/admin/artworks", authRequired, adminRequired, async (_req, res) => 
     });
   }
 });
+
+const forensicUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 12 * 1024 * 1024 },
+  fileFilter(_req, file, callback) {
+    if (!String(file.mimetype || "").startsWith("image/")) {
+      callback(new Error("FORENSIC_IMAGE_REQUIRED"));
+      return;
+    }
+    callback(null, true);
+  }
+});
+
+/**
+ * Webtoon-style Toon Radar decode: upload a leaked screenshot/preview and recover
+ * the invisible viewer identity embedded at serve time.
+ */
+router.post(
+  "/admin/forensic-watermark/decode",
+  authRequired,
+  adminRequired,
+  forensicUpload.single("image"),
+  async (req, res) => {
+    let tempPath = null;
+
+    try {
+      if (!req.file?.buffer) {
+        return res.status(400).json({
+          message: "Image file is required (field name: image)",
+          code: "FORENSIC_IMAGE_REQUIRED"
+        });
+      }
+
+      const ext = path.extname(req.file.originalname || "").toLowerCase() || ".png";
+      tempPath = path.join(
+        os.tmpdir(),
+        `mia-forensic-decode-${Date.now()}-${Math.random().toString(16).slice(2)}${ext}`
+      );
+      await fsp.writeFile(tempPath, req.file.buffer);
+
+      const decoded = await extractForensicWatermarkFromFile(tempPath);
+
+      if (!decoded.ok) {
+        return res.status(422).json({
+          message: "No valid forensic watermark found in this image",
+          code: "FORENSIC_NOT_FOUND",
+          reason: decoded.reason || "UNKNOWN"
+        });
+      }
+
+      let user = null;
+      if (decoded.userId) {
+        user = await prisma.user.findUnique({
+          where: { id: decoded.userId },
+          select: { id: true, email: true, username: true }
+        });
+      }
+
+      return res.status(200).json({
+        message: "Forensic watermark decoded",
+        forensic: {
+          kind: decoded.kind,
+          userId: decoded.userId,
+          artworkId: decoded.artworkId,
+          guestToken: decoded.guestToken,
+          visibleId: decoded.visibleId,
+          user
+        }
+      });
+    } catch (error) {
+      console.error("Forensic watermark decode error:", error);
+      return res.status(500).json({
+        message: "Unable to decode forensic watermark",
+        code: "FORENSIC_DECODE_FAILED"
+      });
+    } finally {
+      if (tempPath) {
+        await fsp.unlink(tempPath).catch(() => {});
+      }
+    }
+  }
+);
 
 router.patch("/admin/artworks/:id/moderation", authRequired, adminRequired, async (req, res) => {
   try {

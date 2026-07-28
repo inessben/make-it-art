@@ -34,7 +34,10 @@ function runPython(args) {
 async function generateArtworkPreview({
   sourcePath,
   applyWatermark = true,
-  watermarkText = env.artworkMedia.watermarkText
+  watermarkText = env.artworkMedia.watermarkText,
+  title = "",
+  artist = "",
+  copyrightNotice = ""
 }) {
   const outputPath = path.join(
     os.tmpdir(),
@@ -52,11 +55,18 @@ async function generateArtworkPreview({
     "--quality",
     String(env.artworkMedia.previewQuality),
     "--watermark",
-    watermarkText
+    watermarkText || "Make It Art · Preview · No AI training",
+    "--title",
+    title || "",
+    "--artist",
+    artist || "",
+    "--copyright",
+    copyrightNotice || ""
   ];
 
-  if (applyWatermark) {
-    args.push("--apply-watermark");
+  // Public marketplace previews are always watermarked unless explicitly disabled.
+  if (applyWatermark === false) {
+    args.push("--no-watermark");
   }
 
   await runPython(args);
@@ -70,7 +80,7 @@ async function generateArtworkPreview({
   return {
     path: outputPath,
     contentType: "image/jpeg",
-    watermarkApplied: Boolean(applyWatermark)
+    watermarkApplied: applyWatermark !== false
   };
 }
 

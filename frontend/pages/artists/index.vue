@@ -3,7 +3,6 @@
     <div class="artist-directory__shell">
       <section class="artist-directory__hero">
         <div class="artist-directory__intro">
-          <p class="artist-directory__eyebrow">Global network</p>
           <h1 class="artist-directory__title">All Artists</h1>
         </div>
 
@@ -470,28 +469,6 @@ function artistBannerStyle(artist) {
 
 .artist-directory__intro {
   display: grid;
-  gap: 14px;
-}
-
-.artist-directory__eyebrow {
-  position: relative;
-  padding-left: 20px;
-  font-family: Geist, sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #b49cff;
-}
-
-.artist-directory__eyebrow::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: -10px;
-  height: 60px;
-  width: 2px;
-  background: linear-gradient(180deg, #7c3aed 0%, rgba(124, 58, 237, 0) 100%);
 }
 
 .artist-directory__title {

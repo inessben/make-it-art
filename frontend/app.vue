@@ -1,7 +1,8 @@
 <template>
   <div class="flex min-h-screen flex-col bg-black font-sans">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <TheHeader v-if="showGlobalNavigation" />
-    <div class="flex-1">
+    <div id="main-content" class="flex-1" tabindex="-1">
       <NuxtPage />
     </div>
     <TheFooter v-if="showGlobalNavigation" />

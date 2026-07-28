@@ -27,6 +27,7 @@ const artwork = {
   price: "120 tokens",
   priceTokens: "120 tokens",
   licenseType: "COMMERCIAL",
+  visibility: "PUBLISHED",
   artist: {
     id: 3,
     userId: artistUser.id,
@@ -245,4 +246,24 @@ test("createCheckout keeps a personal artwork purchasable after previous sales",
 
   assert.equal(calls.createCheckoutOrder.length, 1);
   assert.equal(calls.createCheckoutOrder[0].lineItems[0].licenseType, "PERSONAL");
+});
+
+test("createCheckout rejects a hidden artwork before creating an order", async (t) => {
+  const { service, calls, restore } = loadCheckoutService({
+    artworks: [{ ...artwork, visibility: "HIDDEN" }]
+  });
+
+  t.after(() => {
+    restore();
+  });
+
+  await assert.rejects(
+    () =>
+      service.createCheckout({
+        userId: buyer.id,
+        items: [{ artworkId: artwork.id, quantity: 1 }]
+      }),
+    (error) => error.message === "ARTWORK_NOT_AVAILABLE"
+  );
+  assert.equal(calls.createCheckoutOrder.length, 0);
 });

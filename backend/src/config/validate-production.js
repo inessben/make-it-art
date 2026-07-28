@@ -118,6 +118,41 @@ function validateProductionConfig(config) {
   if (config.paymentOperations?.disputeRightsPolicyConfirmed !== true) {
     errors.push("DISPUTE_RIGHTS_POLICY_CONFIRMED must be true after the risk policy is approved");
   }
+  if (config.cdp?.walletFeatureEnabled) {
+    const cdp = config.cdp;
+    if (!/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(cdp.projectId || "")) {
+      errors.push("CDP_PROJECT_ID must be a valid production project ID");
+    }
+    if (!/^https:\/\//.test(cdp.authIssuer || "")) {
+      errors.push("CDP_AUTH_ISSUER must be the exact HTTPS issuer configured in Coinbase");
+    }
+    if (cdp.authIssuer !== config.appBaseUrl) {
+      errors.push("CDP_AUTH_ISSUER must exactly match APP_BASE_URL and the Coinbase issuer");
+    }
+    if (cdp.authAudience !== cdp.projectId) {
+      errors.push("CDP_AUTH_AUDIENCE must exactly match CDP_PROJECT_ID");
+    }
+    if (!cdp.authKeyId || /replace_with|change_me/i.test(cdp.authKeyId)) {
+      errors.push("CDP_AUTH_KEY_ID must identify the active JWKS signing key");
+    }
+    if (
+      !/^-----BEGIN PRIVATE KEY-----[\s\S]+-----END PRIVATE KEY-----\s*$/.test(
+        cdp.authPrivateKey || ""
+      )
+    ) {
+      errors.push("CDP_AUTH_PRIVATE_KEY must be a valid PKCS#8 private key");
+    }
+    if (!cdp.apiKeyId || /replace_with|change_me/i.test(cdp.apiKeyId)) {
+      errors.push("CDP_API_KEY_ID must be configured");
+    }
+    if (!cdp.apiKeySecret || /replace_with|change_me/i.test(cdp.apiKeySecret)) {
+      errors.push("CDP_API_KEY_SECRET must be configured");
+    }
+    if (!Number.isSafeInteger(cdp.requestTimeoutMs) || cdp.requestTimeoutMs < 1000) {
+      errors.push("CDP_REQUEST_TIMEOUT_MS must be at least 1000");
+    }
+  }
+
   if (errors.length > 0) {
     const error = new Error(`Unsafe production configuration: ${errors.join("; ")}`);
     error.code = "UNSAFE_PRODUCTION_CONFIGURATION";

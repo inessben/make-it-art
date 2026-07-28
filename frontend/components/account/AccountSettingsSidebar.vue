@@ -87,6 +87,23 @@ const artistNavigationItems = computed(() => {
     ];
   }
 
+  if (auth.artistApplicationStatus === "approved" && auth.isArtist) {
+    return [
+      {
+        label: "Artist dashboard",
+        to: "/artist",
+        matches: ["/artist"],
+        icon: "M4 5h7v6H4zM13 5h7v10h-7zM4 13h7v6H4zM13 17h7v2h-7z"
+      },
+      {
+        label: "Artist public profile",
+        to: "/artist-profile",
+        matches: ["/artist-profile", "/become-artist"],
+        icon: "M12 3l7 4v10l-7 4-7-4V7l7-4zM9 11.5l2 2 4-4"
+      }
+    ];
+  }
+
   if (auth.artistApplicationStatus === "pending") {
     return [
       {

@@ -95,11 +95,15 @@
                         />
                         <div class="min-w-0">
                           <NuxtLink
+                            v-if="transaction.publicDetailAvailable"
                             :to="`/artworks/${transaction.artworkId}`"
                             class="block truncate text-body-1 uppercase transition-colors hover:text-violet-400"
                           >
                             {{ transaction.title }}
                           </NuxtLink>
+                          <p v-else class="truncate text-body-1 uppercase">
+                            {{ transaction.title }}
+                          </p>
                           <NuxtLink
                             :to="`/orders/${transaction.orderId}`"
                             class="mt-1 block text-subtitle-2 text-slate-100 transition-colors hover:text-violet-400"
@@ -108,6 +112,12 @@
                           </NuxtLink>
                           <span class="mt-1 block text-xs uppercase text-violet-300">
                             {{ transaction.licenseLabel }}
+                          </span>
+                          <span
+                            v-if="!transaction.publicDetailAvailable"
+                            class="mt-1 block text-xs text-slate-400"
+                          >
+                            Retirée du catalogue · preuve d’achat conservée
                           </span>
                         </div>
                       </div>
@@ -127,10 +137,18 @@
                     </td>
                     <td class="px-6 text-right">
                       <NuxtLink
+                        v-if="transaction.publicDetailAvailable"
                         :to="`/artworks/${transaction.artworkId}`"
                         class="text-subtitle-2 uppercase tracking-[0.06em] text-slate-400 transition-colors hover:text-violet-400"
                       >
                         Provenance ↗
+                      </NuxtLink>
+                      <NuxtLink
+                        v-else
+                        :to="`/orders/${transaction.orderId}`"
+                        class="text-subtitle-2 uppercase tracking-[0.06em] text-slate-400 transition-colors hover:text-violet-400"
+                      >
+                        Détails privés ↗
                       </NuxtLink>
                     </td>
                   </tr>
@@ -213,6 +231,7 @@ const transactions = computed(() =>
       orderNumber: order.reference || order.number || `#${order.id}`,
       artworkId: item.artworkId,
       title: item.title || "Untitled artwork",
+      publicDetailAvailable: Boolean(item.publicAccess?.publicDetailAvailable),
       licenseLabel: formatArtworkLicenseType(item.licenseType),
       status: getOrderStatusPresentation(order.status).title,
       date: order.createdAt,

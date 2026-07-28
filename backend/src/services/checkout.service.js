@@ -233,6 +233,7 @@ async function createPendingCheckout({
           where: {
             id: item.artworkId,
             licenseType: "EXCLUSIVE",
+            visibility: "PUBLISHED",
             saleStatus: "AVAILABLE",
             isSold: false,
             stockQuantity: 1,
@@ -581,6 +582,10 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
 
     if (artwork.artist?.userId === userId) {
       throw new Error("CANNOT_BUY_OWN_ARTWORK");
+    }
+
+    if (artwork.visibility !== "PUBLISHED") {
+      throw new Error("ARTWORK_NOT_AVAILABLE");
     }
 
     if (artwork.licenseType === "EXCLUSIVE" && artwork.isSold) {

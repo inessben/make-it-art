@@ -48,7 +48,7 @@ async function processArtworkUpload({
 
     const preview = await generateArtworkPreview({
       sourcePath: uploadedFile.path,
-      applyWatermark
+      applyWatermark: applyWatermark !== false
     });
     previewLocalPath = preview.path;
 
@@ -76,7 +76,10 @@ async function processArtworkUpload({
   }
 }
 
-async function deleteArtworkMediaAssets(artwork) {
+async function deleteArtworkMediaAssets(
+  artwork,
+  { action = "ARTWORK_MEDIA_DELETE", correlationId = null } = {}
+) {
   if (!artwork) {
     return;
   }
@@ -85,7 +88,29 @@ async function deleteArtworkMediaAssets(artwork) {
   const keys = [
     ...new Set([artwork.hdPath, artwork.previewPath, artwork.imagePath].filter(Boolean))
   ];
-  await Promise.allSettled(keys.map((key) => storage.deleteObject(key)));
+
+  await Promise.all(
+    keys.map(async (key) => {
+      let lastError = null;
+
+      for (let attempt = 1; attempt <= 3; attempt += 1) {
+        try {
+          await storage.deleteObject(key);
+          return;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      console.error("Artwork media deletion failed after retries", {
+        action,
+        correlationId,
+        storageProvider: storage.name,
+        key,
+        reasonCode: lastError?.code || "ARTWORK_MEDIA_DELETE_FAILED"
+      });
+    })
+  );
 }
 
 module.exports = {

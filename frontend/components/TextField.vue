@@ -8,6 +8,7 @@
       :type="type"
       :autocomplete="autocomplete"
       :required="required"
+      :aria-required="required"
       @input="$emit('update:modelValue', $event.target.value)"
     />
   </div>
@@ -50,14 +51,14 @@ defineEmits(["update:modelValue"]);
 }
 
 label {
-  @apply text-body-1 font-semibold text-slate-500;
+  @apply text-body-1 font-semibold text-slate-400;
 }
 
 input {
   @apply min-h-12 w-full border border-slate-800 bg-slate-900 px-4 py-3 text-body-1 text-slate-100 outline-none transition placeholder:text-slate-500;
 }
 
-input:focus {
-  @apply border-violet-600 ring-2 ring-violet-700/20;
+input:focus-visible {
+  @apply border-violet-400 ring-2 ring-violet-400/30;
 }
 </style>

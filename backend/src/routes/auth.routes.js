@@ -341,6 +341,7 @@ router.get("/auth/verify-email", async (req, res) => {
 });
 
 router.get("/auth/me", authRequired, async (req, res) => {
+  res.set("Cache-Control", "private, no-store");
   return res.status(200).json({
     user: serializeAuthUser(req.user)
   });
