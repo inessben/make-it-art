@@ -183,7 +183,9 @@
                     :src="heroArtwork.imageUrl"
                     :alt="heroArtwork.title"
                     :artwork-id="heroArtwork.id"
-                    :artist-name="heroArtwork.artist?.displayName || heroArtwork.artist?.username || ''"
+                    :artist-name="
+                      heroArtwork.artist?.displayName || heroArtwork.artist?.username || ''
+                    "
                     img-class="marketplace-card__featured-image"
                     class="marketplace-card__featured-media"
                   />
