@@ -438,8 +438,7 @@ import {
   categoryLabelFromValue,
   MARKETPLACE_CATEGORY_GROUPS,
   normalizeMarketplaceCategoryKey,
-  resolveArtworkCategoryGroup,
-  resolveMarketplaceCategoryGroupValue
+  resolveArtworkCategoryGroup
 } from "~/utils/marketplace-categories";
 import {
   formatMarketplacePrice,
