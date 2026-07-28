@@ -199,7 +199,8 @@ import { navigateTo, useRoute } from "#app";
 import {
   ARTWORK_LICENSE_OPTIONS,
   formatArtworkManagementReason,
-  isArtworkDescriptionRequired
+  isArtworkDescriptionRequired,
+  resolveArtworkCategoryId
 } from "~/utils/marketplace";
 
 definePageMeta({
@@ -260,7 +261,7 @@ function handleFileChange(event) {
 function populateForm(source) {
   form.title = source.title || "";
   form.description = source.description || "";
-  form.categoryId = source.category?.id ? String(source.category.id) : "";
+  form.categoryId = resolveArtworkCategoryId(source, categories.value);
   form.price = Number.isFinite(Number(source.priceValue))
     ? String(source.priceValue)
     : source.price || "";

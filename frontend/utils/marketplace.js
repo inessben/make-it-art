@@ -159,3 +159,38 @@ export function shouldSynchronizeArtworkManagement(artwork, user) {
 
   return isArtworkOwnedByArtist(artwork, user) && !artwork?.management;
 }
+
+function normalizeArtworkCategoryName(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .trim()
+    .toLowerCase();
+}
+
+export function resolveArtworkCategoryId(artwork, categories) {
+  const availableCategories = Array.isArray(categories) ? categories : [];
+  const artworkCategory = artwork?.category;
+  const currentCategoryId =
+    artwork?.categoryId ??
+    (artworkCategory && typeof artworkCategory === "object" ? artworkCategory.id : null);
+
+  if (currentCategoryId !== null && currentCategoryId !== undefined) {
+    const categoryById = availableCategories.find(
+      (category) => String(category?.id) === String(currentCategoryId)
+    );
+
+    if (categoryById) return String(categoryById.id);
+  }
+
+  const currentCategoryName =
+    typeof artworkCategory === "string" ? artworkCategory : artworkCategory?.name;
+  const normalizedCurrentName = normalizeArtworkCategoryName(currentCategoryName);
+  if (!normalizedCurrentName) return "";
+
+  const categoryByName = availableCategories.find(
+    (category) => normalizeArtworkCategoryName(category?.name) === normalizedCurrentName
+  );
+
+  return categoryByName ? String(categoryByName.id) : "";
+}

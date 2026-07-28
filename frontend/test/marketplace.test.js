@@ -12,6 +12,7 @@ import {
   isArtworkDescriptionRequired,
   isArtworkOwnedByArtist,
   normalizeArtistArtworkCounts,
+  resolveArtworkCategoryId,
   shouldSynchronizeArtworkManagement
 } from "../utils/marketplace.js";
 
@@ -100,4 +101,20 @@ test("a stale owner session triggers a management capability refresh", () => {
   assert.equal(shouldSynchronizeArtworkManagement({ ...artwork, management: {} }, owner), false);
   assert.equal(shouldSynchronizeArtworkManagement(artwork, { artist: { id: 43 } }), false);
   assert.equal(shouldSynchronizeArtworkManagement(artwork, null), true);
+});
+
+test("the artwork edit form resolves its current category from every supported payload", () => {
+  const categories = [
+    { id: 1, name: "Illustration" },
+    { id: 2, name: "Peinture numerique" }
+  ];
+
+  assert.equal(resolveArtworkCategoryId({ category: { id: 1 } }, categories), "1");
+  assert.equal(resolveArtworkCategoryId({ categoryId: 2 }, categories), "2");
+  assert.equal(
+    resolveArtworkCategoryId({ category: { id: 99, name: "Peinture num\u00e9rique" } }, categories),
+    "2"
+  );
+  assert.equal(resolveArtworkCategoryId({ category: "Illustration" }, categories), "1");
+  assert.equal(resolveArtworkCategoryId({ category: { name: "Inconnue" } }, categories), "");
 });
