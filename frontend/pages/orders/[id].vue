@@ -229,6 +229,12 @@
                       Empreinte SHA-256 : {{ item.delivery.certificate.fingerprint }}
                     </p>
                   </details>
+                  <a
+                    :href="certificateDownloadUrl(item)"
+                    class="mt-3 inline-flex min-h-10 items-center justify-center rounded-xl bg-[#4A6CF7] px-4 text-xs font-semibold text-black transition hover:bg-[#6D8BFF]"
+                  >
+                    Télécharger le certificat PDF
+                  </a>
                 </div>
               </div>
             </article>
@@ -309,7 +315,10 @@ import {
   getPaymentStatusLabel,
   getRefundStatusPresentation
 } from "~/utils/order-status";
-import { getDigitalDeliveryPresentation } from "~/utils/digital-delivery";
+import {
+  buildCertificateDownloadUrl,
+  getDigitalDeliveryPresentation
+} from "~/utils/digital-delivery";
 import { formatArtworkLicenseType } from "~/utils/marketplace";
 
 definePageMeta({
@@ -397,6 +406,13 @@ function artworkDownloadUrl(item) {
   return `/api/v1/orders/${encodeURIComponent(order.value.id)}/download/${encodeURIComponent(
     item.id
   )}`;
+}
+
+function certificateDownloadUrl(item) {
+  return (
+    item?.delivery?.certificate?.downloadUrl ||
+    buildCertificateDownloadUrl(order.value?.id, item?.delivery?.certificate?.id)
+  );
 }
 
 function canDownloadItem(item) {
