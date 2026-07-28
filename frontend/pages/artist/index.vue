@@ -591,6 +591,10 @@ function settlementClass(status) {
 }
 
 function notificationLabel(type) {
+  if (type === "follower") {
+    return "Follower";
+  }
+
   if (type === "sale") {
     return "Sale";
   }
@@ -603,6 +607,10 @@ function notificationLabel(type) {
 }
 
 function notificationClass(type) {
+  if (type === "follower") {
+    return "bg-[#1E2540] text-[#9DB2FF]";
+  }
+
   if (type === "sale") {
     return "bg-[#12301F] text-[#86EFAC]";
   }

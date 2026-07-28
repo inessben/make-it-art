@@ -1,8 +1,12 @@
 function isTransactionWriteConflict(error) {
   return (
     error?.code === "P2034" ||
+    error?.meta?.code === "40001" ||
     error?.cause?.originalCode === "40001" ||
-    error?.cause?.kind === "TransactionWriteConflict"
+    error?.cause?.kind === "TransactionWriteConflict" ||
+    error?.message?.includes(
+      "could not serialize access due to read/write dependencies among transactions"
+    )
   );
 }
 

@@ -133,7 +133,16 @@
         <section class="artist-layout">
           <aside class="artist-sidebar">
             <div class="artist-stats">
-              <article class="artist-panel artist-panel--stat">
+              <NuxtLink
+                v-if="isOwnArtistProfile"
+                to="/follows?tab=followers"
+                class="artist-panel artist-panel--stat artist-panel--stat-link"
+              >
+                <span class="artist-panel__eyebrow">Followers</span>
+                <strong class="artist-panel__metric">{{ followersMetric }}</strong>
+                <span class="artist-panel__hint">Open followers</span>
+              </NuxtLink>
+              <article v-else class="artist-panel artist-panel--stat">
                 <span class="artist-panel__eyebrow">Followers</span>
                 <strong class="artist-panel__metric">{{ followersMetric }}</strong>
               </article>
@@ -983,6 +992,19 @@ function formatCompactNumber(value) {
   padding: 20px 18px;
 }
 
+.artist-panel--stat-link {
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.artist-panel--stat-link:hover {
+  border-color: rgba(74, 108, 247, 0.45);
+  background: rgba(74, 108, 247, 0.08);
+  transform: translateY(-1px);
+}
+
 .artist-panel__eyebrow {
   font-family: "Geist", "Hanken Grotesk", sans-serif;
   font-size: 12px;
@@ -999,6 +1021,15 @@ function formatCompactNumber(value) {
   line-height: 1;
   letter-spacing: -0.03em;
   color: #fff;
+}
+
+.artist-panel__hint {
+  font-family: "Geist", "Hanken Grotesk", sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(230, 237, 247, 0.6);
 }
 
 .artist-panel--bio,
