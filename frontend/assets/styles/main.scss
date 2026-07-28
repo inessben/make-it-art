@@ -57,8 +57,24 @@ $color-brand: theme("colors.violet.700");
   }
 }
 
-/* Soft global cue while artwork screenshot guard is active */
+/* While artwork screenshot guard is active: force-hide every protected pixel site-wide. */
 html.mia-screenshot-guard-active {
   -webkit-user-select: none !important;
   user-select: none !important;
+}
+
+html.mia-screenshot-guard-active .mia-protected-media {
+  background: #000 !important;
+}
+
+html.mia-screenshot-guard-active .mia-protected-media__image,
+html.mia-screenshot-guard-active .mia-protected-media__watermark,
+html.mia-screenshot-guard-active .mia-protected-media__viewer-badge {
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+html.mia-screenshot-guard-active .mia-protected-media__blackout {
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }

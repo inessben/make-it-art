@@ -5,8 +5,9 @@
     @contextmenu.prevent
     @dragstart.prevent
   >
+    <!-- Unmount pixels while locked so delayed OS captures cannot grab the image. -->
     <img
-      v-if="src"
+      v-if="src && !isBlackedOut"
       :src="src"
       :alt="alt"
       :class="imgClass"
@@ -14,19 +15,28 @@
       draggable="false"
       decoding="async"
     />
+    <div
+      v-else-if="src && isBlackedOut"
+      :class="imgClass"
+      class="mia-protected-media__image mia-protected-media__image--blank bg-black"
+      aria-hidden="true"
+    />
     <div v-else :class="fallbackClass">
       <slot name="fallback" />
     </div>
 
-    <!-- 1) Brand anti-AI watermark (complements server-baked watermark) -->
-    <div class="mia-protected-media__watermark mia-protected-media__watermark--brand" aria-hidden="true">
+    <div
+      v-show="!isBlackedOut"
+      class="mia-protected-media__watermark mia-protected-media__watermark--brand"
+      aria-hidden="true"
+    >
       <span v-for="n in 12" :key="`brand-${n}`" class="mia-protected-media__watermark-tile">
         Make It Art · No AI
       </span>
     </div>
 
-    <!-- 3) Forensic viewer watermark tied to the consulting user (or guest session) -->
     <div
+      v-show="!isBlackedOut"
       class="mia-protected-media__watermark mia-protected-media__watermark--viewer"
       aria-hidden="true"
     >
@@ -40,13 +50,13 @@
     </div>
 
     <div
+      v-show="!isBlackedOut"
       class="mia-protected-media__viewer-badge"
       aria-hidden="true"
     >
       {{ viewerWatermarkId }}
     </div>
 
-    <!-- Transparent shield: blocks casual save / inspect of the visual surface -->
     <div
       class="mia-protected-media__shield absolute inset-0 z-[2]"
       aria-hidden="true"
@@ -55,9 +65,8 @@
     />
 
     <div
-      class="mia-protected-media__blackout absolute inset-0 z-[3] grid place-items-center bg-black px-4 transition-opacity duration-150"
+      class="mia-protected-media__blackout absolute inset-0 z-[3] grid place-items-center bg-black px-4 transition-opacity duration-100"
       :class="isBlackedOut ? 'opacity-100' : 'pointer-events-none opacity-0'"
-      aria-hidden="true"
     >
       <div v-show="isBlackedOut" class="max-w-sm text-center">
         <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">
@@ -67,9 +76,22 @@
           v-if="blackoutMode === 'screen-share' || blackoutMode === 'cast'"
           class="mt-3 text-[11px] leading-5 text-slate-500"
         >
-          Comme sur les plateformes de streaming : arrêtez le partage d'écran ou l'enregistrement
-          pour afficher l'aperçu.
+          Arrêtez le partage d'écran ou l'enregistrement pour réafficher l'aperçu.
         </p>
+        <p
+          v-else-if="blackoutMode === 'sticky'"
+          class="mt-3 text-[11px] leading-5 text-slate-500"
+        >
+          Outil de capture ou perte de focus détecté. Réaffichez l'aperçu quand vous avez terminé.
+        </p>
+        <button
+          v-if="canDismissBlackout"
+          type="button"
+          class="mia-protected-media__unlock mt-4 inline-flex min-h-10 items-center justify-center border border-slate-600 bg-slate-950 px-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-200 transition hover:border-violet-500"
+          @click.stop.prevent="dismissBlackout"
+        >
+          Afficher l'aperçu
+        </button>
       </div>
     </div>
   </div>
@@ -95,6 +117,14 @@ const props = defineProps({
     type: [Number, String],
     default: null
   },
+  traceId: {
+    type: String,
+    default: ""
+  },
+  protectionLevel: {
+    type: String,
+    default: "soft"
+  },
   imgClass: {
     type: String,
     default: "h-full w-full object-cover"
@@ -107,14 +137,18 @@ const props = defineProps({
 
 const auth = useAuthStore();
 const { user } = storeToRefs(auth);
-const { isBlackedOut, blackoutMessage, blackoutMode } = useScreenshotGuard();
+const { isBlackedOut, blackoutMessage, blackoutMode, canDismissBlackout, dismissBlackout } =
+  useScreenshotGuard({ protectionLevel: props.protectionLevel });
 
-const viewerWatermarkId = computed(() =>
-  buildViewerWatermarkId({
+const viewerWatermarkId = computed(() => {
+  if (props.traceId) {
+    return props.traceId;
+  }
+  return buildViewerWatermarkId({
     userId: user.value?.id || null,
     artworkId: props.artworkId
-  })
-);
+  });
+});
 </script>
 
 <style scoped>
@@ -122,11 +156,17 @@ const viewerWatermarkId = computed(() =>
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
+  background: #000;
 }
 
 .mia-protected-media__image {
   -webkit-user-drag: none;
   user-drag: none;
+}
+
+.mia-protected-media__image--blank {
+  min-height: 8rem;
+  background: #000;
 }
 
 .mia-protected-media__watermark {
@@ -189,9 +229,13 @@ const viewerWatermarkId = computed(() =>
   color: #c9d7f0;
 }
 
-.mia-protected-media--blackout .mia-protected-media__image,
-.mia-protected-media--blackout .mia-protected-media__watermark,
-.mia-protected-media--blackout .mia-protected-media__viewer-badge {
-  visibility: hidden;
+.mia-protected-media__unlock {
+  pointer-events: auto;
+  position: relative;
+  z-index: 4;
+}
+
+.mia-protected-media--blackout .mia-protected-media__shield {
+  pointer-events: none;
 }
 </style>
