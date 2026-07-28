@@ -87,7 +87,7 @@ function buildContractContext({ user, payload, effectiveDate = new Date() }) {
     locality: localityParts.join(", ") || "Non renseignee",
     country: normalizeText(payload.country) || "Non renseigne",
     email: user.email || "Non renseigne",
-    taxId: normalizeText(payload.taxId) || "Non renseigne",
+    taxId: normalizeText(payload.taxId) || "undefined",
     phone: user.phone || "Non renseigne",
     artType: normalizeText(payload.artType) || "Non renseigne",
     styles: Array.isArray(payload.styles) ? payload.styles.filter(Boolean).join(", ") : "",

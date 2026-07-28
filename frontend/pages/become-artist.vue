@@ -234,11 +234,11 @@
               </label>
 
               <label class="grid gap-2 text-sm text-slate-400 lg:col-span-2">
-                <span class="font-medium text-slate-100"> Tax identification number * </span>
+                <span class="font-medium text-slate-100">Tax identification number</span>
                 <input
                   v-model.trim="form.taxId"
                   type="text"
-                  placeholder="SIREN, VAT, EIN, etc."
+                  placeholder="SIREN, VAT, EIN, etc. (optional)"
                   class="field-control"
                 />
               </label>
@@ -814,12 +814,6 @@ function validateStep(targetStep = step.value) {
       !form.country.trim()
     ) {
       message.value = "A complete legal address is required.";
-      step.value = 1;
-      return false;
-    }
-
-    if (!form.taxId.trim()) {
-      message.value = "A tax identification number is required.";
       step.value = 1;
       return false;
     }
