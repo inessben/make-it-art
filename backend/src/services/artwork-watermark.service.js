@@ -3,7 +3,10 @@ const fsp = require("node:fs/promises");
 const path = require("node:path");
 const prisma = require("../lib/prisma");
 const env = require("../config/env");
-const { generateArtworkPreview } = require("./artwork-preview.service");
+const {
+  buildPreviewWatermarkText,
+  generateArtworkPreview
+} = require("./artwork-preview.service");
 const { getArtworkStorageProvider } = require("./artwork-storage");
 const { assertSafeRelativeUploadPath, UPLOADS_ROOT } = require("./artwork-media.service");
 
@@ -77,12 +80,14 @@ async function ensureWatermarkedPreview(artwork, { force = false } = {}) {
   let previewLocalPath = null;
 
   try {
+    const artistName = artwork.artist?.displayName || artwork.artist?.user?.username || "";
     const preview = await generateArtworkPreview({
       sourcePath,
       applyWatermark: true,
-      watermarkText: env.artworkMedia.watermarkText,
+      watermarkText: buildPreviewWatermarkText(artistName, env.artworkMedia.watermarkText),
       title: artwork.title || "",
-      artist: artwork.artist?.displayName || artwork.artist?.user?.username || ""
+      artist: artistName,
+      copyrightNotice: artistName ? `© ${artistName} — All rights reserved.` : ""
     });
     previewLocalPath = preview.path;
 

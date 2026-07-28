@@ -31,7 +31,7 @@
       aria-hidden="true"
     >
       <span v-for="n in 12" :key="`brand-${n}`" class="mia-protected-media__watermark-tile">
-        Make It Art · No AI
+        {{ brandWatermarkText }}
       </span>
     </div>
 
@@ -72,10 +72,10 @@
           v-if="blackoutMode === 'screen-share' || blackoutMode === 'cast'"
           class="mt-3 text-[11px] leading-5 text-slate-500"
         >
-          Arrêtez le partage d'écran ou l'enregistrement pour réafficher l'aperçu.
+          Stop screen sharing or recording to reveal the preview again.
         </p>
         <p v-else-if="blackoutMode === 'sticky'" class="mt-3 text-[11px] leading-5 text-slate-500">
-          Outil de capture ou perte de focus détecté. Réaffichez l'aperçu quand vous avez terminé.
+          Capture tool or focus loss detected. Reveal the preview again when you are done.
         </p>
         <button
           v-if="canDismissBlackout"
@@ -83,7 +83,7 @@
           class="mia-protected-media__unlock mt-4 inline-flex min-h-10 items-center justify-center border border-slate-600 bg-slate-950 px-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-200 transition hover:border-violet-500"
           @click.stop.prevent="dismissBlackout"
         >
-          Afficher l'aperçu
+          Reveal preview
         </button>
       </div>
     </div>
@@ -110,6 +110,10 @@ const props = defineProps({
     type: [Number, String],
     default: null
   },
+  artistName: {
+    type: String,
+    default: ""
+  },
   traceId: {
     type: String,
     default: ""
@@ -132,6 +136,11 @@ const auth = useAuthStore();
 const { user } = storeToRefs(auth);
 const { isBlackedOut, blackoutMessage, blackoutMode, canDismissBlackout, dismissBlackout } =
   useScreenshotGuard({ protectionLevel: props.protectionLevel });
+
+const brandWatermarkText = computed(() => {
+  const normalizedArtistName = String(props.artistName || "").trim();
+  return normalizedArtistName ? `${normalizedArtistName} - No AI` : "Make It Art - No AI";
+});
 
 const viewerWatermarkId = computed(() => {
   if (props.traceId) {

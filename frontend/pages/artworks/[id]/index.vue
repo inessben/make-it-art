@@ -58,6 +58,7 @@
                 :src="artworkImageUrl"
                 :alt="artwork.title"
                 :artwork-id="artwork.id"
+                :artist-name="artwork.artist?.displayName || artwork.artist?.username || ''"
                 img-class="h-full w-full object-cover"
                 class="absolute inset-0 h-full w-full"
               />
@@ -442,6 +443,7 @@
                     :src="related.imageUrl"
                     :alt="related.title"
                     :artwork-id="related.id"
+                    :artist-name="related.artist?.displayName || related.artist?.username || ''"
                     img-class="aspect-square w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                     class="block"
                   />
@@ -527,6 +529,7 @@
             :src="artworkImageUrl"
             :alt="artwork?.title || 'Artwork preview'"
             :artwork-id="artwork?.id"
+            :artist-name="artwork?.artist?.displayName || artwork?.artist?.username || ''"
             img-class="max-h-[min(78vh,860px)] w-full object-contain"
             class="block w-full"
           />

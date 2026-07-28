@@ -9,7 +9,10 @@ const {
   buildArtworkImageUrl
 } = require("./artwork-media.service");
 const { getArtworkStorageProvider } = require("./artwork-storage");
-const { generateArtworkPreview } = require("./artwork-preview.service");
+const {
+  buildPreviewWatermarkText,
+  generateArtworkPreview
+} = require("./artwork-preview.service");
 
 const DEFAULT_DOWNLOAD_LIMIT = 5;
 
@@ -245,9 +248,14 @@ async function openLocalPreviewStream(artwork, storage) {
 
   if (await keyExists(storage, recoverySourceKey)) {
     const sourcePath = await storage.resolveLocalPath(recoverySourceKey);
+    const artistName = artwork.artist?.displayName || artwork.artist?.user?.username || "";
     const preview = await generateArtworkPreview({
       sourcePath,
-      applyWatermark: artwork.watermarkApplied !== false
+      applyWatermark: artwork.watermarkApplied !== false,
+      watermarkText: buildPreviewWatermarkText(artistName),
+      title: artwork.title || "",
+      artist: artistName,
+      copyrightNotice: artistName ? `© ${artistName} — All rights reserved.` : ""
     });
     const recoveredPreviewKey =
       artwork.previewPath || `artworks/preview/recovered-${artwork.id}-${Date.now()}.jpg`;
