@@ -50,6 +50,11 @@ function mapCheckoutError(error) {
         status: 409,
         message: "Une ou plusieurs oeuvres ne sont plus disponibles a l'achat."
       };
+    case "ARTWORK_NOT_AVAILABLE":
+      return {
+        status: 409,
+        message: "Une ou plusieurs oeuvres ne sont plus disponibles. Actualisez votre panier."
+      };
     case "EXCLUSIVE_CHECKOUT_REQUIRES_SECURE_FLOW":
       return {
         status: 409,

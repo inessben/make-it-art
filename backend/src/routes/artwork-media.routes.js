@@ -1,6 +1,7 @@
 const express = require("express");
 const prisma = require("../lib/prisma");
 const { authRequired } = require("../middlewares/auth-required.middleware");
+const { getUserFromRequest } = require("../services/session.service");
 const {
   ArtworkMediaAccessError,
   assertCanAccessHd,
@@ -28,7 +29,9 @@ async function loadArtwork(req, res, next) {
         previewPath: true,
         storageProvider: true,
         watermarkApplied: true,
-        mediaStatus: true
+        mediaStatus: true,
+        visibility: true,
+        moderationStatus: true
       }
     });
 
@@ -44,9 +47,15 @@ async function loadArtwork(req, res, next) {
   }
 }
 
-function pipeMedia(res, { stream, contentType, filename, disposition = "inline" }) {
+function pipeMedia(
+  res,
+  { stream, contentType, filename, disposition = "inline", cacheControl = null }
+) {
   res.setHeader("Content-Type", contentType);
-  res.setHeader("Cache-Control", disposition === "inline" ? "public, max-age=86400" : "private");
+  res.setHeader(
+    "Cache-Control",
+    cacheControl || (disposition === "inline" ? "public, max-age=86400" : "private")
+  );
   if (filename) {
     res.setHeader(
       "Content-Disposition",
@@ -63,13 +72,46 @@ function pipeMedia(res, { stream, contentType, filename, disposition = "inline" 
   stream.pipe(res);
 }
 
+function isPublicArtworkPreview(artwork) {
+  return (
+    artwork?.visibility === "PUBLISHED" &&
+    String(artwork?.moderationStatus || "").toLowerCase() === "approved"
+  );
+}
+
+async function canAccessPrivatePreview(req) {
+  const user = await getUserFromRequest(req);
+
+  if (!user) {
+    return false;
+  }
+
+  try {
+    await assertCanAccessHd(user, req.artworkMedia);
+    return true;
+  } catch (_error) {
+    return false;
+  }
+}
+
 router.get("/artworks/:id(\\d+)/media/preview", loadArtwork, async (req, res) => {
   try {
+    const publicPreview = isPublicArtworkPreview(req.artworkMedia);
+
+    if (!publicPreview && !(await canAccessPrivatePreview(req))) {
+      res.setHeader("Cache-Control", "private, no-store");
+      return res.status(404).json({ message: "Artwork not found." });
+    }
+
     const payload = await openArtworkMediaStream(req.artworkMedia, "preview");
+    if (!publicPreview) {
+      res.setHeader("X-Robots-Tag", "noindex, noarchive");
+    }
     return pipeMedia(res, {
       stream: payload.stream,
       contentType: payload.contentType,
-      filename: `artwork-${req.artworkMedia.id}-preview.jpg`
+      filename: `artwork-${req.artworkMedia.id}-preview.jpg`,
+      cacheControl: publicPreview ? "public, max-age=86400" : "private, no-store"
     });
   } catch (error) {
     if (error instanceof ArtworkMediaAccessError) {

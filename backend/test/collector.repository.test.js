@@ -124,4 +124,11 @@ test("listPersonalCollections backfills legacy artist collections before loading
   });
   assert.equal(calls.updateMany.data.artistId, 11);
   assert.equal(calls.findMany.where.userId, 7);
+  assert.deepEqual(calls.findMany.include.items.where, {
+    artwork: {
+      visibility: "PUBLISHED",
+      moderationStatus: "approved",
+      artist: { verified: true }
+    }
+  });
 });

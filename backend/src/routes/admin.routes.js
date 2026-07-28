@@ -566,6 +566,8 @@ function serializeAdminAuditLog(log) {
     entityLabel: getAdminAuditEntityLabel(log.entityType),
     entityId: log.entityId || "",
     ipAddress: log.ipAddress || "",
+    correlationId: log.correlationId || "",
+    metadata: log.metadata || null,
     createdAt: log.createdAt,
     actor: serializeAdminActor(log.user)
   };

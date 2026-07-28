@@ -4,6 +4,14 @@
     title="Artist public profile"
     description="Manage your public identity, visual assets and published portfolio."
   >
+    <p
+      v-if="deletionSuccessMessage"
+      class="rounded-2xl border border-emerald-700/60 bg-emerald-950/40 p-4 text-sm text-emerald-200"
+      role="status"
+    >
+      {{ deletionSuccessMessage }}
+    </p>
+
     <section
       v-if="loading"
       class="rounded-[24px] border border-slate-800 bg-violet-950 p-6 text-slate-400"
@@ -396,7 +404,10 @@
           <div class="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Portfolio</p>
-              <h2 class="mt-4 text-2xl font-semibold text-white">Published artworks</h2>
+              <h2 class="mt-4 text-2xl font-semibold text-white">My artworks</h2>
+              <p class="mt-2 max-w-2xl text-sm leading-6 text-[#A0ADB4]">
+                Manage active, hidden and archived artworks from one private workspace.
+              </p>
             </div>
             <NuxtLink
               v-if="artist.verified"
@@ -407,26 +418,74 @@
             </NuxtLink>
           </div>
 
+          <div
+            v-if="artist.verified"
+            class="mt-6 flex flex-wrap gap-2"
+            role="tablist"
+            aria-label="Filter my artworks by status"
+          >
+            <button
+              v-for="filter in artworkFilters"
+              :id="`artwork-filter-${filter.value.toLowerCase()}`"
+              :key="filter.value"
+              type="button"
+              role="tab"
+              :aria-selected="selectedArtworkVisibility === filter.value"
+              :aria-controls="`artwork-panel-${filter.value.toLowerCase()}`"
+              class="inline-flex min-h-11 items-center gap-2 rounded-2xl border px-4 text-sm font-semibold transition"
+              :class="
+                selectedArtworkVisibility === filter.value
+                  ? 'border-[#4A6CF7] bg-[#4A6CF7]/20 text-white'
+                  : 'border-[#24314F] bg-[#10151E] text-[#A0ADB4] hover:bg-[#1F273A] hover:text-white'
+              "
+              @click="selectedArtworkVisibility = filter.value"
+            >
+              {{ filter.label }}
+              <span
+                class="inline-flex min-w-6 items-center justify-center rounded-full bg-black/30 px-2 py-0.5 text-xs"
+                :aria-label="`${filter.count} artwork${filter.count === 1 ? '' : 's'}`"
+              >
+                {{ filter.count }}
+              </span>
+            </button>
+          </div>
+
           <div v-if="artworksLoading" class="mt-6 text-sm text-[#A0ADB4]">
             Loading your artworks...
           </div>
           <div
-            v-else-if="!publishedArtworks.length"
+            v-else-if="!filteredArtworks.length"
+            :id="`artwork-panel-${selectedArtworkVisibility.toLowerCase()}`"
+            role="tabpanel"
+            :aria-labelledby="`artwork-filter-${selectedArtworkVisibility.toLowerCase()}`"
             class="mt-6 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 text-sm leading-6 text-[#A0ADB4]"
           >
-            <span v-if="artist.verified">
-              You have not published any artwork yet. Launch your first release to appear in the
-              catalogue.
-            </span>
+            <template v-if="artist.verified">
+              <p class="font-semibold text-white">{{ emptyArtworkState.title }}</p>
+              <p class="mt-2">{{ emptyArtworkState.description }}</p>
+              <NuxtLink
+                v-if="emptyArtworkState.showCreateAction"
+                to="/artworks/new"
+                class="mt-4 inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#4A6CF7] px-5 font-semibold text-black transition hover:bg-[#6d8bff]"
+              >
+                Publish an artwork
+              </NuxtLink>
+            </template>
             <span v-else>
               Your artist profile must be approved before you can publish artworks.
             </span>
           </div>
-          <div v-else class="mt-6 grid gap-4">
+          <div
+            v-else
+            :id="`artwork-panel-${selectedArtworkVisibility.toLowerCase()}`"
+            role="tabpanel"
+            :aria-labelledby="`artwork-filter-${selectedArtworkVisibility.toLowerCase()}`"
+            class="mt-6 grid gap-4"
+          >
             <article
-              v-for="artwork in publishedArtworks"
+              v-for="artwork in filteredArtworks"
               :key="artwork.id"
-              class="flex flex-col gap-4 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 sm:flex-row sm:items-center sm:justify-between"
+              class="grid gap-5 rounded-[20px] border border-[#1A1F2A] bg-[#050916] p-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center"
             >
               <div class="flex items-center gap-4">
                 <div
@@ -445,7 +504,7 @@
                     MIA
                   </div>
                 </div>
-                <div>
+                <div class="min-w-0">
                   <p class="text-lg font-semibold text-white">
                     {{ artwork.title }}
                   </p>
@@ -453,14 +512,45 @@
                     {{ artwork.category?.name || "Sans categorie" }} ·
                     {{ formatArtworkPrice(artwork) }}
                   </p>
+                  <p class="mt-1 text-sm text-[#A0ADB4]">
+                    {{ formatArtworkLicenseType(artwork.licenseType) }}
+                  </p>
                 </div>
               </div>
-              <NuxtLink
-                :to="`/artworks/${artwork.id}`"
-                class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#24314F] bg-[#10151E] px-5 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
-              >
-                View artwork
-              </NuxtLink>
+              <div class="grid gap-3 xl:justify-items-end">
+                <div class="flex flex-wrap gap-2 xl:justify-end">
+                  <span
+                    class="rounded-full border px-3 py-1 text-xs font-semibold"
+                    :class="artworkVisibilityClass(artwork.visibility)"
+                  >
+                    {{ getArtworkVisibilityPresentation(artwork.visibility).label }}
+                  </span>
+                  <span
+                    class="rounded-full border px-3 py-1 text-xs font-semibold"
+                    :class="artworkAvailabilityClass(artwork)"
+                  >
+                    {{ formatCommercialAvailability(artwork) }}
+                  </span>
+                </div>
+                <div class="text-sm leading-6 text-[#A0ADB4] xl:text-right">
+                  <p v-if="artwork.management?.lifecycle?.hasConfirmedPurchase">
+                    Purchase recorded — history preserved
+                  </p>
+                  <p v-else>No purchase recorded</p>
+                  <p
+                    v-if="artwork.management?.lifecycle?.hasTransactionInProgress"
+                    class="text-amber-300"
+                  >
+                    Payment or reservation in progress
+                  </p>
+                </div>
+                <NuxtLink
+                  :to="`/artworks/${artwork.id}`"
+                  class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#24314F] bg-[#10151E] px-5 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+                >
+                  View private details
+                </NuxtLink>
+              </div>
             </article>
           </div>
         </div>
@@ -480,16 +570,27 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
+import {
+  ARTIST_ARTWORK_VISIBILITY_FILTERS,
+  filterArtistArtworksByVisibility,
+  formatArtworkLicenseType,
+  getArtworkAvailabilityPresentation,
+  getArtworkVisibilityPresentation,
+  normalizeArtistArtworkCounts
+} from "~/utils/marketplace.js";
 
 definePageMeta({
   middleware: "auth"
 });
 
 const artist = ref(null);
+const route = useRoute();
 const application = ref(null);
 const loading = ref(true);
 const artworksLoading = ref(false);
-const publishedArtworks = ref([]);
+const artistArtworks = ref([]);
+const artworkCounts = ref(normalizeArtistArtworkCounts(null));
+const selectedArtworkVisibility = ref("PUBLISHED");
 const missingArtist = ref(false);
 const errorMessage = ref("");
 const savingProfile = ref(false);
@@ -499,6 +600,9 @@ const selectedCoverImage = ref(null);
 const selectedCoverPreviewUrl = ref("");
 const profileSuccessMessage = ref("");
 const profileErrorMessage = ref("");
+const deletionSuccessMessage = computed(() =>
+  route.query.artworkDeleted === "1" ? "L’œuvre a été supprimée définitivement." : ""
+);
 const profileForm = reactive({
   displayName: "",
   bio: "",
@@ -512,6 +616,41 @@ const pendingApplication = computed(() =>
 const rejectedApplication = computed(() =>
   application.value?.status === "rejected" ? application.value : null
 );
+const artworkFilters = computed(() =>
+  ARTIST_ARTWORK_VISIBILITY_FILTERS.map((filter) => ({
+    ...filter,
+    count: artworkCounts.value[filter.value]
+  }))
+);
+const filteredArtworks = computed(() =>
+  filterArtistArtworksByVisibility(artistArtworks.value, selectedArtworkVisibility.value)
+);
+const emptyArtworkState = computed(() => {
+  if (selectedArtworkVisibility.value === "HIDDEN") {
+    return {
+      title: "No hidden artworks",
+      description:
+        "Artworks temporarily removed from sale will appear here, ready to be republished or archived.",
+      showCreateAction: false
+    };
+  }
+
+  if (selectedArtworkVisibility.value === "ARCHIVED") {
+    return {
+      title: "No archived artworks",
+      description:
+        "Artworks kept outside your active catalogue will appear here with their history.",
+      showCreateAction: false
+    };
+  }
+
+  return {
+    title: "No active artworks",
+    description:
+      "Publish your first artwork to offer it in the catalogue after moderation approval.",
+    showCreateAction: true
+  };
+});
 const userNameFallback = computed(
   () => artist.value?.username || application.value?.payload?.displayName || "Artist"
 );
@@ -621,9 +760,10 @@ function syncProfileForm(source) {
   selectedCoverImage.value = null;
 }
 
-async function loadPublishedArtworks() {
+async function loadArtistArtworks() {
   if (!artist.value?.verified) {
-    publishedArtworks.value = [];
+    artistArtworks.value = [];
+    artworkCounts.value = normalizeArtistArtworkCounts(null);
     return;
   }
 
@@ -634,9 +774,11 @@ async function loadPublishedArtworks() {
       credentials: "include"
     });
 
-    publishedArtworks.value = Array.isArray(response?.artworks) ? response.artworks : [];
+    artistArtworks.value = Array.isArray(response?.artworks) ? response.artworks : [];
+    artworkCounts.value = normalizeArtistArtworkCounts(response?.counts);
   } catch {
-    publishedArtworks.value = [];
+    artistArtworks.value = [];
+    artworkCounts.value = normalizeArtistArtworkCounts(null);
   } finally {
     artworksLoading.value = false;
   }
@@ -815,7 +957,7 @@ onMounted(async () => {
       missingArtist.value = true;
     } else if (response.artist) {
       syncProfileForm(response.artist);
-      await loadPublishedArtworks();
+      await loadArtistArtworks();
     }
   } catch (error) {
     errorMessage.value = error?.data?.message || "Unable to load the artist profile.";
@@ -830,6 +972,54 @@ function formatArtworkPrice(artwork) {
   }
 
   return "Price unavailable";
+}
+
+function formatCommercialAvailability(artwork) {
+  if (artwork?.visibility !== "PUBLISHED") {
+    return "Withdrawn from sale";
+  }
+
+  if (String(artwork?.moderationStatus || "").toLowerCase() !== "approved") {
+    return "Pending moderation";
+  }
+
+  return getArtworkAvailabilityPresentation(artwork).label;
+}
+
+function artworkVisibilityClass(visibility) {
+  const tone = getArtworkVisibilityPresentation(visibility).tone;
+
+  if (tone === "hidden") {
+    return "border-amber-700/60 bg-amber-950/40 text-amber-200";
+  }
+
+  if (tone === "archived") {
+    return "border-slate-700 bg-slate-900 text-slate-300";
+  }
+
+  return "border-emerald-700/60 bg-emerald-950/40 text-emerald-200";
+}
+
+function artworkAvailabilityClass(artwork) {
+  if (artwork?.visibility !== "PUBLISHED") {
+    return "border-slate-700 bg-slate-900 text-slate-300";
+  }
+
+  if (String(artwork?.moderationStatus || "").toLowerCase() !== "approved") {
+    return "border-amber-700/60 bg-amber-950/40 text-amber-200";
+  }
+
+  const tone = getArtworkAvailabilityPresentation(artwork).tone;
+
+  if (tone === "available") {
+    return "border-emerald-700/60 bg-emerald-950/40 text-emerald-200";
+  }
+
+  if (tone === "reserved") {
+    return "border-amber-700/60 bg-amber-950/40 text-amber-200";
+  }
+
+  return "border-red-900/60 bg-red-950/40 text-red-200";
 }
 
 function formatDate(value) {

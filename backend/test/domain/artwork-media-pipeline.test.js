@@ -80,3 +80,46 @@ test("processArtworkUpload stores HD and watermarked preview via local adapter",
     await fsp.rm(tempRoot, { recursive: true, force: true });
   }
 });
+
+test("deleteArtworkMediaAssets deduplicates keys and retries transient storage failures", async () => {
+  const pipelinePath = require.resolve("../../src/services/artwork-media-pipeline.service");
+  const storageIndexPath = require.resolve("../../src/services/artwork-storage/index.js");
+  const envPath = require.resolve("../../src/config/env");
+  const deleteAttempts = new Map();
+  const { moduleExports, restore } = loadModuleWithMocks(pipelinePath, {
+    [envPath]: {
+      artworkMedia: {
+        storageProvider: "local",
+        watermarkPublicPreviews: true
+      }
+    },
+    [storageIndexPath]: {
+      getArtworkStorageProvider() {
+        return {
+          name: "local",
+          async deleteObject(key) {
+            const attempts = (deleteAttempts.get(key) || 0) + 1;
+            deleteAttempts.set(key, attempts);
+            if (key === "preview.jpg" && attempts < 3) {
+              throw new Error("temporary storage outage");
+            }
+          }
+        };
+      }
+    }
+  });
+
+  try {
+    await moduleExports.deleteArtworkMediaAssets({
+      storageProvider: "local",
+      imagePath: "preview.jpg",
+      previewPath: "preview.jpg",
+      hdPath: "hd.png"
+    });
+
+    assert.equal(deleteAttempts.get("preview.jpg"), 3);
+    assert.equal(deleteAttempts.get("hd.png"), 1);
+  } finally {
+    restore();
+  }
+});

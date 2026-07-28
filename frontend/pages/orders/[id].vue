@@ -160,6 +160,13 @@
                   <p class="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#BFD0FF]">
                     {{ formatArtworkLicenseType(item.licenseType) }}
                   </p>
+                  <p
+                    v-if="item.publicAccess?.withdrawnFromPublic"
+                    class="mt-2 text-xs leading-5 text-[#A0ADB4]"
+                  >
+                    Cette œuvre n’est plus publique. Les informations et droits liés à votre achat
+                    restent disponibles dans cette commande privée.
+                  </p>
                 </div>
                 <span
                   class="inline-flex items-center rounded-full bg-[#1c3350] px-3 py-2 text-xs font-semibold text-[#67b7ff]"
@@ -185,6 +192,13 @@
                   <p class="mt-1 text-xs leading-5 text-[#A0ADB4]">
                     {{ deliveryStatus(item.delivery.downloadRights.status).message }}
                   </p>
+                  <a
+                    v-if="item.delivery.downloadRights.downloadUrl"
+                    :href="item.delivery.downloadRights.downloadUrl"
+                    class="mt-3 inline-flex min-h-10 items-center justify-center rounded-xl bg-[#4A6CF7] px-4 text-xs font-semibold text-black transition hover:bg-[#6D8BFF]"
+                  >
+                    Télécharger le fichier HD
+                  </a>
                 </div>
 
                 <div

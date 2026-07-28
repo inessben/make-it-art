@@ -199,6 +199,9 @@ router.get("/artworks", attachViewer, async (req, res) => {
 });
 
 router.get("/artworks/:id(\\d+)", attachViewer, async (req, res) => {
+  res.set("Cache-Control", "private, no-store");
+  res.vary("Cookie");
+
   try {
     const artworkId = normalizeResourceId(req.params.id);
 
@@ -226,9 +229,10 @@ router.get("/artworks/:id(\\d+)", attachViewer, async (req, res) => {
       categoryId: artwork.categoryId,
       limit: 4
     });
+    const isOwner = Boolean(req.viewer?.id) && artwork.artist?.userId === req.viewer.id;
 
     return res.status(200).json({
-      artwork: serializeArtwork(artwork),
+      artwork: serializeArtwork(artwork, { includeManagement: isOwner }),
       relatedArtworks: relatedArtworks.map((item) => serializeArtwork(item))
     });
   } catch (error) {

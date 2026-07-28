@@ -1,6 +1,7 @@
 const express = require("express");
 const { authRequired } = require("../middlewares/auth-required.middleware");
 const { csrfProtection } = require("../middlewares/csrf.middleware");
+const { artworkManagementRateLimit } = require("../middlewares/rate-limit.middleware");
 const { isAdminUser } = require("../middlewares/admin-required.middleware");
 const { ensureVerifiedArtist } = require("../middlewares/artist-required.middleware");
 const artistApplicationDraftRepository = require("../repositories/artist-application-draft.repository");
@@ -229,6 +230,7 @@ function isApplicationLocked(application) {
 
 function normalizeArtworkInput(input = {}) {
   const categoryId = Number.parseInt(input.categoryId, 10);
+  const expectedVersion = Number.parseInt(input.expectedVersion, 10);
 
   return {
     title: normalizeText(input.title),
@@ -236,7 +238,10 @@ function normalizeArtworkInput(input = {}) {
     categoryId: Number.isInteger(categoryId) && categoryId > 0 ? categoryId : null,
     price: normalizeText(input.price) || normalizeText(input.priceTokens),
     licenseType: normalizeArtworkLicenseType(input.licenseType),
-    protection: input.protection === true || input.protection === "true" || input.protection === "1"
+    protection:
+      input.protection === true || input.protection === "true" || input.protection === "1",
+    expectedVersion:
+      Number.isSafeInteger(expectedVersion) && expectedVersion > 0 ? expectedVersion : null
   };
 }
 
@@ -313,6 +318,70 @@ function mapArtworkRouteError(error) {
     };
   }
 
+  if (error?.message === "ARTWORK_HAS_PURCHASES") {
+    return {
+      status: 409,
+      code: "ARTWORK_HAS_PURCHASES",
+      message: "Cette oeuvre a deja ete achetee et ne peut plus etre modifiee."
+    };
+  }
+
+  if (error?.message === "ARTWORK_TRANSACTION_IN_PROGRESS") {
+    return {
+      status: 409,
+      code: "ARTWORK_TRANSACTION_IN_PROGRESS",
+      message: "Un paiement ou une reservation est en cours pour cette oeuvre."
+    };
+  }
+
+  if (error?.message === "ARTWORK_ARCHIVED") {
+    return {
+      status: 409,
+      code: "ARTWORK_ARCHIVED",
+      message: "Restaurez cette oeuvre avant de la modifier ou de la supprimer."
+    };
+  }
+
+  if (error?.message === "ARTWORK_VERSION_CONFLICT" || error?.code === "P2034") {
+    return {
+      status: 409,
+      code: "ARTWORK_VERSION_CONFLICT",
+      message: "Cette oeuvre a ete modifiee entre-temps. Rechargez la fiche."
+    };
+  }
+
+  if (error?.message === "ARTWORK_NOT_PUBLISHED") {
+    return {
+      status: 409,
+      code: "ARTWORK_NOT_PUBLISHED",
+      message: "Seule une oeuvre publiee peut etre masquee."
+    };
+  }
+
+  if (error?.message === "ARTWORK_NOT_HIDDEN") {
+    return {
+      status: 409,
+      code: "ARTWORK_NOT_HIDDEN",
+      message: "Seule une oeuvre masquee peut etre republiee."
+    };
+  }
+
+  if (error?.message === "ARTWORK_MODERATION_BLOCKED") {
+    return {
+      status: 409,
+      code: "ARTWORK_MODERATION_BLOCKED",
+      message: "La moderation actuelle ne permet pas de republier cette oeuvre."
+    };
+  }
+
+  if (error?.message === "ARTWORK_NOT_ARCHIVED") {
+    return {
+      status: 409,
+      code: "ARTWORK_NOT_ARCHIVED",
+      message: "Seule une oeuvre archivee peut etre restauree."
+    };
+  }
+
   if (error?.message === "CATEGORY_NOT_FOUND") {
     return {
       status: 400,
@@ -328,6 +397,44 @@ function mapArtworkRouteError(error) {
   }
 
   return null;
+}
+
+function artworkAuditContext(req) {
+  return {
+    actorUserId: req.user?.id,
+    ipAddress: req.ip,
+    correlationId: req.supportReference || null
+  };
+}
+
+function sendArtworkMutationFailure(req, res, { action, error, fallbackMessage }) {
+  const mappedError = mapArtworkRouteError(error);
+  const correlationId = req.supportReference || null;
+  const logContext = {
+    action,
+    reasonCode: mappedError?.code || error?.message || "ARTWORK_MANAGEMENT_ERROR",
+    correlationId
+  };
+
+  res.set("Cache-Control", "private, no-store");
+
+  if (mappedError) {
+    console.warn("Artist artwork management rejected", logContext);
+    return res.status(mappedError.status).json({
+      message: mappedError.message,
+      ...(mappedError.code ? { code: mappedError.code } : {}),
+      ...(correlationId ? { supportReference: correlationId } : {})
+    });
+  }
+
+  console.error("Artist artwork management failed", {
+    ...logContext,
+    errorName: error?.name || "Error"
+  });
+  return res.status(500).json({
+    message: fallbackMessage,
+    ...(correlationId ? { supportReference: correlationId } : {})
+  });
 }
 
 function buildContractFilename(applicationOrArtistPayload, fallbackName = "artiste") {
@@ -977,14 +1084,52 @@ router.get("/artists/me/contract.pdf", async (req, res) => {
 router.get("/artists/me/artworks", ensureVerifiedArtist, async (req, res) => {
   try {
     const artworks = await artworkRepository.listArtworksByArtistId(req.artist.id);
+    const serializedArtworks = artworks.map((artwork) =>
+      serializeArtwork(artwork, { includeManagement: true })
+    );
+    const counts = serializedArtworks.reduce(
+      (summary, artwork) => {
+        summary.total += 1;
+        summary[artwork.visibility] += 1;
+        return summary;
+      },
+      { total: 0, PUBLISHED: 0, HIDDEN: 0, ARCHIVED: 0 }
+    );
 
     return res.status(200).json({
-      artworks: artworks.map((artwork) => serializeArtwork(artwork))
+      artworks: serializedArtworks,
+      counts
     });
   } catch (error) {
     console.error("Artist artworks fetch error:", error);
     return res.status(500).json({
       message: "Impossible de charger vos oeuvres."
+    });
+  }
+});
+
+router.get("/artists/me/artworks/:id(\\d+)", ensureVerifiedArtist, async (req, res) => {
+  try {
+    const artworkId = Number.parseInt(req.params.id, 10);
+    const artwork = await artworkRepository.findOwnedArtwork({
+      artworkId,
+      artistId: req.artist.id
+    });
+
+    if (!artwork) {
+      return res.status(404).json({
+        message: "Oeuvre introuvable.",
+        code: "ARTWORK_NOT_FOUND"
+      });
+    }
+
+    return res.status(200).json({
+      artwork: serializeArtwork(artwork, { includeManagement: true })
+    });
+  } catch (error) {
+    console.error("Artist artwork detail fetch error:", error);
+    return res.status(500).json({
+      message: "Impossible de charger cette oeuvre."
     });
   }
 });
@@ -1030,7 +1175,7 @@ router.post("/artists/me/artworks", ensureVerifiedArtist, handleArtworkUpload, a
 
     return res.status(201).json({
       message: "Oeuvre publiee et visible dans le catalogue.",
-      artwork: serializeArtwork(artwork)
+      artwork: serializeArtwork(artwork, { includeManagement: true })
     });
   } catch (error) {
     const mappedError = mapArtworkRouteError(error);
@@ -1063,77 +1208,292 @@ router.post("/artists/me/artworks", ensureVerifiedArtist, handleArtworkUpload, a
   }
 });
 
-router.patch("/artists/me/artworks/:id(\\d+)", ensureVerifiedArtist, async (req, res) => {
-  try {
-    const artworkId = Number.parseInt(req.params.id, 10);
-    const input = normalizeArtworkInput(req.body);
-    const validationError = validateArtworkInput(input);
+router.patch(
+  "/artists/me/artworks/:id(\\d+)",
+  ensureVerifiedArtist,
+  csrfProtection,
+  handleArtworkUpload,
+  async (req, res) => {
+    let replacementMedia = null;
+    let previousArtwork = null;
 
-    if (validationError) {
-      return res.status(400).json({
-        message: validationError
+    try {
+      const artworkId = Number.parseInt(req.params.id, 10);
+      const input = normalizeArtworkInput(req.body);
+      const validationError = validateArtworkInput(input);
+
+      if (validationError) {
+        return res.status(400).json({
+          message: validationError
+        });
+      }
+
+      if (!input.expectedVersion) {
+        return res.status(400).json({
+          message: "La version de l'oeuvre est requise.",
+          code: "ARTWORK_VERSION_REQUIRED"
+        });
+      }
+
+      const categoryId = await resolveCategoryId(input);
+      previousArtwork = await artworkRepository.findOwnedArtwork({
+        artworkId,
+        artistId: req.artist.id
+      });
+
+      if (!previousArtwork) {
+        return res.status(404).json({
+          message: "Oeuvre introuvable.",
+          code: "ARTWORK_NOT_FOUND"
+        });
+      }
+
+      if (req.file) {
+        replacementMedia = await processArtworkUpload({
+          uploadedFile: req.file,
+          applyWatermark: env.artworkMedia.watermarkPublicPreviews || input.protection,
+          storageProviderName: env.artworkMedia.storageProvider
+        });
+      }
+
+      const artwork = await artworkRepository.updateArtwork({
+        artworkId,
+        artistId: req.artist.id,
+        title: input.title,
+        description: input.description,
+        categoryId,
+        price: input.price,
+        licenseType: input.licenseType,
+        protection: input.protection,
+        expectedVersion: input.expectedVersion,
+        media: replacementMedia,
+        audit: artworkAuditContext(req)
+      });
+
+      if (replacementMedia) {
+        await deleteArtworkMediaAssets(previousArtwork, {
+          action: "ARTWORK_MEDIA_REPLACED",
+          correlationId: req.supportReference
+        });
+      }
+
+      res.set("Cache-Control", "private, no-store");
+      return res.status(200).json({
+        message: "Oeuvre mise a jour.",
+        artwork: serializeArtwork(artwork, { includeManagement: true })
+      });
+    } catch (error) {
+      if (replacementMedia) {
+        await deleteArtworkMediaAssets(replacementMedia, {
+          action: "ARTWORK_MEDIA_ROLLBACK",
+          correlationId: req.supportReference
+        });
+      }
+      return sendArtworkMutationFailure(req, res, {
+        action: "ARTWORK_UPDATED",
+        error,
+        fallbackMessage: "Impossible de mettre a jour cette oeuvre."
       });
     }
-
-    const categoryId = await resolveCategoryId(input);
-    const artwork = await artworkRepository.updateArtwork({
-      artworkId,
-      artistId: req.artist.id,
-      title: input.title,
-      description: input.description,
-      categoryId,
-      price: input.price,
-      licenseType: input.licenseType,
-      protection: input.protection
-    });
-
-    return res.status(200).json({
-      message: "Oeuvre mise a jour et republiee.",
-      artwork: serializeArtwork(artwork)
-    });
-  } catch (error) {
-    const mappedError = mapArtworkRouteError(error);
-
-    if (mappedError) {
-      return res.status(mappedError.status).json({
-        message: mappedError.message
-      });
-    }
-
-    console.error("Artist artwork update error:", error);
-    return res.status(500).json({
-      message: "Impossible de mettre a jour cette oeuvre."
-    });
   }
-});
+);
 
-router.delete("/artists/me/artworks/:id(\\d+)", ensureVerifiedArtist, async (req, res) => {
-  try {
-    const artworkId = Number.parseInt(req.params.id, 10);
+router.delete(
+  "/artists/me/artworks/:id(\\d+)",
+  ensureVerifiedArtist,
+  artworkManagementRateLimit,
+  csrfProtection,
+  async (req, res) => {
+    try {
+      const artworkId = Number.parseInt(req.params.id, 10);
+      const expectedVersion = Number.parseInt(req.body?.expectedVersion, 10);
 
-    const deleted = await artworkRepository.deleteArtwork({
-      artworkId,
-      artistId: req.artist.id
-    });
-    await deleteArtworkMediaAssets(deleted);
+      if (!Number.isSafeInteger(expectedVersion) || expectedVersion <= 0) {
+        return res.status(400).json({
+          message: "La version de l'oeuvre est requise.",
+          code: "ARTWORK_VERSION_REQUIRED"
+        });
+      }
 
-    return res.status(200).json({
-      message: "Oeuvre supprimee."
-    });
-  } catch (error) {
-    const mappedError = mapArtworkRouteError(error);
+      const deleted = await artworkRepository.deleteArtwork({
+        artworkId,
+        artistId: req.artist.id,
+        expectedVersion,
+        audit: artworkAuditContext(req)
+      });
+      await deleteArtworkMediaAssets(deleted, {
+        action: "ARTWORK_DELETED",
+        correlationId: req.supportReference
+      });
 
-    if (mappedError) {
-      return res.status(mappedError.status).json({
-        message: mappedError.message
+      res.set("Cache-Control", "private, no-store");
+      return res.status(200).json({
+        message: "Oeuvre supprimee definitivement."
+      });
+    } catch (error) {
+      return sendArtworkMutationFailure(req, res, {
+        action: "ARTWORK_DELETED",
+        error,
+        fallbackMessage: "Impossible de supprimer cette oeuvre."
       });
     }
-
-    console.error("Artist artwork delete error:", error);
-    return res.status(500).json({
-      message: "Impossible de supprimer cette oeuvre."
-    });
   }
-});
+);
+
+router.post(
+  "/artists/me/artworks/:id(\\d+)/hide",
+  ensureVerifiedArtist,
+  artworkManagementRateLimit,
+  csrfProtection,
+  async (req, res) => {
+    try {
+      const artworkId = Number.parseInt(req.params.id, 10);
+      const expectedVersion = Number.parseInt(req.body?.expectedVersion, 10);
+
+      if (!Number.isSafeInteger(expectedVersion) || expectedVersion <= 0) {
+        return res.status(400).json({
+          message: "La version de l'oeuvre est requise.",
+          code: "ARTWORK_VERSION_REQUIRED"
+        });
+      }
+
+      const artwork = await artworkRepository.hideArtwork({
+        artworkId,
+        artistId: req.artist.id,
+        expectedVersion,
+        audit: artworkAuditContext(req)
+      });
+
+      res.set("Cache-Control", "private, no-store");
+      return res.status(200).json({
+        message: "Oeuvre masquee. Les nouveaux achats sont suspendus.",
+        artwork: serializeArtwork(artwork, { includeManagement: true })
+      });
+    } catch (error) {
+      return sendArtworkMutationFailure(req, res, {
+        action: "ARTWORK_HIDDEN",
+        error,
+        fallbackMessage: "Impossible de masquer cette oeuvre."
+      });
+    }
+  }
+);
+
+router.post(
+  "/artists/me/artworks/:id(\\d+)/publish",
+  ensureVerifiedArtist,
+  artworkManagementRateLimit,
+  csrfProtection,
+  async (req, res) => {
+    try {
+      const artworkId = Number.parseInt(req.params.id, 10);
+      const expectedVersion = Number.parseInt(req.body?.expectedVersion, 10);
+
+      if (!Number.isSafeInteger(expectedVersion) || expectedVersion <= 0) {
+        return res.status(400).json({
+          message: "La version de l'oeuvre est requise.",
+          code: "ARTWORK_VERSION_REQUIRED"
+        });
+      }
+
+      const artwork = await artworkRepository.publishArtwork({
+        artworkId,
+        artistId: req.artist.id,
+        expectedVersion,
+        audit: artworkAuditContext(req)
+      });
+
+      res.set("Cache-Control", "private, no-store");
+      return res.status(200).json({
+        message: "Oeuvre republiee.",
+        artwork: serializeArtwork(artwork, { includeManagement: true })
+      });
+    } catch (error) {
+      return sendArtworkMutationFailure(req, res, {
+        action: "ARTWORK_PUBLISHED",
+        error,
+        fallbackMessage: "Impossible de republier cette oeuvre."
+      });
+    }
+  }
+);
+
+router.post(
+  "/artists/me/artworks/:id(\\d+)/archive",
+  ensureVerifiedArtist,
+  artworkManagementRateLimit,
+  csrfProtection,
+  async (req, res) => {
+    try {
+      const artworkId = Number.parseInt(req.params.id, 10);
+      const expectedVersion = Number.parseInt(req.body?.expectedVersion, 10);
+
+      if (!Number.isSafeInteger(expectedVersion) || expectedVersion <= 0) {
+        return res.status(400).json({
+          message: "La version de l'oeuvre est requise.",
+          code: "ARTWORK_VERSION_REQUIRED"
+        });
+      }
+
+      const artwork = await artworkRepository.archiveArtwork({
+        artworkId,
+        artistId: req.artist.id,
+        expectedVersion,
+        audit: artworkAuditContext(req)
+      });
+
+      res.set("Cache-Control", "private, no-store");
+      return res.status(200).json({
+        message: "Oeuvre archivee. Son historique et les droits acquis sont conserves.",
+        artwork: serializeArtwork(artwork, { includeManagement: true })
+      });
+    } catch (error) {
+      return sendArtworkMutationFailure(req, res, {
+        action: "ARTWORK_ARCHIVED",
+        error,
+        fallbackMessage: "Impossible d'archiver cette oeuvre."
+      });
+    }
+  }
+);
+
+router.post(
+  "/artists/me/artworks/:id(\\d+)/restore",
+  ensureVerifiedArtist,
+  artworkManagementRateLimit,
+  csrfProtection,
+  async (req, res) => {
+    try {
+      const artworkId = Number.parseInt(req.params.id, 10);
+      const expectedVersion = Number.parseInt(req.body?.expectedVersion, 10);
+
+      if (!Number.isSafeInteger(expectedVersion) || expectedVersion <= 0) {
+        return res.status(400).json({
+          message: "La version de l'oeuvre est requise.",
+          code: "ARTWORK_VERSION_REQUIRED"
+        });
+      }
+
+      const artwork = await artworkRepository.restoreArtwork({
+        artworkId,
+        artistId: req.artist.id,
+        expectedVersion,
+        audit: artworkAuditContext(req)
+      });
+
+      res.set("Cache-Control", "private, no-store");
+      return res.status(200).json({
+        message: "Oeuvre restauree dans vos oeuvres masquees.",
+        artwork: serializeArtwork(artwork, { includeManagement: true })
+      });
+    } catch (error) {
+      return sendArtworkMutationFailure(req, res, {
+        action: "ARTWORK_RESTORED",
+        error,
+        fallbackMessage: "Impossible de restaurer cette oeuvre."
+      });
+    }
+  }
+);
 
 module.exports = router;
