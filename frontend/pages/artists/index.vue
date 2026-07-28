@@ -187,7 +187,7 @@ const pageSize = 12;
 const quickFilters = [
   { label: "All Artists", value: "all" },
   { label: "3D Art", value: "3d-art" },
-  { label: "Generative", value: "generative" },
+  { label: "Photography", value: "photography" },
   { label: "Fine Art", value: "fine-art" },
   { label: "Illustration", value: "illustration" }
 ];
@@ -340,8 +340,8 @@ function resolveFilterKey(value) {
     return "illustration";
   }
 
-  if (normalized.includes("generative")) {
-    return "generative";
+  if (normalized.includes("photography") || normalized.includes("photo")) {
+    return "photography";
   }
 
   return "fine-art";
@@ -375,8 +375,12 @@ function matchesQuickFilter(artist, filter) {
     return haystack.includes("3d") || haystack.includes("3-d") || haystack.includes("motion");
   }
 
-  if (filter === "generative") {
-    return haystack.includes("generative") || haystack.includes("algorithmic");
+  if (filter === "photography") {
+    return (
+      haystack.includes("photography") ||
+      haystack.includes("photo") ||
+      haystack.includes("photographic")
+    );
   }
 
   if (filter === "illustration") {
@@ -391,8 +395,7 @@ function matchesQuickFilter(artist, filter) {
     haystack.includes("digital art") ||
     haystack.includes("fine art") ||
     haystack.includes("painting") ||
-    haystack.includes("mixed media") ||
-    haystack.includes("photography")
+    haystack.includes("mixed media")
   );
 }
 
