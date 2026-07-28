@@ -48,14 +48,18 @@
         <span class="rounded-full bg-violet-700/10 px-3 py-1 text-violet-200">
           {{ artwork.category?.name || "Digital artwork" }}
         </span>
+        <span class="rounded-full bg-[#241D3D] px-3 py-1 text-[#D8C8FF]">
+          {{ formatArtworkLicenseType(artwork.licenseType) }}
+        </span>
         <span class="rounded-full bg-slate-850 px-3 py-1 text-slate-500">
           {{ formattedDate }}
         </span>
         <span
-          v-if="!artwork.isAvailableForPurchase"
-          class="rounded-full bg-[#3A1A1A] px-3 py-1 text-[#F5A8A8]"
+          v-if="artwork.licenseType === 'EXCLUSIVE' || !artwork.isAvailableForPurchase"
+          class="rounded-full px-3 py-1"
+          :class="availabilityClass"
         >
-          Unavailable
+          {{ availability.label }}
         </span>
       </div>
 
@@ -99,9 +103,11 @@
 <script setup>
 import { computed } from "vue";
 import {
+  formatArtworkLicenseType,
   formatMarketplaceDate,
   formatMarketplacePrice,
-  getArtistInitials
+  getArtistInitials,
+  getArtworkAvailabilityPresentation
 } from "~/utils/marketplace";
 
 const props = defineProps({
@@ -126,6 +132,16 @@ const formattedPrice = computed(() => {
 });
 
 const formattedDate = computed(() => formatMarketplaceDate(props.artwork.createdAt));
+const availability = computed(() => getArtworkAvailabilityPresentation(props.artwork));
+const availabilityClass = computed(() => {
+  const tones = {
+    available: "bg-[#10261A] text-[#9DE2B4]",
+    reserved: "bg-[#2B220E] text-[#F7D990]",
+    sold: "bg-[#3A1A1A] text-[#F5A8A8]",
+    unavailable: "bg-slate-850 text-slate-400"
+  };
+  return tones[availability.value.tone] || tones.unavailable;
+});
 const initials = computed(() =>
   getArtistInitials(props.artwork.artist?.displayName || props.artwork.title)
 );

@@ -1,5 +1,5 @@
 <template>
-  <main :class="props.embedded ? 'text-slate-100' : 'min-h-screen bg-black text-slate-100'">
+  <main :class="props.embedded ? 'text-slate-100' : 'min-h-full bg-black text-slate-100'">
     <div
       :class="
         props.embedded

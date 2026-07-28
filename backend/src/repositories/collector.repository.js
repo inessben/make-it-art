@@ -362,20 +362,57 @@ async function followArtist({ userId, artistId }) {
     throw new Error("SELF_FOLLOW_NOT_ALLOWED");
   }
 
-  await prisma.follow.upsert({
+  const existingFollow = await prisma.follow.findUnique({
     where: {
       userId_artistId: {
         userId,
         artistId
       }
-    },
-    create: {
-      userId,
-      artistId,
-      createdAt: new Date()
-    },
-    update: {}
+    }
   });
+
+  if (existingFollow) {
+    return {
+      artist,
+      follow: existingFollow,
+      created: false
+    };
+  }
+
+  try {
+    const follow = await prisma.follow.create({
+      data: {
+        userId,
+        artistId,
+        createdAt: new Date()
+      }
+    });
+
+    return {
+      artist,
+      follow,
+      created: true
+    };
+  } catch (error) {
+    if (error?.code !== "P2002") {
+      throw error;
+    }
+
+    const follow = await prisma.follow.findUnique({
+      where: {
+        userId_artistId: {
+          userId,
+          artistId
+        }
+      }
+    });
+
+    return {
+      artist,
+      follow,
+      created: false
+    };
+  }
 }
 
 async function unfollowArtist({ userId, artistId }) {

@@ -31,6 +31,7 @@ function certificateSnapshot(order, item) {
     artworkId: item.artworkId,
     artworkTitle: item.artworkTitle,
     artistName: item.artistName,
+    licenseType: item.licenseType,
     owner: order.user.username,
     quantity: item.quantity,
     unitAmount: item.unitAmount,

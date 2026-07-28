@@ -50,6 +50,11 @@ function mapCheckoutError(error) {
         status: 409,
         message: "Une ou plusieurs oeuvres ne sont plus disponibles a l'achat."
       };
+    case "EXCLUSIVE_CHECKOUT_REQUIRES_SECURE_FLOW":
+      return {
+        status: 409,
+        message: "Cette oeuvre exclusive doit etre achetee depuis le panier securise."
+      };
     default:
       return null;
   }
@@ -131,6 +136,7 @@ router.get("/orders", authRequired, async (req, res) => {
         artworks: order.items.map((item) => ({
           id: item.artwork.id,
           title: item.artwork.title,
+          licenseType: item.licenseType,
           priceTokens: item.priceTokens || formatAmount(item.unitAmount, item.currency),
           unitAmount: item.unitAmount,
           currency: item.currency
@@ -184,6 +190,7 @@ router.get("/orders/:id", authRequired, async (req, res) => {
           id: item.id,
           artworkId: item.artworkId,
           artworkTitle: item.artwork.title,
+          licenseType: item.licenseType,
           priceTokens: item.priceTokens || formatAmount(item.unitAmount, item.currency),
           unitAmount: item.unitAmount,
           currency: item.currency

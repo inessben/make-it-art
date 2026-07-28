@@ -35,6 +35,7 @@ const config: Partial<Config> = {
         }
       },
       fontFamily: {
+        geist: ["Geist", "Hanken Grotesk", "ui-sans-serif", "system-ui", "sans-serif"],
         sans: ["Hanken Grotesk", "ui-sans-serif", "system-ui", "sans-serif"]
       },
       fontSize: {

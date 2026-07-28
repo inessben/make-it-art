@@ -1,4 +1,4 @@
-﻿const express = require("express");
+const express = require("express");
 const { authRequired } = require("../middlewares/auth-required.middleware");
 const { walletWriteRateLimit } = require("../middlewares/rate-limit.middleware");
 const cdpAuthService = require("../services/cdp-auth.service");
@@ -21,7 +21,11 @@ router.get("/.well-known/jwks.json", (_req, res) => {
 });
 router.get("/wallets/me", authRequired, async (req, res) => {
   try {
-    return res.status(200).json({ wallets: await walletService.listWallets(req.user) });
+    const [wallets, consent] = await Promise.all([
+      walletService.listWallets(req.user),
+      walletService.getLatestConsent(req.user)
+    ]);
+    return res.status(200).json({ wallets, consent });
   } catch (error) {
     return sendError(res, error);
   }
@@ -29,12 +33,10 @@ router.get("/wallets/me", authRequired, async (req, res) => {
 router.post("/wallets/consent", authRequired, walletWriteRateLimit, async (req, res) => {
   try {
     if (typeof req.body?.accepted !== "boolean")
-      return res
-        .status(400)
-        .json({
-          message: "Wallet consent decision is required",
-          code: "CONSENT_DECISION_REQUIRED"
-        });
+      return res.status(400).json({
+        message: "Wallet consent decision is required",
+        code: "CONSENT_DECISION_REQUIRED"
+      });
     return res
       .status(201)
       .json({ consent: await walletService.recordConsent(req.user, req.body.accepted) });
@@ -60,25 +62,21 @@ router.post("/wallets/:id/cdp-token", authRequired, walletWriteRateLimit, async 
 });
 router.post("/wallets/:id/complete", authRequired, walletWriteRateLimit, async (req, res) => {
   try {
-    return res
-      .status(200)
-      .json({
-        wallet: await walletService.completeCreation(req.user, req.params.id, {
-          accessToken: req.body?.accessToken,
-          address: req.body?.address
-        })
-      });
+    return res.status(200).json({
+      wallet: await walletService.completeCreation(req.user, req.params.id, {
+        accessToken: req.body?.accessToken,
+        address: req.body?.address
+      })
+    });
   } catch (error) {
     return sendError(res, error);
   }
 });
 router.post("/wallets/:id/failure", authRequired, walletWriteRateLimit, async (req, res) => {
   try {
-    return res
-      .status(200)
-      .json({
-        wallet: await walletService.markCreationFailed(req.user, req.params.id, req.body?.code)
-      });
+    return res.status(200).json({
+      wallet: await walletService.markCreationFailed(req.user, req.params.id, req.body?.code)
+    });
   } catch (error) {
     return sendError(res, error);
   }

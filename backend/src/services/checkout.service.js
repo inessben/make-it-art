@@ -10,6 +10,7 @@ const {
 const { isPaymentIntentReusable } = require("../domain/payment-intent-state");
 const { getStripeClient } = require("../lib/stripe");
 const { getCartSummary, withLockedPayableCart } = require("./cart.service");
+const { isExclusiveArtworkLicenseType } = require("../constants/artwork-license-types");
 const { cancelSupersededCheckouts, CheckoutRecoveryError } = require("./checkout-recovery.service");
 const { reconcilePaymentIntent } = require("./payment-monitoring.service");
 const { tryCreatePaymentCustomerContext } = require("./saved-payment-method.service");
@@ -162,6 +163,9 @@ async function createPendingCheckout({
       assertAmountSupported(cartSummary.totalAmount);
 
       const expiresAt = new Date(Date.now() + RESERVATION_DURATION_MS);
+      const reservableItems = cartSummary.items.filter((item) =>
+        isExclusiveArtworkLicenseType(item.licenseType)
+      );
       const order = await transaction.order.create({
         data: {
           userId,
@@ -188,6 +192,7 @@ async function createPendingCheckout({
               artworkId: item.artworkId,
               artworkTitle: item.title,
               artistName: item.artistName,
+              licenseType: item.licenseType,
               quantity: item.quantity,
               unitAmount: item.unitAmount,
               subtotalAmount: item.subtotalAmount,
@@ -200,13 +205,17 @@ async function createPendingCheckout({
               currency: item.currency
             }))
           },
-          reservations: {
-            create: cartSummary.items.map((item) => ({
-              artworkId: item.artworkId,
-              quantity: item.quantity,
-              expiresAt
-            }))
-          },
+          ...(reservableItems.length > 0
+            ? {
+                reservations: {
+                  create: reservableItems.map((item) => ({
+                    artworkId: item.artworkId,
+                    quantity: item.quantity,
+                    expiresAt
+                  }))
+                }
+              }
+            : {}),
           payments: {
             create: {
               checkoutVersion: 1,
@@ -219,13 +228,28 @@ async function createPendingCheckout({
         include: { payments: true }
       });
 
-      for (const item of cartSummary.items) {
-        await transaction.artwork.update({
-          where: { id: item.artworkId },
+      for (const item of reservableItems) {
+        const reservation = await transaction.artwork.updateMany({
+          where: {
+            id: item.artworkId,
+            licenseType: "EXCLUSIVE",
+            saleStatus: "AVAILABLE",
+            isSold: false,
+            stockQuantity: 1,
+            reservedQuantity: 0
+          },
           data: {
-            reservedQuantity: { increment: item.quantity }
+            reservedQuantity: 1
           }
         });
+
+        if (item.quantity !== 1 || reservation.count !== 1) {
+          throw new CheckoutError(
+            "EXCLUSIVE_ARTWORK_UNAVAILABLE",
+            "This exclusive artwork is already reserved or sold",
+            409
+          );
+        }
       }
 
       return {
@@ -559,8 +583,12 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
       throw new Error("CANNOT_BUY_OWN_ARTWORK");
     }
 
-    if (artwork.isSold) {
+    if (artwork.licenseType === "EXCLUSIVE" && artwork.isSold) {
       throw new Error("ARTWORK_ALREADY_SOLD");
+    }
+
+    if (artwork.licenseType === "EXCLUSIVE") {
+      throw new Error("EXCLUSIVE_CHECKOUT_REQUIRES_SECURE_FLOW");
     }
 
     const unitPrice = parsePriceValue(artwork.price || artwork.priceTokens);
@@ -576,6 +604,7 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
       lineItems.push({
         artworkId: artwork.id,
         artwork,
+        licenseType: artwork.licenseType || "PERSONAL",
         quantity: 1,
         unitPrice,
         lineTotal: unitPrice
@@ -587,6 +616,7 @@ async function createCheckout({ userId, items, paymentMethod, billingEmail }) {
     userId,
     lineItems: lineItems.map((lineItem) => ({
       artworkId: lineItem.artworkId,
+      licenseType: lineItem.licenseType,
       unitPrice: lineItem.unitPrice
     })),
     paymentMethod: paymentMethod || "card",

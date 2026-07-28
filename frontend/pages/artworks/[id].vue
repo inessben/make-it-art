@@ -1,23 +1,16 @@
 <template>
   <main class="min-h-screen bg-black px-4 py-6 text-slate-100 sm:px-6 sm:py-10">
-    <section class="mx-auto w-full max-w-[1280px]">
-      <NuxtLink
-        to="/artworks"
-        class="inline-flex min-h-11 items-center border border-slate-800 bg-slate-950 px-5 text-subtitle-2 uppercase tracking-[0.12em] text-slate-300 transition hover:border-violet-600"
-      >
-        Back to marketplace
-      </NuxtLink>
-
+    <section class="mx-auto w-full max-w-[1360px]">
       <AppStatePanel
         v-if="pending"
-        class="mt-6"
+        class="mt-8"
         type="loading"
         title="Loading artwork"
         message="Artwork details are being retrieved."
       />
       <AppStatePanel
         v-else-if="errorMessage"
-        class="mt-6"
+        class="mt-8"
         type="error"
         title="Unable to load this artwork"
         :message="errorMessage"
@@ -27,7 +20,7 @@
       />
       <AppStatePanel
         v-else-if="!artwork"
-        class="mt-6"
+        class="mt-8"
         type="empty"
         title="Artwork not found"
         message="This artwork is no longer available in the public marketplace."
@@ -38,52 +31,87 @@
       <template v-else>
         <AppStatePanel
           v-if="actionMessage"
-          class="mt-6"
+          class="mt-8"
           compact
           :type="actionStatus || 'success'"
           :message="actionMessage"
         />
+        <AppStatePanel
+          v-if="cartMessage"
+          class="mt-4"
+          compact
+          :type="cartMessageType"
+          :message="cartMessage"
+        />
 
         <section
-          class="mt-6 grid overflow-hidden border border-slate-900 bg-slate-950/75 lg:grid-cols-[1.25fr_0.85fr]"
+          class="mt-8 grid gap-0 border border-[#161A1D] bg-[#111414] xl:grid-cols-[minmax(0,1.58fr)_minmax(360px,0.9fr)]"
         >
-          <div class="border-b border-slate-900 p-4 sm:p-8 lg:border-b-0 lg:border-r lg:p-10">
-            <div class="overflow-hidden rounded-[30px] border border-[#1B2640] bg-[#050912]">
+          <div class="border-b border-[#1C2022] xl:border-b-0 xl:border-r">
+            <div
+              class="relative h-full overflow-hidden bg-[#101515] min-h-[520px] lg:min-h-[760px]"
+            >
               <img
-                v-if="artwork.imageUrl"
-                :src="artwork.imageUrl"
+                v-if="artworkImageUrl"
+                :src="artworkImageUrl"
                 :alt="artwork.title"
-                class="max-h-[720px] w-full object-cover"
+                class="block h-full min-h-[520px] w-full object-cover lg:min-h-[760px]"
               />
               <div
                 v-else
-                class="grid aspect-square min-h-[280px] place-items-center bg-gradient-to-br from-slate-950 via-black to-violet-950/50 p-6 text-center sm:min-h-[460px] lg:min-h-[650px]"
+                class="grid min-h-[520px] place-items-center bg-[radial-gradient(circle_at_50%_30%,rgba(115,43,255,0.28),transparent_45%),linear-gradient(180deg,#111616_0%,#06080C_100%)] p-6 text-center lg:min-h-[760px]"
               >
-                <div>
+                <div class="max-w-sm">
                   <div
-                    class="mx-auto grid h-24 w-24 place-items-center border border-violet-700/50 bg-black text-title-2 text-violet-300"
+                    class="mx-auto grid h-24 w-24 place-items-center rounded-[20px] border border-violet-500/40 bg-black/60 text-3xl font-semibold text-violet-300"
                   >
                     {{ artworkInitials }}
                   </div>
-                  <p class="mt-6 text-subtitle-2 uppercase tracking-[0.14em] text-slate-500">
+                  <p class="mt-6 text-xs uppercase tracking-[0.2em] text-slate-500">
                     {{ artwork.category?.name || "Digital artwork" }}
                   </p>
-                  <p class="mt-3 max-w-sm text-body-1 leading-7 text-slate-400">
-                    The artwork record is available. A media preview will appear when a deliverable
-                    file is attached.
+                  <p class="mt-4 text-base leading-7 text-slate-300">
+                    The artwork record is online. A visual preview will appear here as soon as the
+                    media file is available.
                   </p>
                 </div>
+              </div>
+
+              <div class="absolute bottom-5 right-5 flex items-center gap-3">
+                <a
+                  v-if="artworkImageUrl"
+                  :href="artworkImageUrl"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="inline-flex min-h-11 items-center justify-center rounded-[14px] border border-white/10 bg-black/45 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-white/80 backdrop-blur transition hover:border-violet-500 hover:text-white"
+                  aria-label="Open preview"
+                >
+                  Open
+                </a>
+                <button
+                  type="button"
+                  class="inline-flex min-h-11 items-center justify-center rounded-[14px] border border-white/10 bg-black/45 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-white/80 backdrop-blur transition hover:border-violet-500 hover:text-white"
+                  aria-label="Share artwork"
+                  @click="shareArtwork"
+                >
+                  Share
+                </button>
               </div>
             </div>
           </div>
 
-          <div class="flex min-w-0 flex-col px-5 py-7 sm:px-8 sm:py-10 lg:px-10 lg:py-12">
-            <div>
-              <div class="mb-6 flex flex-wrap items-center gap-3">
+          <aside class="bg-[#171919] p-6 sm:p-8 xl:p-10">
+            <div class="flex flex-col gap-5">
+              <div class="flex flex-wrap gap-2">
                 <span
                   class="rounded-full bg-[#4A6CF7]/12 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#BCD0FF]"
                 >
                   {{ artwork.category?.name || "Digital artwork" }}
+                </span>
+                <span
+                  class="rounded-full bg-[#241D3D] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#D8C8FF]"
+                >
+                  {{ formatArtworkLicenseType(artwork.licenseType) }}
                 </span>
                 <span
                   v-if="artwork.protection"
@@ -95,257 +123,235 @@
                   v-if="artwork.watermarkApplied"
                   class="rounded-full bg-[#1A2336] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#9FB4D9]"
                 >
-                  Aperçu filigrané
+                  Watermarked preview
                 </span>
                 <span
-                  v-if="!artwork.isAvailableForPurchase"
-                  class="rounded-full bg-[#3A1A1A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#F5A8A8]"
+                  v-if="availability.status !== 'AVAILABLE'"
+                  class="rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em]"
+                  :class="availabilityClass"
                 >
-                  Unavailable
+                  {{ availability.label }}
                 </span>
               </div>
 
-              <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <div
-                  class="grid h-12 w-12 shrink-0 place-items-center border border-slate-750 bg-black text-violet-300"
-                >
-                  {{ artistInitials }}
-                </div>
-                <div class="min-w-0 flex-1">
-                  <NuxtLink
-                    v-if="artwork.artist"
-                    :to="`/artists/${artwork.artist.id}`"
-                    class="text-title-4 text-slate-100 transition hover:text-violet-300"
+              <div class="flex items-start justify-between gap-4">
+                <div class="flex min-w-0 items-center gap-4">
+                  <div
+                    class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-violet-500/30 bg-[#0C1018] text-sm font-semibold text-violet-200"
                   >
-                    {{ artwork.artist.displayName }}
-                  </NuxtLink>
-                  <p class="mt-1 text-subtitle-2 uppercase tracking-[0.12em] text-slate-500">
-                    {{ artwork.artist?.artType || "Digital artist" }}
+                    <img
+                      v-if="artwork.artist?.avatarUrl"
+                      :src="artwork.artist.avatarUrl"
+                      :alt="artwork.artist.displayName"
+                      class="h-full w-full object-cover"
+                    />
+                    <template v-else>{{ artistInitials }}</template>
+                  </div>
+
+                  <div class="min-w-0">
+                    <NuxtLink
+                      v-if="artwork.artist"
+                      :to="artistProfileRoute"
+                      class="truncate text-[2rem] font-semibold text-white transition hover:text-violet-300"
+                    >
+                      {{ artwork.artist.displayName }}
+                    </NuxtLink>
+                    <p
+                      class="mt-1 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500"
+                    >
+                      {{ artistRoleLabel }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                  <button
+                    v-if="artwork.artist && canFollowArtist(artwork.artist)"
+                    type="button"
+                    class="inline-flex min-h-10 items-center rounded-full border border-white/10 px-5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-200 transition hover:border-violet-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    :disabled="Boolean(followLoading[artwork.artist.id])"
+                    @click="toggleFollow(artwork.artist)"
+                  >
+                    {{
+                      followLoading[artwork.artist.id]
+                        ? "Updating..."
+                        : artwork.artist.isFollowed
+                          ? "Following"
+                          : "Follow"
+                    }}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <h1
+                  class="mt-4 break-words text-[clamp(2.6rem,6vw,4rem)] font-semibold uppercase leading-[0.94] tracking-[-0.04em] text-white"
+                >
+                  {{ artwork.title }}
+                </h1>
+
+                <div class="mt-4 flex flex-wrap items-end gap-3">
+                  <p class="text-[clamp(2rem,4vw,2.8rem)] font-semibold text-slate-100">
+                    {{ formattedPrice }}
+                  </p>
+                  <p class="pb-1 text-sm text-slate-500">
+                    {{ availabilityText }}
                   </p>
                 </div>
+              </div>
+
+              <div class="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <article
+                  v-for="fact in artworkFacts"
+                  :key="fact.label"
+                  class="border border-white/10 bg-transparent p-5"
+                >
+                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    {{ fact.label }}
+                  </p>
+                  <p class="mt-4 text-lg font-medium text-slate-100">
+                    {{ fact.value }}
+                  </p>
+                </article>
+              </div>
+
+              <div class="mt-2">
+                <p
+                  class="border-b border-white/10 pb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500"
+                >
+                  Description
+                </p>
+                <p class="mt-5 text-base leading-8 text-slate-300">
+                  {{ artwork.description || "No description has been provided for this artwork." }}
+                </p>
+              </div>
+
+              <div class="mt-2 grid gap-3">
                 <button
-                  v-if="artwork.artist && canFollowArtist(artwork.artist)"
+                  v-if="artwork.isAvailableForPurchase"
                   type="button"
-                  class="min-h-11 w-full border border-slate-800 px-5 text-subtitle-2 uppercase text-slate-300 transition hover:border-violet-600 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
-                  :disabled="Boolean(followLoading[artwork.artist.id])"
-                  @click="toggleFollow(artwork.artist)"
+                  class="inline-flex min-h-[62px] items-center justify-center rounded-[6px] bg-gradient-to-r from-[#6F2BFF] to-[#A046FF] px-6 text-base font-semibold uppercase tracking-[0.12em] text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                  :disabled="cart.loading || isOwnArtwork"
+                  :title="isOwnArtwork ? 'You cannot buy your own artwork.' : undefined"
+                  @click="toggleCart"
                 >
                   {{
-                    followLoading[artwork.artist.id]
+                    cart.loading
                       ? "Updating..."
-                      : artwork.artist.isFollowed
-                        ? "Following"
-                        : "Follow"
+                      : isOwnArtwork
+                        ? "Your artwork - purchase unavailable"
+                        : isInCart
+                          ? "Remove from cart"
+                          : "Add to cart"
                   }}
                 </button>
-              </div>
-
-              <h1 class="mt-9 break-words text-title-2 uppercase text-slate-100">
-                {{ artwork.title }}
-              </h1>
-            </div>
-
-            <p class="mt-5 text-title-3 text-slate-300">{{ formattedPrice }}</p>
-
-            <div class="mt-9 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <article class="border border-slate-800 bg-black/30 p-4">
-                <p class="text-subtitle-2 uppercase text-slate-500">Category</p>
-                <p class="mt-3 text-body-1 text-slate-200">
-                  {{ artwork.category?.name || "Uncategorized" }}
-                </p>
-              </article>
-              <article class="border border-slate-800 bg-black/30 p-4">
-                <p class="text-subtitle-2 uppercase text-slate-500">Published</p>
-                <p class="mt-3 text-body-1 text-slate-200">{{ formattedDate }}</p>
-              </article>
-              <article class="border border-slate-800 bg-black/30 p-4">
-                <p class="text-subtitle-2 uppercase text-slate-500">Protection</p>
-                <p class="mt-3 text-body-1 text-slate-200">
-                  {{ artwork.protection ? "Protected" : "Standard" }}
-                </p>
-              </article>
-              <article class="border border-slate-800 bg-black/30 p-4">
-                <p class="text-subtitle-2 uppercase text-slate-500">Favorites</p>
-                <p class="mt-3 text-body-1 text-slate-200">{{ artwork.favoriteCount || 0 }}</p>
-              </article>
-            </div>
-
-            <div class="mt-9">
-              <p class="border-b border-slate-800 pb-3 text-subtitle-2 uppercase text-slate-500">
-                Description
-              </p>
-              <p class="mt-5 text-body-1 leading-7 text-slate-400">
-                {{ artwork.description || "No description has been provided for this artwork." }}
-              </p>
-            </div>
-
-            <div class="mt-10 grid gap-3">
-              <button
-                type="button"
-                class="h-14 bg-violet-600 text-body-1 uppercase text-slate-100 transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
-                :disabled="Boolean(favoriteLoading[artwork.id])"
-                @click="toggleFavorite(artwork)"
-              >
-                {{
-                  favoriteLoading[artwork.id]
-                    ? "Updating..."
-                    : artwork.isFavorite
-                      ? "Remove from wishlist"
-                      : "Add to wishlist"
-                }}
-              </button>
-              <button
-                v-if="artwork.isAvailableForPurchase"
-                type="button"
-                class="inline-flex min-h-12 items-center justify-center rounded-2xl border px-6 text-sm font-semibold transition"
-                :class="
-                  isInCart
-                    ? 'border-[#F2C97D] bg-[#F2C97D]/10 text-[#F7D990]'
-                    : 'border-[#24314F] bg-[#0C111D] text-[#E6EDF7] hover:border-[#4A6CF7]'
-                "
-                :disabled="cart.loading || isOwnArtwork"
-                :title="isOwnArtwork ? 'You cannot buy your own artwork.' : undefined"
-                @click="toggleCart"
-              >
-                {{
-                  cart.loading
-                    ? "Updating..."
-                    : isOwnArtwork
-                      ? "Your artwork - purchase unavailable"
-                      : isInCart
-                        ? "Remove from cart"
-                        : "Add to cart"
-                }}
-              </button>
-              <p
-                v-else
-                class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#3A1A1A] bg-[#1A0A0A] px-6 text-sm font-semibold text-[#F5A8A8]"
-              >
-                This artwork is no longer available for purchase
-              </p>
-              <a
-                v-if="artwork.hasHdFile && artwork.hdDownloadUrl"
-                :href="artwork.hdDownloadUrl"
-                class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#24314F] bg-[#0C111D] px-6 text-sm font-semibold text-[#E6EDF7] transition hover:border-[#4A6CF7]"
-              >
-                Télécharger le fichier HD
-              </a>
-              <p v-if="artwork.hasHdFile" class="text-sm text-slate-500">
-                L'aperçu public est compressé{{ artwork.watermarkApplied ? " et filigrané" : "" }}.
-                Le HD est réservé à l'artiste et aux acheteurs.
-              </p>
-            </div>
-
-            <div
-              v-if="cartMessage || actionMessage"
-              class="rounded-2xl border border-[#203357] bg-[#091121] px-5 py-4 text-sm text-[#BFD0FF]"
-            >
-              {{ cartMessage || actionMessage }}
-            </div>
-
-            <section
-              v-if="showCollectorTools"
-              class="grid gap-4 rounded-[28px] border border-[#151E30] bg-[#050912] p-6"
-            >
-              <div class="flex items-center justify-between gap-4">
-                <div>
-                  <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">My collections</p>
-                  <h2 class="mt-3 text-xl font-semibold text-white">
-                    Save this artwork to a collection
-                  </h2>
-                  <p class="mt-2 text-sm text-[#96A4B8]">
-                    Use the wishlist button for favorites. Here you can organize the artwork in a
-                    personal collection.
-                  </p>
-                </div>
-                <NuxtLink
-                  to="/wishlist?tab=collections"
-                  class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#24314F] bg-[#0B111C] px-4 text-sm font-semibold text-[#D5E0FF] transition hover:bg-[#12192A]"
+                <p
+                  v-else
+                  class="inline-flex min-h-[62px] items-center justify-center rounded-[6px] border border-[#3A1A1A] bg-[#1A0A0A] px-6 text-base font-semibold uppercase tracking-[0.1em] text-[#F5A8A8]"
                 >
-                  Manage
-                </NuxtLink>
-              </div>
-
-              <div v-if="collectionsLoading" class="text-sm text-[#96A4B8]">
-                Loading your collections...
-              </div>
-              <div v-else class="grid gap-3 sm:grid-cols-[1fr_auto]">
-                <select
-                  v-model="selectedCollectionId"
-                  class="rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7]"
-                >
-                  <option value="">Choose a collection</option>
-                  <option
-                    v-for="collection in personalCollections"
-                    :key="collection.id"
-                    :value="String(collection.id)"
-                  >
-                    {{ collection.title }} ({{ collection.itemsCount }})
-                  </option>
-                </select>
+                  {{ availabilityMessage }}
+                </p>
 
                 <button
                   type="button"
-                  class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#4A6CF7] px-6 text-sm font-semibold text-black transition hover:bg-[#6D8BFF]"
-                  :disabled="collectionSubmitLoading"
-                  @click="addToCollection"
+                  class="inline-flex min-h-[58px] items-center justify-center rounded-[6px] border border-white/10 px-6 text-base font-semibold uppercase tracking-[0.12em] text-white transition hover:border-violet-500 hover:bg-white/5"
+                  @click="notifyOfferUnavailable"
                 >
-                  {{ collectionSubmitLoading ? "Adding..." : "Add" }}
+                  Make an offer
                 </button>
-              </div>
 
-              <p v-if="collectionMessage" class="text-sm text-[#BFD0FF]">
-                {{ collectionMessage }}
-              </p>
-              <p
-                v-if="!personalCollections.length && !collectionsLoading"
-                class="text-sm text-[#96A4B8]"
-              >
-                Create your first collection to organize your saved artworks.
-              </p>
-            </section>
-
-            <section class="rounded-[28px] border border-[#151E30] bg-[#050912] p-6">
-              <p class="text-xs uppercase tracking-[0.18em] text-[#8AA2FF]">Artist</p>
-              <div v-if="artwork.artist" class="mt-4 grid gap-3">
-                <p class="text-2xl font-semibold text-white">
-                  {{ artwork.artist.displayName }}
-                </p>
-                <p class="text-sm leading-7 text-[#A4B0C0]">
-                  {{ artwork.artist.bio || "This artist is still completing the public profile." }}
-                </p>
-                <div class="flex flex-wrap gap-2">
-                  <span
-                    v-for="style in artwork.artist.styles || []"
-                    :key="style"
-                    class="rounded-full bg-[#101728] px-3 py-1 text-xs font-medium text-[#C7D4EA]"
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    class="inline-flex min-h-[54px] items-center justify-center rounded-[6px] border border-white/10 px-5 text-sm font-semibold uppercase tracking-[0.12em] text-white transition hover:border-violet-500 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
+                    :disabled="Boolean(favoriteLoading[artwork.id])"
+                    @click="toggleFavorite(artwork)"
                   >
-                    {{ style }}
-                  </span>
+                    {{
+                      favoriteLoading[artwork.id]
+                        ? "Updating..."
+                        : artwork.isFavorite
+                          ? "Saved to wishlist"
+                          : "Add to wishlist"
+                    }}
+                  </button>
+
+                  <a
+                    v-if="artwork.hasHdFile && artwork.hdDownloadUrl"
+                    :href="artwork.hdDownloadUrl"
+                    class="inline-flex min-h-[54px] items-center justify-center rounded-[6px] border border-white/10 px-5 text-sm font-semibold uppercase tracking-[0.12em] text-white transition hover:border-violet-500 hover:bg-white/5"
+                  >
+                    Download HD
+                  </a>
                 </div>
+
+                <p class="pt-2 text-sm leading-7 text-slate-500">
+                  Public previews may be compressed{{
+                    artwork.watermarkApplied ? " and watermarked" : ""
+                  }}. The HD asset is reserved for the artist and verified buyers.
+                </p>
               </div>
-            </section>
-          </div>
+            </div>
+          </aside>
         </section>
 
-        <section class="mt-12 border border-slate-900 bg-slate-950/50 p-4 sm:mt-16 sm:p-8">
-          <h2 class="text-title-3 uppercase text-slate-100 sm:text-title-2">More by this artist</h2>
+        <section class="mt-12 border border-[#161A1D] bg-[#111414] p-5 sm:mt-16 sm:p-8">
+          <h2 class="text-[clamp(2rem,5vw,3.2rem)] font-semibold uppercase leading-none text-white">
+            More by this artist
+          </h2>
           <div
             v-if="relatedArtworks.length"
-            class="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+            class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4"
           >
-            <ArtworkCard
+            <article
               v-for="related in relatedArtworks"
               :key="related.id"
-              :artwork="related"
-              :favorite-loading="Boolean(favoriteLoading[related.id])"
-              :show-favorite-action="true"
-              @toggle-favorite="toggleFavorite"
-            />
+              class="group border border-white/10 bg-[#111414] p-0"
+            >
+              <NuxtLink :to="`/artworks/${related.id}`" class="block">
+                <div class="relative overflow-hidden bg-[#090C10]">
+                  <img
+                    v-if="related.imageUrl"
+                    :src="related.imageUrl"
+                    :alt="related.title"
+                    class="aspect-[4/4.2] w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                  />
+                  <div
+                    v-else
+                    class="flex aspect-[4/4.2] items-center justify-center bg-[linear-gradient(180deg,#10151B_0%,#05070C_100%)] text-3xl font-semibold text-violet-200"
+                  >
+                    {{ relatedArtworkInitials(related) }}
+                  </div>
+                </div>
+              </NuxtLink>
+
+              <div class="flex items-start justify-between gap-3 px-4 pb-4 pt-3">
+                <div class="min-w-0">
+                  <NuxtLink
+                    :to="`/artworks/${related.id}`"
+                    class="block truncate text-base font-medium text-slate-100 transition hover:text-violet-300"
+                  >
+                    {{ related.title }}
+                  </NuxtLink>
+                  <p class="mt-1 text-sm text-slate-400">
+                    {{ relatedArtworkPrice(related) }}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  class="mt-1 text-slate-500 transition hover:text-violet-300 disabled:cursor-not-allowed disabled:opacity-40"
+                  :disabled="Boolean(favoriteLoading[related.id])"
+                  @click="toggleFavorite(related)"
+                >
+                  {{ related.isFavorite ? "Saved" : "Save" }}
+                </button>
+              </div>
+            </article>
           </div>
           <AppStatePanel
             v-else
-            class="mt-7"
+            class="mt-8"
             type="empty"
             title="No related artworks"
             message="This artist has no other public artworks yet."
@@ -359,15 +365,16 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { navigateTo, useHead, useRequestHeaders, useRoute, useRuntimeConfig } from "#app";
-import ArtworkCard from "~/components/marketplace/ArtworkCard.vue";
 import { useAnalyticsEvent } from "~/composables/useAnalyticsEvent";
 import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
 import { useAuthStore } from "~/stores/auth";
 import { useCartStore } from "~/stores/cart";
 import {
+  formatArtworkLicenseType,
   formatMarketplaceDate,
   formatMarketplacePrice,
   getArtistInitials,
+  getArtworkAvailabilityPresentation,
   isArtworkOwnedByArtist
 } from "~/utils/marketplace";
 
@@ -377,12 +384,19 @@ const config = useRuntimeConfig();
 const siteUrl = config.public.siteUrl.replace(/\/$/, "");
 const cart = useCartStore();
 const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
-const collectionsLoading = ref(false);
-const collectionSubmitLoading = ref(false);
-const collectionMessage = ref("");
 const cartMessage = ref("");
-const selectedCollectionId = ref("");
-const personalCollections = ref([]);
+const cartMessageType = ref("success");
+
+function schemaAvailability(status) {
+  const values = {
+    AVAILABLE: "https://schema.org/InStock",
+    RESERVED: "https://schema.org/LimitedAvailability",
+    SOLD: "https://schema.org/SoldOut",
+    UNAVAILABLE: "https://schema.org/OutOfStock"
+  };
+
+  return values[String(status || "").toUpperCase()] || values.UNAVAILABLE;
+}
 
 const { data, pending, error, refresh } = await useFetch(`/api/artworks/${route.params.id}`, {
   headers: requestHeaders,
@@ -421,9 +435,10 @@ useHead({
             url: `${siteUrl}/artworks/${artwork.value.id}`,
             priceCurrency: "EUR",
             price: Number(artwork.value.priceValue),
-            availability: artwork.value.isAvailableForPurchase
-              ? "https://schema.org/PreOrder"
-              : "https://schema.org/SoldOut"
+            availability: schemaAvailability(
+              artwork.value.availabilityStatus ||
+                (artwork.value.isAvailableForPurchase ? "AVAILABLE" : "UNAVAILABLE")
+            )
           };
         }
 
@@ -438,11 +453,21 @@ const errorMessage = computed(() =>
     ? error.value?.data?.message || "The artwork details are temporarily unavailable."
     : ""
 );
+const formattedDate = computed(() => formatMarketplaceDate(artwork.value?.createdAt));
 const formattedPrice = computed(() =>
   formatMarketplacePrice(artwork.value?.priceValue ?? artwork.value?.price)
 );
-const formattedDate = computed(() => formatMarketplaceDate(artwork.value?.createdAt));
-const showCollectorTools = computed(() => auth.user && !auth.isAdmin);
+const availability = computed(() => getArtworkAvailabilityPresentation(artwork.value));
+const availabilityClass = computed(() => {
+  const tones = {
+    available: "bg-[#10261A] text-[#9DE2B4]",
+    reserved: "bg-[#2B220E] text-[#F7D990]",
+    sold: "bg-[#3A1A1A] text-[#F5A8A8]",
+    unavailable: "bg-[#1A2336] text-[#9FB4D9]"
+  };
+
+  return tones[availability.value.tone] || tones.unavailable;
+});
 const isOwnArtwork = computed(() => isArtworkOwnedByArtist(artwork.value, auth.user));
 const isInCart = computed(() =>
   Boolean(
@@ -451,6 +476,79 @@ const isInCart = computed(() =>
 );
 const artworkInitials = computed(() => getArtistInitials(artwork.value?.title || "Artwork"));
 const artistInitials = computed(() => getArtistInitials(artwork.value?.artist?.displayName));
+const artworkImageUrl = computed(
+  () => artwork.value?.previewUrl || artwork.value?.imageUrl || artwork.value?.hdDownloadUrl || ""
+);
+const artistProfileRoute = computed(() =>
+  artwork.value?.artist ? `/artists/${artwork.value.artist.id}` : "/artists"
+);
+const artistRoleLabel = computed(
+  () =>
+    (artwork.value?.artist?.verified ? "Master artist" : artwork.value?.artist?.artType) ||
+    "Digital artist"
+);
+const availabilityText = computed(() => {
+  if (isOwnArtwork.value) {
+    return "owned by you";
+  }
+
+  const labels = {
+    AVAILABLE: "available now",
+    RESERVED: "payment in progress",
+    SOLD: "sold",
+    UNAVAILABLE: "currently unavailable"
+  };
+
+  return labels[availability.value.status] || "currently unavailable";
+});
+const availabilityMessage = computed(() => {
+  if (availability.value.status === "RESERVED") {
+    return "This artwork is temporarily reserved while a payment is being completed.";
+  }
+
+  if (availability.value.status === "SOLD") {
+    return "This exclusive artwork has already been sold.";
+  }
+
+  return "This artwork is not currently available for purchase.";
+});
+const artworkFacts = computed(() => [
+  {
+    label: "Medium",
+    value: artwork.value?.category?.name || artwork.value?.artist?.artType || "Digital artwork"
+  },
+  {
+    label: "Published",
+    value: formattedDate.value
+  },
+  {
+    label: "License",
+    value: formatArtworkLicenseType(artwork.value?.licenseType)
+  },
+  {
+    label: "Delivery",
+    value: artwork.value?.hasHdFile ? "HD file included" : "Preview only"
+  },
+  {
+    label: "Protection",
+    value: artwork.value?.protection ? "Protected" : "Standard"
+  },
+  {
+    label: "Edition",
+    value:
+      Number(artwork.value?.stockQuantity || 0) > 1
+        ? `Edition of ${artwork.value.stockQuantity}`
+        : "Unique 1 of 1"
+  }
+]);
+
+function relatedArtworkInitials(item) {
+  return getArtistInitials(item?.artist?.displayName || item?.title || "Artwork");
+}
+
+function relatedArtworkPrice(item) {
+  return formatMarketplacePrice(item?.priceValue ?? item?.price);
+}
 
 const {
   actionMessage,
@@ -486,72 +584,48 @@ async function toggleCart() {
     if (isInCart.value) {
       await cart.removeItem(artwork.value.id);
       cartMessage.value = "Artwork removed from cart.";
+      cartMessageType.value = "success";
       return;
     }
 
     await cart.setItem(artwork.value.id, 1);
     cartMessage.value = "Artwork added to cart.";
+    cartMessageType.value = "success";
   } catch {
     cartMessage.value = cart.error || "Unable to update your cart.";
+    cartMessageType.value = "error";
   }
 }
 
-async function loadCollections() {
-  if (!showCollectorTools.value) {
-    personalCollections.value = [];
-    return;
-  }
-
-  collectionsLoading.value = true;
-
-  try {
-    const response = await $fetch("/api/collections/me", {
-      credentials: "include"
-    });
-
-    personalCollections.value = (response.collections || []).filter(
-      (collection) => !collection.isDefaultFavorites
-    );
-  } catch (fetchError) {
-    collectionMessage.value =
-      fetchError?.data?.message || "Unable to load your personal collections.";
-  } finally {
-    collectionsLoading.value = false;
-  }
-}
-
-async function addToCollection() {
-  if (!selectedCollectionId.value) {
-    collectionMessage.value = "Choose a collection first.";
-    return;
-  }
-
+async function shareArtwork() {
   if (!artwork.value) {
     return;
   }
 
-  collectionSubmitLoading.value = true;
-  collectionMessage.value = "";
+  const url = `${siteUrl}/artworks/${artwork.value.id}`;
 
   try {
-    const response = await $fetch(`/api/collections/me/${selectedCollectionId.value}/artworks`, {
-      method: "POST",
-      credentials: "include",
-      body: {
-        artworkId: artwork.value.id
-      }
-    });
+    if (navigator.share) {
+      await navigator.share({
+        title: artwork.value.title,
+        text: artwork.value.description || "Discover this artwork on Make It Art.",
+        url
+      });
+    } else if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+      actionMessage.value = "Artwork link copied to clipboard.";
+      actionStatus.value = "success";
+    }
 
-    personalCollections.value = personalCollections.value.map((collection) =>
-      collection.id === response.collection.id ? response.collection : collection
-    );
-    collectionMessage.value = "Artwork added to the collection.";
-  } catch (fetchError) {
-    collectionMessage.value =
-      fetchError?.data?.message || "Unable to add this artwork to the collection.";
-  } finally {
-    collectionSubmitLoading.value = false;
+    trackEvent("share_artwork", { artworkId: artwork.value.id });
+  } catch {
+    // Ignore share cancellations.
   }
+}
+
+function notifyOfferUnavailable() {
+  actionMessage.value = "Offer requests are not enabled yet for this artwork.";
+  actionStatus.value = "error";
 }
 
 onMounted(async () => {
@@ -577,9 +651,8 @@ onMounted(async () => {
       await cart.fetchCart();
     } catch {
       cartMessage.value = cart.error || "Unable to load your cart.";
+      cartMessageType.value = "error";
     }
   }
-
-  await loadCollections();
 });
 </script>

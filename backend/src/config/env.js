@@ -144,6 +144,9 @@ module.exports = {
     }
   },
   cdp: {
+    walletFeatureEnabled: process.env.WALLET_FEATURE_ENABLED
+      ? process.env.WALLET_FEATURE_ENABLED === "true"
+      : nodeEnv !== "production",
     projectId: process.env.CDP_PROJECT_ID || "",
     authIssuer: process.env.CDP_AUTH_ISSUER || "make-it-art",
     authAudience: process.env.CDP_AUTH_AUDIENCE || "",

@@ -132,7 +132,7 @@ const walletWriteRateLimit = asExpressMiddleware(
     limit: isProduction ? 20 : 100,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: ipKeyGenerator,
+    keyGenerator: (req) => ipKeyGenerator(req.ip),
     message: {
       message: "Too many wallet operations. Please try again later.",
       code: "WALLET_RATE_LIMITED"

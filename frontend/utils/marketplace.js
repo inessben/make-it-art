@@ -30,6 +30,52 @@ export function formatMarketplaceDate(value) {
   }).format(new Date(value));
 }
 
+const ARTWORK_LICENSE_LABELS = Object.freeze({
+  PERSONAL: "Licence personnelle",
+  COMMERCIAL: "Licence commerciale",
+  EXCLUSIVE: "Licence exclusive"
+});
+
+export const ARTWORK_LICENSE_OPTIONS = Object.freeze([
+  Object.freeze({
+    value: "PERSONAL",
+    label: "Personnelle",
+    description: "L'acheteur peut utiliser l'oeuvre dans un cadre personnel."
+  }),
+  Object.freeze({
+    value: "COMMERCIAL",
+    label: "Commerciale",
+    description:
+      "L'acheteur peut utiliser l'oeuvre dans un cadre commercial. Précise les conditions d'utilisation commerciale dans la description de l'oeuvre."
+  }),
+  Object.freeze({
+    value: "EXCLUSIVE",
+    label: "Exclusive",
+    description: "Une seule personne pourra acheter cette oeuvre."
+  })
+]);
+
+export function isArtworkDescriptionRequired(licenseType) {
+  return String(licenseType || "").toUpperCase() === "COMMERCIAL";
+}
+
+export function formatArtworkLicenseType(value) {
+  return ARTWORK_LICENSE_LABELS[String(value || "").toUpperCase()] || "Licence personnelle";
+}
+
+const ARTWORK_AVAILABILITY = Object.freeze({
+  AVAILABLE: { status: "AVAILABLE", label: "Disponible", tone: "available" },
+  RESERVED: { status: "RESERVED", label: "Réservée temporairement", tone: "reserved" },
+  SOLD: { status: "SOLD", label: "Vendue", tone: "sold" },
+  UNAVAILABLE: { status: "UNAVAILABLE", label: "Indisponible", tone: "unavailable" }
+});
+
+export function getArtworkAvailabilityPresentation(artwork) {
+  const fallbackStatus = artwork?.isAvailableForPurchase ? "AVAILABLE" : "UNAVAILABLE";
+  const status = String(artwork?.availabilityStatus || fallbackStatus).toUpperCase();
+  return ARTWORK_AVAILABILITY[status] || ARTWORK_AVAILABILITY.UNAVAILABLE;
+}
+
 export function getArtistInitials(name) {
   return String(name || "Artist")
     .split(" ")

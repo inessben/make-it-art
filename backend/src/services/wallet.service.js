@@ -16,6 +16,14 @@ class WalletError extends Error {
     this.status = status;
   }
 }
+function assertCreationEnabled() {
+  if (!env.cdp.walletFeatureEnabled)
+    throw new WalletError(
+      "WALLET_FEATURE_DISABLED",
+      "New wallet creation is temporarily unavailable",
+      503
+    );
+}
 function assertEligible(user) {
   if (!user) throw new WalletError("NOT_AUTHENTICATED", "Not authenticated", 401);
   if (!user.verified || !user.isActive)
@@ -44,6 +52,7 @@ async function owned(userId, walletId) {
 }
 async function recordConsent(user, accepted) {
   assertEligible(user);
+  if (accepted === true) assertCreationEnabled();
   const consent = await walletRepository.createConsent({
     userId: user.id,
     accepted: accepted === true,
@@ -57,6 +66,7 @@ async function recordConsent(user, accepted) {
 }
 async function startCreation(user, idempotencyKey) {
   assertEligible(user);
+  assertCreationEnabled();
   if (!/^[a-zA-Z0-9_-]{16,128}$/.test(idempotencyKey || ""))
     throw new WalletError(
       "INVALID_IDEMPOTENCY_KEY",
@@ -92,8 +102,8 @@ async function startCreation(user, idempotencyKey) {
 async function issueCdpToken(user, walletId) {
   assertEligible(user);
   const wallet = await owned(user.id, walletId);
-  if (wallet.status !== "PENDING")
-    throw new WalletError("WALLET_NOT_PENDING", "Wallet is not awaiting creation", 409);
+  if (!["PENDING", "ACTIVE"].includes(wallet.status))
+    throw new WalletError("WALLET_AUTH_UNAVAILABLE", "Wallet authentication is not available", 409);
   return { token: cdpAuthService.createUserToken(user), projectId: env.cdp.projectId };
 }
 async function completeCreation(user, walletId, { accessToken, address }) {
@@ -139,6 +149,7 @@ async function markCreationFailed(user, walletId, errorCode) {
 }
 async function retryCreation(user, walletId) {
   assertEligible(user);
+  assertCreationEnabled();
   const wallet = await owned(user.id, walletId);
   if (!["FAILED", "RETRY_REQUIRED"].includes(wallet.status))
     throw new WalletError("WALLET_NOT_RETRYABLE", "Wallet creation cannot be retried", 409);
@@ -150,9 +161,21 @@ async function listWallets(user) {
   assertEligible(user);
   return (await walletRepository.listForUser(user.id)).map(serialize);
 }
+async function getLatestConsent(user) {
+  assertEligible(user);
+  const consent = await walletRepository.findLatestConsent(user.id);
+  if (!consent) return null;
+  return {
+    accepted: consent.accepted,
+    consentVersion: consent.consentVersion,
+    createdAt: consent.createdAt,
+    revokedAt: consent.revokedAt
+  };
+}
 module.exports = {
   WalletError,
   completeCreation,
+  getLatestConsent,
   issueCdpToken,
   listWallets,
   markCreationFailed,

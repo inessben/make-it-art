@@ -296,20 +296,23 @@ async function createCheckoutOrder({ userId, lineItems, paymentMethod, totalAmou
         data: {
           orderId: order.id,
           artworkId: lineItem.artworkId,
+          licenseType: lineItem.licenseType || "PERSONAL",
           priceTokens: String(lineItem.unitPrice)
         }
       });
 
       orderItems.push(orderItem);
 
-      await tx.artwork.update({
-        where: {
-          id: lineItem.artworkId
-        },
-        data: {
-          isSold: true
-        }
-      });
+      if (lineItem.licenseType === "EXCLUSIVE") {
+        await tx.artwork.update({
+          where: {
+            id: lineItem.artworkId
+          },
+          data: {
+            isSold: true
+          }
+        });
+      }
 
       await tx.ownershipToken.updateMany({
         where: {

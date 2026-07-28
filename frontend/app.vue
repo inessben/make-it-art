@@ -1,19 +1,24 @@
 <template>
-  <div class="min-h-screen bg-black font-sans">
+  <div class="flex min-h-screen flex-col bg-black font-sans">
     <TheHeader v-if="showGlobalNavigation" />
-    <NuxtPage />
+    <div class="flex-1">
+      <NuxtPage />
+    </div>
     <TheFooter v-if="showGlobalNavigation" />
+    <ArtistFloatingAction v-if="showArtistFloatingAction" />
     <CookieConsentBanner />
   </div>
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import { useHead, useRoute, useRuntimeConfig, useSeoMeta } from "#app";
+import { useAuthStore } from "~/stores/auth";
 
 const route = useRoute();
 const config = useRuntimeConfig();
 const siteUrl = config.public.siteUrl.replace(/\/$/, "");
+const auth = useAuthStore();
 
 useHead({
   htmlAttrs: { lang: "en" },
@@ -48,6 +53,17 @@ const authOnlyRoutes = new Set([
   "/reset-password"
 ]);
 const showGlobalNavigation = computed(() => !authOnlyRoutes.has(route.path));
+const showArtistFloatingAction = computed(() => {
+  if (!showGlobalNavigation.value) {
+    return false;
+  }
+
+  if (route.path.startsWith("/admin")) {
+    return false;
+  }
+
+  return auth.isVerifiedArtist;
+});
 
 const privateRoutePrefixes = [
   "/admin",
@@ -205,5 +221,17 @@ useHead({
         })
     }
   ]
+});
+
+onMounted(async () => {
+  if (auth.user || auth.loading) {
+    return;
+  }
+
+  try {
+    await auth.fetchCurrentUser();
+  } catch {
+    // Public pages remain accessible when no authenticated session exists.
+  }
 });
 </script>

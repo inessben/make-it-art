@@ -5,13 +5,13 @@
     >
       <header class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Mon compte</p>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#4A6CF7]">Account</p>
           <h1 class="mt-4 text-[clamp(2rem,2.6vw,3rem)] font-semibold leading-[1.05] text-white">
             Follows & Followers
           </h1>
           <p class="mt-4 max-w-3xl text-sm leading-6 text-[#A0ADB4]">
-            Consultez les artistes que vous suivez et, si vous avez un profil artiste, les membres
-            qui vous suivent.
+            Explore the artists you follow and, if you have an artist profile, the collectors who
+            follow you.
           </p>
         </div>
 
@@ -19,7 +19,7 @@
           to="/account-settings"
           class="inline-flex items-center justify-center rounded-2xl border border-[#1A1F2A] bg-[#10151E] px-5 py-3 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
         >
-          Retour au compte
+          Back to account
         </NuxtLink>
       </header>
 
@@ -32,7 +32,7 @@
               ? 'bg-[#4A6CF7] text-black'
               : 'text-[#C9D6FF] hover:bg-[#101827]'
           "
-          @click="activeTab = 'following'"
+          @click="setActiveTab('following')"
         >
           Following
         </button>
@@ -44,16 +44,14 @@
               ? 'bg-[#4A6CF7] text-black'
               : 'text-[#C9D6FF] hover:bg-[#101827]'
           "
-          @click="activeTab = 'followers'"
+          @click="setActiveTab('followers')"
         >
           Followers
         </button>
       </section>
 
       <section v-if="activeTab === 'following'" class="grid gap-4">
-        <div v-if="followingPending" class="text-sm text-[#A0ADB4]">
-          Chargement de vos follows...
-        </div>
+        <div v-if="followingPending" class="text-sm text-[#A0ADB4]">Loading your follows...</div>
         <div
           v-else-if="followingErrorMessage"
           class="rounded-[24px] border border-[#6C1F2D] bg-[#261018] p-6 text-[#FBC8D0]"
@@ -64,7 +62,7 @@
           v-else-if="!followedArtists.length"
           class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6 text-[#A0ADB4]"
         >
-          Vous ne suivez encore aucun artiste.
+          You are not following any artist yet.
         </div>
         <div v-else class="grid gap-4 sm:grid-cols-2">
           <ArtistCard
@@ -79,9 +77,7 @@
       </section>
 
       <section v-else class="grid gap-4">
-        <div v-if="followersPending" class="text-sm text-[#A0ADB4]">
-          Chargement de vos followers...
-        </div>
+        <div v-if="followersPending" class="text-sm text-[#A0ADB4]">Loading your followers...</div>
         <div
           v-else-if="followersErrorMessage"
           class="rounded-[24px] border border-[#6C1F2D] bg-[#261018] p-6 text-[#FBC8D0]"
@@ -92,27 +88,62 @@
           v-else-if="followersUnavailable"
           class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6 text-[#A0ADB4]"
         >
-          Les followers sont disponibles uniquement si vous avez un profil artiste.
+          Followers are available only if you have an artist profile.
         </div>
         <div
           v-else-if="!followers.length"
           class="rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6 text-[#A0ADB4]"
         >
-          Aucun follower pour le moment.
+          No followers yet.
         </div>
-        <div v-else class="grid gap-3 rounded-[24px] border border-[#1A1F2A] bg-[#090017] p-6">
-          <div
+        <div class="overflow-hidden rounded-[24px] border border-[#1A1F2A] bg-[#090017]">
+          <NuxtLink
             v-for="follower in followers"
             :key="follower.id"
-            class="flex flex-col gap-1 rounded-2xl border border-[#1A1F2A] bg-[#01050E] px-5 py-4"
+            :to="follower.profileUrl"
+            class="group flex items-center justify-between gap-4 border-b border-[#1A1F2A] px-5 py-4 transition hover:bg-[#0B1020] last:border-b-0"
           >
-            <p class="text-sm font-semibold text-white">
-              {{ follower.username || "Utilisateur" }}
-            </p>
-            <p class="text-sm text-[#A0ADB4]">
-              {{ follower.email || "" }}
-            </p>
-          </div>
+            <div class="flex min-w-0 items-center gap-4">
+              <div
+                class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#2A3144] bg-[#10151E] text-sm font-semibold text-[#E6EDF7]"
+              >
+                <img
+                  v-if="follower.avatarUrl"
+                  :src="follower.avatarUrl"
+                  :alt="follower.displayName"
+                  class="h-full w-full object-cover"
+                />
+                <template v-else>{{ getInitials(follower.displayName) }}</template>
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <p class="truncate text-sm font-semibold text-white sm:text-base">
+                    {{ follower.displayName }}
+                  </p>
+                  <span
+                    class="rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]"
+                    :class="
+                      follower.isArtist
+                        ? 'bg-[#4A6CF7]/12 text-[#9DB2FF]'
+                        : 'bg-[#151B29] text-[#B8C2D8]'
+                    "
+                  >
+                    {{ follower.isArtist ? "Artist" : "Collector" }}
+                  </span>
+                </div>
+
+                <p v-if="follower.username" class="mt-1 text-xs text-[#8D98AA] sm:text-sm">
+                  @{{ follower.username }}
+                </p>
+              </div>
+            </div>
+            <span
+              class="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-[#C9D6FF] transition group-hover:text-white"
+            >
+              Open
+            </span>
+          </NuxtLink>
         </div>
       </section>
 
@@ -127,8 +158,8 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
-import { navigateTo } from "#app";
+import { computed, ref, watch } from "vue";
+import { navigateTo, useRoute, useRouter } from "#app";
 import { storeToRefs } from "pinia";
 import ArtistCard from "~/components/marketplace/ArtistCard.vue";
 import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
@@ -140,12 +171,18 @@ definePageMeta({
 
 const auth = useAuthStore();
 const { user } = storeToRefs(auth);
+const route = useRoute();
+const router = useRouter();
 
 if (auth.isAdmin) {
   await navigateTo("/admin");
 }
 
-const activeTab = ref("following");
+function normalizeTab(value) {
+  return value === "followers" ? "followers" : "following";
+}
+
+const activeTab = ref(normalizeTab(route.query.tab));
 const { actionMessage, followLoading, canFollowArtist, toggleFollow } = useMarketplaceActions(auth);
 
 const {
@@ -182,4 +219,40 @@ if (!followersUnavailable.value) {
 }
 
 const followers = computed(() => followersData.value?.followers || []);
+
+watch(
+  () => route.query.tab,
+  (value) => {
+    activeTab.value = normalizeTab(value);
+  }
+);
+
+watch(activeTab, async (value) => {
+  if (normalizeTab(route.query.tab) === value) {
+    return;
+  }
+
+  await router.replace({
+    query: {
+      ...route.query,
+      tab: value
+    }
+  });
+});
+
+function setActiveTab(value) {
+  activeTab.value = normalizeTab(value);
+}
+
+function getInitials(value) {
+  const label = String(value || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("");
+
+  return label || "M";
+}
 </script>

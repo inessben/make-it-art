@@ -1,4 +1,4 @@
-﻿import { defineNuxtPlugin, useRuntimeConfig, useState } from "#app";
+import { defineNuxtPlugin, useRuntimeConfig, useState } from "#app";
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
@@ -60,9 +60,20 @@ export default defineNuxtPlugin(() => {
           const sdk = await ensureInitialized();
           return sdk.createEvmEoaAccount(options);
         },
+        async createEvmKeyExportIframe(options) {
+          const sdk = await ensureInitialized();
+          return sdk.createEvmKeyExportIframe({
+            ...options,
+            projectId
+          });
+        },
         async getCurrentUser(options) {
           const sdk = await ensureInitialized();
           return sdk.getCurrentUser(options);
+        },
+        async getAccessToken(options) {
+          const sdk = await ensureInitialized();
+          return sdk.getAccessToken(options);
         },
         initializationError: null,
         load: ensureInitialized

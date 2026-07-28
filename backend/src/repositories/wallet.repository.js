@@ -1,4 +1,4 @@
-﻿const prisma = require("../lib/prisma");
+const prisma = require("../lib/prisma");
 
 function findLatestConsent(userId) {
   return prisma.walletConsent.findFirst({
@@ -54,7 +54,7 @@ function activate({ id, address }) {
 function markFailed({ id, errorCode }) {
   return prisma.wallet.update({
     where: { id },
-    data: { status: "FAILED", lastErrorCode: errorCode }
+    data: { status: "RETRY_REQUIRED", lastErrorCode: errorCode }
   });
 }
 function prepareRetry(id) {

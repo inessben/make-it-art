@@ -3,6 +3,11 @@ const environment =
 
 export default defineNuxtConfig({
   modules: ["@nuxtjs/tailwindcss", "@pinia/nuxt"],
+  vite: {
+    resolve: {
+      alias: [{ find: /^zustand$/, replacement: "zustand/vanilla" }]
+    }
+  },
   css: ["~/assets/styles/main.scss"],
   devtools: { enabled: true },
   app: {

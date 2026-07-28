@@ -106,6 +106,9 @@
                           >
                             {{ transaction.orderNumber }}
                           </NuxtLink>
+                          <span class="mt-1 block text-xs uppercase text-violet-300">
+                            {{ transaction.licenseLabel }}
+                          </span>
                         </div>
                       </div>
                     </td>
@@ -190,6 +193,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "#app";
 import AccountSettingsSidebar from "~/components/account/AccountSettingsSidebar.vue";
 import { getOrderStatusPresentation } from "~/utils/order-status";
+import { formatArtworkLicenseType } from "~/utils/marketplace";
 
 definePageMeta({ middleware: "auth" });
 
@@ -209,6 +213,7 @@ const transactions = computed(() =>
       orderNumber: order.reference || order.number || `#${order.id}`,
       artworkId: item.artworkId,
       title: item.title || "Untitled artwork",
+      licenseLabel: formatArtworkLicenseType(item.licenseType),
       status: getOrderStatusPresentation(order.status).title,
       date: order.createdAt,
       value:

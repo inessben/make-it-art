@@ -7,7 +7,13 @@
         <div
           class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-slate-800 text-lg font-semibold text-violet-200 ring-1 ring-violet-700/30"
         >
-          {{ initials }}
+          <img
+            v-if="artist.avatarUrl"
+            :src="artist.avatarUrl"
+            :alt="artist.displayName"
+            class="h-full w-full rounded-full object-cover"
+          />
+          <template v-else>{{ initials }}</template>
         </div>
 
         <div class="min-w-0">

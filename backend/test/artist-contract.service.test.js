@@ -70,6 +70,30 @@ test("renderArtistContract includes the signature date and time in the contract 
   );
 });
 
+test("buildContractContext uses undefined when the optional tax identifier is missing", () => {
+  const context = buildContractContext({
+    user: {
+      email: "artist@example.com",
+      username: "Ada Lovelace",
+      phone: "0102030405"
+    },
+    payload: {
+      firstName: "Ada",
+      lastName: "Lovelace",
+      displayName: "Ada Art",
+      addressLine1: "1 rue de Paris",
+      city: "Paris",
+      postalCode: "75001",
+      country: "France",
+      taxId: "",
+      artType: "Digital Art",
+      styles: ["Digital painting"]
+    }
+  });
+
+  assert.equal(context.taxId, "undefined");
+});
+
 test("resolveContractSignedAt falls back to the submission timestamp when needed", () => {
   const signedAt = resolveContractSignedAt({
     contractSignedAt: null,

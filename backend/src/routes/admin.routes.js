@@ -1,6 +1,7 @@
 const express = require("express");
 const prisma = require("../lib/prisma");
 const { authRequired } = require("../middlewares/auth-required.middleware");
+const { csrfProtection } = require("../middlewares/csrf.middleware");
 const {
   adminRequired,
   superAdminRequired,
@@ -16,6 +17,11 @@ const artistApplicationDraftRepository = require("../repositories/artist-applica
 const userRepository = require("../repositories/user.repository");
 const artistRepository = require("../repositories/artist.repository");
 const artworkRepository = require("../repositories/artwork.repository");
+const categoryRepository = require("../repositories/category.repository");
+const {
+  createSingleImageUpload,
+  getUploadedImagePath
+} = require("../middlewares/upload-image.middleware");
 const {
   ADMIN_AUDIT_ENTITY_LABELS,
   ADMIN_AUDIT_ENTITY_TYPES,
@@ -49,8 +55,18 @@ const {
   listAdminArtistWithdrawals,
   updateArtistWithdrawalStatus
 } = require("../services/artist-withdrawal.service");
+const {
+  buildUploadedImageUrl,
+  removeUploadedImage
+} = require("../services/uploaded-image.service");
 
 const router = express.Router();
+const CATEGORY_IMAGE_DIRECTORY = "categories";
+const handleCategoryImageUpload = createSingleImageUpload({
+  fieldName: "image",
+  relativeDirectory: CATEGORY_IMAGE_DIRECTORY,
+  maxFileSizeBytes: 8 * 1024 * 1024
+});
 
 const ORDER_STATUS_LABELS = {
   PENDING_PAYMENT: "Pending",
@@ -107,6 +123,14 @@ function normalizeText(value) {
 
 function normalizeEmail(value) {
   return normalizeText(value).toLowerCase();
+}
+
+function parseBooleanFlag(value) {
+  return ["1", "true", "yes", "on"].includes(
+    String(value || "")
+      .trim()
+      .toLowerCase()
+  );
 }
 
 function parsePositiveInteger(value) {
@@ -335,6 +359,7 @@ function serializeAdminArtist(artist) {
     id: artist.id,
     userId: artist.userId,
     name: artist.displayName || artist.user?.username || "Unnamed artist",
+    avatarUrl: buildUploadedImageUrl(artist.avatarPath),
     email: artist.user?.email || "Email not provided",
     bio: artist.user?.bio || "No bio yet.",
     verified: Boolean(artist.verified),
@@ -344,6 +369,15 @@ function serializeAdminArtist(artist) {
     followersCount: artist._count.followers,
     collectionsCount: artist._count.collections,
     createdAt: artist.createdAt || artist.user?.createdAt || null
+  };
+}
+
+function serializeAdminCategory(category) {
+  return {
+    id: category.id,
+    name: category.name || "Unnamed category",
+    imageUrl: buildUploadedImageUrl(category.imagePath),
+    artworksCount: category._count?.artworks || 0
   };
 }
 
@@ -816,6 +850,7 @@ function serializeAdminOrderItem(item) {
     artworkId: item.artworkId,
     artworkTitle: item.artworkTitle,
     artistName: item.artistName,
+    licenseType: item.licenseType,
     quantity: item.quantity,
     unitAmount: item.unitAmount,
     subtotalAmount: item.subtotalAmount,
@@ -1011,6 +1046,117 @@ function buildAdminPaymentDetailPayload(payment) {
     auditLog: (payment.auditLogs || []).map(serializeAdminAuditLog)
   };
 }
+
+router.get("/admin/categories", authRequired, adminRequired, async (_req, res) => {
+  try {
+    const categories = await categoryRepository.listCategoriesForAdmin();
+    const payload = categories.map(serializeAdminCategory);
+
+    return res.status(200).json({
+      summary: {
+        totalCategories: payload.length,
+        categoriesWithImage: payload.filter((category) => Boolean(category.imageUrl)).length,
+        totalArtworks: payload.reduce((sum, category) => sum + category.artworksCount, 0)
+      },
+      categories: payload
+    });
+  } catch (error) {
+    console.error("Admin categories fetch error:", error);
+
+    return res.status(500).json({
+      message: "Unable to load admin categories"
+    });
+  }
+});
+
+router.patch(
+  "/admin/categories/:categoryId/image",
+  authRequired,
+  adminRequired,
+  csrfProtection,
+  handleCategoryImageUpload,
+  async (req, res) => {
+    const categoryId = parsePositiveInteger(req.params.categoryId);
+    const uploadedImagePath = getUploadedImagePath(CATEGORY_IMAGE_DIRECTORY, req.file);
+
+    if (!categoryId) {
+      if (uploadedImagePath) {
+        await removeUploadedImage(uploadedImagePath);
+      }
+
+      return res.status(400).json({
+        message: "Invalid category id"
+      });
+    }
+
+    try {
+      const currentCategory = await categoryRepository.findById(categoryId);
+
+      if (!currentCategory) {
+        if (uploadedImagePath) {
+          await removeUploadedImage(uploadedImagePath);
+        }
+
+        return res.status(404).json({
+          message: "Category not found"
+        });
+      }
+
+      const removeImage = parseBooleanFlag(req.body.removeImage);
+
+      if (!uploadedImagePath && !removeImage) {
+        return res.status(400).json({
+          message: "Provide an image to upload or request image removal."
+        });
+      }
+
+      const nextImagePath = uploadedImagePath
+        ? uploadedImagePath
+        : removeImage
+          ? null
+          : currentCategory.imagePath || null;
+      const updatedCategory = await categoryRepository.updateCategoryImage({
+        categoryId,
+        imagePath: nextImagePath
+      });
+
+      if (
+        uploadedImagePath &&
+        currentCategory.imagePath &&
+        currentCategory.imagePath !== uploadedImagePath
+      ) {
+        await removeUploadedImage(currentCategory.imagePath);
+      }
+
+      if (removeImage && !uploadedImagePath && currentCategory.imagePath) {
+        await removeUploadedImage(currentCategory.imagePath);
+      }
+
+      await writeAdminAuditLog(prisma, {
+        actorUser: req.user,
+        action: uploadedImagePath ? "CATEGORY_IMAGE_UPDATED" : "CATEGORY_IMAGE_REMOVED",
+        entityType: "CATEGORY",
+        entityId: updatedCategory.id,
+        ipAddress: req.ip
+      });
+
+      return res.status(200).json({
+        message: uploadedImagePath ? "Category image updated." : "Category image removed.",
+        category: serializeAdminCategory(updatedCategory)
+      });
+    } catch (error) {
+      if (uploadedImagePath) {
+        await removeUploadedImage(uploadedImagePath);
+      }
+
+      console.error("Admin category image update error:", error);
+
+      return res.status(500).json({
+        message: "Unable to update this category image"
+      });
+    }
+  }
+);
 
 router.get("/admin/users", authRequired, adminRequired, async (req, res) => {
   try {

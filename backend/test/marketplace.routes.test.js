@@ -10,6 +10,7 @@ const adminRequiredPath = require.resolve("../src/middlewares/admin-required.mid
 const sessionServicePath = require.resolve("../src/services/session.service");
 const marketplaceRepositoryPath = require.resolve("../src/repositories/marketplace.repository");
 const collectorRepositoryPath = require.resolve("../src/repositories/collector.repository");
+const notificationRepositoryPath = require.resolve("../src/repositories/notification.repository");
 
 const collectorUser = {
   id: 7,
@@ -82,7 +83,8 @@ async function startMarketplaceApp(t, overrides = {}) {
   const calls = {
     addFavorite: [],
     createPersonalCollection: [],
-    cleanupSelfFollowForUser: []
+    cleanupSelfFollowForUser: [],
+    createNotification: []
   };
 
   const { moduleExports: router, restore } = loadModuleWithMocks(routesPath, {
@@ -160,6 +162,16 @@ async function startMarketplaceApp(t, overrides = {}) {
         if (overrides.followArtistError) {
           throw overrides.followArtistError;
         }
+
+        return (
+          overrides.followArtistResult || {
+            artist: {
+              id: 3,
+              userId: 19
+            },
+            created: true
+          }
+        );
       },
       async unfollowArtist() {},
       async listFavoriteArtworks() {
@@ -191,6 +203,11 @@ async function startMarketplaceApp(t, overrides = {}) {
       },
       async removeArtworkFromPersonalCollection() {
         return null;
+      }
+    },
+    [notificationRepositoryPath]: {
+      async createNotification(payload) {
+        calls.createNotification.push(payload);
       }
     }
   });
@@ -290,6 +307,58 @@ test("POST /artists/:id/follow blocks self follow attempts", async (t) => {
 
   assert.equal(response.status, 409);
   assert.equal(response.body.message, "Vous ne pouvez pas suivre votre propre profil artiste.");
+});
+
+test("POST /artists/:id/follow notifies the artist on a new follower", async (t) => {
+  const { baseUrl, calls } = await startMarketplaceApp(t, {
+    followArtistResult: {
+      artist: {
+        id: 3,
+        userId: 22
+      },
+      created: true
+    }
+  });
+
+  const response = await requestJson(baseUrl, "/artists/3/follow", {
+    method: "POST"
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(calls.createNotification.length, 1);
+  assert.deepEqual(calls.createNotification[0], {
+    userId: 22,
+    type: "follower",
+    title: "New follower",
+    message: "Collector started following your artist profile.",
+    payload: {
+      artistId: 3,
+      followerUserId: 7,
+      followerUsername: "Collector",
+      followerEmail: "collector@example.com",
+      followerArtistId: null,
+      profileUrl: "/members/7"
+    }
+  });
+});
+
+test("POST /artists/:id/follow does not create a notification when the follow already exists", async (t) => {
+  const { baseUrl, calls } = await startMarketplaceApp(t, {
+    followArtistResult: {
+      artist: {
+        id: 3,
+        userId: 22
+      },
+      created: false
+    }
+  });
+
+  const response = await requestJson(baseUrl, "/artists/3/follow", {
+    method: "POST"
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(calls.createNotification.length, 0);
 });
 
 test("GET /artists/:id returns the public artist profile payload", async (t) => {

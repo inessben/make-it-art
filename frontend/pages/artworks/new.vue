@@ -107,14 +107,26 @@
         </label>
 
         <label class="grid gap-2 text-sm text-[#9EABBE]">
-          <span class="font-medium text-[#E6EDF7]">Description</span>
+          <span class="font-medium text-[#E6EDF7]">
+            Description{{ descriptionRequired ? " *" : "" }}
+          </span>
           <textarea
             v-model.trim="form.description"
             rows="5"
             maxlength="4000"
-            placeholder="Decris ton univers, ta technique ou l'histoire de cette oeuvre..."
+            :placeholder="
+              descriptionRequired
+                ? `Décris l'oeuvre et précise ses conditions d'utilisation commerciale...`
+                : `Décris ton univers, ta technique ou l'histoire de cette oeuvre...`
+            "
             class="rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7]"
+            :required="descriptionRequired"
+            :aria-required="descriptionRequired"
           />
+          <span v-if="descriptionRequired" class="leading-6 text-[#8AA2FF]">
+            Indique ici les conditions d'utilisation commerciale : usages autorisés, restrictions,
+            supports, durée ou territoire applicables.
+          </span>
         </label>
 
         <label class="grid gap-2 text-sm text-[#9EABBE]">
@@ -127,6 +139,26 @@
             required
           />
         </label>
+
+        <fieldset class="grid gap-3 text-sm text-[#9EABBE]">
+          <legend class="font-medium text-[#E6EDF7]">Type de licence *</legend>
+          <label
+            v-for="license in licenseOptions"
+            :key="license.value"
+            class="flex cursor-pointer gap-3 rounded-2xl border bg-[#03060D] px-4 py-4 transition"
+            :class="
+              form.licenseType === license.value
+                ? 'border-[#4A6CF7] ring-1 ring-[#4A6CF7]/40'
+                : 'border-[#1A2336] hover:border-[#24314F]'
+            "
+          >
+            <input v-model="form.licenseType" type="radio" :value="license.value" required />
+            <span class="grid gap-1">
+              <strong class="font-semibold text-[#E6EDF7]">{{ license.label }}</strong>
+              <span class="leading-6 text-[#96A4B8]">{{ license.description }}</span>
+            </span>
+          </label>
+        </fieldset>
 
         <label
           class="flex items-center gap-3 rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-sm text-[#D7E3FF]"
@@ -168,8 +200,9 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, reactive, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { navigateTo } from "#app";
+import { ARTWORK_LICENSE_OPTIONS, isArtworkDescriptionRequired } from "~/utils/marketplace";
 
 definePageMeta({
   middleware: ["auth", "artist"]
@@ -183,14 +216,17 @@ const formError = ref(false);
 const fileInput = ref(null);
 const selectedFile = ref(null);
 const previewUrl = ref("");
+const licenseOptions = ARTWORK_LICENSE_OPTIONS;
 
 const form = reactive({
   title: "",
   description: "",
   categoryId: "",
   price: "",
+  licenseType: "",
   protection: false
 });
+const descriptionRequired = computed(() => isArtworkDescriptionRequired(form.licenseType));
 
 function openFilePicker() {
   fileInput.value?.click();
@@ -198,9 +234,32 @@ function openFilePicker() {
 
 function revokePreviewUrl() {
   if (previewUrl.value) {
-    URL.revokeObjectURL(previewUrl.value);
+    if (previewUrl.value.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl.value);
+    }
     previewUrl.value = "";
   }
+}
+
+function readPreviewImageAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("Preview data is unavailable."));
+    };
+
+    reader.onerror = () => {
+      reject(reader.error || new Error("Unable to load image preview."));
+    };
+
+    reader.readAsDataURL(file);
+  });
 }
 
 function clearSelectedFile() {
@@ -212,8 +271,9 @@ function clearSelectedFile() {
   }
 }
 
-function handleFileChange(event) {
-  const file = event.target.files?.[0];
+async function handleFileChange(event) {
+  const input = event.target;
+  const file = input.files?.[0];
 
   if (!file) {
     clearSelectedFile();
@@ -223,7 +283,16 @@ function handleFileChange(event) {
   // Ne pas vider l'input ici: ça peut relancer un change vide et effacer l'aperçu.
   revokePreviewUrl();
   selectedFile.value = file;
-  previewUrl.value = URL.createObjectURL(file);
+  try {
+    previewUrl.value = await readPreviewImageAsDataUrl(file);
+  } catch {
+    clearSelectedFile();
+    formError.value = true;
+    formMessage.value = "Impossible d'afficher l'aperçu local de cette image.";
+    return;
+  }
+
+  input.value = "";
 }
 
 onMounted(async () => {
@@ -256,6 +325,13 @@ async function submitArtwork() {
     return;
   }
 
+  if (descriptionRequired.value && !form.description) {
+    formError.value = true;
+    formMessage.value =
+      "Ajoute les conditions d'utilisation commerciale dans la description de l'oeuvre.";
+    return;
+  }
+
   submitting.value = true;
 
   try {
@@ -264,6 +340,7 @@ async function submitArtwork() {
     formData.append("title", form.title);
     formData.append("categoryId", form.categoryId);
     formData.append("price", form.price);
+    formData.append("licenseType", form.licenseType);
     formData.append("protection", String(form.protection));
 
     if (form.description) {

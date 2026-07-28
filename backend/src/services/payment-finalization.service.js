@@ -5,6 +5,7 @@ const { isFranceB2COrder } = require("../domain/commerce-policy");
 const { isTransactionWriteConflict, waitForTransactionRetry } = require("../lib/transaction-retry");
 const { canTransitionOrder, canTransitionPayment } = require("../domain/payment-state");
 const { recordSavedPaymentMethodConsent } = require("./saved-payment-method.service");
+const { releaseReservedArtwork } = require("./inventory-reservation.service");
 
 const EVENT_TARGETS = Object.freeze({
   "payment_intent.processing": {
@@ -131,17 +132,37 @@ async function consumeReservations(transaction, payment) {
   );
 
   for (const reservation of activeReservations) {
-    const updated = await transaction.artwork.updateMany({
+    let updated = await transaction.artwork.updateMany({
       where: {
         id: reservation.artworkId,
-        stockQuantity: { gte: reservation.quantity },
-        reservedQuantity: { gte: reservation.quantity }
+        licenseType: "EXCLUSIVE",
+        saleStatus: "AVAILABLE",
+        isSold: false,
+        stockQuantity: reservation.quantity,
+        reservedQuantity: reservation.quantity
       },
       data: {
-        stockQuantity: { decrement: reservation.quantity },
-        reservedQuantity: { decrement: reservation.quantity }
+        stockQuantity: 0,
+        reservedQuantity: 0,
+        saleStatus: "SOLD_OUT",
+        isSold: true
       }
     });
+
+    if (updated.count === 0) {
+      updated = await transaction.artwork.updateMany({
+        where: {
+          id: reservation.artworkId,
+          licenseType: { not: "EXCLUSIVE" },
+          stockQuantity: { gte: reservation.quantity },
+          reservedQuantity: { gte: reservation.quantity }
+        },
+        data: {
+          stockQuantity: { decrement: reservation.quantity },
+          reservedQuantity: { decrement: reservation.quantity }
+        }
+      });
+    }
 
     if (updated.count !== 1) {
       throw new PaymentFinalizationError(
@@ -221,15 +242,7 @@ async function releaseReservations(transaction, payment) {
   );
 
   for (const reservation of activeReservations) {
-    const updated = await transaction.artwork.updateMany({
-      where: {
-        id: reservation.artworkId,
-        reservedQuantity: { gte: reservation.quantity }
-      },
-      data: { reservedQuantity: { decrement: reservation.quantity } }
-    });
-
-    if (updated.count !== 1) {
+    if (!(await releaseReservedArtwork(transaction, reservation))) {
       throw new PaymentFinalizationError(
         "INVENTORY_RELEASE_CONFLICT",
         "Inventory cannot be released safely"
@@ -500,6 +513,7 @@ module.exports = {
   EVENT_TARGETS,
   FULFILLMENT_TASK_TYPES,
   PaymentFinalizationError,
+  consumeReservations,
   processStripePaymentEvent,
   validatePaymentIntent
 };

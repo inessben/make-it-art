@@ -1,4 +1,4 @@
-﻿const assert = require("node:assert/strict");
+const assert = require("node:assert/strict");
 const { test } = require("node:test");
 const { loadModuleWithMocks } = require("./helpers/mock-require");
 const servicePath = require.resolve("../src/services/wallet.service");
@@ -65,7 +65,7 @@ function loadService(changes = {}) {
   return loadModuleWithMocks(servicePath, {
     [repositoryPath]: repo,
     [cdpPath]: cdp,
-    [envPath]: { cdp: { projectId: "project-test" } }
+    [envPath]: { cdp: { projectId: "project-test", walletFeatureEnabled: true } }
   });
 }
 test("wallet creation refuses an unverified user", async () => {
@@ -113,6 +113,60 @@ test("wallet creation is idempotent", async () => {
     loaded.restore();
   }
 });
+test("CDP authentication remains available for an active owned wallet", async () => {
+  const loaded = loadService({
+    repo: {
+      async findByIdForUser() {
+        return { ...pending, status: "ACTIVE" };
+      }
+    }
+  });
+  try {
+    assert.deepEqual(await loaded.moduleExports.issueCdpToken(user, 1), {
+      token: "token",
+      projectId: "project-test"
+    });
+  } finally {
+    loaded.restore();
+  }
+});
+
+test("CDP authentication is refused for a detached wallet", async () => {
+  const loaded = loadService({
+    repo: {
+      async findByIdForUser() {
+        return { ...pending, status: "DETACHED" };
+      }
+    }
+  });
+  try {
+    await assert.rejects(
+      loaded.moduleExports.issueCdpToken(user, 1),
+      (error) => error.code === "WALLET_AUTH_UNAVAILABLE" && error.status === 409
+    );
+  } finally {
+    loaded.restore();
+  }
+});
+
+test("wallet access never reveals another user's wallet", async () => {
+  const loaded = loadService({
+    repo: {
+      async findByIdForUser() {
+        return null;
+      }
+    }
+  });
+  try {
+    await assert.rejects(
+      loaded.moduleExports.issueCdpToken(user, 99),
+      (error) => error.code === "WALLET_NOT_FOUND" && error.status === 404
+    );
+  } finally {
+    loaded.restore();
+  }
+});
+
 test("wallet completion validates and persists the Coinbase address", async () => {
   const loaded = loadService();
   try {

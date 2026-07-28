@@ -1,5 +1,5 @@
 <template>
-  <main class="min-h-screen bg-black text-slate-100">
+  <main class="min-h-full bg-black text-slate-100">
     <section
       class="mx-auto grid w-full max-w-[1440px] gap-8 px-5 py-8 lg:grid-cols-[258px_minmax(0,1fr)]"
     >
@@ -34,7 +34,7 @@
 defineProps({
   eyebrow: {
     type: String,
-    default: "Espace artiste"
+    default: "Artist workspace"
   },
   title: {
     type: String,
