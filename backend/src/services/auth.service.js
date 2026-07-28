@@ -10,6 +10,7 @@ const env = require("../config/env");
 const argon2 = require("argon2");
 const crypto = require("crypto");
 const { assertUserCanAuthenticate } = require("../utils/user-account-status");
+const { buildEmailVerificationUrl } = require("../utils/post-auth-redirect");
 
 async function loginWithEmail(email, password) {
   const normalizedEmail = normalizeEmail(email);
@@ -59,7 +60,7 @@ function buildTokenExpiryDate() {
   return new Date(Date.now() + 1000 * 60 * 60);
 }
 
-async function sendUserVerificationEmail(user) {
+async function sendUserVerificationEmail(user, requestedRedirect = "") {
   const verificationToken = crypto.randomBytes(32).toString("hex");
   const tokenHash = hashToken(verificationToken);
 
@@ -71,7 +72,11 @@ async function sendUserVerificationEmail(user) {
     expiresAt: buildTokenExpiryDate()
   });
 
-  const verificationUrl = `${env.appBaseUrl}/verify-email?token=${verificationToken}`;
+  const verificationUrl = buildEmailVerificationUrl(
+    env.appBaseUrl,
+    verificationToken,
+    requestedRedirect
+  );
 
   await sendVerificationEmail({
     to: user.email,
@@ -80,7 +85,7 @@ async function sendUserVerificationEmail(user) {
   });
 }
 
-async function registerUser({ username, email, phone, password }) {
+async function registerUser({ username, email, phone, password, redirectTo = "" }) {
   const normalizedEmail = normalizeEmail(email);
   const existingUser = await userRepository.findByEmail(normalizedEmail);
 
@@ -100,12 +105,12 @@ async function registerUser({ username, email, phone, password }) {
     isActive: false
   });
 
-  await sendUserVerificationEmail(user);
+  await sendUserVerificationEmail(user, redirectTo);
 
   return user;
 }
 
-async function resendVerificationEmail(email) {
+async function resendVerificationEmail(email, redirectTo = "") {
   const normalizedEmail = normalizeEmail(email);
   const user = await userRepository.findByEmail(normalizedEmail);
 
@@ -117,7 +122,7 @@ async function resendVerificationEmail(email) {
     throw new Error("Email already verified");
   }
 
-  await sendUserVerificationEmail(user);
+  await sendUserVerificationEmail(user, redirectTo);
 
   return user;
 }

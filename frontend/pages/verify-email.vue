@@ -19,14 +19,18 @@
       >
     </div>
     <FormMessage :message="message" />
-    <NuxtLink v-if="complete" class="ui-button-primary" to="/login">Go to sign in</NuxtLink>
+    <NuxtLink v-if="complete" class="ui-button-primary" :to="loginLocation">Go to sign in</NuxtLink>
   </AuthPanel>
 </template>
 
 <script setup>
+import { computed, onMounted, ref } from "vue";
+import { buildLoginLocation } from "~/utils/post-auth-redirect";
+
 const route = useRoute();
 const message = ref("Verifying your email...");
 const complete = ref(false);
+const loginLocation = computed(() => buildLoginLocation(route.query.redirect));
 
 onMounted(async () => {
   try {
@@ -40,6 +44,6 @@ onMounted(async () => {
 });
 
 function goToLogin() {
-  return navigateTo("/login");
+  return navigateTo(loginLocation.value);
 }
 </script>

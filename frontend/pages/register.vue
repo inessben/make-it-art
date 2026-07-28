@@ -44,7 +44,7 @@
 
       <p class="text-center text-body-1 text-slate-400">
         Already have an account?
-        <NuxtLink class="font-semibold text-violet-400 hover:underline" to="/login">
+        <NuxtLink class="font-semibold text-violet-400 hover:underline" :to="loginLocation">
           Sign in
         </NuxtLink>
       </p>
@@ -53,16 +53,21 @@
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import {
   getPasswordConfirmationError,
   getPasswordValidationError,
   MIN_PASSWORD_LENGTH
 } from "~/utils/password-validation";
+import { buildLoginLocation, sanitizePostAuthRedirect } from "~/utils/post-auth-redirect";
 
 definePageMeta({
   middleware: "guest"
 });
+
+const route = useRoute();
+const requestedRedirect = computed(() => sanitizePostAuthRedirect(route.query.redirect));
+const loginLocation = computed(() => buildLoginLocation(requestedRedirect.value));
 
 const form = reactive({
   username: "",
@@ -103,7 +108,8 @@ async function handleRegister() {
         email: form.email,
         phone: form.phone,
         password: form.password,
-        confirmPassword: form.confirmPassword
+        confirmPassword: form.confirmPassword,
+        redirect: requestedRedirect.value
       }
     });
 

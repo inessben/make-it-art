@@ -137,14 +137,7 @@ const artistNavigationItems = computed(() => {
     ];
   }
 
-  return [
-    {
-      label: "Become an artist",
-      to: "/become-artist",
-      matches: ["/become-artist", "/artist-profile"],
-      icon: "M12 3l7 4v10l-7 4-7-4V7l7-4zM12 8v8M8 12h8"
-    }
-  ];
+  return [];
 });
 
 const baseNavigation = [

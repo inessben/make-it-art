@@ -1,6 +1,7 @@
 <template>
   <header
     class="relative z-50 h-20 border-b border-white/5 bg-black text-slate-100"
+    :aria-busy="!auth.initialized || auth.loading"
     @keydown.esc="closeMenu(true)"
   >
     <div
@@ -58,7 +59,7 @@
       </NuxtLink>
 
       <div class="hidden items-center justify-self-end lg:flex">
-        <div v-if="auth.loading" class="h-[60px] w-[237px]" />
+        <div v-if="!auth.initialized || auth.loading" class="h-[60px] w-[237px]" />
         <nav
           v-else-if="auth.isAuthenticated"
           class="flex items-center gap-4 sm:gap-8 lg:gap-16"
@@ -120,7 +121,8 @@
         @click="closeMenu"
         >About Us</NuxtLink
       >
-      <template v-if="auth.isAuthenticated">
+      <div v-if="!auth.initialized || auth.loading" class="mt-6 h-12" aria-hidden="true" />
+      <template v-else-if="auth.isAuthenticated">
         <NuxtLink
           v-if="!auth.isAdmin"
           to="/wallet"
@@ -168,7 +170,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { navigateTo, useRoute } from "#app";
 import { useAuthStore } from "~/stores/auth";
 
@@ -199,14 +201,4 @@ async function handleLogout() {
 }
 
 watch(() => route.fullPath, closeMenu);
-
-onMounted(async () => {
-  if (auth.user || auth.loading) return;
-
-  try {
-    await auth.fetchCurrentUser();
-  } catch {
-    auth.user = null;
-  }
-});
 </script>
