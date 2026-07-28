@@ -1413,13 +1413,18 @@ function resetFilters() {
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #e2e2e2;
+  color: rgba(198, 204, 216, 0.72);
   outline: none;
+}
+
+.marketplace-footerbar__sort select option {
+  background: #0d1018;
+  color: rgba(170, 177, 191, 0.9);
 }
 
 .marketplace-footerbar__sort-icon {
   font-size: 13px;
-  color: #ccc3d9;
+  color: rgba(168, 156, 188, 0.82);
 }
 
 .marketplace-footerbar__view {
