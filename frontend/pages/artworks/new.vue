@@ -234,9 +234,32 @@ function openFilePicker() {
 
 function revokePreviewUrl() {
   if (previewUrl.value) {
-    URL.revokeObjectURL(previewUrl.value);
+    if (previewUrl.value.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl.value);
+    }
     previewUrl.value = "";
   }
+}
+
+function readPreviewImageAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("Preview data is unavailable."));
+    };
+
+    reader.onerror = () => {
+      reject(reader.error || new Error("Unable to load image preview."));
+    };
+
+    reader.readAsDataURL(file);
+  });
 }
 
 function clearSelectedFile() {
@@ -248,8 +271,9 @@ function clearSelectedFile() {
   }
 }
 
-function handleFileChange(event) {
-  const file = event.target.files?.[0];
+async function handleFileChange(event) {
+  const input = event.target;
+  const file = input.files?.[0];
 
   if (!file) {
     clearSelectedFile();
@@ -259,7 +283,16 @@ function handleFileChange(event) {
   // Ne pas vider l'input ici: ça peut relancer un change vide et effacer l'aperçu.
   revokePreviewUrl();
   selectedFile.value = file;
-  previewUrl.value = URL.createObjectURL(file);
+  try {
+    previewUrl.value = await readPreviewImageAsDataUrl(file);
+  } catch {
+    clearSelectedFile();
+    formError.value = true;
+    formMessage.value = "Impossible d'afficher l'aperçu local de cette image.";
+    return;
+  }
+
+  input.value = "";
 }
 
 onMounted(async () => {

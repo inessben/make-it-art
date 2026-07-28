@@ -195,10 +195,6 @@ function validateArtistApplicationPayload(payload, { requireAcceptances = false 
     return "L'adresse legale complete est requise.";
   }
 
-  if (!payload.taxId) {
-    return "Le numero d'identification fiscale est requis.";
-  }
-
   if (!payload.bio) {
     return "La bio artiste est requise.";
   }

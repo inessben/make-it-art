@@ -116,7 +116,7 @@ router.get("/marketplace/overview", attachViewer, async (req, res) => {
 
 router.get("/categories", async (_req, res) => {
   try {
-    const categories = await categoryRepository.listCategories();
+    const categories = await categoryRepository.listCategories({ publicOnly: true });
 
     return res.status(200).json({
       categories: categories.map((category) => ({

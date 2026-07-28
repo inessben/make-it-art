@@ -713,7 +713,7 @@ function formatCompactNumber(value) {
 
 <style scoped lang="scss">
 .artist-page {
-  min-height: 100vh;
+  min-height: 100%;
   background: radial-gradient(circle at top, rgba(123, 44, 255, 0.12), transparent 22%), #000;
   color: #e6edf7;
 }

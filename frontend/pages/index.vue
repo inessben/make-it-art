@@ -328,7 +328,12 @@
 
 <script setup>
 import { computed, nextTick, ref, watch } from "vue";
-import { useRequestHeaders } from "#app";
+import { useRequestHeaders, useState } from "#app";
+import {
+  MARKETPLACE_CATEGORY_GROUPS,
+  resolveArtworkCategoryGroup,
+  resolveMarketplaceCategoryGroupValue
+} from "~/utils/marketplace-categories";
 import { formatMarketplacePrice, getArtistInitials } from "~/utils/marketplace";
 
 const requestHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
@@ -339,6 +344,9 @@ const homeArtistCarousel = ref(null);
 const artworkProgress = ref(0);
 const artistProgress = ref(0);
 const newsletterEmail = ref("");
+const categoryImageSeed = useState("homepage-category-image-seed", () =>
+  Math.floor(Math.random() * 1_000_000_000)
+);
 
 const { data: categoriesData, pending: categoriesPending } = await useFetch("/api/categories", {
   headers: requestHeaders,
@@ -352,7 +360,7 @@ const { data: artworksData, pending: artworksPending } = await useFetch("/api/ar
   headers: requestHeaders,
   credentials: "include",
   query: {
-    limit: 12,
+    limit: 48,
     sort: "popular"
   },
   default: () => ({
@@ -371,29 +379,40 @@ const { data: artistsData, pending: artistsPending } = await useFetch("/api/arti
   })
 });
 
-const featuredCategories = computed(() => (categoriesData.value?.categories || []).slice(0, 3));
 const showcaseArtworks = computed(() => (artworksData.value?.artworks || []).slice(0, 12));
+const categorySourceArtworks = computed(() => artworksData.value?.artworks || []);
 const showcaseArtists = computed(() => (artistsData.value?.artists || []).slice(0, 12));
 const hasArtworkCarousel = computed(() => showcaseArtworks.value.length > artworksPerRail);
 const hasArtistCarousel = computed(() => showcaseArtists.value.length > artistsPerRail);
 
 const categoryCards = computed(() =>
-  featuredCategories.value.map((category, index) => {
-    const meta = categoryPresentation(category.name, index);
-    const categoryMatches = showcaseArtworks.value.filter(
-      (artwork) =>
-        normalizeKey(artwork.category?.name) === normalizeKey(category.name) ||
-        artwork.category?.id === category.id
+  MARKETPLACE_CATEGORY_GROUPS.map((group) => {
+    const linkedCategories = (categoriesData.value?.categories || []).filter(
+      (category) => resolveMarketplaceCategoryGroupValue(category.name) === group.value
     );
-    const pieceCount = Math.max(category.artworksCount || categoryMatches.length || 0, 0);
+    const categoryMatches = categorySourceArtworks.value.filter(
+      (artwork) => resolveArtworkCategoryGroup(artwork) === group.value
+    );
+    const exactPieceCount = linkedCategories.reduce(
+      (sum, category) => sum + Number(category.artworksCount || 0),
+      0
+    );
+    const pieceCount = exactPieceCount > 0 ? exactPieceCount : categoryMatches.length || 0;
+    const imageUrl =
+      selectCategoryArtworkImage(group.value, categoryMatches) ||
+      linkedCategories.find((category) => category.imageUrl)?.imageUrl ||
+      "";
 
     return {
-      ...category,
-      ...meta,
-      imageUrl: category.imageUrl || "",
+      id: group.value,
+      name: group.label,
+      filterValue: group.value,
+      imageUrl,
+      displayName: group.label,
+      pieceCount,
       piecesLabel: `${pieceCount} ${pieceCount === 1 ? "Piece" : "Pieces"}`
     };
-  })
+  }).filter((category) => category.pieceCount > 0 || Boolean(category.imageUrl))
 );
 
 const artistMeterStyle = computed(() => {
@@ -416,41 +435,21 @@ watch(
   { immediate: true }
 );
 
-function normalizeKey(value) {
-  return String(value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase();
-}
-
-function categoryPresentation(name, index) {
-  const key = normalizeKey(name);
-  const map = {
-    "digital art": { displayName: "Digital Arts" },
-    "digital arts": { displayName: "Digital Arts" },
-    illustration: { displayName: "Digital Arts" },
-    illustrations: { displayName: "Digital Arts" },
-    graphics: { displayName: "Graphics" },
-    graphic: { displayName: "Graphics" },
-    "graphical assets": { displayName: "Graphics" },
-    photographie: { displayName: "Photographies" },
-    photographies: { displayName: "Photographies" },
-    photography: { displayName: "Photographies" }
-  };
-
-  return (
-    map[key] || {
-      displayName:
-        index === 0
-          ? "Digital Arts"
-          : index === 1
-            ? "Graphics"
-            : index === 2
-              ? "Photographies"
-              : name
-    }
+function selectCategoryArtworkImage(groupValue, artworks) {
+  const matchingArtworks = artworks.filter(
+    (artwork) => resolveArtworkCategoryGroup(artwork) === groupValue
   );
+
+  if (!matchingArtworks.length) {
+    return "";
+  }
+
+  const hash = `${groupValue}-${categoryImageSeed.value}`
+    .split("")
+    .reduce((sum, character) => sum + character.charCodeAt(0), 0);
+  const artwork = matchingArtworks[hash % matchingArtworks.length];
+
+  return artwork?.imageUrl || artwork?.previewUrl || "";
 }
 
 function categoryCardClass(index) {
@@ -478,7 +477,7 @@ function buildCategoryRoute(category) {
   return {
     path: "/artworks",
     query: {
-      search: category.name
+      category: category.filterValue
     }
   };
 }

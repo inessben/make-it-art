@@ -1,5 +1,6 @@
 const prisma = require("../lib/prisma");
 const { PREDEFINED_ARTWORK_CATEGORIES } = require("../constants/artwork-categories");
+const { ARTWORK_MODERATION_STATUS } = require("../constants/artwork-moderation-status");
 
 function sortCategoriesByPredefinedOrder(categories) {
   const orderMap = new Map(
@@ -47,7 +48,22 @@ async function ensurePredefinedCategories() {
   return categories;
 }
 
-async function listCategories() {
+function buildArtworkCountSelection(publicOnly = false) {
+  if (!publicOnly) {
+    return true;
+  }
+
+  return {
+    where: {
+      moderationStatus: ARTWORK_MODERATION_STATUS.APPROVED,
+      artist: {
+        verified: true
+      }
+    }
+  };
+}
+
+async function listCategories({ publicOnly = false } = {}) {
   const ensuredCategories = await ensurePredefinedCategories();
   const categoryIds = ensuredCategories.map((category) => category.id);
 
@@ -60,7 +76,7 @@ async function listCategories() {
     include: {
       _count: {
         select: {
-          artworks: true
+          artworks: buildArtworkCountSelection(publicOnly)
         }
       }
     }

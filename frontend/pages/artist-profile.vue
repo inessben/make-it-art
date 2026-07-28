@@ -564,7 +564,9 @@ function revokeSelectedAvatarPreview() {
     return;
   }
 
-  URL.revokeObjectURL(selectedAvatarPreviewUrl.value);
+  if (selectedAvatarPreviewUrl.value.startsWith("blob:")) {
+    URL.revokeObjectURL(selectedAvatarPreviewUrl.value);
+  }
   selectedAvatarPreviewUrl.value = "";
 }
 
@@ -573,8 +575,31 @@ function revokeSelectedCoverPreview() {
     return;
   }
 
-  URL.revokeObjectURL(selectedCoverPreviewUrl.value);
+  if (selectedCoverPreviewUrl.value.startsWith("blob:")) {
+    URL.revokeObjectURL(selectedCoverPreviewUrl.value);
+  }
   selectedCoverPreviewUrl.value = "";
+}
+
+function readImageFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("Preview data is unavailable."));
+    };
+
+    reader.onerror = () => {
+      reject(reader.error || new Error("Unable to load image preview."));
+    };
+
+    reader.readAsDataURL(file);
+  });
 }
 
 function syncProfileForm(source) {
@@ -617,32 +642,56 @@ async function fetchCsrfToken() {
   return response.csrfToken;
 }
 
-function onProfileImageSelected(event) {
-  const [file] = event?.target?.files || [];
+async function onProfileImageSelected(event) {
+  const input = event?.target;
+  const [file] = input?.files || [];
   revokeSelectedAvatarPreview();
   selectedProfileImage.value = file || null;
 
   if (file) {
-    selectedAvatarPreviewUrl.value = URL.createObjectURL(file);
+    try {
+      selectedAvatarPreviewUrl.value = await readImageFileAsDataUrl(file);
+    } catch {
+      selectedProfileImage.value = null;
+      profileErrorMessage.value = "Unable to preview this profile image before upload.";
+    }
+  }
+
+  if (input) {
+    input.value = "";
   }
 
   profileForm.removeAvatar = false;
   profileSuccessMessage.value = "";
-  profileErrorMessage.value = "";
+  if (selectedProfileImage.value) {
+    profileErrorMessage.value = "";
+  }
 }
 
-function onCoverImageSelected(event) {
-  const [file] = event?.target?.files || [];
+async function onCoverImageSelected(event) {
+  const input = event?.target;
+  const [file] = input?.files || [];
   revokeSelectedCoverPreview();
   selectedCoverImage.value = file || null;
 
   if (file) {
-    selectedCoverPreviewUrl.value = URL.createObjectURL(file);
+    try {
+      selectedCoverPreviewUrl.value = await readImageFileAsDataUrl(file);
+    } catch {
+      selectedCoverImage.value = null;
+      profileErrorMessage.value = "Unable to preview this cover image before upload.";
+    }
+  }
+
+  if (input) {
+    input.value = "";
   }
 
   profileForm.removeCover = false;
   profileSuccessMessage.value = "";
-  profileErrorMessage.value = "";
+  if (selectedCoverImage.value) {
+    profileErrorMessage.value = "";
+  }
 }
 
 function markAvatarForRemoval() {

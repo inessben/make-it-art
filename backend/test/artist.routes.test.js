@@ -269,6 +269,35 @@ test("POST /artists/me submits a pending artist application with a signed contra
   assert.ok(Buffer.isBuffer(calls.submitApplication[0].contractPdf));
 });
 
+test("POST /artists/me accepts a signed artist application without a tax identifier", async (t) => {
+  const { baseUrl, calls } = await startArtistRoutesApp(t);
+  const response = await requestJson(baseUrl, "/artists/me", {
+    method: "POST",
+    body: {
+      displayName: "Ada Art",
+      firstName: "Ada",
+      lastName: "Lovelace",
+      bio: "Digital artist",
+      artType: "Digital Art",
+      styles: ["Digital painting"],
+      portfolioUrl: "https://portfolio.example",
+      socialHandle: "@ada",
+      addressLine1: "1 rue de Paris",
+      city: "Paris",
+      postalCode: "75001",
+      country: "France",
+      termsAccepted: true,
+      commissionAccepted: true,
+      contractAccepted: true,
+      signatureDataUrl: "data:image/png;base64,QUJD"
+    }
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(calls.submitApplication.length, 1);
+  assert.equal(calls.submitApplication[0].payload.taxId, "");
+});
+
 test("GET /artists/me returns both artist profile and application state", async (t) => {
   const { baseUrl } = await startArtistRoutesApp(t, {
     artistResult: {
