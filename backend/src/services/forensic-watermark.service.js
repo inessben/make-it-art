@@ -4,10 +4,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { spawn } = require("node:child_process");
 const env = require("../config/env");
-const {
-  buildViewerWatermarkId,
-  parseViewerWatermarkId
-} = require("../utils/viewer-watermark");
+const { buildViewerWatermarkId, parseViewerWatermarkId } = require("../utils/viewer-watermark");
 
 const FORENSIC_COOKIE = "mia_forensic_viewer";
 const PAYLOAD_LENGTH = 34;
@@ -26,14 +23,15 @@ function createGuestViewerToken() {
   return crypto.randomBytes(6).toString("hex").toUpperCase();
 }
 
-function runPython(args) {
+function runPythonCommand(command, args) {
   return new Promise((resolve, reject) => {
-    const child = spawn(env.artworkMedia.pythonPath, args, {
+    const child = spawn(command, args, {
       stdio: ["ignore", "pipe", "pipe"]
     });
 
     let stdout = "";
     let stderr = "";
+    let settled = false;
 
     child.stdout.on("data", (chunk) => {
       stdout += chunk.toString();
@@ -41,8 +39,14 @@ function runPython(args) {
     child.stderr.on("data", (chunk) => {
       stderr += chunk.toString();
     });
-    child.on("error", reject);
+    child.on("error", (error) => {
+      if (settled) return;
+      settled = true;
+      reject(error);
+    });
     child.on("close", (code) => {
+      if (settled) return;
+      settled = true;
       if (code === 0) {
         resolve(stdout.trim());
         return;
@@ -50,6 +54,26 @@ function runPython(args) {
       reject(new Error(stderr.trim() || `FORENSIC_WATERMARK_FAILED:${code}`));
     });
   });
+}
+
+async function runPython(args) {
+  const configuredPath = env.artworkMedia.pythonPath;
+  const commands = [
+    configuredPath,
+    ...(process.platform === "win32" ? ["py"] : []),
+    "python3"
+  ].filter((command, index, values) => command && values.indexOf(command) === index);
+
+  let lastError;
+  for (const command of commands) {
+    try {
+      return await runPythonCommand(command, args);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError;
 }
 
 /**
@@ -116,11 +140,7 @@ function parseForensicPayload(buffer) {
   const kindFlag = buffer.readUInt8(5);
   const userId = buffer.readUInt32BE(6) || null;
   const artworkId = buffer.readUInt32BE(10) || null;
-  const guestToken = buffer
-    .subarray(14, 26)
-    .toString("ascii")
-    .replace(/\0/g, "")
-    .trim() || null;
+  const guestToken = buffer.subarray(14, 26).toString("ascii").replace(/\0/g, "").trim() || null;
 
   const visibleId = buildViewerWatermarkId({
     userId: kindFlag === 1 ? userId : null,

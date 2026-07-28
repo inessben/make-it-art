@@ -39,9 +39,7 @@ const multer = require("multer");
 const fsp = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
-const {
-  extractForensicWatermarkFromFile
-} = require("../services/forensic-watermark.service");
+const { extractForensicWatermarkFromFile } = require("../services/forensic-watermark.service");
 const {
   AdminUserManagementError,
   removeAdminAccess,

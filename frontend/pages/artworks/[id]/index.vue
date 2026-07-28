@@ -1,5 +1,7 @@
 <template>
-  <main class="artwork-page min-h-screen bg-black px-4 py-8 text-slate-100 sm:px-8 sm:py-12 lg:px-10">
+  <main
+    class="artwork-page min-h-screen bg-black px-4 py-8 text-slate-100 sm:px-8 sm:py-12 lg:px-10"
+  >
     <section class="mx-auto w-full max-w-[1360px]">
       <AppStatePanel
         v-if="pending"
@@ -48,7 +50,9 @@
           class="artwork-hero grid overflow-hidden border border-[#161A1D] bg-[#111414] lg:grid-cols-[minmax(0,1.55fr)_minmax(360px,0.95fr)]"
         >
           <div class="relative border-b border-[#1C2022] bg-[#101515] lg:border-b-0 lg:border-r">
-            <div class="relative aspect-square w-full overflow-hidden lg:aspect-auto lg:h-full lg:min-h-[640px]">
+            <div
+              class="relative aspect-square w-full overflow-hidden lg:aspect-auto lg:h-full lg:min-h-[640px]"
+            >
               <ProtectedArtworkMedia
                 v-if="artworkImageUrl"
                 :src="artworkImageUrl"
@@ -213,210 +217,207 @@
               </p>
             </div>
 
-              <section
-                v-if="artwork.management || isOwnArtwork"
-                class="mt-2 border border-white/10 bg-[#111414] px-4 py-4 sm:px-5"
-                aria-labelledby="artwork-management-title"
-              >
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                  <div class="flex flex-wrap items-center gap-3">
-                    <h2
-                      id="artwork-management-title"
-                      class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300"
-                    >
-                      Gérer l’œuvre
-                    </h2>
-                    <span
-                      v-if="artwork.management"
-                      class="rounded-[4px] border px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em]"
-                      :class="visibilityClass"
-                    >
-                      {{ visibilityPresentation.label }}
-                    </span>
-                  </div>
-                  <p class="text-xs text-slate-500">Actions réservées au propriétaire</p>
-                </div>
-
-                <div
-                  class="mt-4 flex flex-wrap gap-2"
-                  aria-label="Actions de gestion"
-                >
-                  <NuxtLink
-                    v-if="!artwork.management || artwork.management.capabilities?.canEdit !== false"
-                    :to="`/artworks/${artwork.id}/edit`"
-                    class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-violet-500/60 bg-violet-500/10 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-violet-100 transition hover:border-violet-400 hover:bg-violet-500/20"
-                    aria-label="Modifier l’œuvre"
+            <section
+              v-if="artwork.management || isOwnArtwork"
+              class="mt-2 border border-white/10 bg-[#111414] px-4 py-4 sm:px-5"
+              aria-labelledby="artwork-management-title"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-3">
+                  <h2
+                    id="artwork-management-title"
+                    class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300"
                   >
-                    Modifier
-                  </NuxtLink>
-                  <button
-                    v-if="artwork.management?.capabilities?.canHide"
-                    ref="hideTrigger"
-                    type="button"
-                    class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-[#6F5C23] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-[#F7D990] transition hover:border-[#A78931] hover:bg-[#2B220E]"
-                    @click="openHideDialog"
-                  >
-                    Masquer
-                  </button>
-                  <button
-                    v-if="artwork.management?.capabilities?.canPublish"
-                    type="button"
-                    class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-violet-500/60 bg-violet-500/10 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-violet-100 transition hover:border-violet-400 hover:bg-violet-500/20 disabled:cursor-wait disabled:opacity-50"
-                    :disabled="publishingArtwork"
-                    @click="confirmArtworkPublish"
-                  >
-                    {{ publishingArtwork ? "Republication…" : "Republier" }}
-                  </button>
-                  <button
-                    v-if="artwork.management?.capabilities?.canArchive"
-                    ref="archiveTrigger"
-                    type="button"
-                    class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-white/15 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-slate-300 transition hover:border-slate-500 hover:bg-white/5 hover:text-white"
-                    @click="openArchiveDialog"
-                  >
-                    Archiver
-                  </button>
-                  <button
-                    v-if="artwork.management?.capabilities?.canRestore"
-                    ref="restoreTrigger"
-                    type="button"
-                    class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-violet-500/60 bg-violet-500/10 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-violet-100 transition hover:border-violet-400 hover:bg-violet-500/20"
-                    @click="openRestoreDialog"
-                  >
-                    Restaurer
-                  </button>
-                  <button
-                    v-if="!artwork.management || artwork.management.capabilities?.canDelete !== false"
-                    ref="deleteTrigger"
-                    type="button"
-                    class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-[#7A3131] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-[#FFB4B4] transition hover:border-[#B64747] hover:bg-[#2A1010]"
-                    @click="openDeleteDialog"
-                  >
-                    Supprimer
-                  </button>
-                </div>
-
-                <details
-                  v-if="blockedManagementActions.length"
-                  class="group mt-3 border-t border-white/10 pt-3"
-                >
-                  <summary
-                    class="flex cursor-pointer list-none items-center justify-between gap-3 text-xs text-slate-500 transition hover:text-slate-300 [&::-webkit-details-marker]:hidden"
-                  >
-                    <span>Voir les actions indisponibles</span>
-                    <span
-                      class="text-base leading-none transition group-open:rotate-45"
-                      aria-hidden="true"
-                    >
-                      +
-                    </span>
-                  </summary>
-                  <ul class="mt-3 grid gap-2">
-                    <li
-                      v-for="item in blockedManagementActions"
-                      :key="item.key"
-                      class="grid gap-1 text-xs sm:grid-cols-[7rem_1fr] sm:gap-3"
-                    >
-                      <span class="font-semibold text-slate-300">{{ item.label }}</span>
-                      <span class="leading-5 text-slate-500">{{ item.reason }}</span>
-                    </li>
-                  </ul>
-                </details>
-
-                <p
-                  v-if="managementMessage"
-                  class="mt-3 border px-3 py-2 text-sm"
-                  :class="
-                    managementMessageTone === 'success'
-                      ? 'border-[#24543A] bg-[#10261A] text-[#9DE2B4]'
-                      : 'border-[#7A3131] bg-[#2A1010] text-[#FFB4B4]'
-                  "
-                  role="alert"
-                >
-                  {{ managementMessage }}
-                </p>
-              </section>
-
-              <div class="mt-2 grid gap-3">
-                <button
-                  v-if="artwork.isAvailableForPurchase"
-                  type="button"
-                  class="inline-flex min-h-[62px] items-center justify-center rounded-[6px] bg-gradient-to-r from-[#6F2BFF] to-[#A046FF] px-6 text-base font-semibold uppercase tracking-[0.12em] text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-                  :disabled="cart.loading || isOwnArtwork"
-                  :title="isOwnArtwork ? 'You cannot buy your own artwork.' : undefined"
-                  @click="toggleCart"
-                >
-                  {{
-                    cart.loading
-                      ? "Updating..."
-                      : isOwnArtwork
-                        ? "Your artwork - purchase unavailable"
-                        : isInCart
-                          ? "Remove from cart"
-                          : "Add to cart"
-                  }}
-                </button>
-                <div
-                  v-else
-                  class="group relative rounded-[6px] focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/70"
-                  tabindex="0"
-                  :aria-describedby="`purchase-unavailable-${artwork.id}`"
-                >
-                  <button
-                    type="button"
-                    class="inline-flex min-h-[62px] w-full cursor-not-allowed items-center justify-center rounded-[6px] border border-white/10 bg-white/[0.04] px-6 text-base font-semibold uppercase tracking-[0.12em] text-slate-500"
-                    disabled
-                    aria-disabled="true"
-                  >
-                    {{ unavailablePurchaseLabel }}
-                  </button>
+                    Gérer l’œuvre
+                  </h2>
                   <span
-                    :id="`purchase-unavailable-${artwork.id}`"
-                    role="tooltip"
-                    class="pointer-events-none absolute bottom-[calc(100%+0.5rem)] left-1/2 z-20 w-max max-w-[min(18rem,calc(100vw-3rem))] -translate-x-1/2 rounded-[6px] border border-white/10 bg-[#090C10] px-3 py-2 text-center text-xs font-medium normal-case tracking-normal text-slate-200 opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus:opacity-100"
+                    v-if="artwork.management"
+                    class="rounded-[4px] border px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em]"
+                    :class="visibilityClass"
                   >
-                    {{ availabilityMessage }}
+                    {{ visibilityPresentation.label }}
                   </span>
                 </div>
+                <p class="text-xs text-slate-500">Actions réservées au propriétaire</p>
+              </div>
 
+              <div class="mt-4 flex flex-wrap gap-2" aria-label="Actions de gestion">
+                <NuxtLink
+                  v-if="!artwork.management || artwork.management.capabilities?.canEdit !== false"
+                  :to="`/artworks/${artwork.id}/edit`"
+                  class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-violet-500/60 bg-violet-500/10 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-violet-100 transition hover:border-violet-400 hover:bg-violet-500/20"
+                  aria-label="Modifier l’œuvre"
+                >
+                  Modifier
+                </NuxtLink>
+                <button
+                  v-if="artwork.management?.capabilities?.canHide"
+                  ref="hideTrigger"
+                  type="button"
+                  class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-[#6F5C23] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-[#F7D990] transition hover:border-[#A78931] hover:bg-[#2B220E]"
+                  @click="openHideDialog"
+                >
+                  Masquer
+                </button>
+                <button
+                  v-if="artwork.management?.capabilities?.canPublish"
+                  type="button"
+                  class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-violet-500/60 bg-violet-500/10 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-violet-100 transition hover:border-violet-400 hover:bg-violet-500/20 disabled:cursor-wait disabled:opacity-50"
+                  :disabled="publishingArtwork"
+                  @click="confirmArtworkPublish"
+                >
+                  {{ publishingArtwork ? "Republication…" : "Republier" }}
+                </button>
+                <button
+                  v-if="artwork.management?.capabilities?.canArchive"
+                  ref="archiveTrigger"
+                  type="button"
+                  class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-white/15 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-slate-300 transition hover:border-slate-500 hover:bg-white/5 hover:text-white"
+                  @click="openArchiveDialog"
+                >
+                  Archiver
+                </button>
+                <button
+                  v-if="artwork.management?.capabilities?.canRestore"
+                  ref="restoreTrigger"
+                  type="button"
+                  class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-violet-500/60 bg-violet-500/10 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-violet-100 transition hover:border-violet-400 hover:bg-violet-500/20"
+                  @click="openRestoreDialog"
+                >
+                  Restaurer
+                </button>
+                <button
+                  v-if="!artwork.management || artwork.management.capabilities?.canDelete !== false"
+                  ref="deleteTrigger"
+                  type="button"
+                  class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-[#7A3131] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-[#FFB4B4] transition hover:border-[#B64747] hover:bg-[#2A1010]"
+                  @click="openDeleteDialog"
+                >
+                  Supprimer
+                </button>
+              </div>
+
+              <details
+                v-if="blockedManagementActions.length"
+                class="group mt-3 border-t border-white/10 pt-3"
+              >
+                <summary
+                  class="flex cursor-pointer list-none items-center justify-between gap-3 text-xs text-slate-500 transition hover:text-slate-300 [&::-webkit-details-marker]:hidden"
+                >
+                  <span>Voir les actions indisponibles</span>
+                  <span
+                    class="text-base leading-none transition group-open:rotate-45"
+                    aria-hidden="true"
+                  >
+                    +
+                  </span>
+                </summary>
+                <ul class="mt-3 grid gap-2">
+                  <li
+                    v-for="item in blockedManagementActions"
+                    :key="item.key"
+                    class="grid gap-1 text-xs sm:grid-cols-[7rem_1fr] sm:gap-3"
+                  >
+                    <span class="font-semibold text-slate-300">{{ item.label }}</span>
+                    <span class="leading-5 text-slate-500">{{ item.reason }}</span>
+                  </li>
+                </ul>
+              </details>
+
+              <p
+                v-if="managementMessage"
+                class="mt-3 border px-3 py-2 text-sm"
+                :class="
+                  managementMessageTone === 'success'
+                    ? 'border-[#24543A] bg-[#10261A] text-[#9DE2B4]'
+                    : 'border-[#7A3131] bg-[#2A1010] text-[#FFB4B4]'
+                "
+                role="alert"
+              >
+                {{ managementMessage }}
+              </p>
+            </section>
+
+            <div class="mt-2 grid gap-3">
+              <button
+                v-if="artwork.isAvailableForPurchase"
+                type="button"
+                class="inline-flex min-h-[62px] items-center justify-center rounded-[6px] bg-gradient-to-r from-[#6F2BFF] to-[#A046FF] px-6 text-base font-semibold uppercase tracking-[0.12em] text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                :disabled="cart.loading || isOwnArtwork"
+                :title="isOwnArtwork ? 'You cannot buy your own artwork.' : undefined"
+                @click="toggleCart"
+              >
+                {{
+                  cart.loading
+                    ? "Updating..."
+                    : isOwnArtwork
+                      ? "Your artwork - purchase unavailable"
+                      : isInCart
+                        ? "Remove from cart"
+                        : "Add to cart"
+                }}
+              </button>
+              <div
+                v-else
+                class="group relative rounded-[6px] focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/70"
+                tabindex="0"
+                :aria-describedby="`purchase-unavailable-${artwork.id}`"
+              >
                 <button
                   type="button"
-                  class="inline-flex min-h-[58px] items-center justify-center rounded-[6px] border border-white/10 px-6 text-base font-semibold uppercase tracking-[0.12em] text-white transition hover:border-violet-500 hover:bg-white/5"
-                  @click="notifyOfferUnavailable"
+                  class="inline-flex min-h-[62px] w-full cursor-not-allowed items-center justify-center rounded-[6px] border border-white/10 bg-white/[0.04] px-6 text-base font-semibold uppercase tracking-[0.12em] text-slate-500"
+                  disabled
+                  aria-disabled="true"
                 >
-                  Make an offer
+                  {{ unavailablePurchaseLabel }}
                 </button>
-
-                <div class="grid gap-3 sm:grid-cols-2">
-                  <button
-                    type="button"
-                    class="inline-flex min-h-[54px] items-center justify-center rounded-[6px] border border-white/10 px-5 text-sm font-semibold uppercase tracking-[0.12em] text-white transition hover:border-violet-500 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
-                    :disabled="Boolean(favoriteLoading[artwork.id])"
-                    @click="toggleFavorite(artwork)"
-                  >
-                    {{
-                      favoriteLoading[artwork.id]
-                        ? "Updating..."
-                        : artwork.isFavorite
-                          ? "Saved to wishlist"
-                          : "Add to wishlist"
-                    }}
-                  </button>
-                  <a
-                    v-if="artwork.hasHdFile && artwork.hdDownloadUrl"
-                    :href="artwork.hdDownloadUrl"
-                    class="inline-flex min-h-[54px] items-center justify-center rounded-[6px] border border-white/10 px-5 text-sm font-semibold uppercase tracking-[0.12em] text-white transition hover:border-violet-500 hover:bg-white/5"
-                  >
-                    Download HD
-                  </a>
-                </div>
-
-                <p class="pt-2 text-sm leading-7 text-slate-500">
-                  Public previews may be compressed{{
-                    artwork.watermarkApplied ? " and watermarked" : ""
-                  }}. The HD asset is reserved for the artist and verified buyers.
-                </p>
+                <span
+                  :id="`purchase-unavailable-${artwork.id}`"
+                  role="tooltip"
+                  class="pointer-events-none absolute bottom-[calc(100%+0.5rem)] left-1/2 z-20 w-max max-w-[min(18rem,calc(100vw-3rem))] -translate-x-1/2 rounded-[6px] border border-white/10 bg-[#090C10] px-3 py-2 text-center text-xs font-medium normal-case tracking-normal text-slate-200 opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus:opacity-100"
+                >
+                  {{ availabilityMessage }}
+                </span>
               </div>
+
+              <button
+                type="button"
+                class="inline-flex min-h-[58px] items-center justify-center rounded-[6px] border border-white/10 px-6 text-base font-semibold uppercase tracking-[0.12em] text-white transition hover:border-violet-500 hover:bg-white/5"
+                @click="notifyOfferUnavailable"
+              >
+                Make an offer
+              </button>
+
+              <div class="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  class="inline-flex min-h-[54px] items-center justify-center rounded-[6px] border border-white/10 px-5 text-sm font-semibold uppercase tracking-[0.12em] text-white transition hover:border-violet-500 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
+                  :disabled="Boolean(favoriteLoading[artwork.id])"
+                  @click="toggleFavorite(artwork)"
+                >
+                  {{
+                    favoriteLoading[artwork.id]
+                      ? "Updating..."
+                      : artwork.isFavorite
+                        ? "Saved to wishlist"
+                        : "Add to wishlist"
+                  }}
+                </button>
+                <a
+                  v-if="artwork.hasHdFile && artwork.hdDownloadUrl"
+                  :href="artwork.hdDownloadUrl"
+                  class="inline-flex min-h-[54px] items-center justify-center rounded-[6px] border border-white/10 px-5 text-sm font-semibold uppercase tracking-[0.12em] text-white transition hover:border-violet-500 hover:bg-white/5"
+                >
+                  Download HD
+                </a>
+              </div>
+
+              <p class="pt-2 text-sm leading-7 text-slate-500">
+                Public previews may be compressed{{
+                  artwork.watermarkApplied ? " and watermarked" : ""
+                }}. The HD asset is reserved for the artist and verified buyers.
+              </p>
+            </div>
           </aside>
         </section>
 
@@ -503,10 +504,7 @@
         aria-label="Close protected preview"
         @click="closeProtectedPreview"
       />
-      <div
-        class="relative z-[1] grid w-full max-w-5xl gap-4"
-        @click.stop
-      >
+      <div class="relative z-[1] grid w-full max-w-5xl gap-4" @click.stop>
         <div class="flex items-center justify-between gap-4">
           <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
             Protected preview · AI training prohibited
@@ -886,9 +884,6 @@ const managementActionSummary = computed(() => {
 const blockedManagementActions = computed(() =>
   managementActionSummary.value.filter((item) => !item.available)
 );
-const availableManagementActionCount = computed(
-  () => managementActionSummary.value.length - blockedManagementActions.value.length
-);
 const availabilityClass = computed(() => {
   const tones = {
     available: "bg-[#10261A] text-[#9DE2B4]",
@@ -972,12 +967,11 @@ const artworkFacts = computed(() => [
   },
   {
     label: "Edition",
-    value:
-      artwork.value?.isUnlimited
-        ? "Unlimited edition"
-        : Number(artwork.value?.stockQuantity || 0) > 1
-          ? `Edition of ${artwork.value.stockQuantity}`
-          : "Unique 1 of 1"
+    value: artwork.value?.isUnlimited
+      ? "Unlimited edition"
+      : Number(artwork.value?.stockQuantity || 0) > 1
+        ? `Edition of ${artwork.value.stockQuantity}`
+        : "Unique 1 of 1"
   }
 ]);
 
@@ -1422,4 +1416,5 @@ async function hydrateOwnerManagement() {
       }
     }
   }
-}</script>
+}
+</script>

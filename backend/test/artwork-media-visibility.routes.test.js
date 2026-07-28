@@ -98,7 +98,7 @@ test("an owner or active buyer can load a withdrawn preview without public cachi
   assert.equal(response.status, 200);
   assert.equal(await response.text(), "preview");
   assert.equal(response.headers.get("cache-control"), "private, no-store");
-  assert.equal(response.headers.get("x-robots-tag"), "noindex, noarchive");
+  assert.equal(response.headers.get("x-robots-tag"), "noindex, nofollow, noai, noimageai");
   assert.equal(calls.accessChecks, 1);
   assert.equal(calls.opened, 1);
 });
@@ -110,8 +110,8 @@ test("an approved published preview keeps its public cache policy", async (t) =>
   const response = await fetch(`${baseUrl}/artworks/42/media/preview`);
 
   assert.equal(response.status, 200);
-  assert.equal(response.headers.get("cache-control"), "public, max-age=86400");
-  assert.equal(response.headers.get("x-robots-tag"), null);
+  assert.equal(response.headers.get("cache-control"), "private, no-store");
+  assert.equal(response.headers.get("x-robots-tag"), "noindex, nofollow, noai, noimageai");
   assert.equal(calls.accessChecks, 0);
   assert.equal(calls.opened, 1);
 });

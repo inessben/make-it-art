@@ -1,9 +1,6 @@
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
-const {
-  buildViewerWatermarkId,
-  parseViewerWatermarkId
-} = require("../src/utils/viewer-watermark");
+const { buildViewerWatermarkId, parseViewerWatermarkId } = require("../src/utils/viewer-watermark");
 
 test("viewer watermark encodes and decodes authenticated user + artwork", () => {
   const watermark = buildViewerWatermarkId({ userId: 42, artworkId: 7 });

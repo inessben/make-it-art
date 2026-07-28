@@ -153,7 +153,7 @@ test("only an active right exposes the protected download after public withdrawa
     }).items;
 
     assert.equal(item.publicAccess.publicDetailAvailable, false);
-    assert.equal(item.delivery.downloadRights.downloadUrl, null);
+    assert.equal(item.delivery.downloadRights.downloadUrl, undefined);
   }
 });
 

@@ -75,7 +75,6 @@
       <div class="homepage__section-link-row">
         <NuxtLink to="/artworks" class="homepage__section-link">
           <span>all categories</span>
-          <span aria-hidden="true">&rarr;</span>
         </NuxtLink>
       </div>
     </section>
@@ -172,7 +171,6 @@
       <div class="homepage__section-link-row homepage__section-link-row--tight">
         <NuxtLink to="/artworks" class="homepage__section-link">
           <span>more artworks</span>
-          <span aria-hidden="true">&rarr;</span>
         </NuxtLink>
       </div>
     </section>
@@ -285,7 +283,6 @@
       <div class="homepage__section-link-row homepage__section-link-row--tight">
         <NuxtLink to="/artists" class="homepage__section-link">
           <span>all artists</span>
-          <span aria-hidden="true">&rarr;</span>
         </NuxtLink>
       </div>
     </section>

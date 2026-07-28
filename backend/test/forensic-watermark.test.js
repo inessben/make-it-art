@@ -21,7 +21,12 @@ test("forensic payload hmac roundtrip", () => {
 });
 
 test("forensic watermark survives embed/extract as PNG", async () => {
-  const python = process.env.PDF_PYTHON_PATH || process.env.ARTWORK_PYTHON_PATH || "python3";
+  const pythonCommands = [
+    process.env.PDF_PYTHON_PATH,
+    process.env.ARTWORK_PYTHON_PATH,
+    ...(process.platform === "win32" ? ["py"] : []),
+    "python3"
+  ].filter((command, index, values) => command && values.indexOf(command) === index);
   const tempRoot = await fsp.mkdtemp(path.join(os.tmpdir(), "mia-forensic-test-"));
   const sourcePath = path.join(tempRoot, "source.jpg");
   const embeddedPath = path.join(tempRoot, "embedded.png");
@@ -39,7 +44,11 @@ test("forensic watermark survives embed/extract as PNG", async () => {
       "utf8"
     );
 
-    const makeSource = spawnSync(python, [helperPath, sourcePath], { encoding: "utf8" });
+    let makeSource;
+    for (const command of pythonCommands) {
+      makeSource = spawnSync(command, [helperPath, sourcePath], { encoding: "utf8" });
+      if (makeSource.status === 0) break;
+    }
     if (makeSource.status !== 0) {
       assert.fail(makeSource.stderr || "Unable to create test JPEG with Pillow");
     }

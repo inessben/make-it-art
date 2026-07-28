@@ -47,6 +47,7 @@ export default defineNuxtPlugin(() => {
             return response.token;
           }
         },
+        ethereum: { createOnLogin: "eoa" },
         disableAnalytics: true
       });
     });

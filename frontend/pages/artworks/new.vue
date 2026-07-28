@@ -165,8 +165,8 @@
         >
           <input v-model="form.protection" type="checkbox" />
           <span>
-            Protection anti-IA renforcée (badge catalogue). Le filigrane anti-copie est déjà appliqué
-            sur toutes les prévisualisations publiques.
+            Protection anti-IA renforcée (badge catalogue). Le filigrane anti-copie est déjà
+            appliqué sur toutes les prévisualisations publiques.
           </span>
         </label>
 

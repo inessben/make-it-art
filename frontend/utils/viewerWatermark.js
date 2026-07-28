@@ -70,7 +70,9 @@ export function buildViewerWatermarkId({ userId = null, artworkId = null } = {})
  * @returns {{ kind: 'user'|'guest'|'unknown', userId: number|null, artworkId: number|null, guestToken: string|null }}
  */
 export function parseViewerWatermarkId(watermarkId) {
-  const raw = String(watermarkId || "").trim().toUpperCase();
+  const raw = String(watermarkId || "")
+    .trim()
+    .toUpperCase();
   const userMatch = raw.match(/^MIA-U([A-Z0-9]+)(?:-A([A-Z0-9]+))?-([A-Z0-9]{4,8})$/);
   if (userMatch) {
     return {

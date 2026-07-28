@@ -1950,6 +1950,29 @@ const checkoutPaths = {
         404: jsonResponse("Invoice not found", errorSchema)
       }
     }
+  },
+  "/v1/orders/{publicId}/download/{itemId}": {
+    get: {
+      tags: ["Checkout"],
+      summary: "Download an owned artwork file",
+      security: sessionOnlySecurity,
+      parameters: [
+        { $ref: "#/components/parameters/OrderPublicId" },
+        {
+          name: "itemId",
+          in: "path",
+          required: true,
+          schema: { type: "integer", minimum: 1 }
+        }
+      ],
+      responses: {
+        200: binaryResponse("Original artwork file"),
+        401: jsonResponse("Authentication required", errorSchema),
+        404: jsonResponse("Artwork file not found", errorSchema),
+        410: jsonResponse("Download access expired", errorSchema),
+        429: jsonResponse("Too many download attempts", errorSchema)
+      }
+    }
   }
 };
 
@@ -2018,6 +2041,31 @@ const notificationPaths = {
 };
 
 const adminPaths = {
+  "/admin/forensic-watermark/decode": {
+    post: {
+      tags: ["Admin"],
+      summary: "Decode a forensic watermark from an artwork image",
+      security: [{ cookieAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          "multipart/form-data": {
+            schema: {
+              type: "object",
+              required: ["image"],
+              properties: { image: { type: "string", format: "binary" } }
+            }
+          }
+        }
+      },
+      responses: {
+        200: { description: "Forensic watermark decoded." },
+        400: { description: "Invalid image or undecodable watermark." },
+        401: { description: "Authentication required." },
+        403: { description: "Administrator access required." }
+      }
+    }
+  },
   "/admin/dashboard": {
     get: {
       tags: ["Admin"],

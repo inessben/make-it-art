@@ -129,10 +129,10 @@ const paymentOperationsRateLimit = asExpressMiddleware(
 const walletWriteRateLimit = asExpressMiddleware(
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: isProduction ? 20 : 100,
+    limit: isProduction ? 60 : 200,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => ipKeyGenerator(req.ip),
+    keyGenerator: (req) => (req.user ? `wallet-user:${req.user.id}` : ipKeyGenerator(req.ip)),
     message: {
       message: "Too many wallet operations. Please try again later.",
       code: "WALLET_RATE_LIMITED"

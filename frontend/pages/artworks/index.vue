@@ -257,6 +257,8 @@
                       class="marketplace-card__favorite"
                       :class="{ 'marketplace-card__favorite--active': artwork.isFavorite }"
                       :disabled="Boolean(favoriteLoading[artwork.id])"
+                      :aria-label="`${artwork.isFavorite ? 'Remove' : 'Add'} ${artwork.title} ${artwork.isFavorite ? 'from' : 'to'} favorites`"
+                      :aria-pressed="artwork.isFavorite"
                       @click.stop="toggleFavorite(artwork)"
                     >
                       <svg
@@ -325,6 +327,8 @@
                     class="marketplace-card__favorite"
                     :class="{ 'marketplace-card__favorite--active': artwork.isFavorite }"
                     :disabled="Boolean(favoriteLoading[artwork.id])"
+                    :aria-label="`${artwork.isFavorite ? 'Remove' : 'Add'} ${artwork.title} ${artwork.isFavorite ? 'from' : 'to'} favorites`"
+                    :aria-pressed="artwork.isFavorite"
                     @click.stop="toggleFavorite(artwork)"
                   >
                     <svg

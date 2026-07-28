@@ -32,12 +32,7 @@ function pageIsHidden() {
 function isTypingTarget(target) {
   if (!(target instanceof HTMLElement)) return false;
   const tag = target.tagName;
-  return (
-    target.isContentEditable ||
-    tag === "INPUT" ||
-    tag === "TEXTAREA" ||
-    tag === "SELECT"
-  );
+  return target.isContentEditable || tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
 function isCaptureShortcut(event) {
@@ -246,7 +241,7 @@ function unbindListeners() {
 /**
  * Best-effort deterrents: black out when capture tools / focus loss are detected.
  */
-export function useScreenshotGuard(_options = {}) {
+export function useScreenshotGuard() {
   let stopCaptureWatch = null;
 
   onMounted(() => {

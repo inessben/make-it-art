@@ -1,18 +1,19 @@
 <template>
   <header
     class="relative z-50 h-20 border-b border-white/5 bg-black text-slate-100"
-    @keydown.esc="closeMenu"
+    @keydown.esc="closeMenu(true)"
   >
     <div
       class="mx-auto grid h-full w-full max-w-[1440px] grid-cols-[auto_1fr_auto] items-center px-4 sm:px-6 lg:grid-cols-3 lg:px-8"
     >
       <button
+        ref="menuButton"
         type="button"
         class="flex h-11 w-11 flex-col items-center justify-center gap-[6px] lg:hidden"
         :aria-expanded="mobileMenuOpen"
         aria-controls="mobile-navigation"
         :aria-label="mobileMenuOpen ? 'Close menu' : 'Open menu'"
-        @click="mobileMenuOpen = !mobileMenuOpen"
+        @click="toggleMenu"
       >
         <span
           class="h-px w-6 bg-slate-100 transition-transform"
@@ -97,6 +98,7 @@
     <nav
       v-show="mobileMenuOpen"
       id="mobile-navigation"
+      ref="mobileNavigation"
       class="fixed inset-x-0 top-20 max-h-[calc(100vh-5rem)] overflow-y-auto border-y border-slate-800 bg-black px-6 py-8 lg:hidden"
       aria-label="Mobile navigation"
     >
@@ -166,17 +168,28 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { navigateTo, useRoute } from "#app";
 import { useAuthStore } from "~/stores/auth";
 
 const auth = useAuthStore();
 const route = useRoute();
 const mobileMenuOpen = ref(false);
+const menuButton = ref(null);
+const mobileNavigation = ref(null);
 const profileRoute = computed(() => (auth.isAdmin ? "/admin" : "/account-settings"));
 
-function closeMenu() {
+function closeMenu(restoreFocus = false) {
   mobileMenuOpen.value = false;
+  if (restoreFocus) nextTick(() => menuButton.value?.focus());
+}
+
+async function toggleMenu() {
+  mobileMenuOpen.value = !mobileMenuOpen.value;
+  if (mobileMenuOpen.value) {
+    await nextTick();
+    mobileNavigation.value?.querySelector("a, button")?.focus();
+  }
 }
 
 async function handleLogout() {

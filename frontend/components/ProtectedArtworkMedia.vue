@@ -49,11 +49,7 @@
       </span>
     </div>
 
-    <div
-      v-show="!isBlackedOut"
-      class="mia-protected-media__viewer-badge"
-      aria-hidden="true"
-    >
+    <div v-show="!isBlackedOut" class="mia-protected-media__viewer-badge" aria-hidden="true">
       {{ viewerWatermarkId }}
     </div>
 
@@ -78,10 +74,7 @@
         >
           Arrêtez le partage d'écran ou l'enregistrement pour réafficher l'aperçu.
         </p>
-        <p
-          v-else-if="blackoutMode === 'sticky'"
-          class="mt-3 text-[11px] leading-5 text-slate-500"
-        >
+        <p v-else-if="blackoutMode === 'sticky'" class="mt-3 text-[11px] leading-5 text-slate-500">
           Outil de capture ou perte de focus détecté. Réaffichez l'aperçu quand vous avez terminé.
         </p>
         <button

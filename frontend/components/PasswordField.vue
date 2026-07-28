@@ -10,6 +10,7 @@
         :autocomplete="autocomplete"
         :minlength="minlength"
         required
+        aria-required="true"
         @input="$emit('update:modelValue', $event.target.value)"
       />
 
@@ -65,7 +66,7 @@ const showPassword = ref(false);
 }
 
 label {
-  @apply text-body-1 font-semibold text-slate-500;
+  @apply text-body-1 font-semibold text-slate-400;
 }
 
 .password-control {
@@ -80,8 +81,8 @@ input {
   @apply min-w-0 w-full border border-slate-800 bg-slate-900 py-3 pl-4 pr-12 text-body-1 text-slate-100 outline-none transition;
 }
 
-input:focus {
-  @apply border-violet-600 ring-2 ring-violet-700/20;
+input:focus-visible {
+  @apply border-violet-400 ring-2 ring-violet-400/30;
 }
 
 .password-toggle {

@@ -192,10 +192,12 @@
       @keydown.esc="closeRefundDialog"
     >
       <section
+        ref="refundDialog"
         class="my-8 w-full max-w-3xl border border-slate-700 bg-slate-950 p-5 shadow-2xl sm:p-7"
         role="dialog"
         aria-modal="true"
         aria-labelledby="refund-dialog-title"
+        @keydown.tab="trapRefundDialogFocus"
       >
         <header class="flex items-start justify-between gap-5 border-b border-slate-800 pb-5">
           <div>
@@ -462,6 +464,7 @@ const refundFeedback = ref("");
 const refundFeedbackType = ref("");
 const refundRequestKey = ref("");
 const refundRequestSignature = ref("");
+const refundDialog = ref(null);
 const refundDialogCloseButton = ref(null);
 const refundDialogTrigger = ref(null);
 const summary = ref({
@@ -615,6 +618,24 @@ function openRefundDialog(order, event) {
   refundRequestSignature.value = "";
   refundDialogTrigger.value = event?.currentTarget || null;
   nextTick(() => refundDialogCloseButton.value?.focus());
+}
+
+function trapRefundDialogFocus(event) {
+  const elements = [
+    ...(refundDialog.value?.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    ) || [])
+  ];
+  if (!elements.length) return;
+  const first = elements[0];
+  const last = elements[elements.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
 }
 
 function closeRefundDialog() {

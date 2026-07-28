@@ -1,12 +1,11 @@
 <template>
   <section
-    class="rounded-2xl border border-slate-800 bg-slate-950 p-5 text-slate-100"
+    class="rounded-2xl border border-slate-700 bg-slate-900 p-5 text-slate-100"
     aria-live="polite"
   >
     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-widest text-violet-500">Coinbase CDP</p>
-        <h2 class="mt-2 text-lg font-semibold">Portefeuille numérique</h2>
+        <h2 class="text-lg font-semibold">Portefeuille numérique</h2>
       </div>
       <span
         class="w-fit rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-300"
