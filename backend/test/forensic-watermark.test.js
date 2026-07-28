@@ -20,13 +20,27 @@ test("forensic payload hmac roundtrip", () => {
   assert.equal(parsed.visibleId, visibleId);
 });
 
-test("forensic watermark survives embed/extract as PNG", async () => {
+test("forensic watermark survives embed/extract as PNG", async (t) => {
   const pythonCommands = [
     process.env.PDF_PYTHON_PATH,
     process.env.ARTWORK_PYTHON_PATH,
     ...(process.platform === "win32" ? ["py"] : []),
     "python3"
   ].filter((command, index, values) => command && values.indexOf(command) === index);
+
+  let python;
+  for (const command of pythonCommands) {
+    const pythonCheck = spawnSync(command, ["-c", "from PIL import Image"], { encoding: "utf8" });
+    if (pythonCheck.status === 0) {
+      python = command;
+      break;
+    }
+  }
+  if (!python) {
+    t.skip("Python with Pillow is required for the forensic watermark integration test.");
+    return;
+  }
+
   const tempRoot = await fsp.mkdtemp(path.join(os.tmpdir(), "mia-forensic-test-"));
   const sourcePath = path.join(tempRoot, "source.jpg");
   const embeddedPath = path.join(tempRoot, "embedded.png");
@@ -44,11 +58,7 @@ test("forensic watermark survives embed/extract as PNG", async () => {
       "utf8"
     );
 
-    let makeSource;
-    for (const command of pythonCommands) {
-      makeSource = spawnSync(command, [helperPath, sourcePath], { encoding: "utf8" });
-      if (makeSource.status === 0) break;
-    }
+    const makeSource = spawnSync(python, [helperPath, sourcePath], { encoding: "utf8" });
     if (makeSource.status !== 0) {
       assert.fail(makeSource.stderr || "Unable to create test JPEG with Pillow");
     }

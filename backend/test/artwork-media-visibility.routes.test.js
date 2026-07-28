@@ -103,7 +103,7 @@ test("an owner or active buyer can load a withdrawn preview without public cachi
   assert.equal(calls.opened, 1);
 });
 
-test("an approved published preview keeps its public cache policy", async (t) => {
+test("an approved published preview is personalized without public caching", async (t) => {
   const { baseUrl, calls } = await startMediaApp(t, {
     artwork: artwork({ visibility: "PUBLISHED" })
   });

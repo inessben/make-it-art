@@ -1940,6 +1940,34 @@ const checkoutPaths = {
       }
     }
   },
+  "/v1/orders/{publicId}/download/{itemId}": {
+    get: {
+      tags: ["Checkout"],
+      summary: "Download an artwork covered by active digital rights",
+      security: sessionOnlySecurity,
+      parameters: [
+        { $ref: "#/components/parameters/OrderPublicId" },
+        {
+          name: "itemId",
+          in: "path",
+          required: true,
+          schema: {
+            type: "integer",
+            minimum: 1
+          }
+        }
+      ],
+      responses: {
+        200: binaryResponse("Protected artwork file"),
+        401: jsonResponse("Authentication required", errorSchema),
+        403: jsonResponse("Download right unavailable", errorSchema),
+        404: jsonResponse("Order, item or artwork file not found", errorSchema),
+        409: jsonResponse("Download right is not active", errorSchema),
+        429: jsonResponse("Download rate limit exceeded", errorSchema),
+        500: jsonResponse("Artwork download unavailable", errorSchema)
+      }
+    }
+  },
   "/v1/orders/{publicId}/invoices/{invoicePublicId}.pdf": {
     get: {
       tags: ["Checkout"],
@@ -1953,29 +1981,6 @@ const checkoutPaths = {
         200: binaryResponse("Invoice PDF"),
         401: jsonResponse("Authentication required", errorSchema),
         404: jsonResponse("Invoice not found", errorSchema)
-      }
-    }
-  },
-  "/v1/orders/{publicId}/download/{itemId}": {
-    get: {
-      tags: ["Checkout"],
-      summary: "Download an owned artwork file",
-      security: sessionOnlySecurity,
-      parameters: [
-        { $ref: "#/components/parameters/OrderPublicId" },
-        {
-          name: "itemId",
-          in: "path",
-          required: true,
-          schema: { type: "integer", minimum: 1 }
-        }
-      ],
-      responses: {
-        200: binaryResponse("Original artwork file"),
-        401: jsonResponse("Authentication required", errorSchema),
-        404: jsonResponse("Artwork file not found", errorSchema),
-        410: jsonResponse("Download access expired", errorSchema),
-        429: jsonResponse("Too many download attempts", errorSchema)
       }
     }
   }
@@ -2046,31 +2051,6 @@ const notificationPaths = {
 };
 
 const adminPaths = {
-  "/admin/forensic-watermark/decode": {
-    post: {
-      tags: ["Admin"],
-      summary: "Decode a forensic watermark from an artwork image",
-      security: [{ cookieAuth: [] }],
-      requestBody: {
-        required: true,
-        content: {
-          "multipart/form-data": {
-            schema: {
-              type: "object",
-              required: ["image"],
-              properties: { image: { type: "string", format: "binary" } }
-            }
-          }
-        }
-      },
-      responses: {
-        200: { description: "Forensic watermark decoded." },
-        400: { description: "Invalid image or undecodable watermark." },
-        401: { description: "Authentication required." },
-        403: { description: "Administrator access required." }
-      }
-    }
-  },
   "/admin/dashboard": {
     get: {
       tags: ["Admin"],
@@ -2395,6 +2375,38 @@ const adminPaths = {
         401: jsonResponse("Authentication required", errorSchema),
         403: jsonResponse("Admin role required", errorSchema),
         404: jsonResponse("Artist contract not found", errorSchema)
+      }
+    }
+  },
+  "/admin/forensic-watermark/decode": {
+    post: {
+      tags: ["Admin"],
+      summary: "Decode a forensic watermark from an uploaded artwork image",
+      security: sessionOnlySecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "multipart/form-data": {
+            schema: {
+              type: "object",
+              required: ["image"],
+              properties: {
+                image: {
+                  type: "string",
+                  format: "binary"
+                }
+              }
+            }
+          }
+        }
+      },
+      responses: {
+        200: jsonResponse("Decoded forensic watermark", genericObjectSchema),
+        400: jsonResponse("Artwork image is required", errorSchema),
+        401: jsonResponse("Authentication required", errorSchema),
+        403: jsonResponse("Admin role required", errorSchema),
+        422: jsonResponse("No valid forensic watermark found", errorSchema),
+        500: jsonResponse("Unable to decode forensic watermark", errorSchema)
       }
     }
   },
