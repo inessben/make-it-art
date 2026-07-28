@@ -1,16 +1,16 @@
 <template>
-  <main class="min-h-screen bg-black px-4 py-6 text-slate-100 sm:px-6 sm:py-10">
+  <main class="artwork-page min-h-screen bg-black px-4 py-8 text-slate-100 sm:px-8 sm:py-12 lg:px-10">
     <section class="mx-auto w-full max-w-[1360px]">
       <AppStatePanel
         v-if="pending"
-        class="mt-8"
+        class="mt-4"
         type="loading"
         title="Loading artwork"
         message="Artwork details are being retrieved."
       />
       <AppStatePanel
         v-else-if="errorMessage"
-        class="mt-8"
+        class="mt-4"
         type="error"
         title="Unable to load this artwork"
         :message="errorMessage"
@@ -20,7 +20,7 @@
       />
       <AppStatePanel
         v-else-if="!artwork"
-        class="mt-8"
+        class="mt-4"
         type="empty"
         title="Artwork not found"
         message="This artwork is no longer available in the public marketplace."
@@ -31,35 +31,35 @@
       <template v-else>
         <AppStatePanel
           v-if="actionMessage"
-          class="mt-8"
+          class="mb-6"
           compact
           :type="actionStatus || 'success'"
           :message="actionMessage"
         />
         <AppStatePanel
           v-if="cartMessage"
-          class="mt-4"
+          class="mb-6"
           compact
           :type="cartMessageType"
           :message="cartMessage"
         />
 
         <section
-          class="mt-8 grid gap-0 border border-[#161A1D] bg-[#111414] xl:grid-cols-[minmax(0,1.58fr)_minmax(360px,0.9fr)]"
+          class="artwork-hero grid overflow-hidden border border-[#161A1D] bg-[#111414] lg:grid-cols-[minmax(0,1.55fr)_minmax(360px,0.95fr)]"
         >
-          <div class="border-b border-[#1C2022] xl:border-b-0 xl:border-r">
-            <div
-              class="relative h-full overflow-hidden bg-[#101515] min-h-[520px] lg:min-h-[760px]"
-            >
-              <img
+          <div class="relative border-b border-[#1C2022] bg-[#101515] lg:border-b-0 lg:border-r">
+            <div class="relative aspect-square w-full overflow-hidden lg:aspect-auto lg:h-full lg:min-h-[640px]">
+              <ProtectedArtworkMedia
                 v-if="artworkImageUrl"
                 :src="artworkImageUrl"
                 :alt="artwork.title"
-                class="block h-full min-h-[520px] w-full object-cover lg:min-h-[760px]"
+                :artwork-id="artwork.id"
+                img-class="h-full w-full object-cover"
+                class="absolute inset-0 h-full w-full"
               />
               <div
                 v-else
-                class="grid min-h-[520px] place-items-center bg-[radial-gradient(circle_at_50%_30%,rgba(115,43,255,0.28),transparent_45%),linear-gradient(180deg,#111616_0%,#06080C_100%)] p-6 text-center lg:min-h-[760px]"
+                class="grid h-full min-h-[420px] place-items-center bg-[radial-gradient(circle_at_50%_30%,rgba(115,43,255,0.22),transparent_45%),linear-gradient(180deg,#111616_0%,#06080C_100%)] p-6 text-center lg:min-h-[640px]"
               >
                 <div class="max-w-sm">
                   <div
@@ -71,27 +71,23 @@
                     {{ artwork.category?.name || "Digital artwork" }}
                   </p>
                   <p class="mt-4 text-base leading-7 text-slate-300">
-                    The artwork record is online. A visual preview will appear here as soon as the
-                    media file is available.
+                    A visual preview will appear here as soon as the media file is available.
                   </p>
                 </div>
               </div>
 
-              <div class="absolute bottom-5 right-5 flex items-center gap-3">
-                <a
+              <div class="absolute bottom-5 right-5 z-10 flex items-center gap-3">
+                <button
                   v-if="artworkImageUrl"
-                  :href="artworkImageUrl"
-                  target="_blank"
-                  rel="noreferrer"
+                  type="button"
                   class="inline-flex min-h-11 items-center justify-center rounded-[14px] border border-white/10 bg-black/45 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-white/80 backdrop-blur transition hover:border-violet-500 hover:text-white"
-                  aria-label="Open preview"
+                  @click="openProtectedPreview"
                 >
                   Open
-                </a>
+                </button>
                 <button
                   type="button"
                   class="inline-flex min-h-11 items-center justify-center rounded-[14px] border border-white/10 bg-black/45 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-white/80 backdrop-blur transition hover:border-violet-500 hover:text-white"
-                  aria-label="Share artwork"
                   @click="shareArtwork"
                 >
                   Share
@@ -100,134 +96,125 @@
             </div>
           </div>
 
-          <aside class="bg-[#171919] p-6 sm:p-8 xl:p-10">
-            <div class="flex flex-col gap-5">
-              <div class="flex flex-wrap gap-2">
-                <span
-                  class="rounded-full bg-[#4A6CF7]/12 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#BCD0FF]"
-                >
-                  {{ artwork.category?.name || "Digital artwork" }}
-                </span>
-                <span
-                  class="rounded-full bg-[#241D3D] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#D8C8FF]"
-                >
-                  {{ formatArtworkLicenseType(artwork.licenseType) }}
-                </span>
-                <span
-                  v-if="artwork.protection"
-                  class="rounded-full bg-[#10261A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#9DE2B4]"
-                >
-                  Protection active
-                </span>
-                <span
-                  v-if="artwork.watermarkApplied"
-                  class="rounded-full bg-[#1A2336] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#9FB4D9]"
-                >
-                  Watermarked preview
-                </span>
-                <span
-                  v-if="availability.status !== 'AVAILABLE'"
-                  class="rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em]"
-                  :class="availabilityClass"
-                >
-                  {{ availability.label }}
-                </span>
-              </div>
+          <aside class="flex flex-col gap-5 bg-[#171919] p-6 sm:p-8 xl:p-10">
+            <div class="flex flex-wrap gap-2">
+              <span
+                class="rounded-full bg-[#4A6CF7]/12 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#BCD0FF]"
+              >
+                {{ artwork.category?.name || "Digital artwork" }}
+              </span>
+              <span
+                class="rounded-full bg-[#241D3D] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#D8C8FF]"
+              >
+                {{ formatArtworkLicenseType(artwork.licenseType) }}
+              </span>
+              <span
+                v-if="artwork.protection"
+                class="rounded-full bg-[#10261A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#9DE2B4]"
+              >
+                Protection active
+              </span>
+              <span
+                v-if="artwork.watermarkApplied"
+                class="rounded-full bg-[#1A2336] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#9FB4D9]"
+              >
+                Watermarked preview
+              </span>
+              <span
+                v-if="availability.status !== 'AVAILABLE'"
+                class="rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em]"
+                :class="availabilityClass"
+              >
+                {{ availability.label }}
+              </span>
+            </div>
 
-              <div class="flex items-start justify-between gap-4">
-                <div class="flex min-w-0 items-center gap-4">
-                  <div
-                    class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-violet-500/30 bg-[#0C1018] text-sm font-semibold text-violet-200"
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex min-w-0 items-center gap-4">
+                <div
+                  class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-violet-500/30 bg-[#0C1018] text-sm font-semibold text-violet-200"
+                >
+                  <img
+                    v-if="artwork.artist?.avatarUrl"
+                    :src="artwork.artist.avatarUrl"
+                    :alt="artwork.artist.displayName"
+                    class="h-full w-full object-cover"
+                  />
+                  <template v-else>{{ artistInitials }}</template>
+                </div>
+                <div class="min-w-0">
+                  <NuxtLink
+                    v-if="artwork.artist"
+                    :to="artistProfileRoute"
+                    class="block truncate text-[1.75rem] font-semibold leading-none text-white transition hover:text-violet-300 sm:text-[2rem]"
                   >
-                    <img
-                      v-if="artwork.artist?.avatarUrl"
-                      :src="artwork.artist.avatarUrl"
-                      :alt="artwork.artist.displayName"
-                      class="h-full w-full object-cover"
-                    />
-                    <template v-else>{{ artistInitials }}</template>
-                  </div>
-
-                  <div class="min-w-0">
-                    <NuxtLink
-                      v-if="artwork.artist"
-                      :to="artistProfileRoute"
-                      class="truncate text-[2rem] font-semibold text-white transition hover:text-violet-300"
-                    >
-                      {{ artwork.artist.displayName }}
-                    </NuxtLink>
-                    <p
-                      class="mt-1 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500"
-                    >
-                      {{ artistRoleLabel }}
-                    </p>
-                  </div>
-                </div>
-
-                <div class="flex items-center gap-3">
-                  <button
-                    v-if="artwork.artist && canFollowArtist(artwork.artist)"
-                    type="button"
-                    class="inline-flex min-h-10 items-center rounded-full border border-white/10 px-5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-200 transition hover:border-violet-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                    :disabled="Boolean(followLoading[artwork.artist.id])"
-                    @click="toggleFollow(artwork.artist)"
-                  >
-                    {{
-                      followLoading[artwork.artist.id]
-                        ? "Updating..."
-                        : artwork.artist.isFollowed
-                          ? "Following"
-                          : "Follow"
-                    }}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <h1
-                  class="mt-4 break-words text-[clamp(2.6rem,6vw,4rem)] font-semibold uppercase leading-[0.94] tracking-[-0.04em] text-white"
-                >
-                  {{ artwork.title }}
-                </h1>
-
-                <div class="mt-4 flex flex-wrap items-end gap-3">
-                  <p class="text-[clamp(2rem,4vw,2.8rem)] font-semibold text-slate-100">
-                    {{ formattedPrice }}
-                  </p>
-                  <p class="pb-1 text-sm text-slate-500">
-                    {{ availabilityText }}
+                    {{ artwork.artist.displayName }}
+                  </NuxtLink>
+                  <p class="mt-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                    {{ artistRoleLabel }}
                   </p>
                 </div>
               </div>
 
-              <div class="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <article
-                  v-for="fact in artworkFacts"
-                  :key="fact.label"
-                  class="border border-white/10 bg-transparent p-5"
-                >
-                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    {{ fact.label }}
-                  </p>
-                  <p class="mt-4 text-lg font-medium text-slate-100">
-                    {{ fact.value }}
-                  </p>
-                </article>
-              </div>
+              <button
+                v-if="artwork.artist && canFollowArtist(artwork.artist)"
+                type="button"
+                class="inline-flex min-h-10 shrink-0 items-center rounded-full border border-white/10 px-5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-200 transition hover:border-violet-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                :disabled="Boolean(followLoading[artwork.artist.id])"
+                @click="toggleFollow(artwork.artist)"
+              >
+                {{
+                  followLoading[artwork.artist.id]
+                    ? "Updating..."
+                    : artwork.artist.isFollowed
+                      ? "Following"
+                      : "Follow"
+                }}
+              </button>
+            </div>
 
-              <div class="mt-2">
-                <p
-                  class="border-b border-white/10 pb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500"
-                >
-                  Description
+            <div>
+              <h1
+                class="break-words text-[clamp(2.4rem,5.5vw,3.6rem)] font-semibold uppercase leading-[0.94] tracking-[-0.04em] text-white"
+              >
+                {{ artwork.title }}
+              </h1>
+              <div class="mt-4 flex flex-wrap items-end gap-3">
+                <p class="text-[clamp(1.85rem,3.5vw,2.6rem)] font-semibold text-slate-100">
+                  {{ formattedPrice }}
                 </p>
-                <p class="mt-5 text-base leading-8 text-slate-300">
-                  {{ artwork.description || "No description has been provided for this artwork." }}
-                </p>
+                <p class="pb-1 text-sm text-slate-500">{{ availabilityText }}</p>
               </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <article
+                v-for="fact in artworkFacts"
+                :key="fact.label"
+                class="border border-white/10 bg-transparent p-4 sm:p-5"
+              >
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  {{ fact.label }}
+                </p>
+                <p class="mt-3 text-base font-medium text-slate-100 sm:text-lg">
+                  {{ fact.value }}
+                </p>
+              </article>
+            </div>
+
+            <div>
+              <p
+                class="border-b border-white/10 pb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500"
+              >
+                Description
+              </p>
+              <p class="mt-5 text-base leading-8 text-slate-300">
+                {{ artwork.description || "No description has been provided for this artwork." }}
+              </p>
+            </div>
 
               <section
-                v-if="artwork.management"
+                v-if="artwork.management || isOwnArtwork"
                 class="mt-2 border border-white/10 bg-[#111414] px-4 py-4 sm:px-5"
                 aria-labelledby="artwork-management-title"
               >
@@ -240,6 +227,7 @@
                       Gérer l’œuvre
                     </h2>
                     <span
+                      v-if="artwork.management"
                       class="rounded-[4px] border px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em]"
                       :class="visibilityClass"
                     >
@@ -250,12 +238,11 @@
                 </div>
 
                 <div
-                  v-if="availableManagementActionCount"
                   class="mt-4 flex flex-wrap gap-2"
                   aria-label="Actions de gestion"
                 >
                   <NuxtLink
-                    v-if="artwork.management.capabilities.canEdit"
+                    v-if="!artwork.management || artwork.management.capabilities?.canEdit !== false"
                     :to="`/artworks/${artwork.id}/edit`"
                     class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-violet-500/60 bg-violet-500/10 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-violet-100 transition hover:border-violet-400 hover:bg-violet-500/20"
                     aria-label="Modifier l’œuvre"
@@ -263,7 +250,7 @@
                     Modifier
                   </NuxtLink>
                   <button
-                    v-if="artwork.management.capabilities.canHide"
+                    v-if="artwork.management?.capabilities?.canHide"
                     ref="hideTrigger"
                     type="button"
                     class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-[#6F5C23] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-[#F7D990] transition hover:border-[#A78931] hover:bg-[#2B220E]"
@@ -272,7 +259,7 @@
                     Masquer
                   </button>
                   <button
-                    v-if="artwork.management.capabilities.canPublish"
+                    v-if="artwork.management?.capabilities?.canPublish"
                     type="button"
                     class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-violet-500/60 bg-violet-500/10 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-violet-100 transition hover:border-violet-400 hover:bg-violet-500/20 disabled:cursor-wait disabled:opacity-50"
                     :disabled="publishingArtwork"
@@ -281,7 +268,7 @@
                     {{ publishingArtwork ? "Republication…" : "Republier" }}
                   </button>
                   <button
-                    v-if="artwork.management.capabilities.canArchive"
+                    v-if="artwork.management?.capabilities?.canArchive"
                     ref="archiveTrigger"
                     type="button"
                     class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-white/15 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-slate-300 transition hover:border-slate-500 hover:bg-white/5 hover:text-white"
@@ -290,7 +277,7 @@
                     Archiver
                   </button>
                   <button
-                    v-if="artwork.management.capabilities.canRestore"
+                    v-if="artwork.management?.capabilities?.canRestore"
                     ref="restoreTrigger"
                     type="button"
                     class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-violet-500/60 bg-violet-500/10 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-violet-100 transition hover:border-violet-400 hover:bg-violet-500/20"
@@ -299,7 +286,7 @@
                     Restaurer
                   </button>
                   <button
-                    v-if="artwork.management.capabilities.canDelete"
+                    v-if="!artwork.management || artwork.management.capabilities?.canDelete !== false"
                     ref="deleteTrigger"
                     type="button"
                     class="inline-flex min-h-10 items-center justify-center rounded-[6px] border border-[#7A3131] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-[#FFB4B4] transition hover:border-[#B64747] hover:bg-[#2A1010]"
@@ -308,10 +295,6 @@
                     Supprimer
                   </button>
                 </div>
-
-                <p v-else class="mt-3 text-sm text-slate-500">
-                  Aucune action n’est disponible pour le moment.
-                </p>
 
                 <details
                   v-if="blockedManagementActions.length"
@@ -419,7 +402,6 @@
                           : "Add to wishlist"
                     }}
                   </button>
-
                   <a
                     v-if="artwork.hasHdFile && artwork.hdDownloadUrl"
                     :href="artwork.hdDownloadUrl"
@@ -435,7 +417,6 @@
                   }}. The HD asset is reserved for the artist and verified buyers.
                 </p>
               </div>
-            </div>
           </aside>
         </section>
 
@@ -443,6 +424,7 @@
           <h2 class="text-[clamp(2rem,5vw,3.2rem)] font-semibold uppercase leading-none text-white">
             More by this artist
           </h2>
+
           <div
             v-if="relatedArtworks.length"
             class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4"
@@ -450,19 +432,21 @@
             <article
               v-for="related in relatedArtworks"
               :key="related.id"
-              class="group border border-white/10 bg-[#111414] p-0"
+              class="group border border-white/10 bg-[#111414]"
             >
               <NuxtLink :to="`/artworks/${related.id}`" class="block">
                 <div class="relative overflow-hidden bg-[#090C10]">
-                  <img
+                  <ProtectedArtworkMedia
                     v-if="related.imageUrl"
                     :src="related.imageUrl"
                     :alt="related.title"
-                    class="aspect-[4/4.2] w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                    :artwork-id="related.id"
+                    img-class="aspect-square w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                    class="block"
                   />
                   <div
                     v-else
-                    class="flex aspect-[4/4.2] items-center justify-center bg-[linear-gradient(180deg,#10151B_0%,#05070C_100%)] text-3xl font-semibold text-violet-200"
+                    class="flex aspect-square items-center justify-center bg-[linear-gradient(180deg,#10151B_0%,#05070C_100%)] text-3xl font-semibold text-violet-200"
                   >
                     {{ relatedArtworkInitials(related) }}
                   </div>
@@ -473,7 +457,7 @@
                 <div class="min-w-0">
                   <NuxtLink
                     :to="`/artworks/${related.id}`"
-                    class="block truncate text-base font-medium text-slate-100 transition hover:text-violet-300"
+                    class="block truncate text-base font-medium uppercase text-slate-100 transition hover:text-violet-300"
                   >
                     {{ related.title }}
                   </NuxtLink>
@@ -481,10 +465,9 @@
                     {{ relatedArtworkPrice(related) }}
                   </p>
                 </div>
-
                 <button
                   type="button"
-                  class="mt-1 text-slate-500 transition hover:text-violet-300 disabled:cursor-not-allowed disabled:opacity-40"
+                  class="mt-1 text-sm text-slate-500 transition hover:text-violet-300 disabled:cursor-not-allowed disabled:opacity-40"
                   :disabled="Boolean(favoriteLoading[related.id])"
                   @click="toggleFavorite(related)"
                 >
@@ -504,6 +487,58 @@
       </template>
     </section>
   </main>
+
+  <Teleport to="body">
+    <div
+      v-if="protectedPreviewOpen && artworkImageUrl"
+      class="fixed inset-0 z-[60] grid place-items-center bg-black/92 p-4 sm:p-8"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Protected artwork preview"
+      @keydown.esc.prevent.stop="closeProtectedPreview"
+    >
+      <button
+        type="button"
+        class="absolute inset-0 cursor-zoom-out"
+        aria-label="Close protected preview"
+        @click="closeProtectedPreview"
+      />
+      <div
+        class="relative z-[1] grid w-full max-w-5xl gap-4"
+        @click.stop
+      >
+        <div class="flex items-center justify-between gap-4">
+          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+            Protected preview · AI training prohibited
+          </p>
+          <button
+            ref="protectedPreviewCloseButton"
+            type="button"
+            class="inline-flex min-h-10 items-center justify-center rounded-[8px] border border-white/15 bg-white/5 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:border-violet-400"
+            @click="closeProtectedPreview"
+          >
+            Close
+          </button>
+        </div>
+        <div
+          class="overflow-hidden rounded-[12px] border border-white/10 bg-[#050505]"
+          @contextmenu.prevent
+          @dragstart.prevent
+        >
+          <ProtectedArtworkMedia
+            :src="artworkImageUrl"
+            :alt="artwork?.title || 'Artwork preview'"
+            :artwork-id="artwork?.id"
+            img-class="max-h-[min(78vh,860px)] w-full object-contain"
+            class="block w-full"
+          />
+        </div>
+        <p class="text-center text-xs leading-5 text-slate-500">
+          Preview is watermarked and shielded. Saving, scraping and AI training use are prohibited.
+        </p>
+      </div>
+    </div>
+  </Teleport>
 
   <Teleport to="body">
     <div v-if="deleteDialogOpen" class="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4">
@@ -698,6 +733,7 @@ import { computed, nextTick, onMounted, ref } from "vue";
 import { navigateTo, useHead, useRequestHeaders, useRoute, useRuntimeConfig } from "#app";
 import { useAnalyticsEvent } from "~/composables/useAnalyticsEvent";
 import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
+import { useScreenshotGuard } from "~/composables/useScreenshotGuard";
 import { useAuthStore } from "~/stores/auth";
 import { useCartStore } from "~/stores/cart";
 import {
@@ -708,9 +744,10 @@ import {
   getArtistInitials,
   getArtworkAvailabilityPresentation,
   getArtworkVisibilityPresentation,
-  isArtworkOwnedByArtist,
-  shouldSynchronizeArtworkManagement
+  isArtworkOwnedByArtist
 } from "~/utils/marketplace";
+
+useScreenshotGuard();
 
 const route = useRoute();
 const auth = useAuthStore();
@@ -722,6 +759,8 @@ const cartMessage = ref("");
 const cartMessageType = ref("success");
 const managementMessage = ref("");
 const managementMessageTone = ref("error");
+const protectedPreviewOpen = ref(false);
+const protectedPreviewCloseButton = ref(null);
 const deleteDialogOpen = ref(false);
 const deletingArtwork = ref(false);
 const deleteTrigger = ref(null);
@@ -934,9 +973,11 @@ const artworkFacts = computed(() => [
   {
     label: "Edition",
     value:
-      Number(artwork.value?.stockQuantity || 0) > 1
-        ? `Edition of ${artwork.value.stockQuantity}`
-        : "Unique 1 of 1"
+      artwork.value?.isUnlimited
+        ? "Unlimited edition"
+        : Number(artwork.value?.stockQuantity || 0) > 1
+          ? `Edition of ${artwork.value.stockQuantity}`
+          : "Unique 1 of 1"
   }
 ]);
 
@@ -962,6 +1003,16 @@ const { trackEvent } = useAnalyticsEvent();
 async function openDeleteDialog() {
   managementMessage.value = "";
   managementMessageTone.value = "error";
+
+  if (!artwork.value?.management?.lifecycle?.version) {
+    await hydrateOwnerManagement();
+  }
+
+  if (!artwork.value?.management?.lifecycle?.version) {
+    managementMessage.value = "Impossible de préparer la suppression de cette œuvre.";
+    return;
+  }
+
   deleteDialogOpen.value = true;
   await nextTick();
   deleteCancelButton.value?.focus();
@@ -1259,6 +1310,21 @@ async function toggleCart() {
   }
 }
 
+async function openProtectedPreview() {
+  if (!artworkImageUrl.value) {
+    return;
+  }
+
+  protectedPreviewOpen.value = true;
+  await nextTick();
+  protectedPreviewCloseButton.value?.focus();
+  trackEvent("open_protected_preview", { artworkId: artwork.value?.id });
+}
+
+function closeProtectedPreview() {
+  protectedPreviewOpen.value = false;
+}
+
 async function shareArtwork() {
   if (!artwork.value) {
     return;
@@ -1299,14 +1365,15 @@ onMounted(async () => {
     cart.removeArtwork(artwork.value.id);
   }
 
-  if (shouldSynchronizeArtworkManagement(artwork.value, auth.user)) {
-    try {
+  try {
+    if (!auth.user) {
       await auth.fetchCurrentUser();
-      await refresh();
-    } catch {
-      // Public page: anonymous visitors are allowed.
     }
+  } catch {
+    // Public page: anonymous visitors are allowed.
   }
+
+  await hydrateOwnerManagement();
 
   if (auth.user && !auth.isAdmin) {
     try {
@@ -1317,4 +1384,42 @@ onMounted(async () => {
     }
   }
 });
-</script>
+
+async function hydrateOwnerManagement() {
+  if (!artwork.value?.id || !auth.user || auth.isAdmin) {
+    return;
+  }
+
+  const ownsArtwork = isArtworkOwnedByArtist(artwork.value, auth.user);
+  if (!ownsArtwork && !auth.isVerifiedArtist && !auth.isArtist) {
+    return;
+  }
+
+  // Private endpoint is the source of truth for owner capabilities.
+  try {
+    const response = await $fetch(`/api/artists/me/artworks/${artwork.value.id}`, {
+      credentials: "include"
+    });
+
+    if (!response?.artwork) {
+      return;
+    }
+
+    data.value = {
+      ...(data.value || { relatedArtworks: [] }),
+      artwork: {
+        ...artwork.value,
+        ...response.artwork
+      },
+      relatedArtworks: data.value?.relatedArtworks || []
+    };
+  } catch {
+    if (ownsArtwork && !artwork.value.management) {
+      try {
+        await refresh();
+      } catch {
+        // Keep public payload.
+      }
+    }
+  }
+}</script>

@@ -3,19 +3,31 @@
     <div class="marketplace-page__shell">
       <div class="marketplace-page__topbar">
         <div class="marketplace-page__eyebrow">
-          <span>Marketplace</span>
-          <span>{{ formattedResultsCount }} artworks</span>
+          <span class="marketplace-page__title">Marketplace</span>
+          <span class="marketplace-page__count">{{ formattedResultsCount }} artworks</span>
         </div>
 
-        <button
-          type="button"
-          class="marketplace-page__filters-toggle"
-          :aria-expanded="showFilters"
-          aria-controls="marketplace-filters"
-          @click="showFilters = !showFilters"
-        >
-          {{ showFilters ? "Hide filters" : "Show filters" }}
-        </button>
+        <div class="marketplace-page__topbar-actions">
+          <label class="marketplace-footerbar__sort">
+            <span class="marketplace-footerbar__sort-icon" aria-hidden="true">+/-</span>
+            <select v-model="sortBy">
+              <option value="latest">Recently added</option>
+              <option value="popular">Most popular</option>
+              <option value="price-asc">Price: low to high</option>
+              <option value="price-desc">Price: high to low</option>
+            </select>
+          </label>
+
+          <button
+            type="button"
+            class="marketplace-page__filters-toggle"
+            :aria-expanded="showFilters"
+            aria-controls="marketplace-filters"
+            @click="showFilters = !showFilters"
+          >
+            {{ showFilters ? "Hide filters" : "Show filters" }}
+          </button>
+        </div>
       </div>
 
       <div class="marketplace-layout">
@@ -166,11 +178,13 @@
                   :to="`/artworks/${heroArtwork.id}`"
                   class="marketplace-card__featured-image-shell"
                 >
-                  <img
+                  <ProtectedArtworkMedia
                     v-if="heroArtwork.imageUrl"
                     :src="heroArtwork.imageUrl"
                     :alt="heroArtwork.title"
-                    class="marketplace-card__featured-image"
+                    :artwork-id="heroArtwork.id"
+                    img-class="marketplace-card__featured-image"
+                    class="marketplace-card__featured-media"
                   />
                   <div v-else class="marketplace-card__featured-fallback">
                     {{ artworkInitials(heroArtwork) }}
@@ -225,11 +239,13 @@
                 >
                   <div class="marketplace-card__image-wrap">
                     <NuxtLink :to="`/artworks/${artwork.id}`" class="marketplace-card__image-link">
-                      <img
+                      <ProtectedArtworkMedia
                         v-if="artwork.imageUrl"
                         :src="artwork.imageUrl"
                         :alt="artwork.title"
-                        class="marketplace-card__image"
+                        :artwork-id="artwork.id"
+                        img-class="marketplace-card__image"
+                        class="marketplace-card__media"
                       />
                       <div v-else class="marketplace-card__image marketplace-card__image--fallback">
                         {{ artworkInitials(artwork) }}
@@ -274,45 +290,12 @@
                     </div>
 
                     <div class="marketplace-card__meta">
-                      <span v-if="artworkMetaLabel(artwork)" class="marketplace-card__tag">
-                        {{ artworkMetaLabel(artwork) }}
+                      <span class="marketplace-card__tag">
+                        {{ artworkMetaLabel(artwork) || "Curated" }}
                       </span>
                     </div>
                   </div>
                 </article>
-              </div>
-            </div>
-
-            <div class="marketplace-footerbar">
-              <div>
-                <h1 class="marketplace-footerbar__title">{{ collectionTitle }}</h1>
-                <p class="marketplace-footerbar__copy">
-                  Discovering {{ formattedResultsCount }} unique digital
-                  {{ filteredArtworks.length === 1 ? "artifact" : "artifacts" }}
-                </p>
-              </div>
-
-              <div class="marketplace-footerbar__controls">
-                <label class="marketplace-footerbar__sort">
-                  <span class="marketplace-footerbar__sort-icon" aria-hidden="true">+/-</span>
-                  <select v-model="sortBy">
-                    <option value="latest">Recently added</option>
-                    <option value="popular">Most popular</option>
-                    <option value="price-asc">Price: low to high</option>
-                    <option value="price-desc">Price: high to low</option>
-                  </select>
-                </label>
-
-                <button
-                  type="button"
-                  class="marketplace-footerbar__view marketplace-footerbar__view--active"
-                  aria-label="Grid view"
-                >
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-                </button>
               </div>
             </div>
 
@@ -324,11 +307,13 @@
               >
                 <div class="marketplace-card__image-wrap">
                   <NuxtLink :to="`/artworks/${artwork.id}`" class="marketplace-card__image-link">
-                    <img
+                    <ProtectedArtworkMedia
                       v-if="artwork.imageUrl"
                       :src="artwork.imageUrl"
                       :alt="artwork.title"
-                      class="marketplace-card__image"
+                      :artwork-id="artwork.id"
+                      img-class="marketplace-card__image"
+                      class="marketplace-card__media"
                     />
                     <div v-else class="marketplace-card__image marketplace-card__image--fallback">
                       {{ artworkInitials(artwork) }}
@@ -373,8 +358,8 @@
                   </div>
 
                   <div class="marketplace-card__meta">
-                    <span v-if="artworkMetaLabel(artwork)" class="marketplace-card__tag">
-                      {{ artworkMetaLabel(artwork) }}
+                    <span class="marketplace-card__tag">
+                      {{ artworkMetaLabel(artwork) || "Curated" }}
                     </span>
                   </div>
                 </div>
@@ -435,7 +420,6 @@ import { useAuthStore } from "~/stores/auth";
 import { useCartStore } from "~/stores/cart";
 import {
   buildMarketplaceCategorySelection,
-  categoryLabelFromValue,
   MARKETPLACE_CATEGORY_GROUPS,
   normalizeMarketplaceCategoryKey,
   resolveArtworkCategoryGroup
@@ -589,18 +573,6 @@ const galleryArtworks = computed(() => paginatedArtworks.value.slice(5));
 const formattedResultsCount = computed(() =>
   new Intl.NumberFormat("en-US").format(filteredArtworks.value.length)
 );
-
-const collectionTitle = computed(() => {
-  if (selectedCategories.value.length > 0) {
-    return categoryLabelFromValue(selectedCategories.value[0]);
-  }
-
-  return (
-    categoryLabelFromValue(resolveArtworkCategoryGroup(heroArtwork.value)) ||
-    categoryLabelFromValue(resolveArtworkCategoryGroup(filteredArtworks.value[0])) ||
-    "Digital Artworks"
-  );
-});
 
 const displayedPages = computed(() => {
   if (totalPages.value <= 7) {
@@ -855,20 +827,38 @@ function resetFilters() {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 0 18px 18px;
+  padding: 0 0 22px;
 }
 
 .marketplace-page__eyebrow {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 18px;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.marketplace-page__title {
   font-family: "Geist", "Hanken Grotesk", sans-serif;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(230, 237, 247, 0.72);
+  color: #ffffff;
+}
+
+.marketplace-page__count {
+  font-family: "Geist", "Hanken Grotesk", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(230, 237, 247, 0.48);
+}
+
+.marketplace-page__topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .marketplace-page__filters-toggle {
@@ -889,8 +879,8 @@ function resetFilters() {
 
 .marketplace-layout {
   display: grid;
-  grid-template-columns: 262px minmax(0, 1fr);
-  gap: 28px;
+  grid-template-columns: minmax(200px, 0.22fr) minmax(0, 1fr);
+  gap: 24px;
   align-items: start;
 }
 
@@ -900,11 +890,10 @@ function resetFilters() {
   display: flex;
   flex-direction: column;
   gap: 28px;
-  min-height: 1130px;
-  padding: 36px 18px 22px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(18, 20, 20, 0.56);
-  backdrop-filter: blur(10px);
+  padding: 8px 4px 22px 0;
+  background: transparent;
+  border: none;
+  backdrop-filter: none;
 }
 
 .marketplace-filters__section {
@@ -1082,25 +1071,29 @@ function resetFilters() {
 
 .marketplace-showcase {
   display: grid;
-  grid-template-columns: minmax(0, 1.58fr) minmax(0, 1fr);
-  gap: 22px;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
 }
 
 .marketplace-showcase--solo {
   grid-template-columns: minmax(0, 1fr);
 }
 
-.marketplace-spotlight,
-.marketplace-gallery {
+.marketplace-spotlight {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 22px;
+  grid-auto-rows: 1fr;
+  gap: 20px;
   min-width: 0;
+  min-height: 0;
 }
 
 .marketplace-gallery {
+  display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-top: -4px;
+  gap: 20px;
+  min-width: 0;
 }
 
 .marketplace-card {
@@ -1108,12 +1101,17 @@ function resetFilters() {
   min-width: 0;
   flex-direction: column;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
   background: rgba(18, 20, 20, 0.55);
   overflow: hidden;
 }
 
 .marketplace-card--featured {
-  min-height: 100%;
+  height: 100%;
+}
+
+.marketplace-card--compact {
+  height: 100%;
 }
 
 .marketplace-card--placeholder {
@@ -1132,14 +1130,24 @@ function resetFilters() {
   background: #090d17;
 }
 
+.marketplace-card__featured-image-shell {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 280px;
+}
+
+.marketplace-card__featured-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
 .marketplace-card__featured-image,
 .marketplace-card__featured-fallback {
   display: block;
   width: 100%;
-  aspect-ratio: 1 / 0.98;
-}
-
-.marketplace-card__featured-image {
+  height: 100%;
   object-fit: cover;
 }
 
@@ -1156,32 +1164,34 @@ function resetFilters() {
 
 .marketplace-card__featured-body {
   display: grid;
-  gap: 22px;
-  padding: 22px 22px 24px;
-  background: rgba(15, 18, 16, 0.92);
+  gap: 18px;
+  flex: 0 0 auto;
+  padding: 18px 18px 18px;
+  background: #0b0b0b;
 }
 
 .marketplace-card__featured-heading {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
 }
 
 .marketplace-card__featured-title {
   font-family: "Hanken Grotesk", sans-serif;
-  font-size: 23px;
-  font-weight: 500;
+  font-size: 22px;
+  font-weight: 600;
+  text-transform: uppercase;
   color: #e6edf7;
 }
 
 .marketplace-card__featured-artist {
   margin-top: 6px;
   font-family: "Geist", "Hanken Grotesk", sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(230, 237, 247, 0.58);
+  color: rgba(230, 237, 247, 0.55);
 }
 
 .marketplace-card__featured-price {
@@ -1189,11 +1199,11 @@ function resetFilters() {
   font-family: "Hanken Grotesk", sans-serif;
   font-size: 18px;
   font-weight: 500;
-  color: rgba(230, 237, 247, 0.82);
+  color: rgba(230, 237, 247, 0.9);
 }
 
 .marketplace-card__featured-button {
-  min-height: 60px;
+  min-height: 52px;
   border-radius: 2px;
   background: #fff;
   font-family: "Geist", "Hanken Grotesk", sans-serif;
@@ -1220,10 +1230,15 @@ function resetFilters() {
   position: relative;
 }
 
+.marketplace-card__media {
+  display: block;
+  width: 100%;
+}
+
 .marketplace-card__image {
   display: block;
   width: 100%;
-  aspect-ratio: 1 / 1.06;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
 }
 
@@ -1242,6 +1257,7 @@ function resetFilters() {
   position: absolute;
   right: 12px;
   bottom: 12px;
+  z-index: 2;
   display: inline-flex;
   height: 34px;
   width: 34px;
@@ -1270,27 +1286,29 @@ function resetFilters() {
 
 .marketplace-card__body {
   display: flex;
-  min-height: 112px;
+  min-height: 96px;
   flex: 1;
   flex-direction: column;
   justify-content: space-between;
-  gap: 14px;
-  padding: 14px 14px 16px;
+  gap: 12px;
+  padding: 12px 14px 14px;
+  background: #0b0b0b;
 }
 
 .marketplace-card__title {
   display: inline-block;
   font-family: "Hanken Grotesk", sans-serif;
-  font-size: 18px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
   color: #d9dde5;
 }
 
 .marketplace-card__price {
-  margin-top: 8px;
+  margin-top: 6px;
   font-family: "Hanken Grotesk", sans-serif;
-  font-size: 14px;
-  color: rgba(230, 237, 247, 0.78);
+  font-size: 13px;
+  color: rgba(230, 237, 247, 0.72);
 }
 
 .marketplace-card__meta {
@@ -1300,38 +1318,9 @@ function resetFilters() {
 
 .marketplace-card__tag {
   font-family: "Geist", "Hanken Grotesk", sans-serif;
-  font-size: 11px;
-  color: rgba(230, 237, 247, 0.56);
-}
-
-.marketplace-footerbar {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  padding-top: 10px;
-}
-
-.marketplace-footerbar__title {
-  font-family: "Geist", "Hanken Grotesk", sans-serif;
-  font-size: clamp(2.65rem, 4.4vw, 4rem);
-  font-weight: 700;
-  line-height: 0.98;
-  color: #fff;
-}
-
-.marketplace-footerbar__copy {
-  margin-top: 10px;
-  font-family: "Hanken Grotesk", sans-serif;
-  font-size: 16px;
-  color: rgba(230, 237, 247, 0.72);
-}
-
-.marketplace-footerbar__controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: rgba(230, 237, 247, 0.45);
 }
 
 .marketplace-footerbar__sort {
@@ -1365,26 +1354,6 @@ function resetFilters() {
 .marketplace-footerbar__sort-icon {
   font-size: 13px;
   color: rgba(168, 156, 188, 0.82);
-}
-
-.marketplace-footerbar__view {
-  display: inline-grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 4px;
-  width: 44px;
-  height: 44px;
-  padding: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  background: rgba(18, 20, 20, 0.6);
-}
-
-.marketplace-footerbar__view span {
-  border: 1px solid rgba(230, 237, 247, 0.72);
-}
-
-.marketplace-footerbar__view--active {
-  border-color: rgba(209, 188, 255, 0.3);
 }
 
 .marketplace-pagination {
@@ -1478,8 +1447,18 @@ function resetFilters() {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .marketplace-spotlight {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .marketplace-gallery {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .marketplace-card__featured-image-shell {
+    min-height: 420px;
+    aspect-ratio: 1 / 1;
+    flex: none;
   }
 }
 
@@ -1496,15 +1475,13 @@ function resetFilters() {
     display: none;
     min-height: auto;
     position: static;
+    padding: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(18, 20, 20, 0.56);
   }
 
   .marketplace-filters--open {
     display: flex;
-  }
-
-  .marketplace-footerbar {
-    flex-direction: column;
-    align-items: flex-start;
   }
 }
 
@@ -1529,9 +1506,8 @@ function resetFilters() {
     align-items: flex-start;
   }
 
-  .marketplace-card__featured-image,
-  .marketplace-card__featured-fallback {
-    aspect-ratio: 1 / 1.08;
+  .marketplace-card__featured-image-shell {
+    min-height: 280px;
   }
 
   .marketplace-pagination {

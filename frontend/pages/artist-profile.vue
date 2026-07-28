@@ -525,7 +525,7 @@
                     {{ artwork.title }}
                   </p>
                   <p class="mt-2 text-sm text-[#A0ADB4]">
-                    {{ artwork.category?.name || "Sans categorie" }} ┬À
+                    {{ artwork.category?.name || "Sans categorie" }} ·
                     {{ formatArtworkPrice(artwork) }}
                   </p>
                   <p class="mt-1 text-sm text-[#A0ADB4]">
@@ -550,7 +550,7 @@
                 </div>
                 <div class="text-sm leading-6 text-[#A0ADB4] xl:text-right">
                   <p v-if="artwork.management?.lifecycle?.hasConfirmedPurchase">
-                    Purchase recorded ÔÇö history preserved
+                    Purchase recorded — history preserved
                   </p>
                   <p v-else>No purchase recorded</p>
                   <p
@@ -560,12 +560,38 @@
                     Payment or reservation in progress
                   </p>
                 </div>
-                <NuxtLink
-                  :to="`/artworks/${artwork.id}`"
-                  class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#24314F] bg-[#10151E] px-5 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
-                >
-                  View private details
-                </NuxtLink>
+                <div class="flex flex-wrap gap-2 xl:justify-end">
+                  <NuxtLink
+                    :to="`/artworks/${artwork.id}/edit`"
+                    class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-violet-500/50 bg-violet-500/10 px-5 text-sm font-semibold text-violet-100 transition hover:bg-violet-500/20"
+                  >
+                    Modifier
+                  </NuxtLink>
+                  <button
+                    type="button"
+                    class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#7A3131] px-5 text-sm font-semibold text-[#FFB4B4] transition hover:bg-[#2A1010] disabled:cursor-not-allowed disabled:opacity-50"
+                    :disabled="
+                      deletingArtworkId === artwork.id ||
+                      artwork.management?.capabilities?.canDelete === false
+                    "
+                    :title="
+                      artwork.management?.capabilities?.canDelete === false
+                        ? formatArtworkManagementReason(
+                            artwork.management?.capabilities?.reasons?.delete
+                          )
+                        : undefined
+                    "
+                    @click="openDeleteArtworkDialog(artwork)"
+                  >
+                    {{ deletingArtworkId === artwork.id ? "Suppression…" : "Supprimer" }}
+                  </button>
+                  <NuxtLink
+                    :to="`/artworks/${artwork.id}`"
+                    class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#24314F] bg-[#10151E] px-5 text-sm font-semibold text-[#E6EDF7] transition hover:bg-[#1F273A]"
+                  >
+                    Voir la fiche
+                  </NuxtLink>
+                </div>
               </div>
             </article>
           </div>
@@ -582,6 +608,52 @@
       </section>
     </template>
   </ArtistShell>
+
+  <Teleport to="body">
+    <div
+      v-if="artworkPendingDeletion"
+      class="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4"
+    >
+      <section
+        class="w-full max-w-lg rounded-[28px] border border-[#7A3131] bg-[#090D18] p-6 shadow-2xl sm:p-8"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="artist-delete-artwork-title"
+      >
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#FF9E9E]">
+          Action définitive
+        </p>
+        <h2 id="artist-delete-artwork-title" class="mt-3 text-2xl font-semibold text-white">
+          Supprimer « {{ artworkPendingDeletion.title }} » ?
+        </h2>
+        <p class="mt-4 text-sm leading-6 text-[#B7C5DD]">
+          Cette œuvre et ses médias seront supprimés définitivement. Cette action ne peut pas être
+          annulée.
+        </p>
+        <p v-if="artworkActionError" class="mt-4 text-sm text-[#FFB4B4]">
+          {{ artworkActionError }}
+        </p>
+        <div class="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            class="min-h-12 rounded-2xl border border-[#34415A] px-5 text-sm font-semibold text-white transition hover:border-[#61708E] disabled:opacity-50"
+            :disabled="Boolean(deletingArtworkId)"
+            @click="closeDeleteArtworkDialog"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            class="min-h-12 rounded-2xl bg-[#C84D4D] px-5 text-sm font-semibold text-white transition hover:bg-[#E15C5C] disabled:cursor-wait disabled:opacity-50"
+            :disabled="Boolean(deletingArtworkId)"
+            @click="confirmDeleteArtwork"
+          >
+            {{ deletingArtworkId ? "Suppression…" : "Supprimer définitivement" }}
+          </button>
+        </div>
+      </section>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
@@ -590,6 +662,7 @@ import {
   ARTIST_ARTWORK_VISIBILITY_FILTERS,
   filterArtistArtworksByVisibility,
   formatArtworkLicenseType,
+  formatArtworkManagementReason,
   getArtworkAvailabilityPresentation,
   getArtworkVisibilityPresentation,
   normalizeArtistArtworkCounts
@@ -607,6 +680,9 @@ const artworksLoading = ref(false);
 const artistArtworks = ref([]);
 const artworkCounts = ref(normalizeArtistArtworkCounts(null));
 const selectedArtworkVisibility = ref("PUBLISHED");
+const artworkPendingDeletion = ref(null);
+const deletingArtworkId = ref(null);
+const artworkActionError = ref("");
 const missingArtist = ref(false);
 const errorMessage = ref("");
 const savingProfile = ref(false);
@@ -809,6 +885,55 @@ async function fetchCsrfToken() {
   });
 
   return response.csrfToken;
+}
+
+function openDeleteArtworkDialog(artwork) {
+  artworkActionError.value = "";
+  artworkPendingDeletion.value = artwork;
+}
+
+function closeDeleteArtworkDialog() {
+  if (deletingArtworkId.value) {
+    return;
+  }
+
+  artworkPendingDeletion.value = null;
+  artworkActionError.value = "";
+}
+
+async function confirmDeleteArtwork() {
+  const artwork = artworkPendingDeletion.value;
+  const expectedVersion = artwork?.management?.lifecycle?.version;
+
+  if (!artwork?.id || !Number.isSafeInteger(expectedVersion) || expectedVersion <= 0) {
+    artworkActionError.value = "Impossible de supprimer cette œuvre pour le moment.";
+    return;
+  }
+
+  deletingArtworkId.value = artwork.id;
+  artworkActionError.value = "";
+
+  try {
+    const csrfToken = await fetchCsrfToken();
+    await $fetch(`/api/artists/me/artworks/${artwork.id}`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: {
+        "x-csrf-token": csrfToken
+      },
+      body: {
+        expectedVersion
+      }
+    });
+
+    artworkPendingDeletion.value = null;
+    await loadArtistArtworks();
+  } catch (error) {
+    artworkActionError.value =
+      error?.data?.message || "Impossible de supprimer cette œuvre pour le moment.";
+  } finally {
+    deletingArtworkId.value = null;
+  }
 }
 
 async function onProfileImageSelected(event) {
