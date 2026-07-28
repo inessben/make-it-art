@@ -38,6 +38,7 @@ export function createCurrentUserSynchronizer() {
         throw error;
       } finally {
         store.loading = false;
+        store.initialized = true;
         pendingRequests.delete(store);
       }
     })();

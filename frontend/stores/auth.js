@@ -6,7 +6,8 @@ const synchronizeCurrentUser = createCurrentUserSynchronizer();
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     user: null,
-    loading: false
+    loading: false,
+    initialized: false
   }),
 
   getters: {
@@ -67,6 +68,7 @@ export const useAuthStore = defineStore("auth", {
       });
 
       this.user = null;
+      this.initialized = true;
     }
   }
 });
