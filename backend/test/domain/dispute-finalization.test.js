@@ -32,6 +32,16 @@ test("Prisma and PostgreSQL serialization conflicts are treated as retryable", (
   assert.equal(isTransactionWriteConflict({ code: "P2034" }), true);
   assert.equal(
     isTransactionWriteConflict({
+      code: "P2010",
+      meta: {
+        code: "40001",
+        message: "could not serialize access due to read/write dependencies among transactions"
+      }
+    }),
+    true
+  );
+  assert.equal(
+    isTransactionWriteConflict({
       cause: { originalCode: "40001", kind: "TransactionWriteConflict" }
     }),
     true

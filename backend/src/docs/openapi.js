@@ -743,6 +743,36 @@ const marketplacePaths = {
         500: jsonResponse("Artist profile unavailable", errorSchema)
       }
     }
+  },
+  "/members/{id}": {
+    get: {
+      tags: ["Marketplace"],
+      summary: "Get one public member profile",
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          description: "Numeric public member identifier.",
+          schema: {
+            type: "integer",
+            minimum: 1
+          }
+        }
+      ],
+      responses: {
+        200: jsonResponse("Member profile detail", {
+          type: "object",
+          properties: {
+            member: {
+              $ref: "#/components/schemas/PublicMemberSummary"
+            }
+          }
+        }),
+        404: jsonResponse("Member not found", errorSchema),
+        500: jsonResponse("Member profile unavailable", errorSchema)
+      }
+    }
   }
 };
 
@@ -3145,6 +3175,37 @@ const openApiSpec = {
               collections: { type: "integer" }
             }
           }
+        }
+      },
+      PublicMemberSummary: {
+        type: "object",
+        additionalProperties: true,
+        properties: {
+          id: { type: "integer" },
+          displayName: { type: "string", nullable: true },
+          username: { type: "string", nullable: true },
+          bio: { type: "string", nullable: true },
+          avatarUrl: { type: "string", nullable: true },
+          coverUrl: { type: "string", nullable: true },
+          isArtist: { type: "boolean" },
+          artistId: { type: "integer", nullable: true },
+          verifiedArtist: { type: "boolean" },
+          stats: {
+            oneOf: [
+              {
+                type: "object",
+                additionalProperties: true,
+                properties: {
+                  artworks: { type: "integer" },
+                  followers: { type: "integer" },
+                  collections: { type: "integer" }
+                }
+              },
+              { type: "null" }
+            ]
+          },
+          joinedAt: { type: "string", format: "date-time", nullable: true },
+          profileUrl: { type: "string", nullable: true }
         }
       },
       CategorySummary: {
