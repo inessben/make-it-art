@@ -373,12 +373,28 @@
                           : "Add to cart"
                   }}
                 </button>
-                <p
+                <div
                   v-else
-                  class="inline-flex min-h-[62px] items-center justify-center rounded-[6px] border border-[#3A1A1A] bg-[#1A0A0A] px-6 text-base font-semibold uppercase tracking-[0.1em] text-[#F5A8A8]"
+                  class="group relative rounded-[6px] focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/70"
+                  tabindex="0"
+                  :aria-describedby="`purchase-unavailable-${artwork.id}`"
                 >
-                  {{ availabilityMessage }}
-                </p>
+                  <button
+                    type="button"
+                    class="inline-flex min-h-[62px] w-full cursor-not-allowed items-center justify-center rounded-[6px] border border-white/10 bg-white/[0.04] px-6 text-base font-semibold uppercase tracking-[0.12em] text-slate-500"
+                    disabled
+                    aria-disabled="true"
+                  >
+                    {{ unavailablePurchaseLabel }}
+                  </button>
+                  <span
+                    :id="`purchase-unavailable-${artwork.id}`"
+                    role="tooltip"
+                    class="pointer-events-none absolute bottom-[calc(100%+0.5rem)] left-1/2 z-20 w-max max-w-[min(18rem,calc(100vw-3rem))] -translate-x-1/2 rounded-[6px] border border-white/10 bg-[#090C10] px-3 py-2 text-center text-xs font-medium normal-case tracking-normal text-slate-200 opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus:opacity-100"
+                  >
+                    {{ availabilityMessage }}
+                  </span>
+                </div>
 
                 <button
                   type="button"
@@ -879,14 +895,20 @@ const availabilityText = computed(() => {
 });
 const availabilityMessage = computed(() => {
   if (availability.value.status === "RESERVED") {
-    return "This artwork is temporarily reserved while a payment is being completed.";
+    return "Payment in progress. Try again shortly.";
   }
 
   if (availability.value.status === "SOLD") {
-    return "This exclusive artwork has already been sold.";
+    return "This artwork has already been sold.";
   }
 
-  return "This artwork is not currently available for purchase.";
+  return "This artwork is currently unavailable.";
+});
+const unavailablePurchaseLabel = computed(() => {
+  if (availability.value.status === "SOLD") return "Sold";
+  if (availability.value.status === "UNAVAILABLE") return "Unavailable";
+
+  return "Add to cart";
 });
 const artworkFacts = computed(() => [
   {
