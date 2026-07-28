@@ -134,7 +134,7 @@
           <input
             v-model.trim="form.price"
             type="text"
-            placeholder="120 tokens"
+            placeholder=""
             class="rounded-2xl border border-[#1A2336] bg-[#03060D] px-4 py-3 text-[#E6EDF7] outline-none transition focus:border-[#4A6CF7]"
             required
           />
