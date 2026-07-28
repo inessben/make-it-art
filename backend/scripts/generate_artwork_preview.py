@@ -122,7 +122,14 @@ def draw_corner_watermark(image: Image.Image, text: str) -> Image.Image:
     return Image.alpha_composite(base, overlay)
 
 
-def draw_ai_banner(image: Image.Image) -> Image.Image:
+def build_ai_banner_notice(artist: str) -> str:
+    normalized_artist = str(artist or "").strip()
+    if normalized_artist:
+        return f"{normalized_artist} - Preview only - No AI training"
+    return "Preview only - No AI training"
+
+
+def draw_ai_banner(image: Image.Image, artist: str = "") -> Image.Image:
     """Bottom banner stating AI training / copying is prohibited."""
     base = image.convert("RGBA")
     overlay = Image.new("RGBA", base.size, (0, 0, 0, 0))
@@ -131,7 +138,7 @@ def draw_ai_banner(image: Image.Image) -> Image.Image:
     banner_h = max(36, base.height // 18)
     draw.rectangle((0, base.height - banner_h, base.width, base.height), fill=(5, 8, 16, 170))
 
-    notice = "Make It Art - Preview only - AI training & scraping prohibited"
+    notice = build_ai_banner_notice(artist)
     font = load_font(max(14, banner_h // 2))
     bbox = draw.textbbox((0, 0), notice, font=font)
     text_width = bbox[2] - bbox[0]
@@ -143,10 +150,10 @@ def draw_ai_banner(image: Image.Image) -> Image.Image:
     return Image.alpha_composite(base, overlay)
 
 
-def apply_full_watermark(image: Image.Image, text: str) -> Image.Image:
+def apply_full_watermark(image: Image.Image, text: str, artist: str = "") -> Image.Image:
     watermarked = apply_diagonal_watermark(image, text)
     watermarked = draw_corner_watermark(watermarked, text)
-    watermarked = draw_ai_banner(watermarked)
+    watermarked = draw_ai_banner(watermarked, artist)
     return watermarked.convert("RGB")
 
 
@@ -247,7 +254,7 @@ def run_argparse_mode() -> int:
             rgb = rgb.resize((max_width, max(1, int(rgb.height * ratio))), Image.LANCZOS)
 
         if not args.no_watermark:
-            rgb = apply_full_watermark(rgb, watermark_text)
+            rgb = apply_full_watermark(rgb, watermark_text, args.artist)
 
         save_with_metadata(rgb, target, meta, quality=args.quality)
 
@@ -280,7 +287,7 @@ def run_metadata_mode() -> int:
     with Image.open(input_path) as source:
         source = source.convert("RGB")
         source.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
-        watermarked = apply_full_watermark(source, watermark)
+        watermarked = apply_full_watermark(source, watermark, str(meta.get("artist") or ""))
         save_with_metadata(watermarked, output_path, meta)
 
     print(json.dumps({"ok": True, "output": str(output_path), "watermarkApplied": True}))

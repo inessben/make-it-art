@@ -183,6 +183,7 @@
                     :src="heroArtwork.imageUrl"
                     :alt="heroArtwork.title"
                     :artwork-id="heroArtwork.id"
+                    :artist-name="heroArtwork.artist?.displayName || heroArtwork.artist?.username || ''"
                     img-class="marketplace-card__featured-image"
                     class="marketplace-card__featured-media"
                   />
@@ -244,6 +245,7 @@
                         :src="artwork.imageUrl"
                         :alt="artwork.title"
                         :artwork-id="artwork.id"
+                        :artist-name="artwork.artist?.displayName || artwork.artist?.username || ''"
                         img-class="marketplace-card__image"
                         class="marketplace-card__media"
                       />
@@ -314,6 +316,7 @@
                       :src="artwork.imageUrl"
                       :alt="artwork.title"
                       :artwork-id="artwork.id"
+                      :artist-name="artwork.artist?.displayName || artwork.artist?.username || ''"
                       img-class="marketplace-card__image"
                       class="marketplace-card__media"
                     />
