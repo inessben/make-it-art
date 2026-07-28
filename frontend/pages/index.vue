@@ -467,9 +467,7 @@ function categoryCardStyle(imageUrl) {
   }
 
   return {
-    backgroundImage:
-      `linear-gradient(180deg, rgba(6, 10, 17, 0.02) 0%, rgba(6, 10, 17, 0.88) 100%), ` +
-      `url(${imageUrl})`
+    backgroundImage: `url(${imageUrl})`
   };
 }
 
@@ -723,7 +721,8 @@ function scrollHomeArtists(direction) {
 .homepage__category-grid {
   display: grid;
   margin-top: 58px;
-  gap: 16px;
+  column-gap: 16px;
+  row-gap: 24px;
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
@@ -732,10 +731,11 @@ function scrollHomeArtists(direction) {
   display: flex;
   min-height: 312px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  isolation: isolate;
   border-radius: 8px;
   background-color: #090d17;
   background-position: center;
+  background-repeat: no-repeat;
   background-size: cover;
   transition:
     transform 0.22s ease,
@@ -764,7 +764,18 @@ function scrollHomeArtists(direction) {
 .homepage__category-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(9, 13, 23, 0.04) 18%, rgba(9, 13, 23, 0.88) 100%);
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(6, 10, 17, 0.16) 0%,
+    rgba(6, 10, 17, 0.54) 42%,
+    rgba(6, 10, 17, 0.9) 72%,
+    rgba(6, 10, 17, 1) 100%
+  );
+  box-shadow:
+    inset 0 0 0 999px rgba(6, 10, 17, 0.14),
+    inset 0 -120px 120px rgba(6, 10, 17, 0.98);
 }
 
 .homepage__category-body {
