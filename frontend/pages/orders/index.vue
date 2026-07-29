@@ -68,99 +68,148 @@
           />
 
           <template v-else>
-            <div class="overflow-x-auto">
-              <table class="w-full min-w-[920px] table-fixed border-collapse text-left">
-                <thead>
-                  <tr
-                    class="h-16 border-b border-slate-800 text-subtitle-2 uppercase text-slate-100"
-                  >
-                    <th class="w-[35%] px-6 font-normal">Artwork</th>
-                    <th class="w-[15%] px-4 font-normal">Status</th>
-                    <th class="w-[24%] px-4 font-normal">Purchase date</th>
-                    <th class="w-[12%] px-4 text-right font-normal">Value</th>
-                    <th class="w-[14%] px-6 text-right font-normal">Blockchain</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="transaction in visibleTransactions"
-                    :key="transaction.key"
-                    class="h-[112px] border-b border-slate-800 last:border-b-0"
-                  >
-                    <td class="px-0">
-                      <div class="flex items-center gap-6">
-                        <div
-                          class="h-16 w-16 shrink-0 border border-slate-800 bg-black"
-                          aria-label="Artwork media placeholder"
-                        />
-                        <div class="min-w-0">
-                          <NuxtLink
-                            v-if="transaction.publicDetailAvailable"
-                            :to="`/artworks/${transaction.artworkId}`"
-                            class="block truncate text-body-1 uppercase transition-colors hover:text-violet-400"
-                          >
-                            {{ transaction.title }}
-                          </NuxtLink>
-                          <p v-else class="truncate text-body-1 uppercase">
-                            {{ transaction.title }}
-                          </p>
-                          <NuxtLink
-                            :to="`/orders/${transaction.orderId}`"
-                            class="mt-1 block text-subtitle-2 text-slate-100 transition-colors hover:text-violet-400"
-                          >
-                            {{ transaction.orderNumber }}
-                          </NuxtLink>
-                          <span class="mt-1 block text-xs uppercase text-violet-300">
-                            {{ transaction.licenseLabel }}
-                          </span>
-                          <span
-                            v-if="!transaction.publicDetailAvailable"
-                            class="mt-1 block text-xs text-slate-400"
-                          >
-                            Retirée du catalogue · preuve d’achat conservée
-                          </span>
-                        </div>
+            <div class="grid gap-4 px-4 py-4 sm:px-6 sm:py-6">
+              <article
+                v-for="transaction in visibleTransactions"
+                :key="transaction.key"
+                class="rounded-[24px] border border-[#182033] bg-[linear-gradient(180deg,rgba(8,12,20,0.96)_0%,rgba(5,8,14,0.98)_100%)] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.24)]"
+              >
+                <div
+                  class="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.95fr)_minmax(320px,1fr)]"
+                >
+                  <div class="min-w-0">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                      Artwork
+                    </p>
+                    <div class="mt-4 flex items-start gap-4">
+                      <div
+                        class="flex h-16 w-16 shrink-0 items-center justify-center rounded-[18px] border border-[#20283B] bg-[radial-gradient(circle_at_30%_20%,rgba(123,58,237,0.28),transparent_55%),linear-gradient(180deg,#090C13_0%,#04060B_100%)] text-lg font-semibold uppercase text-violet-200"
+                        aria-label="Artwork media placeholder"
+                      >
+                        {{ artworkMonogram(transaction.title) }}
                       </div>
-                    </td>
-                    <td class="px-4">
+                      <div class="min-w-0">
+                        <NuxtLink
+                          v-if="transaction.publicDetailAvailable"
+                          :to="`/artworks/${transaction.artworkId}`"
+                          class="block truncate text-lg font-semibold uppercase tracking-[0.03em] text-white transition-colors hover:text-violet-300"
+                        >
+                          {{ transaction.title }}
+                        </NuxtLink>
+                        <p
+                          v-else
+                          class="truncate text-lg font-semibold uppercase tracking-[0.03em] text-white"
+                        >
+                          {{ transaction.title }}
+                        </p>
+                        <span
+                          class="mt-2 inline-flex rounded-full border border-violet-500/20 bg-violet-500/8 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-violet-200"
+                        >
+                          {{ transaction.licenseLabel }}
+                        </span>
+                        <p
+                          v-if="!transaction.publicDetailAvailable"
+                          class="mt-3 text-xs leading-5 text-slate-400"
+                        >
+                          Removed from the public catalogue. Your purchase proof remains available.
+                        </p>
+                        <NuxtLink
+                          v-if="transaction.publicDetailAvailable"
+                          :to="`/artworks/${transaction.artworkId}`"
+                          class="mt-3 inline-flex text-xs font-semibold uppercase tracking-[0.14em] text-slate-400 transition-colors hover:text-violet-300"
+                        >
+                          Open artwork
+                        </NuxtLink>
+                      </div>
+                    </div>
+                  </div>
+
+                  <NuxtLink
+                    :to="`/orders/${transaction.orderId}`"
+                    class="group flex min-h-[156px] flex-col justify-between rounded-[22px] border border-[#20283B] bg-[linear-gradient(180deg,rgba(12,17,26,0.92)_0%,rgba(9,12,19,0.98)_100%)] p-5 transition duration-200 hover:border-violet-500 hover:bg-[linear-gradient(180deg,rgba(39,21,77,0.32)_0%,rgba(9,12,19,0.98)_100%)]"
+                  >
+                    <div>
+                      <p
+                        class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500"
+                      >
+                        Order details
+                      </p>
+                      <p
+                        class="mt-3 break-all text-base font-semibold text-white transition-colors group-hover:text-violet-300"
+                      >
+                        {{ transaction.orderNumber }}
+                      </p>
+                      <p class="mt-3 text-sm leading-6 text-slate-400">
+                        Open the private order page to access invoices, download rights and delivery
+                        information.
+                      </p>
+                    </div>
+                    <span
+                      class="mt-4 inline-flex text-xs font-semibold uppercase tracking-[0.16em] text-violet-300"
+                    >
+                      View private order page
+                    </span>
+                  </NuxtLink>
+
+                  <div class="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+                    <div class="rounded-[18px] border border-[#20283B] bg-black/30 px-4 py-4">
+                      <p
+                        class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500"
+                      >
+                        Status
+                      </p>
                       <span
-                        class="inline-flex border border-slate-500 bg-slate-800 px-3 py-1 text-subtitle-2 uppercase text-slate-400"
+                        class="mt-3 inline-flex rounded-full border border-slate-600 bg-slate-800/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-200"
                       >
                         {{ transaction.status }}
                       </span>
-                    </td>
-                    <td class="px-4 text-body-1 uppercase">
-                      {{ formatOrderDate(transaction.date) }}
-                    </td>
-                    <td class="px-4 text-right text-body-1 text-slate-400">
-                      {{ formatMoney(transaction.value, transaction.currency) }}
-                    </td>
-                    <td class="px-6 text-right">
+                    </div>
+
+                    <div class="rounded-[18px] border border-[#20283B] bg-black/30 px-4 py-4">
+                      <p
+                        class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500"
+                      >
+                        Purchase date
+                      </p>
+                      <p class="mt-3 text-sm font-medium uppercase leading-6 text-slate-100">
+                        {{ formatOrderDate(transaction.date) }}
+                      </p>
+                    </div>
+
+                    <div class="rounded-[18px] border border-[#20283B] bg-black/30 px-4 py-4">
+                      <p
+                        class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500"
+                      >
+                        Value
+                      </p>
+                      <p class="mt-3 text-lg font-semibold text-slate-100">
+                        {{ formatMoney(transaction.value, transaction.currency) }}
+                      </p>
                       <NuxtLink
                         v-if="transaction.publicDetailAvailable"
                         :to="`/artworks/${transaction.artworkId}`"
-                        class="text-subtitle-2 uppercase tracking-[0.06em] text-slate-400 transition-colors hover:text-violet-400"
+                        class="mt-3 inline-flex text-xs font-semibold uppercase tracking-[0.14em] text-slate-400 transition-colors hover:text-violet-300"
                       >
-                        Provenance ↗
+                        Provenance
                       </NuxtLink>
                       <NuxtLink
                         v-else
                         :to="`/orders/${transaction.orderId}`"
-                        class="text-subtitle-2 uppercase tracking-[0.06em] text-slate-400 transition-colors hover:text-violet-400"
+                        class="mt-3 inline-flex text-xs font-semibold uppercase tracking-[0.14em] text-slate-400 transition-colors hover:text-violet-300"
                       >
-                        Détails privés ↗
+                        Private details
                       </NuxtLink>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                    </div>
+                  </div>
+                </div>
+              </article>
             </div>
 
             <footer
               class="flex min-h-20 flex-col gap-5 border-t border-slate-800 px-6 py-5 sm:flex-row sm:items-center sm:justify-between"
             >
               <p class="text-subtitle-2 uppercase">
-                Showing {{ rangeStart }}–{{ rangeEnd }} of {{ filteredTransactions.length }}
+                Showing {{ rangeStart }}-{{ rangeEnd }} of {{ filteredTransactions.length }}
                 transactions
               </p>
               <nav class="flex items-center gap-1" aria-label="Order history pagination">
@@ -171,7 +220,7 @@
                   aria-label="Previous page"
                   @click="goToPage(currentPage - 1)"
                 >
-                  ‹
+                  &lt;
                 </button>
                 <button
                   v-for="page in totalPages"
@@ -195,7 +244,7 @@
                   aria-label="Next page"
                   @click="goToPage(currentPage + 1)"
                 >
-                  ›
+                  &gt;
                 </button>
               </nav>
             </footer>
@@ -228,6 +277,7 @@ const transactions = computed(() =>
     (order.items || []).map((item, index) => ({
       key: `${order.id}-${item.id || item.artworkId}-${index}`,
       orderId: order.id,
+      orderItemId: item.id,
       orderNumber: order.reference || order.number || `#${order.id}`,
       artworkId: item.artworkId,
       title: item.title || "Untitled artwork",
@@ -300,7 +350,7 @@ function formatMoney(value, currency = "EUR") {
 }
 
 function formatOrderDate(value) {
-  if (!value) return "—";
+  if (!value) return "-";
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "2-digit",
@@ -342,5 +392,16 @@ function exportCsv() {
   link.download = "make-it-art-order-history.csv";
   link.click();
   URL.revokeObjectURL(url);
+}
+
+function artworkMonogram(title) {
+  return String(title || "A")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("")
+    .slice(0, 2);
 }
 </script>

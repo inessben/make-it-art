@@ -510,6 +510,9 @@
                     :src="artwork.imageUrl"
                     :alt="artwork.title"
                     :artwork-id="artwork.id"
+                    :artist-name="
+                      artwork.artist?.displayName || artist.displayName || userNameFallback
+                    "
                     img-class="h-full w-full object-cover"
                     class="h-full w-full"
                   />

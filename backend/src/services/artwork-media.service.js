@@ -4,6 +4,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { resolvePythonCommand } = require("./artist-contract.service");
+const { buildPreviewWatermarkText } = require("./artwork-preview.service");
 
 const UPLOADS_ROOT = path.resolve(__dirname, "../../uploads");
 const ARTWORKS_DIR = path.join(UPLOADS_ROOT, "artworks");
@@ -125,6 +126,7 @@ async function generateArtworkPreview({ imagePath, title, artistName, copyrightH
     usageTerms:
       "No AI training, scraping, crawling, or automated collection without an explicit license from the rights holder."
   };
+  metadata.watermark = buildPreviewWatermarkText(artistName);
 
   const tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), "mia-artwork-preview-"));
   const metadataPath = path.join(tempDir, "metadata.json");

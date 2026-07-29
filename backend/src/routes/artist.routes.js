@@ -1158,6 +1158,8 @@ router.post("/artists/me/artworks", ensureVerifiedArtist, handleArtworkUpload, a
       uploadedFile: req.file,
       // Public previews are always watermarked to deter AI training and casual copying.
       applyWatermark: env.artworkMedia.watermarkPublicPreviews !== false,
+      title: input.title,
+      artistName: req.artist.displayName || req.user.username || "",
       storageProviderName: env.artworkMedia.storageProvider
     });
     const artwork = await artworkRepository.createArtwork({
@@ -1255,6 +1257,8 @@ router.patch(
         replacementMedia = await processArtworkUpload({
           uploadedFile: req.file,
           applyWatermark: env.artworkMedia.watermarkPublicPreviews || input.protection,
+          title: input.title,
+          artistName: req.artist.displayName || req.user.username || "",
           storageProviderName: env.artworkMedia.storageProvider
         });
       }

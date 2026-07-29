@@ -25,3 +25,11 @@ export function getDigitalDeliveryPresentation(status) {
     }
   );
 }
+
+export function buildCertificateDownloadUrl(orderId, certificateId) {
+  if (!orderId || !certificateId) return null;
+
+  return `/api/v1/orders/${encodeURIComponent(String(orderId))}/certificates/${encodeURIComponent(
+    String(certificateId)
+  )}.pdf`;
+}

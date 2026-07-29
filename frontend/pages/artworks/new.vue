@@ -205,6 +205,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { navigateTo } from "#app";
+import { useAuthStore } from "~/stores/auth";
 import { ARTWORK_LICENSE_OPTIONS, isArtworkDescriptionRequired } from "~/utils/marketplace";
 
 definePageMeta({
@@ -212,6 +213,7 @@ definePageMeta({
 });
 
 const categories = ref([]);
+const auth = useAuthStore();
 const categoriesLoading = ref(true);
 const submitting = ref(false);
 const formMessage = ref("");
@@ -338,6 +340,11 @@ async function submitArtwork() {
   submitting.value = true;
 
   try {
+    // The access cookie expires after 15 minutes, while preparing an artwork can take longer.
+    // Reuse the refresh-cookie flow before uploading so the protected route does not reject a
+    // still signed-in artist with "Not authenticated".
+    await auth.fetchCurrentUser();
+
     const formData = new FormData();
     formData.append("image", selectedFile.value);
     formData.append("title", form.title);
@@ -363,7 +370,10 @@ async function submitArtwork() {
     }
   } catch (error) {
     formError.value = true;
-    formMessage.value = error?.data?.message || "Impossible de publier cette oeuvre.";
+    formMessage.value =
+      Number(error?.statusCode ?? error?.status) === 401
+        ? "Ta session a expire. Reconnecte-toi puis relance la publication."
+        : error?.data?.message || "Impossible de publier cette oeuvre.";
   } finally {
     submitting.value = false;
   }

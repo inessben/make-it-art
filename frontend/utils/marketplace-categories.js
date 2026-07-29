@@ -2,22 +2,39 @@ export const MARKETPLACE_CATEGORY_GROUPS = [
   {
     value: "digital-illustrations",
     label: "Digital Illustrations",
-    matches: ["illustration", "peinture numerique", "digital art", "digital arts"]
+    matches: [
+      "illustration",
+      "digital illustration",
+      "peinture numerique",
+      "digital art",
+      "digital arts"
+    ]
   },
   {
-    value: "3d-motion",
-    label: "3D Motion",
-    matches: ["art 3d", "3d", "animation", "motion"]
-  },
-  {
-    value: "assets",
-    label: "Assets",
-    matches: ["graphic", "graphics", "art generatif", "collage", "mix media", "asset"]
+    value: "assets-graphics",
+    label: "Assets Graphics",
+    matches: [
+      "asset",
+      "assets",
+      "graphic",
+      "graphics",
+      "graphic design",
+      "vector",
+      "vector art",
+      "art generatif",
+      "collage",
+      "mix media",
+      "mixed media",
+      "art 3d",
+      "3d",
+      "animation",
+      "motion"
+    ]
   },
   {
     value: "photography",
     label: "Photography",
-    matches: ["photographie", "photography", "photo"]
+    matches: ["photographie", "photographies", "photography", "photo"]
   }
 ];
 

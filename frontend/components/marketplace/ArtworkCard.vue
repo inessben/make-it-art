@@ -11,6 +11,7 @@
         :src="artwork.imageUrl"
         :alt="artwork.title"
         :artwork-id="artwork.id"
+        :artist-name="artwork.artist?.displayName || artwork.artist?.username || ''"
         img-class="aspect-[4/5] w-full object-cover transition duration-300 group-hover:scale-[1.02]"
       />
       <div

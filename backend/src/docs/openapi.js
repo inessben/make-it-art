@@ -1983,6 +1983,23 @@ const checkoutPaths = {
         404: jsonResponse("Invoice not found", errorSchema)
       }
     }
+  },
+  "/v1/orders/{publicId}/certificates/{certificatePublicId}.pdf": {
+    get: {
+      tags: ["Checkout"],
+      summary: "Download one owned purchase certificate PDF",
+      security: sessionOnlySecurity,
+      parameters: [
+        { $ref: "#/components/parameters/OrderPublicId" },
+        { $ref: "#/components/parameters/CertificatePublicId" }
+      ],
+      responses: {
+        200: binaryResponse("Purchase certificate PDF"),
+        401: jsonResponse("Authentication required", errorSchema),
+        404: jsonResponse("Certificate not found", errorSchema),
+        500: jsonResponse("Certificate generation unavailable", errorSchema)
+      }
+    }
   }
 };
 
@@ -3086,6 +3103,16 @@ const openApiSpec = {
         in: "path",
         required: true,
         description: "Public UUID of an invoice.",
+        schema: {
+          type: "string",
+          format: "uuid"
+        }
+      },
+      CertificatePublicId: {
+        name: "certificatePublicId",
+        in: "path",
+        required: true,
+        description: "Public UUID of an ownership certificate.",
         schema: {
           type: "string",
           format: "uuid"
