@@ -59,6 +59,8 @@
                 :alt="artwork.title"
                 :artwork-id="artwork.id"
                 :artist-name="artwork.artist?.displayName || artwork.artist?.username || ''"
+                loading="eager"
+                fetch-priority="high"
                 img-class="h-full w-full object-cover"
                 class="absolute inset-0 h-full w-full"
               />
@@ -530,6 +532,8 @@
             :alt="artwork?.title || 'Artwork preview'"
             :artwork-id="artwork?.id"
             :artist-name="artwork?.artist?.displayName || artwork?.artist?.username || ''"
+            loading="eager"
+            fetch-priority="high"
             img-class="max-h-[min(78vh,860px)] w-full object-contain"
             class="block w-full"
           />
@@ -912,7 +916,12 @@ const isInCart = computed(() =>
 const artworkInitials = computed(() => getArtistInitials(artwork.value?.title || "Artwork"));
 const artistInitials = computed(() => getArtistInitials(artwork.value?.artist?.displayName));
 const artworkImageUrl = computed(
-  () => artwork.value?.previewUrl || artwork.value?.imageUrl || artwork.value?.hdDownloadUrl || ""
+  () =>
+    artwork.value?.protectedPreviewUrl ||
+    artwork.value?.previewUrl ||
+    artwork.value?.imageUrl ||
+    artwork.value?.hdDownloadUrl ||
+    ""
 );
 const resolvedHdDownloadUrl = computed(
   () => hdDownloadAccess.value.hdDownloadUrl || artwork.value?.hdDownloadUrl || ""

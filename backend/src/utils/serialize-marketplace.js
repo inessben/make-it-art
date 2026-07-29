@@ -123,10 +123,12 @@ function serializeArtwork(
   const price = hasFiatPrice
     ? `${priceValue.toFixed(2).replace(".", ",")} €`
     : normalizeText(artwork.price) || normalizeText(artwork.priceTokens);
-  const previewUrl = artwork.id
+  const publicPreviewUrl =
+    buildArtworkPreviewUrl(artwork.previewPath, artwork.imagePath) ||
+    buildArtworkImageUrl(artwork.previewPath || artwork.imagePath);
+  const protectedPreviewUrl = artwork.id
     ? `/api/artworks/${artwork.id}/media/preview`
-    : buildArtworkPreviewUrl(artwork.previewPath, artwork.imagePath) ||
-      buildArtworkImageUrl(artwork.previewPath || artwork.imagePath);
+    : publicPreviewUrl;
   const hasDownloadableOriginal = Boolean(artwork.hdPath || artwork.imagePath);
 
   return {
@@ -141,8 +143,9 @@ function serializeArtwork(
     isUnlimited,
     protection: Boolean(artwork.protection),
     createdAt: artwork.createdAt || null,
-    imageUrl: previewUrl,
-    previewUrl,
+    imageUrl: publicPreviewUrl || protectedPreviewUrl,
+    previewUrl: publicPreviewUrl || protectedPreviewUrl,
+    protectedPreviewUrl,
     forensicWatermark: Boolean(artwork.id),
     hasHdFile: hasDownloadableOriginal,
     canDownloadHd: hasDownloadableOriginal && Boolean(canDownloadHd),
