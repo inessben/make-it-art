@@ -167,6 +167,7 @@ function normalizeArtistApplicationPayload(input = {}) {
     postalCode: normalizeText(input.postalCode),
     country: normalizeText(input.country),
     taxId: normalizeText(input.taxId),
+    contractLanguage: normalizeText(input.contractLanguage).toLowerCase() === "fr" ? "fr" : "en",
     termsAccepted: Boolean(input.termsAccepted),
     commissionAccepted: Boolean(input.commissionAccepted)
   };
@@ -913,7 +914,8 @@ router.post("/artists/me/contract-preview", async (req, res) => {
 
     return res.status(200).json({
       contractText: contract.contractText,
-      contractVersion: contract.contractVersion
+      contractVersion: contract.contractVersion,
+      contractLanguage: contract.contractLanguage
     });
   } catch (error) {
     console.error("Artist contract preview error:", error);

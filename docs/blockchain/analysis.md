@@ -1,3 +1,9 @@
+# Historique technique de l’intégration wallet
+
+> Ce document conserve les constats et travaux effectués pendant l’intégration. Certaines versions ou étapes décrites sont historiques. La configuration et la procédure actuelles se trouvent dans [README.md](README.md).
+
+---
+
 # Jour 1 — Étape 1 : analyse de l’existant
 
 ## État de l’analyse

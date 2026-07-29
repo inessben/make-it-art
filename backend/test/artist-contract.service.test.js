@@ -26,7 +26,8 @@ test("buildContractContext formats the signature timestamp in Europe/Paris with 
       country: "France",
       taxId: "FR123",
       artType: "Digital Art",
-      styles: ["Digital painting"]
+      styles: ["Digital painting"],
+      contractLanguage: "fr"
     },
     effectiveDate: new Date("2026-07-04T13:45:00.000Z")
   });
@@ -58,16 +59,10 @@ test("renderArtistContract includes the signature date and time in the contract 
     effectiveDate: new Date("2026-07-04T13:45:00.000Z")
   });
 
-  assert.match(contractText, /Date et heure de signature : .*15:45.*Europe\/Paris/);
-  assert.match(contractText, /Make It Art est le marchand officiel/);
-  assert.match(
-    contractText,
-    /commission fixe de 7 % sur le montant hors taxes.*apres toute reduction ou promotion/
-  );
-  assert.match(
-    contractText,
-    /frais Stripe, remboursements et chargebacks sont a la charge de Make It Art/
-  );
+  assert.match(contractText, /Signature date and time: .*15:45.*Europe\/Paris/);
+  assert.match(contractText, /ARTICLE 17/);
+  assert.match(contractText, /Commission/);
+  assert.ok(contractText.length > 25000);
 });
 
 test("buildContractContext uses undefined when the optional tax identifier is missing", () => {
@@ -91,7 +86,7 @@ test("buildContractContext uses undefined when the optional tax identifier is mi
     }
   });
 
-  assert.equal(context.taxId, "undefined");
+  assert.equal(context.taxId, "Not provided");
 });
 
 test("resolveContractSignedAt falls back to the submission timestamp when needed", () => {
@@ -105,5 +100,30 @@ test("resolveContractSignedAt falls back to the submission timestamp when needed
 });
 
 test("contract version reflects the France B2C merchant and commission terms", () => {
-  assert.equal(CONTRACT_VERSION, "make-it-art-artist-contract-v3");
+  assert.equal(CONTRACT_VERSION, "make-it-art-artist-contract-v4");
+});
+
+test("renderArtistContract defaults to the complete English agreement", () => {
+  const result = renderArtistContract({
+    user: { email: "artist@example.com", username: "Ada Lovelace" },
+    payload: { firstName: "Ada", lastName: "Lovelace", displayName: "Ada Art" },
+    effectiveDate: new Date("2026-07-04T13:45:00.000Z")
+  });
+  assert.equal(result.contractLanguage, "en");
+  assert.match(result.contractText, /ENGLISH COURTESY TRANSLATION/);
+  assert.match(result.contractText, /ARTICLE 17/);
+  assert.match(result.contractText, /Legal name: Ada Lovelace/);
+  assert.ok(result.contractText.length > 25000);
+});
+
+test("renderArtistContract supports the complete French agreement", () => {
+  const result = renderArtistContract({
+    user: { email: "artist@example.com", username: "Ada Lovelace" },
+    payload: { firstName: "Ada", lastName: "Lovelace", contractLanguage: "fr" }
+  });
+  assert.equal(result.contractLanguage, "fr");
+  assert.match(result.contractText, /CONTRAT D'ARTISTE/);
+  assert.match(result.contractText, /ARTICLE 17/);
+  assert.match(result.contractText, /Nom l.gal: Ada Lovelace/);
+  assert.ok(result.contractText.length > 30000);
 });

@@ -8,6 +8,7 @@ const routesPath = require.resolve("../src/routes/marketplace.routes");
 const authRequiredPath = require.resolve("../src/middlewares/auth-required.middleware");
 const adminRequiredPath = require.resolve("../src/middlewares/admin-required.middleware");
 const sessionServicePath = require.resolve("../src/services/session.service");
+const artworkDownloadServicePath = require.resolve("../src/services/artwork-download.service");
 const marketplaceRepositoryPath = require.resolve("../src/repositories/marketplace.repository");
 const collectorRepositoryPath = require.resolve("../src/repositories/collector.repository");
 const notificationRepositoryPath = require.resolve("../src/repositories/notification.repository");
@@ -99,6 +100,11 @@ async function startMarketplaceApp(t, overrides = {}) {
     [sessionServicePath]: {
       async getUserFromRequest() {
         return overrides.viewerUser ?? null;
+      }
+    },
+    [artworkDownloadServicePath]: {
+      async canAccessHd(user, artwork) {
+        return user?.id === artwork?.artist?.userId;
       }
     },
     [marketplaceRepositoryPath]: {
