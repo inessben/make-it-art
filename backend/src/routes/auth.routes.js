@@ -42,7 +42,8 @@ const {
   verifyLoginCode,
   getLoginChallengeCookieOptions,
   getClearLoginChallengeCookieOptions,
-  getRememberDeviceCookieOptions
+  getRememberDeviceCookieOptions,
+  getClearRememberDeviceCookieOptions
 } = require("../services/two-factor-login.service");
 const router = express.Router();
 
@@ -116,8 +117,6 @@ router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
     });
 
     if (result.bypassCode) {
-      setAuthCookies(res, result);
-
       if (result.rememberDeviceToken) {
         res.cookie(
           env.rememberDeviceCookieName,
@@ -126,6 +125,8 @@ router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
         );
       }
 
+      setAuthCookies(res, result);
+
       return res.status(200).json({
         message: "Login successful",
         passwordCompromised: Boolean(result.passwordCompromised),
@@ -133,6 +134,10 @@ router.post("/auth/login", strictAuthRateLimit, async (req, res) => {
         redirectTo: getAuthenticatedAppPath(result.user),
         user: serializeAuthUser(result.user)
       });
+    }
+
+    if (result.clearRememberDevice) {
+      res.clearCookie(env.rememberDeviceCookieName, getClearRememberDeviceCookieOptions());
     }
 
     res.cookie(env.loginCodeCookieName, result.challengeToken, getLoginChallengeCookieOptions());
@@ -588,17 +593,18 @@ router.post("/auth/verify-login-code", strictAuthRateLimit, async (req, res) => 
       });
     }
 
+    const shouldRememberDevice =
+      rememberDevice === true || rememberDevice === "true" || rememberDevice === 1;
+
     const result = await verifyLoginCode({
       challengeToken,
       code,
-      rememberDevice: Boolean(rememberDevice),
+      rememberDevice: shouldRememberDevice,
       userAgent: req.get("user-agent")
     });
 
-    res.clearCookie(env.loginCodeCookieName, getClearLoginChallengeCookieOptions());
-
-    setAuthCookies(res, result);
-
+    // Set the remember-device cookie first so it is less likely to be dropped when
+    // intermediaries mishandle multiple Set-Cookie headers.
     if (result.rememberDeviceToken) {
       res.cookie(
         env.rememberDeviceCookieName,
@@ -606,6 +612,9 @@ router.post("/auth/verify-login-code", strictAuthRateLimit, async (req, res) => 
         getRememberDeviceCookieOptions()
       );
     }
+
+    res.clearCookie(env.loginCodeCookieName, getClearLoginChallengeCookieOptions());
+    setAuthCookies(res, result);
 
     return res.status(200).json({
       message: "Login successful",

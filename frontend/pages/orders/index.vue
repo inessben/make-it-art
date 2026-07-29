@@ -220,7 +220,7 @@
                   aria-label="Previous page"
                   @click="goToPage(currentPage - 1)"
                 >
-                  <
+                  &lt;
                 </button>
                 <button
                   v-for="page in totalPages"
@@ -244,7 +244,7 @@
                   aria-label="Next page"
                   @click="goToPage(currentPage + 1)"
                 >
-                  >
+                  &gt;
                 </button>
               </nav>
             </footer>

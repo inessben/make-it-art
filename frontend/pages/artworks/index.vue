@@ -376,14 +376,19 @@
             </div>
 
             <nav class="marketplace-pagination" aria-label="Marketplace pagination">
-              <button
-                type="button"
+              <a
+                v-if="currentPage > 1"
                 class="marketplace-pagination__arrow"
-                :disabled="currentPage === 1"
-                @click="goToPage(currentPage - 1)"
+                :href="buildPageHref(currentPage - 1)"
               >
                 &lt;
-              </button>
+              </a>
+              <span
+                v-else
+                class="marketplace-pagination__arrow marketplace-pagination__arrow--disabled"
+              >
+                &lt;
+              </span>
 
               <template v-for="item in displayedPages" :key="item.key">
                 <span
@@ -393,26 +398,30 @@
                 >
                   ...
                 </span>
-                <button
+                <a
                   v-else
-                  type="button"
                   class="marketplace-pagination__page"
+                  :href="buildPageHref(item.page)"
                   :class="{ 'marketplace-pagination__page--active': item.page === currentPage }"
                   :aria-current="item.page === currentPage ? 'page' : undefined"
-                  @click="goToPage(item.page)"
                 >
                   {{ item.page }}
-                </button>
+                </a>
               </template>
 
-              <button
-                type="button"
+              <a
+                v-if="currentPage < totalPages"
                 class="marketplace-pagination__arrow"
-                :disabled="currentPage === totalPages"
-                @click="goToPage(currentPage + 1)"
+                :href="buildPageHref(currentPage + 1)"
               >
                 &gt;
-              </button>
+              </a>
+              <span
+                v-else
+                class="marketplace-pagination__arrow marketplace-pagination__arrow--disabled"
+              >
+                &gt;
+              </span>
             </nav>
           </template>
         </section>
@@ -658,6 +667,17 @@ watch(
   }
 );
 
+watch(
+  () => route.query.page,
+  (page, previousPage) => {
+    if (page === previousPage || !import.meta.client) {
+      return;
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+);
+
 onMounted(async () => {
   if (auth.user) {
     return;
@@ -783,13 +803,8 @@ async function addToCart(artwork) {
   }
 }
 
-async function goToPage(page) {
+function buildPageQuery(page) {
   const nextPage = Math.min(Math.max(Math.trunc(page), 1), totalPages.value);
-
-  if (nextPage === currentPage.value) {
-    return;
-  }
-
   const query = { ...route.query };
 
   if (nextPage === 1) {
@@ -798,11 +813,30 @@ async function goToPage(page) {
     query.page = String(nextPage);
   }
 
-  await router.push({ path: route.path, query });
+  return query;
+}
 
-  if (import.meta.client) {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+function buildPageHref(page) {
+  const query = buildPageQuery(page);
+  const params = new URLSearchParams();
+
+  Object.entries(query).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      value.forEach((entry) => {
+        if (entry != null) {
+          params.append(key, String(entry));
+        }
+      });
+      return;
+    }
+
+    if (value != null) {
+      params.set(key, String(value));
+    }
+  });
+
+  const search = params.toString();
+  return search ? `${route.path}?${search}` : route.path;
 }
 
 function resetFilters() {

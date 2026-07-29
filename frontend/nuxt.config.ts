@@ -29,7 +29,7 @@ export default defineNuxtConfig({
     }
   },
   css: ["~/assets/styles/main.scss"],
-  devtools: { enabled: true },
+  devtools: { enabled: environment.NODE_ENV !== "production" },
   app: {
     head: {
       htmlAttrs: { lang: "en" },

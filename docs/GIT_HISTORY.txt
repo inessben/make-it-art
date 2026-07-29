@@ -1,4 +1,29 @@
-a5fe6e6c0e1d6c3fa5b31943af9d810adca26d8a | 2026-07-29T02:36:09+02:00 | BouhassouneMariam | HEAD -> fix/detail-read-me, origin/develop, develop | Merge pull request #77 from inessben/feature-fixerreur
+8f7e634ba9aa61c941d9595fbf750a200e7d4627 | 2026-07-29T22:22:56+02:00 | Ethan | HEAD -> fix/detail-read-me, origin/fix/detail-read-me | docs: document e2e and replace team log
+6bfb7019ce5c5d770023f73d84d0aaae626dc649 | 2026-07-29T15:39:35+02:00 | Théa | origin/develop | fix screenshot retardement
+3547631d0e298d9485f1093a674fb21108b59bf1 | 2026-07-29T15:09:30+02:00 | Théa |  | Merge branch 'tests-unit' into develop
+b107cc3eec215d66ce0e6374eef7a5d635897b52 | 2026-07-29T14:38:43+02:00 | Théa |  | Merge branch 'develop' of https://github.com/inessben/make-it-art into develop
+b2848e602e7bebcfc2df91cfef9538b8f8fd3fac | 2026-07-29T14:38:27+02:00 | Théa |  | Merge branch 'fix/login' into develop
+f5aeef94b29e8432e3cef047c10ff08174f83260 | 2026-07-29T14:32:32+02:00 | Iness Ben aïssa |  | fix error
+aba56e35a4ace3510d6b2c4e5f981c141284477e | 2026-07-29T11:40:12+02:00 | Iness Ben aïssa |  | fix :  e2e errors
+59a10b621427831e5de8285e06503d9f2738af34 | 2026-07-29T09:23:41+02:00 | Iness Ben aïssa |  | fix :  e2e errors
+7774544c000e26f3f7741b9bf54bed8f01388205 | 2026-07-29T06:05:50+02:00 | Iness Ben aïssa |  | Merge pull request #84 from inessben/feature/LastFrontFix
+98a8d6560f669e1bceaf4ebed0f7194b19356f4f | 2026-07-29T05:59:41+02:00 | Iness Ben aïssa |  | feature : fix lightouse  and front feat
+1f55cb56b50901edda5dcb95996fba56f2322a94 | 2026-07-29T05:41:40+02:00 | BouhassouneMariam |  | TEST E2E
+4cb2c7f2799890cfad1a2c7f3e00bea487e0e3ed | 2026-07-29T05:24:28+02:00 | Iness Ben aïssa |  | Merge remote-tracking branch 'origin/develop' into feature/agreementArtist
+b95a5af74cad939af9cb4b3cc43cfdf219a302b5 | 2026-07-29T04:54:26+02:00 | Iness Ben aïssa |  | feature : fix agreements last errors
+717c44691c5489138fd63c9d52d2a4ae2187c50f | 2026-07-29T04:19:49+02:00 | BouhassouneMariam |  | FRONT
+07d284043e8f747f7d8fc4d99b4a19e62b5b9711 | 2026-07-29T04:12:50+02:00 | BouhassouneMariam |  | FRONT add artwork
+6d24f69b0b9bc59c720400e2052c89ea9c10c146 | 2026-07-29T03:50:11+02:00 | BouhassouneMariam |  | Correction erreur
+4e93588b1bf86aceffa8f8406b527a67ae7a8a86 | 2026-07-29T03:45:06+02:00 | BouhassouneMariam |  | Correction erreur
+b89ff9d7e1f767e12e4c724ff30eaad89e052eea | 2026-07-29T03:35:07+02:00 | BouhassouneMariam |  | Merge pull request #81 from inessben/feature-fixerreur
+6b1070385bbdd1ba65af04995a15b91f78833d41 | 2026-07-29T03:34:31+02:00 | BouhassouneMariam |  | Correction categorie
+4545126bca846616243b0a9c95123a58780bd798 | 2026-07-29T03:23:26+02:00 | Iness Ben aïssa |  | Merge remote-tracking branch 'origin/develop' into feature/agreementArtist
+c0ce8fb3b625ea06f6761fd927094e6a475faaf2 | 2026-07-29T03:21:14+02:00 | Iness Ben aïssa |  | Merge remote-tracking branch 'origin/main' into feature/agreementArtist
+f181e96e414b9ec064fa1be5648e9d986422a34a | 2026-07-29T03:16:35+02:00 | Iness Ben aïssa |  | Merge pull request #79 from inessben/docs
+8fd789ce130c85dc8e3bc7262b0d8eaedb3b6f6d | 2026-07-29T03:14:36+02:00 | BouhassouneMariam |  | Merge pull request #78 from inessben/feature-fixerreur
+b8792e1b54be4d09ebb1b63e361e839fb78408b6 | 2026-07-29T03:13:49+02:00 | BouhassouneMariam |  | Correction bouton 2 marketplace
+4bba6ed1e0240ce8a13749940c029d34ea3c3c76 | 2026-07-29T03:07:50+02:00 | Iness Ben aïssa |  | feature: update agreemen files
+a5fe6e6c0e1d6c3fa5b31943af9d810adca26d8a | 2026-07-29T02:36:09+02:00 | BouhassouneMariam | develop | Merge pull request #77 from inessben/feature-fixerreur
 55f522c4437c6c60abcff49e2b68a22579fb73bb | 2026-07-29T02:34:04+02:00 | BouhassouneMariam | origin/feature-fixerreur | Correction ralentissement image
 83900f1a78bc869b201df473ad1012ba22d206c3 | 2026-07-29T02:33:28+02:00 | Théa | origin/fix/login | fix
 e52d496311147427981bfa6374b5158b5def17f1 | 2026-07-29T02:23:41+02:00 | BouhassouneMariam |  | Merge pull request #76 from inessben/feature-fixerreur

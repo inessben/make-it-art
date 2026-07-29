@@ -10,7 +10,15 @@
             class="ml-5 flex w-fit items-center gap-4"
             aria-label="Make It Art - Home"
           >
-            <img class="h-12 w-10 object-contain" src="/logo.png" alt="" loading="lazy" />
+            <img
+              class="h-12 w-10 object-contain"
+              src="/logo.png"
+              alt=""
+              width="40"
+              height="48"
+              loading="lazy"
+              decoding="async"
+            />
             <span class="font-geist text-[13px] font-bold uppercase tracking-[0.12em]">
               MAKE IT ART
             </span>
@@ -58,14 +66,14 @@
         <section class="md:pt-[38px]">
           <h2 class="font-geist text-[28px] font-semibold">Catalogue</h2>
           <nav class="mt-7 flex flex-col gap-[18px] font-geist text-[16px]">
-            <NuxtLink class="hover:text-violet-400" to="/artworks?artType=illustration">
-              Digital Art
+            <NuxtLink class="hover:text-violet-400" to="/artworks?category=digital-illustrations">
+              Digital Illustrations
             </NuxtLink>
-            <NuxtLink class="hover:text-violet-400" to="/artworks?artType=photography">
-              Photographies
+            <NuxtLink class="hover:text-violet-400" to="/artworks?category=photography">
+              Photography
             </NuxtLink>
-            <NuxtLink class="hover:text-violet-400" to="/artworks?artType=graphic">
-              Graphics
+            <NuxtLink class="hover:text-violet-400" to="/artworks?category=assets-graphics">
+              Assets Graphics
             </NuxtLink>
           </nav>
         </section>

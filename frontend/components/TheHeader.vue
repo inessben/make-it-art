@@ -51,7 +51,14 @@
         aria-label="Make It Art - Home"
         @click="closeMenu"
       >
-        <img class="h-10 w-8 object-contain sm:h-12 sm:w-10" src="/logo.png" alt="" />
+        <img
+          class="h-10 w-8 object-contain sm:h-12 sm:w-10"
+          src="/logo.png"
+          alt=""
+          width="40"
+          height="48"
+          decoding="async"
+        />
         <span
           class="hidden whitespace-nowrap font-geist text-[13px] font-bold uppercase tracking-[0.12em] sm:inline"
           >MAKE IT ART</span

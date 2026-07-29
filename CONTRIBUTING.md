@@ -1,208 +1,179 @@
-# Guide de Contribution - Make It Art
+# Contribuer à Make It Art
 
-Merci de votre intérêt pour contribuer à **Make It Art** ! Ce guide vous aidera à configurer votre environnement de développement.
+## Principes
 
----
-
-## Table des matières
-
-- [Prérequis](#prérequis)
-- [Installation complète](#installation-complète)
-- [Configuration](#configuration)
-- [Développement](#développement)
-- [Tests](#tests)
-- [Conventions](#conventions)
-- [Workflow Git](#workflow-git)
-
----
+Une contribution doit être ciblée, testée, accessible, documentée et dépourvue de secret. Les modifications existantes d’un autre contributeur ne doivent jamais être écrasées pour simplifier une fusion.
 
 ## Prérequis
 
-Avant de commencer, assurez-vous d'avoir installé :
+- Git ;
+- Docker Desktop et Docker Compose ;
+- Node.js 22 si les commandes sont exécutées hors conteneur ;
+- un fichier `infrastructure/.env` local créé depuis l’exemple fourni.
 
-### Outils de base
-- **Node.js** >= 18.0.0 ([Télécharger](https://nodejs.org/))
-- **npm** >= 9.0.0 (inclus avec Node.js)
-- **Git** ([Télécharger](https://git-scm.com/))
-- **PostgreSQL** >= 16 ([Télécharger](https://www.postgresql.org/download/))
-- **Redis** >= 7.x ([Télécharger](https://redis.io/download/))
-- **Docker** (recommandé) ([Télécharger](https://www.docker.com/))
+Ne versionnez jamais les fichiers `.env`, clés Stripe ou Coinbase, secrets OAuth, clés JWT, identifiants SMTP ou données réelles d’utilisateurs.
 
----
+## Installation
 
-## Installation complète
+```bash
+git clone <URL_DU_DEPOT>
+cd make-it-art
+cp infrastructure/.env.example infrastructure/.env
+npm run dev:up:build
+```
 
-### 1. Cloner le repository
+Sous PowerShell :
 
-Fork le projet sur GitHub puis clone ton fork. Ajoute ensuite le repository original comme remote upstream.
+```powershell
+Copy-Item infrastructure/.env.example infrastructure/.env
+npm run dev:up:build
+```
 
-### 2. Installer les dépendances
+## Branches
 
-**Backend** : Lancer `npm install` dans le dossier backend.
+Utiliser une branche dédiée et courte :
 
-**Frontend** : Lancer `npm install` dans le dossier frontend.
+```text
+feature/<sujet>
+fix/<sujet>
+docs/<sujet>
+chore/<sujet>
+```
 
-**Dépendances principales** :
-- Backend : express, prisma, passport, stripe, etc.
-- Frontend : nuxt, vue, three.js, tailwindcss, pinia, etc.
+Avant une fusion :
 
----
+1. récupérer la branche cible ;
+2. résoudre les conflits en conservant les deux intentions métier ;
+3. relancer les contrôles requis ;
+4. examiner le diff complet ;
+5. vérifier qu’aucun secret ni fichier généré n’est inclus.
 
-## Configuration
+## Commits
 
-### 1. Variables d'environnement
+Un commit doit représenter une unité cohérente. Utiliser un message descriptif, par exemple :
 
-Copier le fichier `.env.example` vers `.env` à la racine du projet et remplir les variables nécessaires.
+```text
+feature: add artist withdrawal review
+fix: preserve wallet retry idempotency
+docs: refresh deployment checklist
+```
 
-**Variables à configurer** :
-- **Base & Database** : NODE_ENV, PORT, DATABASE_URL
-- **JWT** : JWT_SECRET, JWT_EXPIRE, JWT_REFRESH_EXPIRE
-- **OAuth2 Google** : Créer des credentials sur Google Cloud Console
-- **OAuth2 GitHub** : Créer une OAuth App sur GitHub Developer Settings
-- **2FA TOTP** : TOTP_ISSUER, TOTP_WINDOW, TOTP_STEP
-- **AWS S3** (optionnel) : Credentials pour le stockage des fichiers
-- **Stripe** (optionnel) : Clés API pour les paiements
-- **Blockchain** (optionnel) : Configuration Solana/Ethereum
+Éviter de mélanger refactorisation, fonctionnalité et formatage global dans un même commit.
 
-### 2. Démarrer les services
+## Commandes de développement
 
-Avec Docker Compose, lancer tous les services (PostgreSQL, Redis, Backend, Frontend) en une seule commande.
+```bash
+npm run dev:up
+npm run dev:up:build
+npm run dev:logs
+npm run dev:down
+```
 
-Sans Docker, démarrer manuellement PostgreSQL et Redis, puis lancer le backend et le frontend séparément.
+Services usuels :
 
----
+- application : <http://localhost> ;
+- frontend : <http://localhost:3000> ;
+- API : <http://localhost:4000/api> ;
+- OpenAPI : <http://localhost:4000/api/docs> ;
+- Mailpit : <http://localhost:8025>.
 
-## Développement
+## Contrôles avant revue
 
-### Lancer le projet en mode développement
+Exécuter les contrôles proportionnés au changement, puis la suite complète avant fusion :
 
-1. **Backend API** : Démarre sur le port 4000
-2. **Frontend Nuxt** : Accessible sur le port 3000
-3. **Base de données** : PostgreSQL sur le port 5432
+```bash
+npm run lint
+npm run format:check
+npm test
+npm run security:audit
+npm run prod:build
+```
 
-### Accès
+Lorsque disponible pour la branche :
 
-- Frontend : http://localhost:3000
-- API : http://localhost:4000
-- Adminer (BDD) : http://localhost:8080
+```bash
+npm run quality
+npm run ci
+npm run test:coverage
+npm run qa:artwork-licences
+```
 
----
+Les tests qui nécessitent PostgreSQL, Redis, Stripe ou Coinbase doivent être exécutés dans un environnement isolé, jamais avec des identifiants live dans une CI de contribution.
 
-## Tests
+## Règles backend
 
-### Backend
-- Tests unitaires : `npm test`
-- Couverture : `npm run test:coverage`
+- valider chaque entrée à la frontière HTTP ;
+- appliquer authentification, rôle et propriété sur toute route protégée ;
+- garder les opérations financières et wallet idempotentes ;
+- utiliser Prisma et une migration pour toute évolution persistante ;
+- préserver les contraintes et journaux d’audit ;
+- ne jamais journaliser de jeton, secret, donnée bancaire ou clé privée ;
+- documenter les nouvelles routes dans OpenAPI ;
+- ajouter des tests d’erreur, de concurrence et d’autorisation.
 
-### Frontend
-- Tests : `npm run test`
+## Règles frontend
 
----
+- réutiliser les composants et tokens Tailwind existants ;
+- éviter les styles en dur lorsque la configuration ou une classe utilitaire convient ;
+- préserver le rendu serveur et isoler les SDK strictement clients ;
+- afficher les états chargement, vide, succès, erreur et relance ;
+- ne jamais exposer une variable serveur via `NUXT_PUBLIC_*` ;
+- ajouter ou adapter les tests des comportements modifiés.
 
-## Conventions
+## Accessibilité
 
-### Commits (Conventional Commits)
+Chaque écran modifié doit respecter au minimum :
 
-Format : `<type>(<scope>): <description>`
+- navigation complète au clavier ;
+- focus visible et ordre logique ;
+- label explicite pour chaque champ ;
+- nom accessible pour chaque bouton et lien ;
+- texte alternatif adapté pour les images ;
+- hiérarchie de titres sans saut artificiel ;
+- contraste WCAG AA ;
+- annonces des erreurs et changements importants ;
+- ARIA uniquement lorsque le HTML natif ne suffit pas.
 
-**Types** :
-| Type | Description |
-|------|-------------|
-| feat | Nouvelle fonctionnalité |
-| fix | Correction de bug |
-| docs | Documentation |
-| style | Formatage (pas de changement de code) |
-| refactor | Refactoring |
-| test | Ajout/modification de tests |
-| chore | Maintenance (build, dépendances) |
-| perf | Amélioration de performance |
+## Données, migrations et production
 
-### Code Style
+Pour une migration :
 
-**Backend (JavaScript/Node.js)** :
-- Utiliser `const` et `let` (pas `var`)
-- Points-virgules obligatoires
-- 2 espaces d'indentation
-- Nommer les fonctions en camelCase
+1. modifier le schéma Prisma ;
+2. générer une migration nommée ;
+3. tester l’application sur une base neuve ;
+4. tester la montée de version sur des données représentatives ;
+5. documenter le rollback ou la restauration ;
+6. ne jamais réécrire une migration déjà déployée.
 
-**Frontend (Vue/TypeScript)** :
-- Composition API (pas Options API)
-- TypeScript pour les types
-- Composants en PascalCase
-- Props typées
+Toute modification de production doit prévoir santé, journaux, sauvegarde, reprise et vérification après déploiement.
 
----
+## Paiements et wallet
 
-## Workflow Git
+Les changements Stripe suivent [`docs/PAYMENT_SECURITY_OPERATIONS.md`](docs/PAYMENT_SECURITY_OPERATIONS.md) et [`docs/GUIDE_QA_STRIPE_PAS_A_PAS.md`](docs/GUIDE_QA_STRIPE_PAS_A_PAS.md).
 
-### 1. Synchroniser avec le repo principal
+Les changements Coinbase CDP suivent [`docs/blockchain/README.md`](docs/blockchain/README.md). Une clé privée utilisateur ne doit jamais être reçue, stockée ou journalisée par Make It Art.
 
-Fetch upstream, checkout main, merge upstream/main.
+## Documentation
 
-### 2. Créer une branche pour votre feature
+Mettre à jour le document canonique correspondant au changement :
 
-Nommer les branches : `feature/nom-de-la-feature` ou `fix/nom-du-bug`
+- périmètre et démarrage : `README.md` ;
+- exigence : `REQUIREMENTS_DOCUMENT.md` ;
+- priorité ou jalon : `ROADMAP_TRELLO.md` ;
+- décision structurante : `docs/DECISIONS.md` ;
+- procédure QA/opérationnelle : document spécialisé sous `docs/` ;
+- historique des contributions : `docs/GIT_HISTORY.txt`.
 
-### 3. Faire vos modifications
+Ne créez pas un nouveau document si une section existante peut devenir la source de vérité.
 
-Ajouter les fichiers modifiés et commit avec un message conventionnel.
+## Pull request
 
-### 4. Pousser vers votre fork
+La description doit préciser :
 
-Push vers origin sur votre branche feature.
-
-### 5. Créer une Pull Request
-
-1. Aller sur GitHub
-2. Cliquer sur "Compare & pull request"
-3. Remplir le template de PR :
-   - **Description** : Que fait votre PR ?
-   - **Tests** : Comment tester ?
-   - **Screenshots** : Si changement visuel
-4. Assigner des reviewers
-5. Attendre la review et les retours
-
-### 6. Mettre à jour votre PR après review
-
-Faire les modifications demandées, commit et push.
-
----
-
-## Checklist avant PR
-
-- [ ] Le code compile sans erreurs
-- [ ] Les tests passent (`npm test`)
-- [ ] Le code est formaté correctement
-- [ ] Les commits suivent les conventions
-- [ ] La documentation est à jour (si nécessaire)
-- [ ] Les variables sensibles ne sont pas commitées
-- [ ] Le `.env.example` est à jour (si nouvelles variables)
-
----
-
-## Ressources
-
-### Documentation officielle
-- [Node.js](https://nodejs.org/docs)
-- [Express](https://expressjs.com/)
-- [Nuxt.js](https://nuxt.com/)
-- [TailwindCSS](https://tailwindcss.com/)
-- [Three.js](https://threejs.org/)
-- [PostgreSQL](https://www.postgresql.org/docs/)
-- [Prisma](https://www.prisma.io/docs)
-
----
-
-## Support
-
-- **Issues** : [GitHub Issues](https://github.com/inessben/make-it-art/issues)
-- **Discussions** : [GitHub Discussions](https://github.com/inessben/make-it-art/discussions)
-
----
-
-## Merci !
-
-Merci de contribuer à **Make It Art** ! Chaque contribution compte, qu'elle soit petite ou grande.
-
-**Where art meets the future**
-
+- problème et résultat attendu ;
+- fichiers et migrations concernés ;
+- risques et stratégie de retour arrière ;
+- tests réellement exécutés et résultats ;
+- captures pour les changements visuels ;
+- impacts accessibilité, sécurité et données ;
+- documentation mise à jour.

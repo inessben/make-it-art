@@ -348,7 +348,8 @@ test("startLoginWithCode falls back to email code when remembered device is not 
   assert.deepEqual(result, {
     bypassCode: false,
     challengeToken: "04".repeat(32),
-    passwordCompromised: false
+    passwordCompromised: false,
+    clearRememberDevice: true
   });
   assert.equal(calls.createCode.length, 1);
   assert.equal(calls.sendLoginCodeEmail.length, 1);

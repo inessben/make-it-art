@@ -31,3 +31,18 @@ test("artists and users with an existing application keep their dashboard entry"
   assert.match(sidebarSource, /label:\s*"Artist application"/);
   assert.match(sidebarSource, /label:\s*"Update artist application"/);
 });
+
+test("artist agreement language selector switches between complete EN and FR previews", async () => {
+  const agreementPage = new URL("../pages/become-artist.vue", import.meta.url);
+  const pageSource = await readFile(agreementPage, "utf8");
+
+  assert.match(pageSource, /v-model="form\.contractLanguage"/);
+  assert.match(pageSource, /@change="changeContractLanguage"/);
+  assert.match(pageSource, /<option value="en">EN<\/option>/);
+  assert.match(pageSource, /<option value="fr">FR<\/option>/);
+  assert.match(
+    pageSource,
+    /response\.contractLanguage && response\.contractLanguage !== requestedLanguage/
+  );
+  assert.match(pageSource, /await ensureContractPreview\(true\)/);
+});
