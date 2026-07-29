@@ -37,6 +37,11 @@
         autocomplete="current-password"
       />
 
+      <label class="remember-device">
+        <input v-model="rememberDevice" type="checkbox" />
+        <span>Remember this computer for 30 days</span>
+      </label>
+
       <SubmitButton label="Sign in" loading-label="Signing in..." :loading="loading" />
 
       <FormMessage :message="message" />
@@ -302,7 +307,7 @@ async function handleVerifyCode() {
       credentials: "include",
       body: {
         code: code.value,
-        rememberDevice: rememberDevice.value
+        rememberDevice: rememberDevice.value === true
       }
     });
 
@@ -350,7 +355,6 @@ async function handleResendVerification() {
 function resetLoginStep() {
   requiresCode.value = false;
   code.value = "";
-  rememberDevice.value = false;
   message.value = "";
 }
 
