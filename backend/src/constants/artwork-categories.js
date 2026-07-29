@@ -1,12 +1,7 @@
 const PREDEFINED_ARTWORK_CATEGORIES = [
-  "Illustration",
-  "Peinture numerique",
-  "Art 3D",
-  "Animation",
-  "Photographie",
-  "Art generatif",
-  "Collage numerique",
-  "Mix media"
+  "Digital Illustrations",
+  "Assets Graphics",
+  "Photography"
 ];
 
 module.exports = {

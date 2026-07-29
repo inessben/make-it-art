@@ -7,6 +7,7 @@ const { buildUploadedImageUrl } = require("../services/uploaded-image.service");
 const { isUnlimitedArtworkLicenseType } = require("../constants/artwork-license-types");
 const { normalizeArtworkVisibility } = require("../constants/artwork-visibility");
 const { buildArtworkManagement } = require("../services/artwork-lifecycle.service");
+const { formatMarketplaceCategoryLabel } = require("./marketplace-category-groups");
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -41,7 +42,7 @@ function serializeArtistSummary(artist) {
     bio: normalizeText(artist.user?.bio),
     avatarUrl: buildUploadedImageUrl(artist.avatarPath),
     coverUrl: buildUploadedImageUrl(artist.coverPath),
-    artType: normalizeText(payload.artType),
+    artType: formatMarketplaceCategoryLabel(payload.artType, normalizeText(payload.artType)),
     styles: Array.isArray(payload.styles) ? payload.styles.filter(Boolean) : [],
     portfolioUrl: normalizeText(payload.portfolioUrl),
     socialHandle: normalizeText(payload.socialHandle),
@@ -176,7 +177,10 @@ function serializeArtwork(
     category: artwork.category
       ? {
           id: artwork.category.id,
-          name: normalizeText(artwork.category.name) || "Uncategorized",
+          name: formatMarketplaceCategoryLabel(
+            artwork.category.name,
+            normalizeText(artwork.category.name) || "Uncategorized"
+          ),
           imageUrl: buildUploadedImageUrl(artwork.category.imagePath)
         }
       : null,

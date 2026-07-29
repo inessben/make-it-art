@@ -522,6 +522,7 @@ import { navigateTo } from "#app";
 import { storeToRefs } from "pinia";
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useAuthStore } from "~/stores/auth";
+import { MARKETPLACE_CATEGORY_GROUPS } from "~/utils/marketplace-categories";
 
 definePageMeta({
   middleware: "auth"
@@ -537,15 +538,7 @@ const steps = [
   { id: 4, label: "Agreement & signature" }
 ];
 
-const artTypeOptions = [
-  "Digital Art",
-  "Photography",
-  "3D Art",
-  "Vector Art",
-  "Illustration",
-  "Graphic Design",
-  "Mixed Media"
-];
+const artTypeOptions = MARKETPLACE_CATEGORY_GROUPS.map((group) => group.label);
 
 const step = ref(1);
 const styleInput = ref("");
