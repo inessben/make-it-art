@@ -1,470 +1,170 @@
 # Make It Art
 
+Make It Art est une marketplace d’art numérique destinée aux artistes, collectionneurs et administrateurs. Le projet couvre désormais l’ensemble du parcours métier : publication et protection des œuvres, découverte des artistes, panier et paiement Stripe, licences d’utilisation, commandes et factures, espace artiste, administration, consentement analytique et portefeuille intégré sur Base.
 
-Monorepo starter for the class project.
+Ce dépôt est un monorepo Docker composé d’un frontend Nuxt, d’une API Node.js, d’une base PostgreSQL, de Redis et des services d’exploitation nécessaires au développement et à la production.
 
-## Stack
+## Fonctionnalités actuelles
 
-- Frontend: Nuxt 3 + Tailwind CSS + Sass
-- Backend: Node.js 22 + Express
-- Data services: PostgreSQL 16 + Redis 7
-- Infra: Docker Compose + Nginx for local dev + Caddy for production TLS
-- CI/CD: GitHub Actions templates
+### Visiteurs et membres
 
-## Project structure
+- inscription par e-mail et connexion Google OAuth 2.0 ;
+- vérification de l’adresse e-mail, récupération du mot de passe et code de connexion renforcée ;
+- catalogue d’œuvres et d’artistes, recherche, catégories et collections ;
+- favoris, abonnements, notifications, profil et paramètres du compte ;
+- panier, commande, paiement Stripe, moyens de paiement enregistrés et historique ;
+- téléchargement sécurisé après achat et consultation des factures ;
+- consentement explicite aux cookies analytiques ;
+- création facultative d’un portefeuille Coinbase CDP sur le réseau Base après vérification de l’e-mail et consentement explicite.
 
-- `frontend/` Nuxt app
-- `backend/` Express API
-- `infrastructure/` Docker, Nginx, scripts
-- `.github/workflows/` CI/CD workflows
-- `docs/` Team documentation and contribution log
+### Artistes
 
-## Docker compose location
+- candidature, contrat et validation administrative ;
+- profil public et tableau de bord ;
+- création, modification, publication, masquage, archivage et restauration des œuvres ;
+- licences personnelle, commerciale et exclusive ;
+- suivi des ventes, revenus et demandes de retrait ;
+- protection des fichiers : aperçus contrôlés, filigrane et métadonnées de traçabilité.
 
-This is intentional: the compose file is in `infrastructure/` to keep all infra files together.
+### Administration
 
-Main file:
+- tableaux de bord et indicateurs ;
+- gestion des utilisateurs, artistes, candidatures, œuvres et catégories ;
+- supervision des commandes, paiements, remboursements et litiges ;
+- journal d’audit et opérations financières idempotentes ;
+- suivi analytique respectueux du consentement avec Umami.
 
-- `infrastructure/docker-compose.yml`
+## Architecture technique
 
-## Environment files
+| Couche | Technologies principales |
+| --- | --- |
+| Frontend | Nuxt 4, Vue 3, Pinia, Tailwind CSS 3, Sass |
+| Backend | Node.js 22, Express, Prisma 7, API REST documentée avec OpenAPI |
+| Données | PostgreSQL 16, Redis 7 |
+| Paiement | Stripe Checkout, webhooks signés, remboursements et rapprochement |
+| Blockchain | Coinbase Developer Platform, portefeuille intégré non custodial, réseau Base |
+| Analytique | Umami, chargé uniquement après consentement |
+| Infrastructure | Docker Compose, Nginx en local, Caddy en production |
+| Qualité | ESLint, Prettier, tests Node, audits npm, GitHub Actions |
 
-Use this file for local Docker runs:
+## Organisation du dépôt
 
-- `infrastructure/.env`
-
-Setup:
-
-1. Copy `infrastructure/.env.example` to `infrastructure/.env`
-2. Keep the default Docker values for local test, or update if needed
-3. For the standard Docker workflow below, no extra host `.env` file is required
-
-## Run local (Docker)
-
-Recommended clean start for first setup, stale containers, missing dependencies, or after package changes:
-
-```bash
-docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml down -v --remove-orphans
-docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml build --no-cache backend frontend
-docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d
+```text
+make-it-art/
+├── backend/          API Express, schéma Prisma, migrations et tests
+├── frontend/         application Nuxt, pages, composants et tests
+├── infrastructure/   configurations Docker, proxy et environnements exemples
+├── docs/             documentation fonctionnelle, technique et QA
+├── .github/          workflows CI/CD et automatisations
+├── tmp_sujet_web.txt exigences pédagogiques d’origine
+└── package.json      commandes communes du monorepo
 ```
 
-The project also exposes workspace scripts:
+## Démarrage local
+
+### Prérequis
+
+- Docker Desktop avec Docker Compose ;
+- Git ;
+- Node.js 22 uniquement pour exécuter certaines commandes hors conteneur.
+
+### Installation
 
 ```bash
-npm run dev:up
+git clone <URL_DU_DEPOT>
+cd make-it-art
+cp infrastructure/.env.example infrastructure/.env
 npm run dev:up:build
 ```
 
-Note: `npm run dev` and `npm run dev:build` run `quality:fix` before Docker, so they may rewrite files.
-
-## Verify
-
-```bash
-docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml ps
-curl -i http://localhost:4000/health
-curl -i http://localhost/api/health
-curl -I http://localhost
-```
-
-Expected result: all responses are `200 OK` (or `301/302` for frontend depending on Nuxt redirect), and no `502`.
-
-Useful local URLs:
-
-- App through Nginx: `http://localhost`
-- Frontend direct: `http://localhost:3000`
-- Backend health: `http://localhost:4000/health`
-- Mailpit inbox: `http://localhost:8025`
-
-## Google OAuth login
-
-To enable Google sign-in, create OAuth2 credentials in Google Cloud Console and set:
-
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
-- `GOOGLE_REDIRECT_URI`
-
-Local default redirect URI:
-
-```bash
-http://localhost/api/auth/google/callback
-```
-
-## Tests de paiement Stripe
-
-Le parcours complet de test Stripe (fixtures sandbox, URLs, cartes de test, webhooks, reprise et
-remboursements admin) est décrit dans [`docs/PAYMENT_TEST_PATHS.md`](docs/PAYMENT_TEST_PATHS.md).
-
-## Production deployment
-
-The repository now includes a dedicated production stack for `https://www.makeitart.io`:
-
-- `backend/Dockerfile.prod`
-- `frontend/Dockerfile.prod`
-- `infrastructure/docker-compose.prod.yml`
-- `infrastructure/Caddyfile`
-- `infrastructure/.env.production.example`
-
-Production uses Caddy as the public reverse proxy so HTTPS certificates for `makeitart.io` and `www.makeitart.io` can be issued automatically once DNS points to the VPS and ports `80` and `443` are open.
-
-### VPS prerequisites
-
-On the Debian VPS:
-
-1. Install Docker Engine and Docker Compose plugin
-2. Install Git
-3. Point both `makeitart.io` and `www.makeitart.io` to the VPS public IP
-4. Open ports `80` and `443` in the VPS firewall / security group
-
-### Production environment
-
-Create the production env file on the server:
-
-```bash
-cp infrastructure/.env.production.example infrastructure/.env.production
-```
-
-Then update at least these values:
-
-- `POSTGRES_PASSWORD`
-- `JWT_SECRET`
-- `SMTP_HOST`
-- `SMTP_PORT`
-- `SMTP_SECURE`
-- `SMTP_USER`
-- `SMTP_PASS`
-- `SMTP_FROM`
-- `STRIPE_SECRET_KEY` avec, de préférence, une clé restreinte `rk_live_*` au moindre privilège (`sk_live_*` reste techniquement accepté)
-- `STRIPE_WEBHOOK_SECRET` avec le secret `whsec_*` propre à l'endpoint de production
-- `STRIPE_PAYMENT_METHOD_CONFIGURATION_ID` avec une configuration `pmc_*` revue et limitée à la carte
-- `SAVED_PAYMENT_METHOD_CONSENT_VERSION` avec la version datée du texte autorisant le réaffichage des cartes (par exemple `2026-07-26`)
-- `NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` avec la clé publique correspondante `pk_live_*`
-- les champs `INVOICE_ISSUER_*` avec l'identité légale et fiscale réelle de Make It Art
-- `FRANCE_B2C_VAT_RATE_BPS` avec le taux validé par le responsable fiscal
-
-Important production defaults:
-
-- `APP_BASE_URL=https://www.makeitart.io`
-- `CORS_ORIGIN=https://www.makeitart.io`
-- `NUXT_PUBLIC_API_BASE=/api`
-- `NUXT_PUBLIC_APP_BASE_URL=https://www.makeitart.io`
-
-La clé `STRIPE_SECRET_KEY` ne doit jamais être copiée dans une variable `NUXT_PUBLIC_*`. Le lancement
-est France B2C, carte uniquement, avec Make It Art comme marchand officiel et
-`STRIPE_TAX_ENABLED=false`. Apple Pay, Google Pay, Link, B2B et vente hors France restent désactivés ;
-leur activation exige la recette et les prérequis décrits dans la checklist.
-
-L'enregistrement des cartes utilise Stripe Customers et Customer Sessions uniquement pour de futurs
-achats confirmés par le client (`on_session`). La clé Stripe restreinte doit donc autoriser les opérations
-nécessaires sur Customers, Customer Sessions, PaymentIntents et PaymentMethods. Aucun numéro complet ni
-cryptogramme n'est stocké par Make It Art.
-
-Les checkouts non payés sont contrôlés chaque minute par le backend (`CHECKOUT_EXPIRATION_SWEEP_MS`).
-Une exécution manuelle et idempotente reste disponible dans le conteneur avec
-`docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml exec backend npm run payments:expire-checkouts` ;
-si Stripe ne confirme pas l'annulation, la réservation n'est pas libérée automatiquement.
-
-Le worker d'outbox traite les emails, les droits numériques, les certificats et les factures de vente
-toutes les cinq secondes.
-Sa cadence, la taille des lots, le bail de reprise et les retries sont configurés par
-`FULFILLMENT_SWEEP_MS`, `FULFILLMENT_BATCH_SIZE`, `FULFILLMENT_LEASE_MS`,
-`FULFILLMENT_MAX_ATTEMPTS` et `FULFILLMENT_RETRY_BASE_MS`. Une exécution ponctuelle est disponible
-avec `docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml exec backend npm run payments:fulfillment`.
-Les droits et certificats sont persistés une seule fois par ligne de commande et apparaissent dans la
-commande privée. Une révocation après remboursement total reste prioritaire sur tout rejeu d'octroi.
-
-La gestion des litiges utilise la politique décidée `DISPUTE_RIGHTS_POLICY=SUSPEND_ON_OPEN`. En
-production, `DISPUTE_RIGHTS_POLICY_CONFIRMED=true` est obligatoire : ouverture = suspension, gain ou
-prévention = restauration, perte = révocation.
-
-La supervision admin détecte et permet de traiter les anomalies Stripe depuis `/admin/payments`.
-Sa cadence, le seuil d'ancienneté et le délai entre deux alertes d'une même catégorie sont configurés
-par `PAYMENT_ANOMALY_SWEEP_MS`, `PAYMENT_ANOMALY_STALE_MS` et
-`PAYMENT_ALERT_COOLDOWN_SECONDS`. Le runbook de diagnostic et de rejeu est documenté dans
-[`docs/PAYMENT_SECURITY_OPERATIONS.md`](docs/PAYMENT_SECURITY_OPERATIONS.md). Le moniteur,
-les webhooks, le rapprochement et l'outbox restent actifs lorsque `CHECKOUT_ENABLED=false`.
-
-### Deploy on the VPS
-
-From the repo root on the server:
-
-```bash
-npm run prod:build
-npm run prod:up
-```
-
-Or without npm scripts:
-
-```bash
-docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml build --no-cache
-docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml up -d
-```
-
-The backend production container runs Prisma migrations automatically on startup before launching the API.
-
-### Production verify
-
-```bash
-docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml ps
-docker compose --env-file infrastructure/.env.production -f infrastructure/docker-compose.prod.yml logs -f proxy
-```
-
-Then verify:
-
-- `https://www.makeitart.io`
-- `https://www.makeitart.io/api/health`
-
-Notes:
-
-- First HTTPS certificate issuance can take a short time right after the first boot
-- Production no longer uses Mailpit; email verification requires a real SMTP provider
-- The production stack does not expose PostgreSQL or Redis publicly
-
-### Automatic deploy from `main`
-
-The repository includes a production deployment workflow in `.github/workflows/cd-production.yml`.
-
-Behavior:
-
-- `CI` now runs on pushes to `develop` and `main`
-- production deploy starts automatically only after `CI` succeeds on `main`
-- production deploy can also be triggered manually from GitHub Actions with `workflow_dispatch`
-
-Required GitHub environment secrets for the `production` environment:
-
-- `PRODUCTION_SSH_HOST`
-- `PRODUCTION_SSH_USER`
-- `PRODUCTION_SSH_KEY`
-
-Optional production secret:
-
-- `PRODUCTION_SSH_PORT`
-
-Optional GitHub environment variable:
-
-- `PRODUCTION_APP_DIR`
-  Default used by the workflow: `/root/make-it-art`
-
-VPS prerequisites for automatic deploy:
-
-1. The repository is already cloned on the VPS at `/root/make-it-art` or at the path configured in `PRODUCTION_APP_DIR`
-2. The VPS user from `PRODUCTION_SSH_USER` can run `docker compose`
-3. `infrastructure/.env.production` already exists on the server
-4. `git pull` works on the server for the deployment branch
-
-If the repository is private, the server itself must also have access to pull from GitHub. Common options:
-
-- add a deploy key on the VPS SSH account used for GitHub
-- or configure Git on the VPS with a PAT over HTTPS
-
-First-time production deploy over GitHub Actions:
-
-1. Add the production secrets in `Settings > Environments > production`
-2. Ensure the VPS repo is on the `main` branch
-3. Push to `main`
-4. Check the `CI` workflow
-5. Check the `CD Production` workflow after `CI` succeeds
-
-## Lint and format
-
-From repo root:
-
-```bash
-npm install
-npm run lint
-npm run lint:fix
-npm run format
-npm run format:check
-```
-
-## Prisma
-
-Prisma uses the schema file below as the single source of truth:
-
-- `backend/prisma/schema.prisma`
-
-The PostgreSQL database used by Prisma in local development is the Docker database defined in `infrastructure/docker-compose.yml`, exposed on `localhost:5432`.
-
-### Recommended local Prisma workflow
-
-1. Start Docker services:
-
-```bash
-docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d
-```
-
-2. Apply migrations from inside the backend container:
-
-```bash
-docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml exec backend sh -lc "npx prisma migrate deploy --schema prisma/schema.prisma"
-```
-
-3. Check migration status if needed:
-
-```bash
-docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml exec backend sh -lc "npx prisma migrate status --schema prisma/schema.prisma"
-```
-
-4. Generate Prisma client if needed:
-
-```bash
-docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml exec backend sh -lc "npx prisma generate --schema prisma/schema.prisma"
-```
-
-This Docker-based Prisma flow is the most reliable local setup because it uses the backend container's own database connection and schema path.
-
-### Host Prisma commands (optional)
-
-If you prefer to run Prisma from the host machine instead of inside Docker:
-
-1. Install the repo-root dependencies once:
-
-```bash
-npm install
-```
-
-2. Set `DATABASE_URL` in the same terminal:
-
-PowerShell:
+Sous PowerShell :
 
 ```powershell
-$env:DATABASE_URL="postgresql://mia:mia_dev_password@localhost:5432/makeitart"
+Copy-Item infrastructure/.env.example infrastructure/.env
+npm run dev:up:build
 ```
 
-Bash:
+Les secrets réels restent exclusivement dans les fichiers `.env` non suivis par Git ou dans les secrets de l’environnement de déploiement.
+
+### Services locaux
+
+| Service | Adresse |
+| --- | --- |
+| Application | <http://localhost> |
+| Frontend direct | <http://localhost:3000> |
+| API | <http://localhost:4000/api> |
+| Documentation OpenAPI | <http://localhost:4000/api/docs> |
+| Mailpit | <http://localhost:8025> |
+
+## Commandes principales
 
 ```bash
-export DATABASE_URL="postgresql://mia:mia_dev_password@localhost:5432/makeitart"
+npm run dev:up           # démarrer l’environnement local
+npm run dev:up:build     # reconstruire puis démarrer
+npm run dev:logs         # suivre les journaux
+npm run dev:down         # arrêter les services
+npm test                 # lancer les tests du monorepo
+npm run test:coverage    # générer la couverture
+npm run lint             # vérifier le lint
+npm run format:check     # vérifier le formatage sans modifier les fichiers
+npm run quality          # exécuter les contrôles de qualité
+npm run ci               # reproduire les contrôles CI disponibles localement
+npm run security:audit   # auditer les dépendances
+npm run prod:build       # construire les images de production
 ```
 
-3. Verify the connection string if needed:
+Les scénarios Stripe détaillés sont centralisés dans [le guide QA Stripe](docs/GUIDE_QA_STRIPE_PAS_A_PAS.md). Les procédures de passage en production se trouvent dans [la checklist paiements](docs/PAYMENT_GO_LIVE_CHECKLIST.md) et [le guide wallet](docs/blockchain/README.md).
 
-PowerShell:
+## Qualité et état de validation
 
-```powershell
-echo $env:DATABASE_URL
-```
+Au 29 juillet 2026, la validation complète réalisée sur la branche de travail comprenait :
 
-Bash:
+- 375 tests backend réussis sur 375 dans un environnement Linux isolé ;
+- 84 tests frontend réussis sur 84 ;
+- 43 migrations Prisma appliquées sur une base neuve ;
+- lint, formatage et typecheck réussis ;
+- construction sans cache des images Docker backend et frontend de production, suivie d’un démarrage avec tous les healthchecks au vert ;
+- audit backend sans vulnérabilité connue ;
+- audit frontend conforme au seuil CI de sévérité haute, avec quatre vulnérabilités modérées transitives connues dans la chaîne Coinbase CDP.
 
-```bash
-echo $DATABASE_URL
-```
+Ces résultats décrivent une exécution donnée. La source de vérité reste le résultat du workflow CI/CD associé au commit déployé.
 
-Expected value:
+## CI/CD et production
 
-```text
-postgresql://mia:mia_dev_password@localhost:5432/makeitart
-```
+Les workflows GitHub Actions vérifient le frontend, le backend, la configuration, les migrations et les images de production. Le déploiement est déclenché après validation et fusion selon les règles du dépôt. La production utilise le domaine `https://www.makeitart.io`, Caddy comme reverse proxy et des secrets fournis par l’environnement du serveur.
 
-### Common Prisma commands
+Avant une mise en production :
 
-From the host machine, use the repo-root schema path `backend/prisma/schema.prisma`.
-Inside the backend container, use `prisma/schema.prisma`.
+1. vérifier les résultats CI du commit ciblé ;
+2. sauvegarder PostgreSQL et contrôler les migrations ;
+3. valider les variables Stripe, Coinbase CDP, OAuth, SMTP, JWT et stockage ;
+4. exécuter les smoke tests d’authentification, paiement, téléchargement et wallet ;
+5. contrôler les journaux, la santé des conteneurs et les webhooks.
 
-Read the existing database schema into Prisma:
+## Conformité au sujet
 
-```bash
-npx prisma db pull --schema backend/prisma/schema.prisma
-```
+Le socle demandé dans [`tmp_sujet_web.txt`](tmp_sujet_web.txt) est couvert par Nuxt, Tailwind, Node.js, PostgreSQL, OAuth 2.0, Docker, CI/CD, tests, accessibilité, consentement RGPD et analytics. Les points qui nécessitent encore une preuve ou une finalisation avant soutenance sont suivis dans [`REQUIREMENTS_DOCUMENT.md`](REQUIREMENTS_DOCUMENT.md), notamment :
 
-Generate the Prisma client:
+- confirmer ou implémenter un véritable second facteur TOTP si cette modalité exacte reste obligatoire ;
+- formaliser des tests E2E navigateur reproductibles ;
+- joindre les preuves de durcissement, sauvegarde et restauration du VPS ;
+- réaliser les dernières validations Stripe et Coinbase CDP dans l’environnement réel.
 
-```bash
-npx prisma generate --schema backend/prisma/schema.prisma
-```
+## Documentation
 
-Create and apply a local migration:
+Le point d’entrée documentaire est [`docs/README.md`](docs/README.md). Les documents structurants sont :
 
-```bash
-npx prisma migrate dev --schema backend/prisma/schema.prisma
-```
+- [`REQUIREMENTS_DOCUMENT.md`](REQUIREMENTS_DOCUMENT.md) : exigences et état de conformité ;
+- [`ROADMAP_TRELLO.md`](ROADMAP_TRELLO.md) : roadmap exploitable dans Trello ;
+- [`docs/TEAM_LOG.md`](docs/TEAM_LOG.md) : journal synthétique des branches et contributions ;
+- [`docs/DECISIONS.md`](docs/DECISIONS.md) : décisions d’architecture ;
+- [`docs/blockchain/README.md`](docs/blockchain/README.md) : architecture et exploitation du wallet ;
+- [`docs/GUIDE_QA_STRIPE_PAS_A_PAS.md`](docs/GUIDE_QA_STRIPE_PAS_A_PAS.md) : validation des paiements.
 
-Apply existing migrations:
+## Contribution
 
-```bash
-npx prisma migrate deploy --schema backend/prisma/schema.prisma
-```
+Lire [`CONTRIBUTING.md`](CONTRIBUTING.md) avant toute modification. Les changements doivent rester ciblés, être accompagnés des tests adaptés et ne jamais introduire de secret dans Git.
 
-### Team conventions
+## Licence
 
-- Use only `backend/prisma/schema.prisma`
-- Do not recreate `prisma/schema.prisma`
-- Prefer Prisma commands inside the backend container for local Docker development
-- If tables were created manually in pgAdmin, use `db pull`
-- If the Prisma schema becomes the source of truth, use `migrate dev`
-
-### pgAdmin connection
-
-Use these values in pgAdmin:
-
-- Host: `localhost`
-- Port: `5432`
-- Database: `makeitart`
-- Username: `mia`
-- Password: `mia_dev_password`
-
-### Troubleshooting Prisma connection
-
-If Prisma tries to connect to `localhost:51214` or uses a `prisma+postgres://` URL, the wrong `DATABASE_URL` is being used. Redefine `DATABASE_URL` in the current terminal before running Prisma commands.
-
-If Prisma returns `P1000`, the database credentials do not match the running local Postgres instance. In local Docker development, the fastest clean reset is:
-
-```bash
-docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml down -v --remove-orphans
-docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml build --no-cache backend frontend
-docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml up -d
-```
-
-If the app starts but registration fails on first use, apply Prisma migrations before testing auth flows:
-
-```bash
-docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml exec backend sh -lc "npx prisma migrate deploy --schema prisma/schema.prisma"
-```
-
-## Automation
-
-Quality is automated at 3 levels:
-
-- `npm run dev` and `npm run dev:build` run `quality:fix` automatically before Docker
-- `pre-commit` git hook runs `npm run precommit` (strict check)
-- `pre-push` git hook runs `npm run prepush` (same quality gate as CI)
-- GitHub Actions CI runs lint + format check on `develop/main`
-
-To enable hooks locally (one time):
-
-```bash
-npm install
-```
-
-Hooks are managed with Husky in `.husky/`.
-
-## Troubleshooting network during npm install in Docker build
-
-If npm registry times out, set a mirror in `infrastructure/.env`:
-
-```bash
-NPM_REGISTRY=https://registry.npmmirror.com
-```
-
-Then rebuild:
-
-```bash
-docker compose --env-file infrastructure/.env -f infrastructure/docker-compose.yml build --no-cache backend frontend
-```
-
-Warnings such as `npm warn deprecated ...` during Docker build are usually non-blocking. Focus on actual build failures such as `ERROR`, `failed to solve`, or non-zero exit codes.
-
-## Branch strategy
-
-- `main`: production
-- `develop`: integration
-- `feature/*`: feature branches
-
-Use pull requests to merge into `develop`, then `main`.
-
-## Team documentation
-
-- Activity log: `docs/TEAM_LOG.md`
-- Entry template: `docs/TEAM_LOG_TEMPLATE.md`
-- Technical decisions: `docs/DECISIONS.md`
+Le statut de licence du code doit être confirmé par les responsables du projet avant toute redistribution publique.
