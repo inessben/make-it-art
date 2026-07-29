@@ -315,6 +315,41 @@ test("POST /auth/login refreshes the remembered-device cookie when the device by
   assert.ok(cookies.some((cookie) => cookie.startsWith("mia_remember_device=remember-token")));
 });
 
+test("POST /auth/login clears a stale remembered-device cookie when email code is required", async (t) => {
+  const { baseUrl } = await startAuthRoutesApp(t, {
+    startLoginResult: {
+      bypassCode: false,
+      challengeToken: "challenge-token",
+      passwordCompromised: false,
+      clearRememberDevice: true
+    }
+  });
+
+  const response = await postJson(
+    baseUrl,
+    "/auth/login",
+    {
+      email: "artist@example.com",
+      password: "Password1!"
+    },
+    {
+      cookie: "mia_remember_device=stale-token"
+    }
+  );
+
+  const cookies = getSetCookieHeaders(response.headers);
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.requiresCode, true);
+  assert.ok(cookies.some((cookie) => cookie.startsWith("mia_login_challenge=challenge-token")));
+  assert.ok(
+    cookies.some(
+      (cookie) =>
+        cookie.startsWith("mia_remember_device=") && cookie.includes("Expires=Thu, 01 Jan 1970")
+    )
+  );
+});
+
 test("POST /auth/login maps unverified users to 403", async (t) => {
   const { baseUrl } = await startAuthRoutesApp(t, {
     startLoginError: "Email not verified"
@@ -412,6 +447,10 @@ test("POST /auth/verify-login-code creates session cookies and a remembered devi
   assert.ok(cookies.some((cookie) => cookie.startsWith("mia_session=access-token")));
   assert.ok(cookies.some((cookie) => cookie.startsWith("mia_refresh=refresh-token")));
   assert.ok(cookies.some((cookie) => cookie.startsWith("mia_remember_device=remember-token")));
+  assert.ok(
+    cookies.findIndex((cookie) => cookie.startsWith("mia_remember_device=")) <
+      cookies.findIndex((cookie) => cookie.startsWith("mia_session="))
+  );
 });
 
 test("POST /auth/verify-login-code maps invalid codes to 401", async (t) => {
