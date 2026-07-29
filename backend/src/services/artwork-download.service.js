@@ -317,16 +317,28 @@ async function userHasPurchaseEntitlement(userId, artworkId) {
   return Boolean(entitlement);
 }
 
+async function canAccessHd(user, artwork) {
+  if (!user?.id || !artwork?.id) {
+    return false;
+  }
+
+  if (await userOwnsArtistArtwork(user.id, artwork)) {
+    return true;
+  }
+
+  if (await userHasPurchaseEntitlement(user.id, artwork.id)) {
+    return true;
+  }
+
+  return false;
+}
+
 async function assertCanAccessHd(user, artwork) {
   if (!user?.id) {
     throw new ArtworkMediaAccessError(401, "AUTH_REQUIRED", "Authentication required.");
   }
 
-  if (await userOwnsArtistArtwork(user.id, artwork)) {
-    return;
-  }
-
-  if (await userHasPurchaseEntitlement(user.id, artwork.id)) {
+  if (await canAccessHd(user, artwork)) {
     return;
   }
 
@@ -387,10 +399,10 @@ async function openArtworkMediaStream(artwork, variant = "preview") {
   return {
     stream,
     key,
-    contentType:
-      variant === "preview"
-        ? detectContentTypeFromKey(key, "image/jpeg")
-        : "application/octet-stream"
+    contentType: detectContentTypeFromKey(
+      key,
+      variant === "preview" ? "image/jpeg" : "application/octet-stream"
+    )
   };
 }
 
@@ -400,6 +412,7 @@ module.exports = {
   defaultDownloadLimit,
   consumeArtworkDownload,
   sendArtworkFile,
+  canAccessHd,
   assertCanAccessHd,
   resolveArtworkMediaUrl,
   openArtworkMediaStream

@@ -103,6 +103,20 @@ function pipeMedia(
   stream.pipe(res);
 }
 
+function buildHdDownloadFilename(artwork, key) {
+  const extension = path.extname(String(key || "")).trim() || ".bin";
+  const safeTitle =
+    String(artwork?.title || `artwork-${artwork?.id || "file"}`)
+      .trim()
+      .replace(/[^A-Za-z0-9._-]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 80) || `artwork-${artwork?.id || "file"}`;
+
+  return safeTitle.toLowerCase().endsWith(extension.toLowerCase())
+    ? safeTitle
+    : `${safeTitle}${extension}`;
+}
+
 async function findArtworkByPreviewFilename(filename) {
   const previewPath = `artworks/previews/${filename}`;
   const baseName = path.basename(filename, path.extname(filename));
@@ -230,6 +244,30 @@ router.get("/artworks/:id(\\d+)/media/preview", authOptional, loadArtwork, async
   }
 });
 
+router.get("/artworks/:id(\\d+)/media/hd-access", authRequired, loadArtwork, async (req, res) => {
+  try {
+    await assertCanAccessHd(req.user, req.artworkMedia);
+    res.set("Cache-Control", "private, no-store");
+
+    return res.status(200).json({
+      canDownloadHd: true,
+      hdDownloadUrl: `/api/artworks/${req.artworkMedia.id}/media/hd`
+    });
+  } catch (error) {
+    if (error instanceof ArtworkMediaAccessError) {
+      return res.status(error.status).json({
+        message: error.message,
+        code: error.code,
+        canDownloadHd: false,
+        hdDownloadUrl: null
+      });
+    }
+
+    console.error("Artwork HD access check error:", error);
+    return res.status(500).json({ message: "Unable to verify HD download access." });
+  }
+});
+
 router.get("/artworks/:id(\\d+)/media/hd", authRequired, loadArtwork, async (req, res) => {
   try {
     await assertCanAccessHd(req.user, req.artworkMedia);
@@ -237,7 +275,7 @@ router.get("/artworks/:id(\\d+)/media/hd", authRequired, loadArtwork, async (req
     return pipeMedia(res, {
       stream: payload.stream,
       contentType: payload.contentType,
-      filename: `artwork-${req.artworkMedia.id}-hd`,
+      filename: buildHdDownloadFilename(req.artworkMedia, payload.key),
       disposition: "attachment"
     });
   } catch (error) {

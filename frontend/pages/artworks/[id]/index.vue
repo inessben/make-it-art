@@ -405,11 +405,11 @@
                   }}
                 </button>
                 <a
-                  v-if="artwork.hasHdFile && artwork.hdDownloadUrl"
-                  :href="artwork.hdDownloadUrl"
+                  v-if="canDownloadOriginal && resolvedHdDownloadUrl"
+                  :href="resolvedHdDownloadUrl"
                   class="inline-flex min-h-[54px] items-center justify-center rounded-[6px] border border-white/10 px-5 text-sm font-semibold uppercase tracking-[0.12em] text-white transition hover:border-violet-500 hover:bg-white/5"
                 >
-                  Download HD
+                  Download original
                 </a>
               </div>
 
@@ -730,7 +730,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { navigateTo, useHead, useRequestHeaders, useRoute, useRuntimeConfig } from "#app";
 import { useAnalyticsEvent } from "~/composables/useAnalyticsEvent";
 import { useMarketplaceActions } from "~/composables/useMarketplaceActions";
@@ -762,6 +762,12 @@ const managementMessage = ref("");
 const managementMessageTone = ref("error");
 const protectedPreviewOpen = ref(false);
 const protectedPreviewCloseButton = ref(null);
+const personalizedArtworkUserId = ref(null);
+const hdAccessResolvedForUserId = ref(null);
+const hdDownloadAccess = ref({
+  canDownloadHd: false,
+  hdDownloadUrl: null
+});
 const deleteDialogOpen = ref(false);
 const deletingArtwork = ref(false);
 const deleteTrigger = ref(null);
@@ -908,6 +914,14 @@ const artistInitials = computed(() => getArtistInitials(artwork.value?.artist?.d
 const artworkImageUrl = computed(
   () => artwork.value?.previewUrl || artwork.value?.imageUrl || artwork.value?.hdDownloadUrl || ""
 );
+const resolvedHdDownloadUrl = computed(
+  () => hdDownloadAccess.value.hdDownloadUrl || artwork.value?.hdDownloadUrl || ""
+);
+const canDownloadOriginal = computed(
+  () =>
+    Boolean(hdDownloadAccess.value.canDownloadHd || artwork.value?.canDownloadHd) &&
+    Boolean(resolvedHdDownloadUrl.value)
+);
 const artistProfileRoute = computed(() =>
   artwork.value?.artist ? `/artists/${artwork.value.artist.id}` : "/artists"
 );
@@ -962,7 +976,11 @@ const artworkFacts = computed(() => [
   },
   {
     label: "Delivery",
-    value: artwork.value?.hasHdFile ? "HD file included" : "Preview only"
+    value: !artwork.value?.hasHdFile
+      ? "Preview only"
+      : canDownloadOriginal.value
+        ? "Original file available"
+        : "Original file after purchase"
   },
   {
     label: "Protection",
@@ -1370,6 +1388,8 @@ onMounted(async () => {
     // Public page: anonymous visitors are allowed.
   }
 
+  await refreshPersonalizedArtworkPayload();
+  await hydrateHdDownloadAccess();
   await hydrateOwnerManagement();
 
   if (auth.user && !auth.isAdmin) {
@@ -1381,6 +1401,96 @@ onMounted(async () => {
     }
   }
 });
+
+watch(
+  () => auth.user?.id ?? null,
+  async (userId, previousUserId) => {
+    if (!userId || auth.isAdmin) {
+      personalizedArtworkUserId.value = null;
+      hdAccessResolvedForUserId.value = null;
+      hdDownloadAccess.value = {
+        canDownloadHd: false,
+        hdDownloadUrl: null
+      };
+      return;
+    }
+
+    if (userId !== previousUserId) {
+      personalizedArtworkUserId.value = null;
+      hdAccessResolvedForUserId.value = null;
+    }
+
+    await refreshPersonalizedArtworkPayload();
+    await hydrateHdDownloadAccess();
+  }
+);
+
+async function refreshPersonalizedArtworkPayload() {
+  if (import.meta.server || !artwork.value?.id || !auth.user || auth.isAdmin) {
+    return;
+  }
+
+  const currentUserId = Number(auth.user.id);
+
+  if (personalizedArtworkUserId.value === currentUserId) {
+    return;
+  }
+
+  try {
+    await refresh();
+    personalizedArtworkUserId.value = currentUserId;
+  } catch {
+    // Keep the public payload when personalized hydration fails.
+  }
+}
+
+async function hydrateHdDownloadAccess() {
+  if (import.meta.server || !artwork.value?.id || !auth.user || auth.isAdmin) {
+    return;
+  }
+
+  const currentUserId = Number(auth.user.id);
+
+  if (hdAccessResolvedForUserId.value === currentUserId) {
+    return;
+  }
+
+  try {
+    const response = await $fetch(`/api/artworks/${artwork.value.id}/media/hd-access`, {
+      credentials: "include"
+    });
+
+    hdDownloadAccess.value = {
+      canDownloadHd: Boolean(response?.canDownloadHd),
+      hdDownloadUrl: response?.hdDownloadUrl || null
+    };
+
+    if (response?.canDownloadHd) {
+      data.value = {
+        ...(data.value || { relatedArtworks: [] }),
+        artwork: {
+          ...artwork.value,
+          canDownloadHd: true,
+          hdDownloadUrl: response.hdDownloadUrl || artwork.value?.hdDownloadUrl || null
+        },
+        relatedArtworks: data.value?.relatedArtworks || []
+      };
+    }
+  } catch (downloadAccessError) {
+    const statusCode = Number(
+      downloadAccessError?.statusCode ?? downloadAccessError?.status ?? 0
+    );
+
+    if (statusCode === 401 || statusCode === 403 || statusCode === 404) {
+      hdDownloadAccess.value = {
+        canDownloadHd: false,
+        hdDownloadUrl: null
+      };
+    }
+  } finally {
+    hdAccessResolvedForUserId.value = currentUserId;
+  }
+}
 
 async function hydrateOwnerManagement() {
   if (!artwork.value?.id || !auth.user || auth.isAdmin) {

@@ -90,7 +90,10 @@ function resolveArtworkAvailabilityStatus({
   return stockQuantity > 0 ? "AVAILABLE" : "UNAVAILABLE";
 }
 
-function serializeArtwork(artwork, { includeArtist = true, includeManagement = false } = {}) {
+function serializeArtwork(
+  artwork,
+  { includeArtist = true, includeManagement = false, canDownloadHd = false } = {}
+) {
   if (!artwork) {
     return null;
   }
@@ -124,6 +127,7 @@ function serializeArtwork(artwork, { includeArtist = true, includeManagement = f
     ? `/api/artworks/${artwork.id}/media/preview`
     : buildArtworkPreviewUrl(artwork.previewPath, artwork.imagePath) ||
       buildArtworkImageUrl(artwork.previewPath || artwork.imagePath);
+  const hasDownloadableOriginal = Boolean(artwork.hdPath || artwork.imagePath);
 
   return {
     id: artwork.id,
@@ -140,8 +144,12 @@ function serializeArtwork(artwork, { includeArtist = true, includeManagement = f
     imageUrl: previewUrl,
     previewUrl,
     forensicWatermark: Boolean(artwork.id),
-    hasHdFile: Boolean(artwork.hdPath),
-    hdDownloadUrl: artwork.hdPath ? `/api/artworks/${artwork.id}/media/hd` : null,
+    hasHdFile: hasDownloadableOriginal,
+    canDownloadHd: hasDownloadableOriginal && Boolean(canDownloadHd),
+    hdDownloadUrl:
+      artwork.id && hasDownloadableOriginal && canDownloadHd
+        ? `/api/artworks/${artwork.id}/media/hd`
+        : null,
     storageProvider: normalizeText(artwork.storageProvider) || "local",
     mediaStatus: normalizeText(artwork.mediaStatus) || "ready",
     watermarkApplied: Boolean(artwork.watermarkApplied),
