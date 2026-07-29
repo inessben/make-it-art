@@ -29,50 +29,109 @@
 
       <section
         v-else-if="pendingApplication"
-        class="grid gap-6 rounded-2xl border border-slate-800 bg-slate-900 p-6 sm:p-8"
+        class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900"
       >
-        <div class="max-w-3xl">
-          <h2 class="text-title-3 text-white">Your signed agreement is being reviewed</h2>
-          <p class="mt-3 text-body-1 text-slate-400">
-            The administration will approve or reject your application. Your artist profile remains
-            inactive until the review is complete.
-          </p>
+        <div class="grid gap-8 p-6 sm:p-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <div>
+            <h2 class="text-title-3 text-white">Your signed agreement is now under review</h2>
+            <p class="mt-3 max-w-3xl text-body-1 text-slate-400">
+              Your application was submitted successfully. The admin team will review your
+              agreement, validate your legal details and activate your artist access after approval.
+            </p>
+
+            <ol class="mt-7 grid gap-3 sm:grid-cols-3" aria-label="Application review process">
+              <li class="rounded-xl border border-slate-750 bg-black/30 p-4">
+                <span
+                  class="flex h-8 w-8 items-center justify-center rounded-full bg-violet-600 text-button-2 text-white"
+                  >1</span
+                >
+                <h3 class="mt-4 text-title-4 text-white">Agreement signed</h3>
+                <p class="mt-2 text-subtitle-2 text-slate-400">
+                  Your contract PDF and signature have been saved.
+                </p>
+              </li>
+              <li class="rounded-xl border border-slate-750 bg-black/30 p-4">
+                <span
+                  class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-750 text-button-2 text-white"
+                  >2</span
+                >
+                <h3 class="mt-4 text-title-4 text-white">Admin review</h3>
+                <p class="mt-2 text-subtitle-2 text-slate-400">
+                  The team checks your application details and agreement.
+                </p>
+              </li>
+              <li class="rounded-xl border border-slate-750 bg-black/30 p-4">
+                <span
+                  class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-750 text-button-2 text-white"
+                  >3</span
+                >
+                <h3 class="mt-4 text-title-4 text-white">Workspace unlocked</h3>
+                <p class="mt-2 text-subtitle-2 text-slate-400">
+                  Your profile and publishing tools become active after approval.
+                </p>
+              </li>
+            </ol>
+          </div>
+
+          <aside
+            class="rounded-xl border border-slate-750 bg-black/30 p-5"
+            aria-label="Application status"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <h3 class="text-title-4 text-white">Application status</h3>
+              <span
+                class="rounded-full bg-amber-950 px-3 py-1 text-subtitle-3 font-semibold text-amber-200"
+              >
+                Under review
+              </span>
+            </div>
+            <dl class="mt-5 grid gap-4 text-sm">
+              <div class="border-b border-slate-800 pb-4">
+                <dt class="text-slate-400">Artist name</dt>
+                <dd class="mt-1 font-semibold text-white">
+                  {{ pendingApplication.payload?.displayName || form.displayName || "-" }}
+                </dd>
+              </div>
+              <div class="border-b border-slate-800 pb-4">
+                <dt class="text-slate-400">Submitted on</dt>
+                <dd class="mt-1 font-semibold text-white">
+                  {{ formatDate(pendingApplication.submittedAt) }}
+                </dd>
+              </div>
+              <div>
+                <dt class="text-slate-400">Access</dt>
+                <dd class="mt-1 font-semibold text-white">Artist profile still inactive</dd>
+              </div>
+            </dl>
+          </aside>
         </div>
 
-        <dl class="grid gap-3 rounded-xl border border-slate-800 bg-black/30 p-5 text-sm">
-          <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
-            <dt class="text-slate-400">Artist name</dt>
-            <dd class="font-semibold text-white">
-              {{ pendingApplication.payload?.displayName || "-" }}
-            </dd>
+        <div
+          class="grid gap-5 border-t border-slate-800 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end"
+        >
+          <div>
+            <h3 class="text-title-4 text-white">What happens next</h3>
+            <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+              No extra action is required. You can keep a copy of the signed agreement and return
+              later to check the approval status.
+            </p>
           </div>
-          <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
-            <dt class="text-slate-400">Status</dt>
-            <dd class="font-semibold text-amber-300">Under review</dd>
+          <div class="flex flex-wrap gap-3">
+            <NuxtLink
+              to="/artist-profile"
+              class="inline-flex min-h-12 items-center justify-center rounded-lg bg-violet-600 px-6 text-button-2 text-white transition hover:bg-violet-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+            >
+              Open artist status
+            </NuxtLink>
+            <a
+              href="/api/artists/me/contract.pdf"
+              target="_blank"
+              rel="noreferrer"
+              class="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-750 bg-slate-850 px-6 text-button-2 text-slate-100 transition hover:bg-slate-750 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+            >
+              Download signed PDF
+            </a>
           </div>
-          <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
-            <dt class="text-slate-400">Submitted on</dt>
-            <dd class="font-semibold text-white">
-              {{ formatDate(pendingApplication.submittedAt) }}
-            </dd>
-          </div>
-        </dl>
-
-        <div class="flex flex-wrap gap-3">
-          <NuxtLink
-            to="/artist-profile"
-            class="inline-flex min-h-12 items-center justify-center rounded-lg bg-violet-600 px-6 text-button-2 text-white transition hover:bg-violet-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
-          >
-            View application status
-          </NuxtLink>
-          <a
-            href="/api/artists/me/contract.pdf"
-            target="_blank"
-            rel="noreferrer"
-            class="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-750 bg-slate-850 px-6 text-button-2 text-slate-100 transition hover:bg-slate-750 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
-          >
-            Open PDF agreement
-          </a>
         </div>
       </section>
 
@@ -538,6 +597,7 @@ import { navigateTo } from "#app";
 import { storeToRefs } from "pinia";
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useAuthStore } from "~/stores/auth";
+import { MARKETPLACE_CATEGORY_GROUPS } from "~/utils/marketplace-categories";
 
 definePageMeta({
   middleware: "auth"
@@ -553,15 +613,7 @@ const steps = [
   { id: 4, label: "Agreement & signature" }
 ];
 
-const artTypeOptions = [
-  "Digital Art",
-  "Photography",
-  "3D Art",
-  "Vector Art",
-  "Illustration",
-  "Graphic Design",
-  "Mixed Media"
-];
+const artTypeOptions = MARKETPLACE_CATEGORY_GROUPS.map((group) => group.label);
 
 const step = ref(1);
 const styleInput = ref("");

@@ -178,6 +178,10 @@
 <script setup>
 import { computed, ref, watch } from "vue";
 import { useRequestHeaders, useRoute, useRouter } from "#app";
+import {
+  MARKETPLACE_CATEGORY_GROUPS,
+  resolveMarketplaceCategoryGroupValue
+} from "~/utils/marketplace-categories";
 import { getArtistInitials } from "~/utils/marketplace";
 
 const route = useRoute();
@@ -185,10 +189,10 @@ const router = useRouter();
 const pageSize = 12;
 const quickFilters = [
   { label: "All Artists", value: "all" },
-  { label: "3D Art", value: "3d-art" },
-  { label: "Photography", value: "photography" },
-  { label: "Fine Art", value: "fine-art" },
-  { label: "Illustration", value: "illustration" }
+  ...MARKETPLACE_CATEGORY_GROUPS.map((group) => ({
+    label: group.label,
+    value: group.value
+  }))
 ];
 const sortModes = [
   { value: "followers", label: "Most followed" },
@@ -321,29 +325,12 @@ function resolveSortValue(value) {
 }
 
 function resolveFilterKey(value) {
-  const normalized = normalizeText(value);
-
-  if (!normalized) {
+  if (!normalizeText(value)) {
     return "all";
   }
 
-  if (quickFilters.some((filter) => filter.value === normalized)) {
-    return normalized;
-  }
-
-  if (normalized.includes("3d")) {
-    return "3d-art";
-  }
-
-  if (normalized.includes("illustration") || normalized.includes("graphic")) {
-    return "illustration";
-  }
-
-  if (normalized.includes("photography") || normalized.includes("photo")) {
-    return "photography";
-  }
-
-  return "fine-art";
+  const resolved = resolveMarketplaceCategoryGroupValue(value);
+  return quickFilters.some((filter) => filter.value === resolved) ? resolved : "all";
 }
 
 function normalizeText(value) {
@@ -368,34 +355,12 @@ function matchesQuickFilter(artist, filter) {
     return true;
   }
 
-  const haystack = buildArtistKeywords(artist);
+  const categorySource = [
+    artist.artType,
+    ...(Array.isArray(artist.styles) ? artist.styles : [])
+  ].join(" ");
 
-  if (filter === "3d-art") {
-    return haystack.includes("3d") || haystack.includes("3-d") || haystack.includes("motion");
-  }
-
-  if (filter === "photography") {
-    return (
-      haystack.includes("photography") ||
-      haystack.includes("photo") ||
-      haystack.includes("photographic")
-    );
-  }
-
-  if (filter === "illustration") {
-    return (
-      haystack.includes("illustration") ||
-      haystack.includes("graphic") ||
-      haystack.includes("vector")
-    );
-  }
-
-  return (
-    haystack.includes("digital art") ||
-    haystack.includes("fine art") ||
-    haystack.includes("painting") ||
-    haystack.includes("mixed media")
-  );
+  return resolveMarketplaceCategoryGroupValue(categorySource) === filter;
 }
 
 function sameQuery(left, right) {

@@ -244,7 +244,7 @@
                   aria-label="Next page"
                   @click="goToPage(currentPage + 1)"
                 >
-                  >
+                  &gt;
                 </button>
               </nav>
             </footer>
