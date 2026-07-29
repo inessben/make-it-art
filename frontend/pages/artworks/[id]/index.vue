@@ -1486,9 +1486,7 @@ async function hydrateHdDownloadAccess() {
       };
     }
   } catch (downloadAccessError) {
-    const statusCode = Number(
-      downloadAccessError?.statusCode ?? downloadAccessError?.status ?? 0
-    );
+    const statusCode = Number(downloadAccessError?.statusCode ?? downloadAccessError?.status ?? 0);
 
     if (statusCode === 401 || statusCode === 403 || statusCode === 404) {
       hdDownloadAccess.value = {

@@ -383,7 +383,10 @@
               >
                 &lt;
               </a>
-              <span v-else class="marketplace-pagination__arrow marketplace-pagination__arrow--disabled">
+              <span
+                v-else
+                class="marketplace-pagination__arrow marketplace-pagination__arrow--disabled"
+              >
                 &lt;
               </span>
 
@@ -413,7 +416,10 @@
               >
                 &gt;
               </a>
-              <span v-else class="marketplace-pagination__arrow marketplace-pagination__arrow--disabled">
+              <span
+                v-else
+                class="marketplace-pagination__arrow marketplace-pagination__arrow--disabled"
+              >
                 &gt;
               </span>
             </nav>

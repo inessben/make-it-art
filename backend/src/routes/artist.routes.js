@@ -914,7 +914,8 @@ router.post("/artists/me/contract-preview", async (req, res) => {
 
     return res.status(200).json({
       contractText: contract.contractText,
-      contractVersion: contract.contractVersion
+      contractVersion: contract.contractVersion,
+      contractLanguage: contract.contractLanguage
     });
   } catch (error) {
     console.error("Artist contract preview error:", error);

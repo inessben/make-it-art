@@ -119,10 +119,11 @@ async function startArtistRoutesApp(t, overrides = {}) {
           new Date("2026-07-04T12:34:00.000Z")
         );
       },
-      renderArtistContract() {
+      renderArtistContract({ payload }) {
         return {
-          contractText: "CONTRAT TEST",
-          contractVersion: "make-it-art-artist-contract-v3"
+          contractText: payload.contractLanguage === "fr" ? "CONTRAT TEST FR" : "TEST AGREEMENT EN",
+          contractVersion: "make-it-art-artist-contract-v3",
+          contractLanguage: payload.contractLanguage
         };
       },
       async generateArtistContractPdf() {
@@ -232,6 +233,32 @@ test("POST /artists/me/contract-preview validates required legal fields", async 
 
   assert.equal(response.status, 400);
   assert.equal(response.body.message, "Le prenom et le nom legal sont requis.");
+});
+
+test("POST /artists/me/contract-preview returns the requested French agreement", async (t) => {
+  const { baseUrl } = await startArtistRoutesApp(t);
+  const response = await requestJson(baseUrl, "/artists/me/contract-preview", {
+    method: "POST",
+    body: {
+      displayName: "Ada Art",
+      firstName: "Ada",
+      lastName: "Lovelace",
+      bio: "Digital artist",
+      artType: "Digital Art",
+      styles: ["Digital painting"],
+      addressLine1: "1 rue de Paris",
+      city: "Paris",
+      postalCode: "75001",
+      country: "France",
+      contractLanguage: "fr",
+      termsAccepted: true,
+      commissionAccepted: true
+    }
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.contractLanguage, "fr");
+  assert.equal(response.body.contractText, "CONTRAT TEST FR");
 });
 
 test("POST /artists/me submits a pending artist application with a signed contract", async (t) => {

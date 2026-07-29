@@ -220,7 +220,7 @@
                   aria-label="Previous page"
                   @click="goToPage(currentPage - 1)"
                 >
-                  <
+                  &lt;
                 </button>
                 <button
                   v-for="page in totalPages"

@@ -37,7 +37,12 @@ test("artist agreement language selector switches between complete EN and FR pre
   const pageSource = await readFile(agreementPage, "utf8");
 
   assert.match(pageSource, /v-model="form\.contractLanguage"/);
-  assert.match(pageSource, /<option value="en">EN - English<\/option>/);
-  assert.match(pageSource, /<option value="fr">FR - Fran.ais<\/option>/);
+  assert.match(pageSource, /@change="changeContractLanguage"/);
+  assert.match(pageSource, /<option value="en">EN<\/option>/);
+  assert.match(pageSource, /<option value="fr">FR<\/option>/);
+  assert.match(
+    pageSource,
+    /response\.contractLanguage && response\.contractLanguage !== requestedLanguage/
+  );
   assert.match(pageSource, /await ensureContractPreview\(true\)/);
 });

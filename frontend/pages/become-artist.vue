@@ -1,13 +1,12 @@
 <template>
-  <main class="min-h-screen bg-black px-4 py-8 text-slate-100 sm:px-6 sm:py-10">
-    <section
-      class="mx-auto grid w-full max-w-[1160px] gap-8 rounded-2xl border border-slate-800 bg-slate-950 p-4 shadow-[0_32px_90px_rgba(0,0,0,0.22)] sm:rounded-[32px] sm:p-7"
-    >
-      <header class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p class="text-xs uppercase tracking-widest text-violet-700">Artist onboarding</p>
-          <h1 class="mt-4 text-title-2 text-white">Submit your artist application</h1>
-          <p class="mt-4 max-w-3xl text-sm leading-6 text-slate-400">
+  <main class="min-h-screen bg-black px-4 py-10 text-slate-100 sm:px-6 lg:py-14">
+    <section class="mx-auto grid w-full max-w-6xl gap-8">
+      <header
+        class="flex flex-col gap-6 border-b border-slate-800 pb-8 sm:flex-row sm:items-end sm:justify-between"
+      >
+        <div class="max-w-3xl">
+          <h1 class="text-title-2 text-white">Become an artist</h1>
+          <p class="mt-3 text-body-1 text-slate-400">
             Complete your application, review and sign the agreement, then submit it to the
             administration for approval.
           </p>
@@ -15,7 +14,7 @@
 
         <NuxtLink
           to="/account-settings"
-          class="inline-flex items-center justify-center rounded-2xl border border-slate-800 bg-slate-850 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
+          class="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-750 bg-slate-900 px-5 text-button-2 text-slate-100 transition hover:border-slate-500 hover:bg-slate-850 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
         >
           Back to account
         </NuxtLink>
@@ -23,27 +22,24 @@
 
       <section
         v-if="pageLoading"
-        class="rounded-[24px] border border-slate-800 bg-violet-950 px-6 py-5 text-sm text-slate-400"
+        class="rounded-xl border border-slate-800 bg-slate-900 px-6 py-5 text-sm text-slate-400"
       >
         Loading your application...
       </section>
 
       <section
         v-else-if="pendingApplication"
-        class="grid gap-5 rounded-[28px] border border-slate-800 bg-violet-950 p-7"
+        class="grid gap-6 rounded-2xl border border-slate-800 bg-slate-900 p-6 sm:p-8"
       >
-        <div>
-          <p class="text-xs uppercase tracking-widest text-violet-700">Application under review</p>
-          <h2 class="mt-4 text-3xl font-semibold text-white">
-            Your signed agreement is being reviewed
-          </h2>
-          <p class="mt-4 max-w-3xl text-sm leading-6 text-slate-400">
+        <div class="max-w-3xl">
+          <h2 class="text-title-3 text-white">Your signed agreement is being reviewed</h2>
+          <p class="mt-3 text-body-1 text-slate-400">
             The administration will approve or reject your application. Your artist profile remains
             inactive until the review is complete.
           </p>
         </div>
 
-        <dl class="grid gap-3 rounded-[24px] border border-slate-800 bg-slate-950 p-5 text-sm">
+        <dl class="grid gap-3 rounded-xl border border-slate-800 bg-black/30 p-5 text-sm">
           <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
             <dt class="text-slate-400">Artist name</dt>
             <dd class="font-semibold text-white">
@@ -65,7 +61,7 @@
         <div class="flex flex-wrap gap-3">
           <NuxtLink
             to="/artist-profile"
-            class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-violet-700 px-6 text-sm font-semibold text-black transition hover:bg-violet-600"
+            class="inline-flex min-h-12 items-center justify-center rounded-lg bg-violet-600 px-6 text-button-2 text-white transition hover:bg-violet-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
           >
             View application status
           </NuxtLink>
@@ -73,7 +69,7 @@
             href="/api/artists/me/contract.pdf"
             target="_blank"
             rel="noreferrer"
-            class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-800 bg-slate-850 px-6 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
+            class="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-750 bg-slate-850 px-6 text-button-2 text-slate-100 transition hover:bg-slate-750 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
           >
             Open PDF agreement
           </a>
@@ -94,29 +90,36 @@
           </p>
         </section>
 
-        <nav class="grid gap-3 sm:grid-cols-4" aria-label="Artist application progress">
+        <nav
+          class="grid overflow-hidden rounded-xl border border-slate-800 bg-slate-900 sm:grid-cols-4"
+          aria-label="Artist application progress"
+        >
           <button
             v-for="item in steps"
             :key="item.id"
             type="button"
-            class="min-h-14 rounded-2xl border px-4 py-3 text-left text-sm transition"
+            class="relative min-h-20 border-b border-slate-800 px-5 py-4 text-left text-sm transition last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0"
             :class="
               item.id === step
-                ? 'border-violet-700 bg-violet-700/15 text-white'
+                ? 'bg-slate-750 text-white after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:bg-violet-600'
                 : item.id < step
-                  ? 'border-slate-800 bg-slate-850 text-slate-100'
-                  : 'border-slate-800 bg-slate-950 text-slate-500'
+                  ? 'bg-slate-850 text-slate-100'
+                  : 'bg-slate-900 text-slate-500 hover:bg-slate-850'
             "
+            :aria-current="item.id === step ? 'step' : undefined"
             @click="goToStep(item.id)"
           >
-            <span class="block text-xs uppercase tracking-widest">Step {{ item.id }}</span>
-            <span class="mt-1 block font-semibold">{{ item.label }}</span>
+            <span class="block text-subtitle-3 text-slate-400">Step {{ item.id }} of 4</span>
+            <span class="mt-1 block text-button-2">{{ item.label }}</span>
           </button>
         </nav>
 
-        <form class="grid gap-7" @submit.prevent="submitApplication">
+        <form
+          class="grid gap-8 rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-8"
+          @submit.prevent="submitApplication"
+        >
           <section v-if="step === 1" class="grid gap-6">
-            <div>
+            <div class="max-w-3xl">
               <h2 class="text-xl font-semibold text-white">Legal identity</h2>
               <p class="mt-2 text-sm text-slate-400">
                 This information will be included automatically in the artist agreement.
@@ -246,7 +249,7 @@
           </section>
 
           <section v-else-if="step === 2" class="grid gap-6">
-            <div>
+            <div class="max-w-3xl">
               <h2 class="text-xl font-semibold text-white">Public profile</h2>
               <p class="mt-2 text-sm text-slate-400">
                 These details will introduce your creative universe on the platform.
@@ -331,14 +334,14 @@
           </section>
 
           <section v-else-if="step === 3" class="grid gap-6">
-            <div>
+            <div class="max-w-3xl">
               <h2 class="text-xl font-semibold text-white">Application review</h2>
               <p class="mt-2 text-sm text-slate-400">
                 Review your information before opening the agreement.
               </p>
             </div>
 
-            <dl class="grid gap-3 rounded-[24px] border border-slate-800 bg-violet-950 p-5 text-sm">
+            <dl class="grid gap-3 rounded-xl border border-slate-800 bg-black/30 p-5 text-sm">
               <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
                 <dt class="text-slate-400">Legal name</dt>
                 <dd class="font-semibold text-white">
@@ -402,7 +405,7 @@
 
           <section v-else class="grid gap-6">
             <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-              <div>
+              <div class="max-w-3xl">
                 <h2 class="text-xl font-semibold text-white">Artist agreement</h2>
                 <p class="mt-2 text-sm text-slate-400">
                   Review the generated agreement, accept it and sign before submitting.
@@ -415,9 +418,10 @@
                   v-model="form.contractLanguage"
                   class="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-4 text-sm font-semibold text-white focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500"
                   aria-label="Agreement language"
+                  @change="changeContractLanguage"
                 >
-                  <option value="en">EN - English</option>
-                  <option value="fr">FR - Français</option>
+                  <option value="en">EN</option>
+                  <option value="fr">FR</option>
                 </select>
               </label>
 
@@ -454,7 +458,7 @@
               }}</pre>
             </div>
 
-            <div class="grid gap-4 rounded-[24px] border border-slate-800 bg-violet-950 p-5">
+            <div class="grid gap-4 rounded-xl border border-slate-800 bg-black/30 p-5">
               <label
                 class="flex gap-3 rounded-2xl border border-slate-800 bg-slate-950 p-4 text-sm text-slate-400"
               >
@@ -470,7 +474,7 @@
               </label>
 
               <div class="grid gap-3">
-                <div>
+                <div class="max-w-3xl">
                   <p class="text-sm font-medium text-slate-100">Artist signature *</p>
                   <p class="mt-1 text-sm text-slate-400">
                     This signature will be added to the PDF submitted to the administration.
@@ -494,11 +498,11 @@
           </p>
 
           <footer
-            class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between"
+            class="flex flex-col-reverse gap-3 border-t border-slate-800 pt-6 sm:flex-row sm:items-center sm:justify-between"
           >
             <button
               type="button"
-              class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-800 bg-slate-850 px-6 text-sm font-semibold text-slate-100 transition hover:bg-slate-750 disabled:cursor-not-allowed disabled:opacity-40"
+              class="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-750 bg-slate-850 px-6 text-button-2 text-slate-100 transition hover:bg-slate-750 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 disabled:cursor-not-allowed disabled:opacity-40"
               :disabled="step === 1 || loading"
               @click="previousStep"
             >
@@ -508,7 +512,7 @@
             <button
               v-if="step < steps.length"
               type="button"
-              class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-violet-700 px-6 text-sm font-semibold text-black transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-60"
+              class="inline-flex min-h-12 items-center justify-center rounded-lg bg-violet-600 px-8 text-button-2 text-white transition hover:bg-violet-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 disabled:cursor-not-allowed disabled:opacity-60"
               :disabled="loading || contractPreviewLoading"
               @click="nextStep"
             >
@@ -517,7 +521,7 @@
             <button
               v-else
               type="submit"
-              class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-violet-700 px-6 text-sm font-semibold text-black transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-60"
+              class="inline-flex min-h-12 items-center justify-center rounded-lg bg-violet-600 px-8 text-button-2 text-white transition hover:bg-violet-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 disabled:cursor-not-allowed disabled:opacity-60"
               :disabled="loading || contractPreviewLoading"
             >
               {{ loading ? "Submitting..." : "Submit signed application" }}
@@ -575,6 +579,7 @@ const contractAccepted = ref(false);
 const signatureDataUrl = ref("");
 const applicationState = ref(null);
 let draftSaveTimeout = null;
+let contractPreviewRequestId = 0;
 
 const form = reactive({
   displayName: "",
@@ -658,18 +663,6 @@ watch(
 watch(step, () => {
   queueDraftSave();
 });
-
-watch(
-  () => form.contractLanguage,
-  async () => {
-    contractAccepted.value = false;
-    signatureDataUrl.value = "";
-
-    if (step.value === 4) {
-      await ensureContractPreview(true);
-    }
-  }
-);
 
 function prefillFromUser() {
   const fullName = user.value?.username || "";
@@ -901,6 +894,8 @@ async function ensureContractPreview(force = false) {
     return true;
   }
 
+  const requestId = ++contractPreviewRequestId;
+  const requestedLanguage = form.contractLanguage;
   contractPreviewLoading.value = true;
   contractPreviewError.value = "";
 
@@ -911,15 +906,40 @@ async function ensureContractPreview(force = false) {
       body: buildDraftPayload()
     });
 
+    if (requestId !== contractPreviewRequestId || requestedLanguage !== form.contractLanguage) {
+      return false;
+    }
+
+    if (response.contractLanguage && response.contractLanguage !== requestedLanguage) {
+      contractPreviewError.value = "The agreement language could not be changed. Please try again.";
+      return false;
+    }
+
     contractPreview.value = response.contractText || "";
     contractPreviewDirty.value = false;
     return true;
   } catch (error) {
+    if (requestId !== contractPreviewRequestId) {
+      return false;
+    }
+
     contractPreviewError.value =
       error?.data?.message || "Unable to generate the agreement preview.";
     return false;
   } finally {
-    contractPreviewLoading.value = false;
+    if (requestId === contractPreviewRequestId) {
+      contractPreviewLoading.value = false;
+    }
+  }
+}
+
+async function changeContractLanguage() {
+  contractAccepted.value = false;
+  signatureDataUrl.value = "";
+  contractPreviewDirty.value = true;
+
+  if (step.value === 4) {
+    await ensureContractPreview(true);
   }
 }
 
@@ -1024,7 +1044,7 @@ function formatDate(value) {
 
 <style scoped>
 .field-control {
-  @apply min-h-12 w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-3 text-slate-100 outline-none;
+  @apply min-h-12 w-full rounded-lg border border-slate-750 bg-black/30 px-4 py-3 text-body-1 text-slate-100 outline-none;
   outline: none;
   transition:
     border-color 0.18s ease,
@@ -1032,7 +1052,7 @@ function formatDate(value) {
 }
 
 .field-control:focus {
-  @apply border-violet-700;
+  @apply border-violet-400;
   box-shadow: 0 0 0 3px color-mix(in srgb, theme("colors.violet.700") 30%, transparent);
 }
 </style>
