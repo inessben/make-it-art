@@ -30,53 +30,121 @@
 
       <section
         v-else-if="pendingApplication"
-        class="grid gap-5 rounded-[28px] border border-slate-800 bg-violet-950 p-7"
+        class="overflow-hidden rounded-[32px] border border-[#151E30] bg-[#070B14]"
       >
-        <div>
-          <p class="text-xs uppercase tracking-widest text-violet-700">Application under review</p>
-          <h2 class="mt-4 text-3xl font-semibold text-white">
-            Your signed agreement is being reviewed
-          </h2>
-          <p class="mt-4 max-w-3xl text-sm leading-6 text-slate-400">
-            The administration will approve or reject your application. Your artist profile remains
-            inactive until the review is complete.
-          </p>
+        <div class="grid gap-8 px-6 py-7 sm:px-8 sm:py-8 xl:grid-cols-[minmax(0,1.2fr)_340px]">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#8AA2FF]">
+              Artist onboarding
+            </p>
+            <h2
+              class="mt-4 text-[clamp(2.1rem,4vw,3.4rem)] font-semibold leading-[0.96] tracking-[-0.04em] text-white"
+            >
+              Your signed agreement is now under review
+            </h2>
+            <p class="mt-4 max-w-3xl text-sm leading-7 text-[#96A4B8]">
+              Your application has been submitted successfully. The admin team will review your
+              agreement, validate your legal details and activate your artist access once approval
+              is complete.
+            </p>
+
+            <div class="mt-6 grid gap-3 sm:grid-cols-3">
+              <article
+                class="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(123,44,255,0.12),rgba(5,8,15,0.9))] px-4 py-4"
+              >
+                <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8AA2FF]">
+                  Step 1
+                </p>
+                <p class="mt-3 text-sm font-semibold text-white">Agreement signed</p>
+                <p class="mt-2 text-xs leading-6 text-[#96A4B8]">
+                  Your contract PDF and signature have been saved.
+                </p>
+              </article>
+              <article class="rounded-[22px] border border-white/8 bg-white/[0.03] px-4 py-4">
+                <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8AA2FF]">
+                  Step 2
+                </p>
+                <p class="mt-3 text-sm font-semibold text-white">Admin review</p>
+                <p class="mt-2 text-xs leading-6 text-[#96A4B8]">
+                  The team checks your application details and signed agreement.
+                </p>
+              </article>
+              <article class="rounded-[22px] border border-white/8 bg-white/[0.03] px-4 py-4">
+                <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8AA2FF]">
+                  Step 3
+                </p>
+                <p class="mt-3 text-sm font-semibold text-white">Workspace unlocked</p>
+                <p class="mt-2 text-xs leading-6 text-[#96A4B8]">
+                  Your public artist profile and publishing tools become active after approval.
+                </p>
+              </article>
+            </div>
+          </div>
+
+          <div class="grid gap-4 self-start">
+            <article
+              class="rounded-[24px] border border-[#1A2336] bg-[radial-gradient(circle_at_top,_rgba(123,44,255,0.18),_transparent_42%),linear-gradient(180deg,_#0A101C,_#060912)] p-5"
+            >
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#8AA2FF]">
+                Application status
+              </p>
+              <p
+                class="mt-4 inline-flex rounded-full bg-[#3A2A0C] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#F7D990]"
+              >
+                Under review
+              </p>
+
+              <dl class="mt-5 grid gap-3 text-sm">
+                <div class="rounded-[18px] border border-white/6 bg-black/20 px-4 py-3">
+                  <dt class="text-xs uppercase tracking-[0.14em] text-[#7E8AA3]">Artist name</dt>
+                  <dd class="mt-2 font-semibold text-white">
+                    {{ pendingApplication.payload?.displayName || form.displayName || "-" }}
+                  </dd>
+                </div>
+                <div class="rounded-[18px] border border-white/6 bg-black/20 px-4 py-3">
+                  <dt class="text-xs uppercase tracking-[0.14em] text-[#7E8AA3]">Submitted on</dt>
+                  <dd class="mt-2 font-semibold text-white">
+                    {{ formatDate(pendingApplication.submittedAt) }}
+                  </dd>
+                </div>
+                <div class="rounded-[18px] border border-white/6 bg-black/20 px-4 py-3">
+                  <dt class="text-xs uppercase tracking-[0.14em] text-[#7E8AA3]">Access</dt>
+                  <dd class="mt-2 font-semibold text-white">Artist profile still inactive</dd>
+                </div>
+              </dl>
+            </article>
+          </div>
         </div>
 
-        <dl class="grid gap-3 rounded-[24px] border border-slate-800 bg-slate-950 p-5 text-sm">
-          <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
-            <dt class="text-slate-400">Artist name</dt>
-            <dd class="font-semibold text-white">
-              {{ pendingApplication.payload?.displayName || "-" }}
-            </dd>
+        <div
+          class="grid gap-6 border-t border-[#141B2B] px-6 py-7 sm:px-8 sm:py-8 lg:grid-cols-[1fr_auto] lg:items-end"
+        >
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#8AA2FF]">
+              What happens next
+            </p>
+            <p class="mt-3 max-w-3xl text-sm leading-7 text-[#96A4B8]">
+              No extra action is required from you right now. You can still open the signed
+              agreement, keep a copy of the PDF and return later to check the approval status.
+            </p>
           </div>
-          <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
-            <dt class="text-slate-400">Status</dt>
-            <dd class="font-semibold text-amber-300">Under review</dd>
-          </div>
-          <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
-            <dt class="text-slate-400">Submitted on</dt>
-            <dd class="font-semibold text-white">
-              {{ formatDate(pendingApplication.submittedAt) }}
-            </dd>
-          </div>
-        </dl>
 
-        <div class="flex flex-wrap gap-3">
-          <NuxtLink
-            to="/artist-profile"
-            class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-violet-700 px-6 text-sm font-semibold text-black transition hover:bg-violet-600"
-          >
-            View application status
-          </NuxtLink>
-          <a
-            href="/api/artists/me/contract.pdf"
-            target="_blank"
-            rel="noreferrer"
-            class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-800 bg-slate-850 px-6 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
-          >
-            Open PDF agreement
-          </a>
+          <div class="flex flex-wrap gap-3">
+            <NuxtLink
+              to="/artist-profile"
+              class="inline-flex min-h-12 items-center justify-center rounded-[18px] bg-[#7B2CFF] px-6 text-sm font-semibold text-white transition hover:bg-[#8D47FF]"
+            >
+              Open artist status
+            </NuxtLink>
+            <a
+              href="/api/artists/me/contract.pdf"
+              target="_blank"
+              rel="noreferrer"
+              class="inline-flex min-h-12 items-center justify-center rounded-[18px] border border-[#24314F] bg-[#0C111D] px-6 text-sm font-semibold text-[#E6EDF7] transition hover:border-[#4A6CF7] hover:bg-[#141C2E]"
+            >
+              Download signed PDF
+            </a>
+          </div>
         </div>
       </section>
 
