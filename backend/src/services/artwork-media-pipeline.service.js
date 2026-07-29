@@ -2,10 +2,7 @@ const crypto = require("node:crypto");
 const fsp = require("node:fs/promises");
 const path = require("node:path");
 const env = require("../config/env");
-const {
-  buildPreviewWatermarkText,
-  generateArtworkPreview
-} = require("./artwork-preview.service");
+const { buildPreviewWatermarkText, generateArtworkPreview } = require("./artwork-preview.service");
 const { getArtworkStorageProvider } = require("./artwork-storage");
 
 function extensionFromFilename(filename = "") {

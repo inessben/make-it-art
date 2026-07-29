@@ -9,10 +9,7 @@ const {
   buildArtworkImageUrl
 } = require("./artwork-media.service");
 const { getArtworkStorageProvider } = require("./artwork-storage");
-const {
-  buildPreviewWatermarkText,
-  generateArtworkPreview
-} = require("./artwork-preview.service");
+const { buildPreviewWatermarkText, generateArtworkPreview } = require("./artwork-preview.service");
 
 const DEFAULT_DOWNLOAD_LIMIT = 5;
 
