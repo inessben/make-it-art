@@ -1,0 +1,320 @@
+CONTRAT D'ARTISTE POUR LA PLATEFORME DE COMMERCE D'ART NUMÉRIQUE
+
+DATE D'ENTRÉE EN VIGUEUR : Jeudi 2 Juillet, 2026
+PARTIES :
+MAKE IT ART
+Paris, France
+E-mail : contact@makeitart.io
+ET
+« L'Artiste »
+Nom légal : _________________________________
+Nom d'artiste/pseudonyme : _____________________
+Adresse : ___________________________________
+Ville, Département, Code postal : ___________________________
+E-mail : _____________________________________
+Numéro d’identification fiscale (EIN/SSN)pas obl : ___________________________
+
+PRÉAMBULE
+CONSIDÉRANT que la Plateforme exploite une marketplace en ligne dédiée à la création, à l’exposition, à la promotion et à la vente d’œuvres d’art numériques, y compris, sans s’y limiter, les NFT (jetons non fongibles) ;
+CONSIDÉRANT que l’Artiste crée des œuvres d’art numériques originales et souhaite distribuer, promouvoir et monétiser ces œuvres par le biais de la Plateforme ;
+CONSIDÉRANT que les parties souhaitent établir les conditions générales régissant cette relation ;
+PAR CONSÉQUENT, en contrepartie des engagements et accords mutuels contenus dans les présentes, et en contrepartie d’autres contreparties valables et utiles, dont la réception et la suffisance sont par les présentes reconnues, les parties conviennent de ce qui suit :
+
+
+ARTICLE 1 – DÉFINITIONS
+1.1 Termes définis
+•    Le terme « Plateforme » désigne la Marketplace, accessible à l’adresse https://makeitart.io/, ainsi que l’ensemble des services, outils et fonctionnalités associés.
+•    Le terme « Œuvre(s) » désigne toute œuvre créative numérique originale soumise par l’Artiste à la Plateforme, y compris, sans s’y limiter, l’art numérique, les illustrations, les photographies, les modèles 3D, l’art génératif et les animations.
+•    « NFT » désigne un jeton non fongible créé sur un réseau blockchain (Ethereum, Polygon ou autre) représentant la propriété ou les droits sur une Œuvre d’art.
+•    « Vente primaire » désigne la première vente d’une Œuvre d’art ou d’un NFT directement par l’Artiste via la Plateforme.
+•    « Vente secondaire » désigne toute revente ultérieure d’une Œuvre d’art ou d’un NFT par un acheteur sur le marché secondaire.
+•    « Prix de vente brut » désigne le montant total payé par un acheteur pour une Œuvre d’art ou un NFT, hors frais de gaz de la blockchain.
+•    « Commission » désigne les frais prélevés par la Plateforme sur les Ventes primaires, tels que définis à l’article 7.
+•    « Redevance » désigne le pourcentage perçu par l’Artiste sur les Ventes secondaires, tel que défini à l’article 7.
+
+
+ARTICLE 2 – CHAMP D’APPLICATION DU CONTRAT
+2.1 Relation indépendante
+Le présent contrat établit une relation de prestataire indépendant. L’Artiste n’est ni un salarié, ni un agent, ni un associé, ni un partenaire de coentreprise de Plateforme. L’Artiste conserve le contrôle total sur la manière et les moyens de création des Œuvres d’art.
+2.2 Non-exclusivité
+Le présent contrat est non exclusif. L’Artiste conserve le droit de : - vendre des Œuvres d’art via d’autres plateformes ou canaux ; - créer des œuvres similaires à d’autres fins ; - gérer son propre site web ou ses propres canaux de vente directe.
+2.3 Sélection des artistes
+Plateforme se réserve le droit de sélectionner les candidatures des artistes en fonction de la qualité artistique, de l’adéquation avec la plateforme et du respect des présentes conditions. Plateforme peut rejeter les candidatures d’artistes ou les soumissions d’œuvres d’art à sa discrétion raisonnable, mais cette discrétion ne doit pas être exercée de manière discriminatoire ou de mauvaise foi.
+ARTICLE 3 – EXIGENCES RELATIVES AUX ŒUVRES ET GARANTIES
+3.1 Originalité et propriété
+L’Artiste déclare, garantit et s’engage à ce que :
+(a)    L’Artiste soit l’unique créateur et titulaire des droits d’auteur de toutes les Œuvres soumises ;
+(b)    Toutes les Œuvres sont des créations 100 % originales de l’Artiste ;
+(c)    Aucune Œuvre ne porte atteinte aux droits de propriété intellectuelle d’un tiers, y compris, sans s’y limiter, les droits d’auteur, les marques, les secrets d’affaires, les brevets, les droits à l’image ou les droits moraux ;
+(d)    Aucune Œuvre ne contient de contenu diffamatoire, obscène, raciste ou préjudiciable ;
+(e)    L’Artiste dispose de l’autorité pleine et entière pour conclure le présent Contrat et octroyer les licences qui y sont prévues ;
+(f)    Aucune Œuvre ne comporte de contenu généré par l’IA, sauf si cela est explicitement signalé à la Plateforme et aux acheteurs.
+3.2 Contenus interdits
+Les Œuvres ne doivent pas contenir : - de matériel pédopornographique (CSAM) ou de sexualisation de mineurs ; - de contenu faisant l’apologie de la violence, du terrorisme ou d’activités illégales ; - de discours de haine ou de contenu ciblant des groupes protégés ; - de contenu plagié ou volé ; - de déclarations trompeuses ou frauduleuses ; - de violations de toute loi ou réglementation applicable.
+3.3 Modération des contenus
+Plateforme se réserve le droit de supprimer toute Œuvre qui enfreint la section 3.2 ou qui fait l’objet d’un signalement pour violation. L’Artiste recevra un avis écrit et disposera de 48 heures pour répondre avant la suppression, sauf en cas de problèmes juridiques ou de sécurité urgents.
+3.4 Obligations d’information
+L’Artiste doit indiquer : - l’utilisation d’outils d’IA dans le processus de création ; - l’intégration d’éléments sous licence provenant de tiers ; - le statut d’édition limitée et le nombre total d’exemplaires ; - toute charge grevant les droits de propriété intellectuelle.
+
+ARTICLE 4 – DROITS DE PROPRIÉTÉ INTELLECTUELLE
+4.1 L’Artiste conserve la propriété
+L’Artiste conserve l’ensemble des droits d’auteur et des droits de propriété intellectuelle sur les Œuvres. Le présent Contrat ne constitue pas un transfert de propriété des droits d’auteur.
+4.2 Octroi d’une licence à la Plateforme
+L’Artiste accorde à la Plateforme une licence non exclusive, mondiale, libre de redevances et sous-licenciable lui permettant :
+(a)    d’afficher les Œuvres sur la Plateforme et dans les résultats de recherche ;
+(b)    de créer des vignettes et des aperçus ;
+(c)    Promouvoir les Œuvres par le biais de supports marketing, des réseaux sociaux, de newsletters et de publicités (en ligne et hors ligne) ;
+(d)    Stocker les Œuvres sur des serveurs et des systèmes de sauvegarde, y compris sur IPFS ou sur la blockchain ;
+(e)    Permettre aux acheteurs de visualiser et de télécharger les Œuvres conformément aux licences vendues ;
+(f)    Utiliser le nom ou le pseudonyme, l’image et la biographie de l’Artiste en lien avec les Œuvres.
+4.3 Limitations de la licence
+La présente licence : - est limitée exclusivement à l’exploitation et à la promotion de la Plateforme ; - n’accorde PAS à la Plateforme le droit de vendre ou de concéder en sous-licence les Œuvres à des fins commerciales en dehors du contexte de la Plateforme ; - prend fin 30 jours après le retrait de l’Artiste de la Plateforme, à l’exception des Œuvres déjà vendues (voir section 4.5).
+4.4 Droits de l’acheteur
+L’Artiste définit les droits de l’acheteur pour chaque Œuvre à l’aide des outils de la Plateforme :
+•    Licence d’usage personnel : l’acheteur peut exposer ou utiliser l’Œuvre à des fins personnelles et non commerciales uniquement ;
+•    Licence commerciale : l’acheteur bénéficie de droits d’utilisation commerciale spécifiques ;
+•    Droits exclusifs : l’acheteur bénéficie de droits exclusifs tels que définis par l’Artiste.
+La Plateforme fournit des modèles de licence standardisés, mais l’Artiste est responsable de la définition des conditions appropriées.
+4.5 Droits après résiliation
+En cas de résiliation du présent Contrat : - l’Artiste peut demander le retrait des Œuvres d’art invendues dans un délai de 30 jours ; - la Plateforme conserve des droits d’archivage limités sur les Œuvres d’art vendues afin de conserver les registres des transactions ; - les licences accordées à l’Acheteur restent valides et exécutoires.
+4.6 Droits moraux
+Dans la mesure autorisée par la loi, l’Artiste renonce à faire valoir ses droits moraux à l’encontre de la Plateforme pour toute adaptation promotionnelle raisonnable (recadrage, ajustement des couleurs, conversion de format) effectuée de bonne foi. L’Artiste conserve tous les autres droits moraux.
+
+ARTICLE 5 – TARIFICATION ET CONDITIONS DE VENTE
+5.1 Pouvoir de fixation des prix
+L’Artiste dispose d’un pouvoir discrétionnaire exclusif pour fixer : - les prix de vente initiaux des Œuvres ; - les pourcentages de redevances sur les ventes secondaires (dans les limites des paramètres de la Plateforme) ; - les tirages et les calendriers de sortie ; - les types de licences proposés (personnelle, commerciale, exclusive).
+5.2 Recommandations en matière de tarification
+La Plateforme peut fournir des recommandations de tarification basées sur les données du marché, mais ne peut imposer de prix spécifiques, sauf pour : - faire respecter les exigences techniques minimales (par exemple, une enchère minimale pour couvrir les frais de gaz) ; - empêcher les erreurs de prix manifestes ou les annonces frauduleuses ; - préserver l’intégrité de la Plateforme (par exemple, en empêchant les annonces à 0,01 € visant à manipuler les classements).
+5.3 Modifications de prix
+L’Artiste peut modifier à tout moment les prix des Œuvres d’art invendues. Les Œuvres d’art vendues sont soumises aux conditions d’achat en vigueur au moment de la vente.
+5.4 Processus de vente
+La Plateforme agit uniquement en tant qu’intermédiaire technique facilitant les transactions entre l’Artiste et les acheteurs. La Plateforme : - traite les paiements via des prestataires tiers sécurisés ; - facilite la frappe de NFT et les transactions sur la blockchain ; - fournit des services de dépôt fiduciaire pour la sécurité des transactions ; - livre les fichiers numériques aux acheteurs.
+
+
+ARTICLE 6 – RÉMUNÉRATION ET CONDITIONS DE PAIEMENT
+6.1 Structure des commissions
+Commission sur les ventes primaires :
+La Plateforme prélève une commission de 7 % sur le prix de vente brut de toutes les ventes primaires.
+IMPORTANT : ce taux est fixe pendant les 12 premiers mois du présent contrat. Au bout de 12 mois, la Plateforme peut ajuster les taux moyennant un préavis écrit de 90 jours adressé à l’Artiste. Les augmentations de taux sont plafonnées à 2 % par an et ne peuvent dépasser 10 % au total sans le consentement écrit de l’Artiste.
+6.2 Redevances sur les ventes secondaires
+Redevances de l’Artiste : l’Artiste fixe lui-même le pourcentage de ses redevances sur les ventes secondaires, compris entre 5 % et 15 % du prix de revente.
+Frais de la Plateforme  sur les ventes secondaires : la Plateforme peut prélever jusqu’à 2,5 % sur les ventes secondaires afin de couvrir les coûts liés à l’infrastructure de la blockchain.
+Application des contrats intelligents : les redevances sur les ventes secondaires sont appliquées via des contrats intelligents sur la blockchain lorsque cela est techniquement possible. La Plateforme déploie des efforts commercialement raisonnables pour garantir le respect des redevances, mais ne peut garantir leur application sur toutes les places de marché tierces.
+6.3 Traitement des paiements
+Modes de paiement acceptés : - Cartes de crédit/débit (Visa, Mastercard) - Portefeuilles numériques (Apple Pay, Google Pay, PayPal) - Cryptomonnaies (ETH, MATIC, USDC) - Virement ACH/bancaire (pour les transactions importantes)
+Frais de traitement des paiements : les frais des prestataires de paiement tiers (généralement 2,9 % + ≃ 0,30 € pour les paiements par carte) sont déduits du prix de vente brut avant le calcul de la commission.
+
+Exemple de calcul :
+Prix de vente de l’œuvre : 1 000,00 €
+Frais de traitement du paiement (2,9 % + 0,30 €) : -29,30 €
+Montant net de la vente : 970,70 €
+Commission de la Plateforme (7 %) : -67,95 €
+Paiement versé à l’artiste : 902,75 €
+6.4 Calendrier de paiement
+Paiement standard : les paiements aux artistes sont effectués chaque semaine (tous les vendredis) via le mode de paiement choisi par l’artiste : - Virement ACH (comptes bancaires américains) : sans frais - PayPal : frais de 2 % (plafonnés à 20 €) - Cryptomonnaie : frais de transaction au prix coûtant - Virement international : frais forfaitaires de 25 €
+Seuil minimum de paiement : équivalent à 50 € EU. Les soldes inférieurs à ce seuil sont reportés sur la période de paiement suivante.
+Calendrier de paiement : - Semaine 1 : les ventes ont lieu du lundi au dimanche - Semaine 2 : période de retenue de 7 jours à des fins de prévention de la fraude - Semaine 3 : paiement traité le vendredi
+Option de paiement accéléré : disponible moyennant des frais de 10 € (le jour ouvrable suivant, minimum de 100 €).
+6.5 Blockchain et frais de gaz
+Coûts de frappe des NFT : - Frappe différée (par défaut) : frais de gaz payés par l’acheteur au moment de la première vente - Option de pré-frappe : l’artiste peut procéder à une pré-frappe à ses frais
+Prise en charge par la Plateforme : la Plateforme prend en charge les frais de gaz pour : - les déploiements de contrats intelligents de la plateforme - les contrats de distribution de redevances - la création de contrats de collection
+Responsabilité de l’artiste : l’artiste prend en charge les frais de gaz pour : - La pré-frappe facultative des NFT - Les transferts vers des portefeuilles externes - Les interactions directes avec la blockchain en dehors de la plateforme
+6.6 Remboursements et rétrofacturations
+Politique de remboursement : - Téléchargements numériques : aucun remboursement après le téléchargement, sauf si l’article diffère sensiblement de sa description - NFT : aucun remboursement après le transfert sur la blockchain, sauf en cas de fraude ou de fausse déclaration - Pannes techniques : remboursement intégral si la Plateforme ne peut pas honorer la commande
+Protection contre les rétrofacturations : la Plateforme gère les rétrofacturations et les réclamations pour fraude. Le paiement de l’artiste ne sera PAS annulé, sauf en cas de fraude avérée et de complicité de l’artiste.
+6.7 Transparence financière
+La Plateforme fournit à l’artiste : - Un tableau de bord des ventes - Des états financiers mensuels - nombre d’abonnée gagné 
+
+ARTICLE 7 – SERVICES ET FONCTIONNALITÉS DE LA PLATEFORME
+7.1 Services inclus (sans frais supplémentaires)
+•    Page de profil de l’artiste et présentation de son portfolio
+•    Mise en ligne des œuvres et gestion des métadonnées
+•    Infrastructure de traitement des paiements
+•    Prise en charge marketing de base (mise en avant sur la page d’accueil, newsletters)
+•    Service client pour les acheteurs
+•    Stockage et livraison sécurisés des fichiers
+•    Médiation basique en cas de litige lié à une transaction
+7.2 Infrastructure technique
+Solutions de stockage : - Stockage cloud standard (AWS S3) : inclus - Stockage des métadonnées sur la blockchain : inclus
+Exigences relatives aux fichiers : - Taille maximale des fichiers : 100 Mo (nous contacter pour les fichiers plus volumineux) - Formats acceptés : JPG, PNG, GIF, MP4, WebM, SVG, GLB - Résolution minimale : 1920 x 1080 recommandée
+7.3 Accès aux outils pour les artistes
+•    Tableau de bord analytique (vues, clics, conversions)
+•    Suivi et rapports sur les redevances
+•    Canal de communication avec les clients (communauté Make it Art sur Discord)
+ARTICLE 8 – PROTECTION ET SÉCURITÉ DES ŒUVRES
+8.1 Mesures de protection des droits d’auteur
+La Plateforme met en œuvre :
+(a)    Tailleur numérique : filigranes visibles sur les images d’aperçu (l’artiste peut les personnaliser)
+(b)    Marquage forensic invisible : données de suivi intégrées dans les fichiers
+(c)    Procédure de retrait DMCA : système simplifié pour le respect des droits d’auteur
+(d)	Protection contre le clic droit : désactivée sur les pages d’affichage (non infaillible, mais dissuade la copie occasionnelle)
+(e)    Analyse Content ID : détection automatisée des copies non autorisées (là où ce service est disponible)
+8.2 Sécurité des données
+•    Chiffrement : chiffrement AES-256 pour les fichiers stockés
+•    Transmission sécurisée : TLS 1.3 pour tous les transferts de données
+•    Contrôles d’accès : autorisations basées sur les rôles
+•    Audits réguliers : audits de sécurité annuels réalisés par un tiers
+8.3 DMCA et réponse aux signalements de contrefaçon
+Obligations de l’artiste : - Répondre aux notifications de violation dans un délai de 5 jours ouvrés - Déposer une contre-notification si la réclamation est infondée - Indemniser la Plateforme en cas de réclamations de retrait abusives
+Mesures prises par la Plateforme : - Transmettre dans un délai de 48h les notifications de violation à l’artiste - Désactiver temporairement le contenu contesté en attendant la résolution du litige - Rétablir le contenu dès réception d’une contre-notification valide - Résilier le compte des contrevenants récidivistes (politique des trois avertissements)
+
+ARTICLE 9 – MARKETING ET PROMOTION
+9.1 Licence promotionnelle
+L’Artiste accorde à la Plateforme le droit d’utiliser : - son nom ou son pseudonyme et sa biographie ; - sa photographie ou son avatar ; - les images de ses œuvres (y compris en haute résolution) ; - ses citations et témoignages (sous réserve d’accord préalable) ; - des contenus « en coulisses » (si fournis)
+9.2 Canaux de marketing
+Plateforme peut promouvoir l’Artiste et ses Œuvres par le biais : - de la page d’accueil et des pages de catégories du site web - de newsletters par e-mail (l’Artiste a la possibilité de se désabonner) - des comptes sur les réseaux sociaux (Instagram, Twitter, TikTok, Discord.) - de publicités payantes (Google, Meta, etc.) - de communiqués de presse et d’actions de relations presse - d’expositions physiques et d’événements - de partenariats et de collaborations
+9.3 Autorisations de marketing
+Autorisation préalable requise pour : - L’utilisation de l’image de l’artiste dans des publicités externes - Les annonces de partenariats exclusifs - Les communiqués de presse mentionnant l’artiste par son nom - Les reproductions imprimées à des fins de marketing
+Aucune autorisation requise pour : - Les publications standard sur les réseaux sociaux présentant des œuvres d’art - Les mentions dans les newsletters - L’affichage sur le site web - Les supports promotionnels portant la marque de la Plateforme 
+9.4 Autopromotion de l’artiste
+L’artiste est encouragé à : - Promouvoir son profil sur la plateforme via ses propres canaux - Ajouter un lien vers Plateforme dans sa biographie sur les réseaux sociaux - Partager ses ventes et ses réussites
+Les artistes ne doivent pas : - Présenter de manière trompeuse le niveau d'approbation ou de partenariat accordé par Plateforme - Faire de fausses déclarations concernant le volume des ventes ou le classement - Utiliser les marques déposées de Plateforme sans autorisation
+
+ARTICLE 10 – DÉCLARATIONS, GARANTIES ET INDEMNISATION
+10.1 Déclarations réciproques
+Chaque partie déclare et garantit : - qu’elle dispose de tous les pouvoirs nécessaires pour conclure le présent Contrat ; - que la signature du présent Contrat n’enfreint aucun autre accord ; - qu’elle se conformera à toutes les lois applicables.
+10.2 Garanties de l’artiste
+L’Artiste garantit que : - Toutes les Œuvres sont des créations originales ; - L’Artiste détient tous les droits nécessaires ; - Les Œuvres ne portent pas atteinte aux droits de tiers ; - Toutes les informations communiquées à la section 3.4 sont exactes ; - L’Artiste répondra sans délai aux réclamations pour contrefaçon.
+10.3 Garanties de la Plateforme
+La Plateforme garantit que : - La plateforme fonctionnera avec un temps de disponibilité de 99 % (moyenne annuelle) - Le traitement des paiements sera sécurisé et conforme - Les données de l’Artiste seront protégées conformément aux lois applicables en matière de protection de la vie privée - La Plateforme agira de bonne foi
+10.4 EXCLUSION DE GARANTIES
+SAUF DISPOSITION EXPRESSE CONTRAIRE DANS LES PRÉSENTES, LA PLATEFORME DE VENTE EN LIGNE FOURNIT LA PLATEFORME « EN L'ÉTAT », SANS GARANTIE D'AUCUNE SORTE, EXPRESSE OU IMPLICITE, Y COMPRIS, MAIS SANS S'Y LIMITER, LES GARANTIES DE QUALITÉ MARCHANDE, D'ADÉQUATION À UN USAGE PARTICULIER OU DE NON-CONTREFAÇON.
+Plateforme ne garantit pas : - des volumes de vente ou des revenus spécifiques ; - le classement ou la visibilité sur les moteurs de recherche ; - l’absence de dysfonctionnements techniques ou d’indisponibilité ; - la compatibilité avec tous les appareils ou navigateurs ; - la prévention de toute violation du droit d’auteur.
+
+
+10.5 Indemnisation de l’Artiste
+L’Artiste s’engage à indemniser, défendre et dégager de toute responsabilité Plateforme , ses dirigeants, administrateurs, employés et agents contre toute réclamation, tout dommage, toute perte, toute responsabilité, tout coût et toute dépense (y compris les honoraires d’avocat raisonnables) découlant de ou liés à :
+(a)    la violation par l’Artiste de ses déclarations ou garanties ;
+(b)    les réclamations pour contrefaçon liées aux Œuvres d’art ;
+(c)    la violation par l’Artiste des lois applicables ;
+(d)    la négligence grave ou la faute intentionnelle de l’Artiste.
+10.6 Indemnisation de la Plateforme 
+Plateforme s’engage à indemniser, défendre et dégager de toute responsabilité l’Artiste contre toute réclamation découlant :
+(a)    du non-respect par Plateforme du présent Contrat ;
+(b)    de la négligence grave ou de la faute intentionnelle de la Plateforme ;
+(c)    des failles de sécurité de la Plateforme causées par le défaut de la Plateforme de mettre en œuvre des mesures de protection raisonnables ;
+(d)    de l’utilisation non autorisée des Œuvres par la Plateforme au-delà du champ d’application de la licence.
+10.7 Procédures d’indemnisation
+La partie indemnisée doit : - notifier sans délai par écrit toute réclamation ; - coopérer de manière raisonnable à la défense ; - permettre à la partie indemnisante de diriger la défense (avec approbation des accords de règlement affectant les droits de la partie indemnisée)
+
+ARTICLE 11 – LIMITATION DE RESPONSABILITÉ
+11.1 Exclusion des dommages indirects
+À L'EXCEPTION DES VIOLATIONS DE L'ARTICLE 4 (PROPRIÉTÉ INTELLECTUELLE) OU DES ARTICLES 10.5 À 10.6 (OBLIGATIONS D'INDEMNISATION), AUCUNE DES PARTIES NE PEUT ÊTRE TENUE RESPONSABLE DE DOMMAGES INDIRECTS, ACCESSOIRES, SPÉCIAUX, CONSÉCUTIFS OU PUNITIFS, Y COMPRIS, SANS S’Y LIMITER, LES PERTES DE BÉNÉFICES, DE CHIFFRE D’AFFAIRES, DE DONNÉES OU DE FONDS DE COMMERCE, MÊME SI ELLE A ÉTÉ INFORMÉE DE LA POSSIBILITÉ DE TELS DOMMAGES.
+11.2 Exceptions aux limitations
+Les limitations de responsabilité NE s’appliquent PAS aux cas suivants : - Atteinte à la propriété intellectuelle - Négligence grave ou faute intentionnelle - Fraude ou déclaration frauduleuse - Décès ou préjudice corporel causé par une négligence - Obligations d’indemnisation - Violations de la loi applicable auxquelles il ne peut être renoncé par contrat
+ARTICLE 12 – CONFIDENTIALITÉ ET PROTECTION DES DONNÉES
+12.1 Législations applicables en matière de confidentialité
+la Plateforme se conforme aux dispositions suivantes : - Règlement général sur la protection des données (RGPD) (pour tous les artistes/clients) 
+12.2 Droits des artistes relatifs à leurs données
+L’artiste dispose des droits suivants : - Accéder aux données à caractère personnel détenues par Plateforme - Rectifier les données inexactes - Demander la suppression des données (sous réserve des obligations légales de conservation) - Se désabonner des communications marketing - Exporter les données dans un format portable - Révoquer ses consentements (le cas échéant)
+12.3 Collecte et utilisation des données
+Plateforme collecte : - Données de compte : nom, e-mail, adresse, numéro d’identification fiscale - Données de transaction : historique des ventes, informations de paiement - Données d’utilisation : analyses, pages vues, indicateurs d’engagement - Données de communication : tickets d’assistance, messages
+Plateforme utilise ces données pour : - Exploiter et améliorer la Plateforme - Traiter les paiements et se conformer à la législation fiscale - Communiquer sur les ventes et les mises à jour de la plateforme - Prévenir la fraude et garantir la sécurité - Se conformer aux obligations légales
+12.4 Partage des données
+Plateforme partage les données des artistes avec : - Les prestataires de paiement (Stripe, PayPal, etc.) - Les réseaux blockchain (pour les transactions NFT publiques) - Les autorités fiscales (conformément aux exigences légales) - Les prestataires de services (hébergement, analyse, service client)
+Plateforme ne vend PAS les données des artistes à des tiers.
+12.5 Conservation des données
+•    Données relatives aux artistes actifs : conservées tant que le compte est actif
+•    Historique des transactions : conservé pendant 7 ans à des fins de conformité fiscale et légale
+•    Données marketing : supprimées lorsqu' un Artiste qui souhaite se désinscrire  de Plateforme nous fait parvenir cette demande par mail
+•    Données de la blockchain : conservées de manière permanente sur les blockchains publiques (ne peuvent pas être supprimées)
+12.6 Notification en cas de violation de la sécurité
+En cas de violation de données affectant les informations de l’Artiste, la Plateforme  en informera l’Artiste dans les 72 heures suivant la découverte, en précisant : - la nature de la violation ; - les données potentiellement concernées ; - les mesures prises pour limiter les dommages ; - les mesures que l’Artiste doit prendre.
+
+ARTICLE 13 – DURÉE ET RÉSILIATION
+13.1 Durée
+Le présent Contrat prend effet à la Date d’entrée en vigueur et reste en vigueur jusqu’à sa résiliation par l’une ou l’autre des parties.
+
+13.2 Résiliation par l’Artiste
+L’Artiste peut résilier le présent Contrat :
+(a)    À sa discrétion : moyennant un préavis écrit de 30 jours, pour quelque motif que ce soit ou sans motif ;
+(b)    Pour motif valable (résiliation immédiate) : si Plateforme :
+•    Commet une violation substantielle du présent Contrat et ne remédie pas à cette violation dans les 15 jours suivant la notification écrite ;
+•    Dépose le bilan ou devient insolvable ;
+•    Cesse ses activités ;
+•    commet une fraude ou fait preuve de négligence grave.
+13.3 Résiliation par la Plateforme 
+La Plateforme peut résilier le présent Contrat :
+(a)    De plein gré : moyennant un préavis écrit de 60 jours, pour quelque motif que ce soit ;
+(b)    Pour motif valable (résiliation immédiate) : si l’Artiste :
+•    commet une violation substantielle du présent Contrat (3 violations au cours des 12 derniers mois) ;
+•    met en ligne du contenu interdit après avoir reçu un avertissement ;
+•    Se livre à des actes de fraude, de blanchiment d’argent ou à des activités illégales ;
+•    Enfreint de manière répétée les droits de propriété intellectuelle de tiers (politique des trois avertissements) ;
+•    Tente de contourner les systèmes de paiement.
+La résiliation pour motif valable nécessite un préavis écrit précisant la violation et accordant un délai de 10 jours pour y remédier, sauf en cas d’activité illégale (résiliation immédiate).
+13.4 Effets de la résiliation
+En cas de résiliation :
+(a)    Œuvres invendues : l’artiste peut demander leur retrait dans un délai de 30 jours ; la plateforme s’y conformera dans un délai de 14 jours ;
+(b)    Œuvres vendues : les licences accordées aux acheteurs restent valides ; la plateforme conserve des copies d’archive ;
+(c)    Paiements en attente : tous les montants dus, perçus mais non versés, seront réglés dans un délai de 30 jours ;
+(d)    Ventes en cours : les transactions en cours seront menées à terme ; le paiement final sera effectué dans un délai de 60 jours ;
+(e)    Exportation des données : l’artiste peut exporter toutes les données dans un délai de 90 jours ;
+(f)    Supports promotionnels : la Plateforme mettra fin à toute nouvelle promotion mais pourra conserver les supports antérieurs à des fins d’archivage.
+13.5 Maintien en vigueur
+Les dispositions suivantes restent en vigueur après la résiliation : - Article 4.5 (Droits de propriété intellectuelle après la résiliation) - Article 6.7 (Paiements en attente) - Article 10 (Indemnisation) - Article 11 (Limitation de responsabilité) - Article 16 (Confidentialité)
+ARTICLE 14 – FORCE MAJEURE
+14.1 Exonération d’exécution
+Aucune des parties ne saurait être tenue responsable du non-respect de ses obligations en raison de causes échappant à son contrôle raisonnable, y compris, mais sans s’y limiter : - les catastrophes naturelles (tremblements de terre, inondations, incendies, pandémies) ; - la guerre, le terrorisme, les troubles civils ; - les mesures ou réglementations gouvernementales ; - les pannes d’Internet ou les cyberattaques ; - les défaillances du réseau blockchain ; - les défaillances de prestataires de services tiers ; - les grèves ou conflits sociaux.
+14.2 Force majeure prolongée
+Si l’événement de force majeure se prolonge pendant plus de 90 jours consécutifs, chacune des parties peut résilier le présent Contrat sans pénalité moyennant un préavis écrit de 10 jours.
+ARTICLE 15 – CONFIDENTIALITÉ
+15.1 Informations confidentielles
+Les « informations confidentielles » comprennent : - les conditions financières, les montants des paiements et les données de vente ; - l’infrastructure technique et les mesures de sécurité ; - les stratégies commerciales et les plans marketing ; - les données et analyses relatives aux utilisateurs ; - les algorithmes et processus exclusifs.
+15.2 Obligations de confidentialité
+Chaque partie s’engage à : - Préserver la confidentialité des informations confidentielles de l’autre partie - Utiliser les informations confidentielles uniquement aux fins du présent contrat - Ne pas les divulguer à des tiers sans consentement écrit préalable - Les protéger avec le même degré de diligence que ses propres informations confidentielles (au moins avec une diligence raisonnable)
+15.3 Exceptions
+Les obligations de confidentialité ne s’appliquent PAS aux informations qui : - Sont ou deviennent accessibles au public sans qu’il y ait violation du présent Contrat - Étaient légitimement détenues avant leur divulgation - Ont été développées de manière indépendante sans utilisation d’informations confidentielles - Doivent être divulguées en vertu de la loi ou d’une décision de justice (moyennant notification immédiate à la partie divulgatrice)
+
+ARTICLE 16 – DISPOSITIONS GÉNÉRALES
+16.1 Intégralité de l’accord
+Le présent Contrat constitue l’intégralité de l’accord entre les parties et remplace tous les accords, déclarations, garanties et ententes antérieurs ou concomitants, qu’ils soient écrits ou oraux, relatifs à l’objet des présentes.
+16.2 Modifications
+Le présent Contrat ne peut être modifié que par un document écrit signé par les deux parties. Plateforme peut mettre à jour les politiques de la Plateforme (par exemple, la Politique d’utilisation acceptable, la Politique de confidentialité) moyennant un préavis de 30 jours, mais toute modification substantielle du présent Contrat nécessite le consentement mutuel des parties.
+16.3 Cession
+L’Artiste : ne peut céder le présent Contrat sans le consentement écrit préalable de Plateforme (qui ne saurait être refusé sans motif valable).
+Plateforme : peut céder le présent Contrat à : - une société mère, une filiale ou une société affiliée ; - une entité remplaçante dans le cadre d’une fusion, d’une acquisition ou d’une cession de la quasi-totalité des actifs.
+L’Artiste recevra un préavis de 60 jours en cas de cession par Plateforme.
+16.4 Renonciation
+Le fait de ne pas faire valoir une disposition ne constitue pas une renonciation à cette disposition ni à toute autre disposition. Les renonciations doivent être formulées par écrit et signées par la partie qui y renonce.
+16.5 Relations entre les parties
+Le présent Contrat ne crée pas de relation de partenariat, de coentreprise, de relation de travail ou de mandat. Aucune des parties ne peut engager l’autre ni prendre d’engagements au nom de celle-ci.
+16.6 Tiers bénéficiaires
+Le présent Contrat est conclu au seul bénéfice des parties et ne confère aucun droit à un tiers, à l’exception des droits de licence des acheteurs, qui sont opposables en tant que tiers bénéficiaires visés.
+16.7 Exemplaires
+Le présent Contrat peut être signé en plusieurs exemplaires, dont chacun sera considéré comme un original et qui, ensemble, constitueront un seul et même acte. Les signatures électroniques auront la même force et le même effet que les signatures originales.
+16.8 Titres
+Les titres des sections sont fournis à titre indicatif uniquement et n’affectent pas l’interprétation.
+16.9 Interprétation
+Le présent Contrat sera interprété de manière équitable, sans tenir compte de la partie qui l’a rédigé.
+
+ARTICLE 17 – DISPOSITIONS SPÉCIFIQUES
+17.1 Conditions spécifiques aux NFT
+Pour les Œuvres d’art vendues sous forme de NFT :
+(a)    Code du contrat intelligent : la Plateforme permet à l’Artiste de consulter le code du contrat intelligent régissant les redevances et les transferts ;
+(b)    Choix de la blockchain : l’Artiste peut choisir entre Ethereum (sécurité accrue, frais plus élevés) et Polygon (frais moins élevés, transactions plus rapides) ;
+(c)    Responsabilité relative aux frais de gaz : voir la section 6.5 pour la répartition des frais de gaz ;
+(d)    Application des redevances : la Plateforme met en œuvre la norme de redevance EIP-2981 lorsqu’elle est prise en charge, mais ne peut garantir son application sur toutes les plateformes ;
+(e)    Métadonnées modifiables : l’Artiste peut mettre à jour les métadonnées de l’œuvre d’art (description, URL externe), mais pas les données fondamentales du NFT (identifiant du jeton, adresse du contrat) ;
+(f)    Transférabilité : l’artiste peut transférer la propriété du contrat NFT moyennant un préavis de 30 jours adressé à la Plateforme.
+17.2 Œuvres collaboratives
+Pour les œuvres d’art créées en collaboration avec d’autres artistes :
+(a)    L’artiste garantit qu’il dispose de l’autorité nécessaire pour concéder des licences sur les œuvres collaboratives ;
+(b)    L’artiste est responsable du partage des revenus avec ses collaborateurs (si accord commun) ;
+(c)    L’artiste doit divulguer l’identité des co-créateurs sur simple demande ;
+(d)    La Plateforme n’est pas responsable des litiges de paiement entre artistes.
+PAGE DE SIGNATURE
+EN SIGNANT CI-DESSOUS, LES DEUX PARTIES RECONNAISSENT AVOIR LU ET COMPRIS LES TERMES DU PRÉSENT CONTRAT ET ACCEPTENT D’ÊTRE LIÉES PAR CEUX-CI.
+
+
+Make it Art :
+Signature : _________________________________
+Nom en lettres majuscules : Iness BEN AISSA
+Fonction : CEO of Make it Art
+Date : 02/ 07/ 2026
+
+ARTISTE :
+Nom légal : ________________________________
+Signature : _________________________________
+Nom d’artiste/pseudonyme : _____________________
+Date : _____________________________________

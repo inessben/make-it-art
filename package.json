@@ -34,10 +34,14 @@
     "payments:qa-saved-methods": "npm --prefix backend run payments:qa-saved-methods",
     "payments:reconcile": "npm --prefix backend run payments:reconcile --",
     "payments:test-alert": "npm --prefix backend run payments:test-alert --",
+    "e2e": "playwright test",
+    "e2e:headed": "playwright test --headed",
+    "e2e:install": "playwright install chromium",
     "precommit": "npm run payments:scan-secrets && npm run quality",
     "prepush": "npm run ci"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.0",
     "husky": "^8.0.3",
     "prisma": "^7.9.0"
   },
