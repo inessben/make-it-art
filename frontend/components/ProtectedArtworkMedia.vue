@@ -10,6 +10,8 @@
       v-if="src && !isBlackedOut"
       :src="src"
       :alt="alt"
+      :loading="loading"
+      :fetchpriority="fetchPriority"
       :class="imgClass"
       class="mia-protected-media__image pointer-events-none select-none"
       draggable="false"
@@ -125,6 +127,14 @@ const props = defineProps({
   imgClass: {
     type: String,
     default: "h-full w-full object-cover"
+  },
+  loading: {
+    type: String,
+    default: "lazy"
+  },
+  fetchPriority: {
+    type: String,
+    default: "auto"
   },
   fallbackClass: {
     type: String,
