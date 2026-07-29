@@ -5,12 +5,33 @@ async function loginWithEmailCode(page, credentials, { expectedPath } = {}) {
   const requestedAt = Date.now();
 
   await page.goto("/login");
-  await page.waitForFunction(() => Boolean(document.querySelector("#__nuxt")?.__vue_app__), null, {
-    timeout: 30_000
-  });
+  await page.waitForFunction(
+    () => {
+      const nuxtRoot = document.querySelector("#__nuxt");
+      const emailInput = document.querySelector("#email");
+
+      return Boolean(
+        nuxtRoot?.__vue_app__?._instance?.isMounted &&
+        emailInput &&
+        Object.prototype.hasOwnProperty.call(emailInput, "_value")
+      );
+    },
+    null,
+    { timeout: 30_000 }
+  );
   await page.locator("#email").fill(credentials.email);
   await page.locator("#password").fill(credentials.password);
+
+  const loginResponsePromise = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      new URL(response.url()).pathname === "/api/auth/login",
+    { timeout: 30_000 }
+  );
+
   await page.locator("button[type='submit']").click();
+  const loginResponse = await loginResponsePromise;
+  expect(loginResponse.ok(), await responseFailureMessage(loginResponse)).toBe(true);
 
   const codeInput = page.locator("#code");
 
@@ -26,7 +47,19 @@ async function loginWithEmailCode(page, credentials, { expectedPath } = {}) {
     });
 
     await codeInput.fill(code);
+
+    const verificationResponsePromise = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        new URL(response.url()).pathname === "/api/auth/verify-login-code",
+      { timeout: 30_000 }
+    );
+
     await page.locator("button[type='submit']").click();
+    const verificationResponse = await verificationResponsePromise;
+    expect(verificationResponse.ok(), await responseFailureMessage(verificationResponse)).toBe(
+      true
+    );
   }
 
   await page.waitForLoadState("networkidle");
@@ -44,6 +77,17 @@ async function loginWithEmailCode(page, credentials, { expectedPath } = {}) {
       timeout: 15_000
     })
     .not.toBe("/login");
+}
+
+async function responseFailureMessage(response) {
+  if (response.ok()) {
+    return "";
+  }
+
+  const body = await response.text().catch(() => "");
+  return `${response.request().method()} ${response.url()} returned ${response.status()}${
+    body ? `: ${body}` : ""
+  }`;
 }
 
 module.exports = {

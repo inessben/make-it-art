@@ -139,8 +139,24 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
         ...(await createSession(user))
       };
     }
+
+    // Stale/invalid remember cookie: ask the client to drop it so a fresh one can be issued.
+    return {
+      bypassCode: false,
+      challengeToken: await issueLoginChallenge(user),
+      passwordCompromised,
+      clearRememberDevice: true
+    };
   }
 
+  return {
+    bypassCode: false,
+    challengeToken: await issueLoginChallenge(user),
+    passwordCompromised
+  };
+}
+
+async function issueLoginChallenge(user) {
   const code = createLoginCode();
   const challengeToken = createChallengeToken();
 
@@ -158,11 +174,7 @@ async function startLoginWithCode({ email, password, rememberDeviceToken }) {
     code
   });
 
-  return {
-    bypassCode: false,
-    challengeToken,
-    passwordCompromised
-  };
+  return challengeToken;
 }
 
 async function verifyLoginCode({ challengeToken, code, rememberDevice, _userAgent }) {
