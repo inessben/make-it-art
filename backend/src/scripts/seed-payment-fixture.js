@@ -19,6 +19,7 @@ async function main() {
   const password = `StripeTest!${crypto.randomBytes(6).toString("hex")}`;
   const passwordHash = await argon2.hash(password);
   const createdAt = new Date();
+  const artistDisplayName = "Stripe Sandbox Artist";
 
   const [buyer, adminUser, artistUser] = await Promise.all([
     prisma.user.create({
@@ -64,7 +65,7 @@ async function main() {
     prisma.artist.create({
       data: {
         userId: artistUser.id,
-        displayName: "Stripe Sandbox Artist",
+        displayName: artistDisplayName,
         verified: true,
         createdAt
       }
@@ -98,9 +99,33 @@ async function main() {
         mailpit: "http://localhost:8025",
         buyer: { email: buyer.email, password },
         admin: { email: adminUser.email, password, adminId: admin.id },
-        artwork: { id: artwork.id, amount: 1990, currency: "EUR" },
+        artist: {
+          id: artist.id,
+          email: artistUser.email,
+          password,
+          displayName: artistDisplayName
+        },
+        artwork: {
+          id: artwork.id,
+          title: artwork.title,
+          amount: 1990,
+          currency: "EUR",
+          artistId: artist.id
+        },
         cart: { id: cart.id, path: "/cart" },
-        paths: ["/login", "/cart", "/checkout", "/payment/return", "/orders"]
+        paths: ["/login", "/cart", "/checkout", "/payment/return", "/orders"],
+        routes: {
+          home: "/",
+          login: "/login",
+          cart: "/cart",
+          checkout: "/checkout",
+          orders: "/orders",
+          paymentReturn: "/payment/return",
+          admin: "/admin",
+          artistDashboard: "/artist",
+          artistPublicProfile: `/artists/${artist.id}`,
+          artwork: `/artworks/${artwork.id}`
+        }
       },
       null,
       2
