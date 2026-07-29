@@ -10,7 +10,15 @@
             class="ml-5 flex w-fit items-center gap-4"
             aria-label="Make It Art - Home"
           >
-            <img class="h-12 w-10 object-contain" src="/logo.png" alt="" loading="lazy" />
+            <img
+              class="h-12 w-10 object-contain"
+              src="/logo.png"
+              alt=""
+              width="40"
+              height="48"
+              loading="lazy"
+              decoding="async"
+            />
             <span class="font-geist text-[13px] font-bold uppercase tracking-[0.12em]">
               MAKE IT ART
             </span>

@@ -132,6 +132,10 @@
                     :src="artwork.imageUrl"
                     :alt="artwork.title"
                     class="homepage__artwork-image"
+                    width="640"
+                    height="889"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div v-else class="homepage__artwork-image homepage__artwork-image--fallback">
                     {{ artworkInitials(artwork) }}
@@ -230,8 +234,21 @@
                         :src="artist.avatarUrl"
                         :alt="artist.displayName"
                         class="homepage__artist-avatar-image"
+                        width="82"
+                        height="82"
+                        loading="lazy"
+                        decoding="async"
                       />
-                      <img v-else src="/logo.png" alt="" class="homepage__artist-avatar-logo" />
+                      <img
+                        v-else
+                        src="/logo.png"
+                        alt=""
+                        class="homepage__artist-avatar-logo"
+                        width="58"
+                        height="70"
+                        loading="lazy"
+                        decoding="async"
+                      />
                     </div>
 
                     <div class="homepage__artist-headcopy">
@@ -294,18 +311,18 @@
         <div class="homepage__collective-panels">
           <article class="homepage__collective-panel">
             <p class="homepage__collective-copy">
-              Subscribe to receive exclusive access to early drops
+              Meet artists, collectors and digital art enthusiasts from around the world.
             </p>
 
-            <form class="homepage__newsletter-form" @submit.prevent>
-              <input
-                v-model="newsletterEmail"
-                type="email"
-                class="homepage__newsletter-input"
-                placeholder="YOUR EMAIL ADDRESS"
-              />
-              <button type="submit" class="homepage__newsletter-button">Subscribe</button>
-            </form>
+            <a
+              href="https://discord.com/invite/TsF3jMGDr3"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="homepage__collective-cta"
+              aria-label="Join our Discord Community (opens in a new tab)"
+            >
+              Join our Discord Community
+            </a>
           </article>
 
           <article class="homepage__collective-panel">
@@ -340,41 +357,36 @@ const featuredArtworkCarousel = ref(null);
 const homeArtistCarousel = ref(null);
 const artworkProgress = ref(0);
 const artistProgress = ref(0);
-const newsletterEmail = ref("");
 const categoryImageSeed = useState("homepage-category-image-seed", () =>
   Math.floor(Math.random() * 1_000_000_000)
 );
 
-const { data: categoriesData, pending: categoriesPending } = await useFetch("/api/categories", {
-  headers: requestHeaders,
-  credentials: "include",
-  default: () => ({
-    categories: []
+const [categoriesRequest, artworksRequest, artistsRequest] = await Promise.all([
+  useFetch("/api/categories", {
+    headers: requestHeaders,
+    credentials: "include",
+    default: () => ({ categories: [] })
+  }),
+  useFetch("/api/artworks", {
+    headers: requestHeaders,
+    credentials: "include",
+    query: {
+      limit: 24,
+      sort: "popular"
+    },
+    default: () => ({ artworks: [] })
+  }),
+  useFetch("/api/artists", {
+    headers: requestHeaders,
+    credentials: "include",
+    query: { limit: 12 },
+    default: () => ({ artists: [] })
   })
-});
+]);
 
-const { data: artworksData, pending: artworksPending } = await useFetch("/api/artworks", {
-  headers: requestHeaders,
-  credentials: "include",
-  query: {
-    limit: 48,
-    sort: "popular"
-  },
-  default: () => ({
-    artworks: []
-  })
-});
-
-const { data: artistsData, pending: artistsPending } = await useFetch("/api/artists", {
-  headers: requestHeaders,
-  credentials: "include",
-  query: {
-    limit: 12
-  },
-  default: () => ({
-    artists: []
-  })
-});
+const { data: categoriesData, pending: categoriesPending } = categoriesRequest;
+const { data: artworksData, pending: artworksPending } = artworksRequest;
+const { data: artistsData, pending: artistsPending } = artistsRequest;
 
 const showcaseArtworks = computed(() => (artworksData.value?.artworks || []).slice(0, 12));
 const categorySourceArtworks = computed(() => artworksData.value?.artworks || []);
@@ -562,6 +574,7 @@ function scrollHomeArtists(direction) {
 .homepage {
   background: radial-gradient(circle at 50% 0%, rgba(123, 44, 255, 0.11), transparent 26%), #000;
   color: #e6edf7;
+  overflow-x: clip;
 }
 
 .homepage__hero {
@@ -681,6 +694,8 @@ function scrollHomeArtists(direction) {
 }
 
 .homepage__section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
   width: min(100%, 1440px);
   margin: 0 auto;
   padding: 0 32px 136px;
@@ -1113,6 +1128,8 @@ function scrollHomeArtists(direction) {
 }
 
 .homepage__collective {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 620px;
   padding: 130px 24px;
   background: linear-gradient(182deg, rgba(123, 44, 255, 0.22) -60%, #000 58%);
 }
@@ -1167,38 +1184,6 @@ function scrollHomeArtists(direction) {
   line-height: 1.5;
   text-align: center;
   color: rgba(230, 237, 247, 0.85);
-}
-
-.homepage__newsletter-form {
-  display: grid;
-  width: min(100%, 490px);
-  grid-template-columns: 1fr auto;
-  overflow: hidden;
-  border: 1px solid #7b2cff;
-  border-radius: 8px;
-}
-
-.homepage__newsletter-input {
-  min-height: 66px;
-  padding: 16px 32px;
-  background: rgba(9, 13, 23, 0.42);
-  font-family: "Geist", "Hanken Grotesk", sans-serif;
-  font-size: 14px;
-  color: #e6edf7;
-}
-
-.homepage__newsletter-input::placeholder {
-  color: #6b7280;
-}
-
-.homepage__newsletter-button {
-  min-width: 108px;
-  padding: 0 24px;
-  font-family: "Geist", "Hanken Grotesk", sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  text-decoration: underline;
-  color: #fff;
 }
 
 .homepage__collective-cta {
@@ -1315,8 +1300,24 @@ function scrollHomeArtists(direction) {
 }
 
 @media (max-width: 767px) {
+  .homepage__hero-content,
+  .homepage__hero-title {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .homepage__hero-title-line--light {
+    font-size: clamp(2.75rem, 15vw, 4rem);
+    letter-spacing: -0.045em;
+  }
+
+  .homepage__hero-title-line--brand {
+    font-size: clamp(3.2rem, 17vw, 4.8rem);
+    letter-spacing: -0.055em;
+  }
+
   .homepage__hero {
-    min-height: 620px;
+    min-height: min(620px, calc(100svh - 5rem));
     padding: 0 16px 56px;
   }
 
@@ -1376,15 +1377,6 @@ function scrollHomeArtists(direction) {
 
   .homepage__collective-panel {
     padding: 32px 20px;
-  }
-
-  .homepage__newsletter-form {
-    grid-template-columns: 1fr;
-  }
-
-  .homepage__newsletter-button {
-    min-height: 56px;
-    border-top: 1px solid rgba(123, 44, 255, 0.28);
   }
 }
 </style>
