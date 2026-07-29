@@ -90,7 +90,10 @@ function resolveArtworkAvailabilityStatus({
   return stockQuantity > 0 ? "AVAILABLE" : "UNAVAILABLE";
 }
 
-function serializeArtwork(artwork, { includeArtist = true, includeManagement = false } = {}) {
+function serializeArtwork(
+  artwork,
+  { includeArtist = true, includeManagement = false, canDownloadHd = false } = {}
+) {
   if (!artwork) {
     return null;
   }
@@ -120,10 +123,13 @@ function serializeArtwork(artwork, { includeArtist = true, includeManagement = f
   const price = hasFiatPrice
     ? `${priceValue.toFixed(2).replace(".", ",")} €`
     : normalizeText(artwork.price) || normalizeText(artwork.priceTokens);
-  const previewUrl = artwork.id
+  const publicPreviewUrl =
+    buildArtworkPreviewUrl(artwork.previewPath, artwork.imagePath) ||
+    buildArtworkImageUrl(artwork.previewPath || artwork.imagePath);
+  const protectedPreviewUrl = artwork.id
     ? `/api/artworks/${artwork.id}/media/preview`
-    : buildArtworkPreviewUrl(artwork.previewPath, artwork.imagePath) ||
-      buildArtworkImageUrl(artwork.previewPath || artwork.imagePath);
+    : publicPreviewUrl;
+  const hasDownloadableOriginal = Boolean(artwork.hdPath || artwork.imagePath);
 
   return {
     id: artwork.id,
@@ -137,11 +143,16 @@ function serializeArtwork(artwork, { includeArtist = true, includeManagement = f
     isUnlimited,
     protection: Boolean(artwork.protection),
     createdAt: artwork.createdAt || null,
-    imageUrl: previewUrl,
-    previewUrl,
+    imageUrl: publicPreviewUrl || protectedPreviewUrl,
+    previewUrl: publicPreviewUrl || protectedPreviewUrl,
+    protectedPreviewUrl,
     forensicWatermark: Boolean(artwork.id),
-    hasHdFile: Boolean(artwork.hdPath),
-    hdDownloadUrl: artwork.hdPath ? `/api/artworks/${artwork.id}/media/hd` : null,
+    hasHdFile: hasDownloadableOriginal,
+    canDownloadHd: hasDownloadableOriginal && Boolean(canDownloadHd),
+    hdDownloadUrl:
+      artwork.id && hasDownloadableOriginal && canDownloadHd
+        ? `/api/artworks/${artwork.id}/media/hd`
+        : null,
     storageProvider: normalizeText(artwork.storageProvider) || "local",
     mediaStatus: normalizeText(artwork.mediaStatus) || "ready",
     watermarkApplied: Boolean(artwork.watermarkApplied),

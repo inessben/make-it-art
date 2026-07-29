@@ -9,7 +9,7 @@ const {
   buildArtworkImageUrl
 } = require("./artwork-media.service");
 const { getArtworkStorageProvider } = require("./artwork-storage");
-const { generateArtworkPreview } = require("./artwork-preview.service");
+const { buildPreviewWatermarkText, generateArtworkPreview } = require("./artwork-preview.service");
 
 const DEFAULT_DOWNLOAD_LIMIT = 5;
 
@@ -245,9 +245,14 @@ async function openLocalPreviewStream(artwork, storage) {
 
   if (await keyExists(storage, recoverySourceKey)) {
     const sourcePath = await storage.resolveLocalPath(recoverySourceKey);
+    const artistName = artwork.artist?.displayName || artwork.artist?.user?.username || "";
     const preview = await generateArtworkPreview({
       sourcePath,
-      applyWatermark: artwork.watermarkApplied !== false
+      applyWatermark: artwork.watermarkApplied !== false,
+      watermarkText: buildPreviewWatermarkText(artistName),
+      title: artwork.title || "",
+      artist: artistName,
+      copyrightNotice: artistName ? `© ${artistName} — All rights reserved.` : ""
     });
     const recoveredPreviewKey =
       artwork.previewPath || `artworks/preview/recovered-${artwork.id}-${Date.now()}.jpg`;
@@ -312,16 +317,28 @@ async function userHasPurchaseEntitlement(userId, artworkId) {
   return Boolean(entitlement);
 }
 
+async function canAccessHd(user, artwork) {
+  if (!user?.id || !artwork?.id) {
+    return false;
+  }
+
+  if (await userOwnsArtistArtwork(user.id, artwork)) {
+    return true;
+  }
+
+  if (await userHasPurchaseEntitlement(user.id, artwork.id)) {
+    return true;
+  }
+
+  return false;
+}
+
 async function assertCanAccessHd(user, artwork) {
   if (!user?.id) {
     throw new ArtworkMediaAccessError(401, "AUTH_REQUIRED", "Authentication required.");
   }
 
-  if (await userOwnsArtistArtwork(user.id, artwork)) {
-    return;
-  }
-
-  if (await userHasPurchaseEntitlement(user.id, artwork.id)) {
+  if (await canAccessHd(user, artwork)) {
     return;
   }
 
@@ -382,10 +399,10 @@ async function openArtworkMediaStream(artwork, variant = "preview") {
   return {
     stream,
     key,
-    contentType:
-      variant === "preview"
-        ? detectContentTypeFromKey(key, "image/jpeg")
-        : "application/octet-stream"
+    contentType: detectContentTypeFromKey(
+      key,
+      variant === "preview" ? "image/jpeg" : "application/octet-stream"
+    )
   };
 }
 
@@ -395,6 +412,7 @@ module.exports = {
   defaultDownloadLimit,
   consumeArtworkDownload,
   sendArtworkFile,
+  canAccessHd,
   assertCanAccessHd,
   resolveArtworkMediaUrl,
   openArtworkMediaStream

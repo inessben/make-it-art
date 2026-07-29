@@ -98,6 +98,10 @@ test("the public order serializer excludes all provider and secret fields", () =
   assert.equal(serialized.items[0].delivery.downloadRights.downloadLimit, 5);
   assert.equal(serialized.items[0].delivery.downloadRights.remainingDownloads, 4);
   assert.equal(serialized.items[0].delivery.certificate.number, "MIA-0123456789ABCDEF0123");
+  assert.equal(
+    serialized.items[0].delivery.certificate.downloadUrl,
+    "/api/v1/orders/75ad34cf-5ee4-4838-b36f-fac65a40f1e9/certificates/1b5d0a0c-d743-4a0b-aed4-e6402058dd77.pdf"
+  );
   assert.deepEqual(serialized.items[0].delivery.certificate.snapshot, {
     version: 1,
     artworkTitle: "Safe artwork"

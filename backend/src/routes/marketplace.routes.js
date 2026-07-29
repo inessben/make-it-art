@@ -11,6 +11,7 @@ const {
   serializeArtistSummary,
   serializeCollection
 } = require("../utils/serialize-marketplace");
+const { canAccessHd } = require("../services/artwork-download.service");
 const { buildUploadedImageUrl } = require("../services/uploaded-image.service");
 const { artworkCatalogRateLimit } = require("../middlewares/rate-limit.middleware");
 const { blockAiTrainingBots } = require("../middlewares/artwork-media-guard.middleware");
@@ -235,9 +236,13 @@ router.get("/artworks/:id(\\d+)", attachViewer, async (req, res) => {
       limit: 4
     });
     const isOwner = Boolean(req.viewer?.id) && artwork.artist?.userId === req.viewer.id;
+    const hdAccessAllowed = req.viewer ? await canAccessHd(req.viewer, artwork) : false;
 
     return res.status(200).json({
-      artwork: serializeArtwork(artwork, { includeManagement: isOwner }),
+      artwork: serializeArtwork(artwork, {
+        includeManagement: isOwner,
+        canDownloadHd: hdAccessAllowed
+      }),
       relatedArtworks: relatedArtworks.map((item) => serializeArtwork(item))
     });
   } catch (error) {

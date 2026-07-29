@@ -1,6 +1,9 @@
 const crypto = require("node:crypto");
 const { isUnlimitedArtworkLicenseType } = require("../constants/artwork-license-types");
-const { buildArtworkImageUrl } = require("../services/artwork-media.service");
+const {
+  buildArtworkImageUrl,
+  buildArtworkPreviewUrl
+} = require("../services/artwork-media.service");
 const {
   INCLUSIVE_TAX_BEHAVIOR,
   PLATFORM_COMMISSION_RATE_BPS,
@@ -8,18 +11,9 @@ const {
   calculateIncludedTax
 } = require("./commerce-policy");
 
-function normalizeText(value) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
 function resolveCartArtworkImageUrl(artwork) {
-  const storageProvider = normalizeText(artwork?.storageProvider) || "local";
-
-  if (storageProvider === "local" && artwork?.id) {
-    return `/api/artworks/${artwork.id}/media/preview`;
-  }
-
   return (
+    buildArtworkPreviewUrl(artwork?.previewPath, artwork?.imagePath) ||
     buildArtworkImageUrl(artwork?.previewPath || artwork?.imagePath) ||
     (artwork?.id ? `/api/artworks/${artwork.id}/media/preview` : null)
   );

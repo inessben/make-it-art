@@ -4,6 +4,16 @@ const os = require("node:os");
 const path = require("node:path");
 const env = require("../config/env");
 
+function buildPreviewWatermarkText(artistName, fallbackText = env.artworkMedia.watermarkText) {
+  const normalizedArtist = String(artistName || "").trim();
+
+  if (normalizedArtist) {
+    return `${normalizedArtist} · Preview · No AI training`;
+  }
+
+  return fallbackText || "Make It Art · Preview · No AI training";
+}
+
 function runPython(args) {
   return new Promise((resolve, reject) => {
     const child = spawn(env.artworkMedia.pythonPath, args, {
@@ -85,5 +95,6 @@ async function generateArtworkPreview({
 }
 
 module.exports = {
+  buildPreviewWatermarkText,
   generateArtworkPreview
 };

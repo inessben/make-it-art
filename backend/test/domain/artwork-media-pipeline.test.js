@@ -30,6 +30,9 @@ test("processArtworkUpload stores HD and watermarked preview via local adapter",
       }
     },
     [previewServicePath]: {
+      buildPreviewWatermarkText() {
+        return "Test watermark";
+      },
       async generateArtworkPreview() {
         const previewPath = path.join(tempRoot, "preview.jpg");
         await fsp.writeFile(previewPath, Buffer.from("preview"));

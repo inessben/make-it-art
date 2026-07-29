@@ -2,7 +2,7 @@ const crypto = require("node:crypto");
 const fsp = require("node:fs/promises");
 const path = require("node:path");
 const env = require("../config/env");
-const { generateArtworkPreview } = require("./artwork-preview.service");
+const { buildPreviewWatermarkText, generateArtworkPreview } = require("./artwork-preview.service");
 const { getArtworkStorageProvider } = require("./artwork-storage");
 
 function extensionFromFilename(filename = "") {
@@ -26,6 +26,8 @@ function contentTypeFromExtension(extension) {
 async function processArtworkUpload({
   uploadedFile,
   applyWatermark = true,
+  title = "",
+  artistName = "",
   storageProviderName = env.artworkMedia.storageProvider
 }) {
   if (!uploadedFile?.path) {
@@ -48,7 +50,11 @@ async function processArtworkUpload({
 
     const preview = await generateArtworkPreview({
       sourcePath: uploadedFile.path,
-      applyWatermark: applyWatermark !== false
+      applyWatermark: applyWatermark !== false,
+      watermarkText: buildPreviewWatermarkText(artistName),
+      title,
+      artist: artistName,
+      copyrightNotice: artistName ? `© ${artistName} — All rights reserved.` : ""
     });
     previewLocalPath = preview.path;
 
