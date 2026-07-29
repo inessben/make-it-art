@@ -10,8 +10,15 @@ Ce dossier contient les documents spécialisés. Les informations générales, l
 | [`../REQUIREMENTS_DOCUMENT.md`](../REQUIREMENTS_DOCUMENT.md) | cahier des exigences et matrice de conformité |
 | [`../ROADMAP_TRELLO.md`](../ROADMAP_TRELLO.md) | cartes terminées, blocages et jalons |
 | [`DECISIONS.md`](DECISIONS.md) | décisions d’architecture et leurs conséquences |
-| [`TEAM_LOG.md`](TEAM_LOG.md) | journal concis des branches et contributions |
-| [`TEAM_LOG_TEMPLATE.md`](TEAM_LOG_TEMPLATE.md) | modèle d’entrée pour le journal d’équipe |
+| [`GIT_HISTORY.txt`](GIT_HISTORY.txt) | historique complet des commits Git exporté depuis le dépôt |
+
+## Historique Git
+
+Pour régénérer l'historique depuis la racine du projet :
+
+```bash
+git log --all --decorate=short --date=iso-strict --pretty=format:"%H | %ad | %an | %D | %s" > docs/GIT_HISTORY.txt
+```
 
 ## Paiements et commerce
 
@@ -59,4 +66,4 @@ Les anciens plans quotidiens et notes préparatoires ont été fusionnés dans l
 2. [`../REQUIREMENTS_DOCUMENT.md`](../REQUIREMENTS_DOCUMENT.md) ;
 3. [`../ROADMAP_TRELLO.md`](../ROADMAP_TRELLO.md) ;
 4. le guide spécialisé correspondant à la tâche ;
-5. [`TEAM_LOG.md`](TEAM_LOG.md) pour la chronologie des contributions.
+5. [`GIT_HISTORY.txt`](GIT_HISTORY.txt) pour la chronologie complète des commits.

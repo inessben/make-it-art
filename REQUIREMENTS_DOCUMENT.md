@@ -280,7 +280,7 @@ Une version est livrable lorsque :
 - architecture et démarrage : [`README.md`](README.md) ;
 - roadmap : [`ROADMAP_TRELLO.md`](ROADMAP_TRELLO.md) ;
 - décisions : [`docs/DECISIONS.md`](docs/DECISIONS.md) ;
-- journal des branches : [`docs/TEAM_LOG.md`](docs/TEAM_LOG.md) ;
+- historique des commits : [`docs/GIT_HISTORY.txt`](docs/GIT_HISTORY.txt) ;
 - paiements : [`docs/GUIDE_QA_STRIPE_PAS_A_PAS.md`](docs/GUIDE_QA_STRIPE_PAS_A_PAS.md) ;
 - wallet : [`docs/blockchain/README.md`](docs/blockchain/README.md) ;
 - checklist production : [`docs/PAYMENT_GO_LIVE_CHECKLIST.md`](docs/PAYMENT_GO_LIVE_CHECKLIST.md).
