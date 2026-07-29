@@ -1,0 +1,322 @@
+ENGLISH COURTESY TRANSLATION - THE FRENCH VERSION PREVAILS IN CASE OF DISCREPANCY.
+
+ARTIST CONTRACT FOR DIGITAL ART TRADE PLATFORM
+
+EFFECTIVE DATE: Thursday July 2, 2026
+PARTS:
+MAKE IT ART
+Paris, France
+Email: contact@makeitart.io
+AND
+“The Artist”
+Legal name: _________________________________
+Artist name/pseudonym: _____________________
+Address: ___________________________________
+City, Department, Postal code: ___________________________
+Email: _____________________________________
+Tax identification number (EIN/SSN) not required: ___________________________
+
+PREAMBLE
+WHEREAS the Platform operates an online marketplace dedicated to the creation, exhibition, promotion and sale of digital works of art, including, without limitation, NFTs (non-fungible tokens);
+WHEREAS the Artist creates original digital works of art and wishes to distribute, promote and monetize these works through the Platform;
+WHEREAS the parties wish to establish the general conditions governing this relationship;
+THEREFORE, in consideration of the mutual commitments and agreements contained herein, and in consideration of other valid and useful consideration, the receipt and sufficiency of which is hereby acknowledged, the parties agree as follows:
+
+
+ARTICLE 1 – DEFINITIONS
+1.1 Defined terms
+• The term “Platform” refers to the Marketplace, accessible at the address https://makeitart.io/, as well as all associated services, tools and functionalities.
+• The term “Work(s)” means any original digital creative work submitted by the Artist to the Platform, including, without limitation, digital art, illustrations, photographs, 3D models, generative art and animations.
+• “NFT” means a non-fungible token created on a blockchain network (Ethereum, Polygon or other) representing ownership or rights to a Work of Art.
+• “Primary Sale” means the first sale of a Work of Art or an NFT directly by the Artist via the Platform.
+• “Secondary sale” means any subsequent resale of a Work of Art or an NFT by a buyer on the secondary market.
+• “Gross Sale Price” means the total amount paid by a buyer for an Artwork or NFT, excluding blockchain gas fees.
+• “Commission” means the fees levied by the Platform on Primary Sales, as defined in Article 7.
+• “Royalty” means the percentage received by the Artist on Secondary Sales, as defined in article 7.
+
+
+ARTICLE 2 – SCOPE OF APPLICATION OF THE CONTRACT
+2.1 Independent relationship
+This contract establishes an independent service provider relationship. The Artist is neither an employee, nor an agent, nor an associate, nor a joint venture partner of the Platform. The Artist retains full control over the manner and means of creating the Works of Art.
+2.2 Non-exclusivity
+This contract is non-exclusive. The Artist retains the right to: - sell Works of art via other platforms or channels; - create similar works for other purposes; - manage your own website or your own direct sales channels.
+2.3 Selection of artists
+Platform reserves the right to select artist applications based on artistic quality, suitability for the platform and compliance with these conditions. Platform may reject artist applications or artwork submissions in its reasonable discretion, but such discretion shall not be exercised in a discriminatory manner or in bad faith.
+ARTICLE 3 – REQUIREMENTS RELATING TO WORKS AND GUARANTEES
+3.1 Originality and ownership
+The Artist declares, guarantees and undertakes that:
+(a) The Artist is the sole creator and copyright holder of all Works submitted;
+(b) All Works are 100% original creations of the Artist;
+(c) No Work infringes the intellectual property rights of any third party, including, without limitation, copyrights, trademarks, trade secrets, patents, publicity rights or moral rights;
+(d) No Work contains defamatory, obscene, racist or harmful content;
+(e) The Artist has full and complete authority to enter into this Agreement and grant the licenses provided for therein;
+(f) No Work contains AI-generated content, unless this is explicitly reported to the Platform and buyers.
+3.2 Prohibited content
+The Works must not contain: - child pornography material (CSAM) or sexualization of minors; - content promoting violence, terrorism or illegal activities; - hate speech or content targeting protected groups; - plagiarized or stolen content; - misleading or fraudulent statements; - violations of any applicable law or regulation.
+3.3 Content moderation
+Platform reserves the right to remove any Work that violates section 3.2 or that is the subject of a report for violation. The Artist will receive written notice and will have 48 hours to respond before removal, unless there are urgent legal or security concerns.
+3.4 Information obligations
+The Artist must indicate: - the use of AI tools in the creative process; - the integration of licensed elements from third parties; - limited edition status and total number of copies; - any charge affecting intellectual property rights.
+
+ARTICLE 4 – INTELLECTUAL PROPERTY RIGHTS
+4.1 The Artist retains ownership
+The Artist retains all copyright and intellectual property rights in the Works. This Agreement does not constitute a transfer of copyright ownership.
+4.2 Grant of a license to the Platform
+The Artist grants the Platform a non-exclusive, worldwide, royalty-free and sublicensable license allowing him:
+(a) display the Works on the Platform and in search results;
+(b) create thumbnails and previews;
+(c) Promote the Works through marketing materials, social media, newsletters and advertisements (online and offline);
+(d) Store the Works on servers and backup systems, including on IPFS or on the blockchain;
+(e) Allow buyers to view and download the Works in accordance with the licenses sold;
+(f) Use the name or pseudonym, image and biography of the Artist in connection with the Works.
+4.3 License Limitations
+This license: - is limited exclusively to the operation and promotion of the Platform; - does NOT grant the Platform the right to sell or sublicense the Works for commercial purposes outside the context of the Platform; - ends 30 days after the Artist's withdrawal from the Platform, with the exception of Works already sold (see section 4.5).
+4.4 Buyer’s rights
+The Artist defines the buyer’s rights for each Work using the Platform’s tools:
+• Personal use license: the buyer may exhibit or use the Work for personal, non-commercial purposes only;
+• Commercial license: the buyer benefits from specific commercial use rights;
+• Exclusive rights: the buyer benefits from exclusive rights as defined by the Artist.
+The Platform provides standardized licensing models, but the Artist is responsible for setting appropriate terms.
+4.5 Rights after termination
+In the event of termination of this Contract: - the Artist may request the withdrawal of unsold Works of Art within 30 days; - the Platform retains limited archiving rights on the Works of art sold in order to preserve records of transactions; - the licenses granted to the Buyer remain valid and enforceable.
+4.6 Moral rights
+To the extent authorized by law, the Artist waives the right to assert his moral rights against the Platform for any reasonable promotional adaptation (cropping, color adjustment, format conversion) carried out in good faith. The Artist retains all other moral rights.
+
+ARTICLE 5 – PRICING AND CONDITIONS OF SALE
+5.1 Pricing power
+The Artist has exclusive discretionary power to set: - the initial sales prices of the Works; - royalty percentages on secondary sales (within the limits of the Platform parameters); - print runs and release schedules; - the types of licenses offered (personal, commercial, exclusive).
+5.2 Pricing Recommendations
+The Platform may provide pricing recommendations based on market data, but may not impose specific prices, except to: - enforce minimum technical requirements (for example, a minimum bid to cover gas costs); - prevent obvious pricing errors or fraudulent advertisements; - preserve the integrity of the Platform (for example, by preventing €0.01 ads aimed at manipulating rankings).
+5.3 Price changes
+The Artist may change the prices of unsold Works of Art at any time. Works of art sold are subject to the purchase conditions in force at the time of the sale.
+5.4 Sales process
+The Platform acts solely as a technical intermediary facilitating transactions between the Artist and buyers. The Platform: - processes payments via secure third-party providers; - facilitates the minting of NFTs and transactions on the blockchain; - provides escrow services for transaction security; - delivers digital files to buyers.
+
+
+ARTICLE 6 – REMUNERATION AND PAYMENT CONDITIONS
+6.1 Commission structure
+Commission on primary sales:
+The Platform charges a 7% commission on the gross sales price of all primary sales.
+IMPORTANT: this rate is fixed for the first 12 months of this contract. After 12 months, the Platform may adjust the rates upon 90 days written notice to the Artist. Rate increases are capped at 2% per year and cannot exceed 10% in total without the written consent of the Artist.
+6.2 Royalties on secondary sales
+Artist's royalties: the Artist himself sets the percentage of his royalties on secondary sales, between 5% and 15% of the resale price.
+Platform Fees on Secondary Sales: The Platform may charge up to 2.5% on secondary sales to cover costs related to blockchain infrastructure.
+Smart contract enforcement: Royalties on secondary sales are enforced via smart contracts on the blockchain where technically feasible. The Platform uses commercially reasonable efforts to ensure compliance with fees, but cannot guarantee their application on all third-party marketplaces.
+6.3 Payment processing
+Payment methods accepted: - Credit/debit cards (Visa, Mastercard) - Digital wallets (Apple Pay, Google Pay, PayPal) - Cryptocurrencies (ETH, MATIC, USDC) - ACH/bank transfer (for large transactions)
+Payment processing fees: Third-party payment provider fees (typically 2.9% + ≃ €0.30 for card payments) are deducted from the gross sales price before commission calculation.
+
+Calculation example:
+Sale price of the work: €1,000.00
+Payment processing fee (2.9% + €0.30): -€29.30
+Net amount of sale: €970.70
+Platform Commission (7%): -€67.95
+Payment paid to the artist: €902.75
+6.4 Payment schedule
+Standard payment: payments to artists are made weekly (every Friday) via the payment method chosen by the artist: - ACH transfer (US bank accounts): no fees - PayPal: 2% fee (capped at €20) - Cryptocurrency: transaction fee at cost - International transfer: flat fee of €25
+Minimum payment threshold: equivalent to €50 EU. Balances below this threshold carry over to the next payment period.
+Payment Schedule: - Week 1: Sales occur Monday through Sunday - Week 2: 7-day hold period for fraud prevention purposes - Week 3: Payment processed on Friday
+Expedited payment option: available for a fee of €10 (next business day, minimum of €100).
+6.5 Blockchain and gas fees
+Minting costs of NFTs: - Delayed minting (default): gas fees paid by the buyer at the time of the first sale - Pre-minting option: the artist can pre-mint at his own expense
+Supported by the Platform: the Platform supports gas costs for: - platform smart contract deployments - royalty distribution contracts - creation of collection contracts
+Artist Responsibility: The artist covers gas fees for: - Optional pre-minting of NFTs - Transfers to external wallets - Direct interactions with the blockchain outside the platform
+6.6 Refunds and Chargebacks
+Refund policy: - Digital downloads: no refund after download, unless the item differs significantly from its description - NFT: no refund after transfer to the blockchain, except in cases of fraud or misrepresentation - Technical breakdowns: full refund if the Platform cannot fulfill the order
+Chargeback Protection: The Platform manages chargebacks and fraud claims. The artist's payment will NOT be canceled, except in cases of proven fraud and complicity of the artist.
+6.7 Financial transparency
+The Platform provides the artist: - A sales dashboard - Monthly financial statements - number of subscribers gained 
+
+ARTICLE 7 – SERVICES AND FEATURES OF THE PLATFORM
+7.1 Services included (at no additional cost)
+• Artist profile page and presentation of their portfolio
+• Uploading of works and management of metadata
+• Payment processing infrastructure
+• Basic marketing support (highlighting on the home page, newsletters)
+• Customer service for buyers
+• Secure file storage and delivery
+• Basic mediation in the event of a transaction-related dispute
+7.2 Technical infrastructure
+Storage solutions: - Standard cloud storage (AWS S3): included - Metadata storage on the blockchain: included
+File requirements: - Maximum file size: 100 MB (contact us for larger files) - Accepted formats: JPG, PNG, GIF, MP4, WebM, SVG, GLB - Minimum resolution: 1920 x 1080 recommended
+7.3 Access to tools for artists
+• Analytics dashboard (views, clicks, conversions)
+• Royalty tracking and reporting
+• Communication channel with customers (Make it Art community on Discord)
+ARTICLE 8 – PROTECTION AND SAFETY OF WORKS
+8.1 Copyright protection measures
+The Platform implements:
+(a) Digital tailor: watermarks visible on preview images (artist can customize them)
+(b) Invisible forensic marking: tracking data embedded in files
+(c) DMCA takedown procedure: simplified system for respecting copyright
+(d) Right-click protection: disabled on display pages (not foolproof, but deters casual copying)
+(e) Content ID analysis: automated detection of unauthorized copies (where this service is available)
+8.2 Data security
+• Encryption: AES-256 encryption for stored files
+• Secure transmission: TLS 1.3 for all data transfers
+• Access controls: role-based authorizations
+• Regular audits: annual security audits carried out by a third party
+8.3 DMCA and responding to infringement reports
+Obligations of the artist: - Respond to notifications of violation within 5 working days - File a counter-notification if the complaint is unfounded - Compensate the Platform in the event of abusive withdrawal claims
+Measures taken by the Platform: - Transmit violation notifications to the artist within 48 hours - Temporarily deactivate the contested content pending resolution of the dispute - Restore the content upon receipt of a valid counter-notification - Terminate the account of repeat infringers (three strikes policy)
+
+ARTICLE 9 – MARKETING AND PROMOTION
+9.1 Promotional License
+The Artist grants the Platform the right to use: - his name or pseudonym and his biography; - their photograph or avatar; - images of his works (including high resolution); - its quotes and testimonials (subject to prior agreement); - “behind the scenes” content (if provided)
+9.2 Marketing channels
+Platform can promote the Artist and their Works through: - the home page and category pages of the website - e-mail newsletters (the Artist has the possibility to unsubscribe) - accounts on social networks (Instagram, Twitter, TikTok, Discord.) - paid advertisements (Google, Meta, etc.) - press releases and press relations actions - physical exhibitions and events - partnerships and collaborations
+9.3 Marketing Permissions
+Prior authorization required for: - Use of the artist's image in external advertising - Announcements of exclusive partnerships - Press releases mentioning the artist by name - Printed reproductions for marketing purposes
+No authorization required for: - Standard publications on social networks presenting works of art - Mentions in newsletters - Display on the website - Promotional materials bearing the Platform's brand 
+9.4 Self-promotion of the artist
+The artist is encouraged to: - Promote their profile on the platform via their own channels - Add a link to Platform in their biography on social networks - Share their sales and successes
+Artists must not: - Misrepresent the level of endorsement or partnership granted by Platform - Make false statements regarding sales volume or ranking - Use Platform's trademarks without authorization
+
+ARTICLE 10 – REPRESENTATIONS, WARRANTIES AND INDEMNIFICATION
+10.1 Reciprocal declarations
+Each party declares and guarantees: - that it has all the necessary powers to enter into this Contract; - that the signing of this Contract does not violate any other agreement; - that it will comply with all applicable laws.
+10.2 Artist guarantees
+The Artist guarantees that: - All Works are original creations; - The Artist holds all necessary rights; - The Works do not infringe the rights of third parties; - All information communicated in section 3.4 is accurate; - The Artist will respond promptly to claims for infringement.
+10.3 Platform Guarantees
+The Platform guarantees that: - The platform will operate with an uptime of 99% (annual average) - Payment processing will be secure and compliant - The Artist's data will be protected in accordance with applicable privacy laws - The Platform will act in good faith
+10.4 EXCLUSION OF WARRANTIES
+EXCEPT AS EXPRESSLY PROVIDED HEREIN, THE ONLINE SALES PLATFORM PROVIDES THE PLATFORM “AS IS,” WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+Platform does not guarantee: - specific sales volumes or revenues; - ranking or visibility on search engines; - the absence of technical malfunctions or unavailability; - compatibility with all devices or browsers; - prevention of any copyright infringement.
+
+
+10.5 Compensation of the Artist
+The Artist agrees to indemnify, defend and hold harmless Platform, its officers, directors, employees and agents against any claims, damages, losses, liabilities, costs and expenses (including reasonable attorneys' fees) arising from or related to:
+(a) Artist’s breach of its representations or warranties;
+(b) claims of infringement relating to the Works of Art;
+(c) Artist’s violation of applicable laws;
+(d) gross negligence or willful misconduct of the Artist.
+10.6 Compensation of the Platform 
+Platform undertakes to indemnify, defend and hold harmless the Artist against any claim arising from:
+(a) non-compliance by Platform with this Agreement;
+(b) gross negligence or willful misconduct of the Platform;
+(c) security breaches of the Platform caused by the failure of the Platform to implement reasonable protective measures;
+(d) unauthorized use of the Works by the Platform beyond the scope of the license.
+10.7 Compensation procedures
+The indemnified party must: - promptly notify in writing any claim; - cooperate reasonably with the defense; - allow the indemnifying party to direct the defense (with approval of settlement agreements affecting the rights of the indemnified party)
+
+ARTICLE 11 – LIMITATION OF LIABILITY
+11.1 Exclusion of consequential damages
+EXCEPT FOR VIOLATIONS OF SECTION 4 (INTELLECTUAL PROPERTY) OR SECTIONS 10.5 THROUGH 10.6 (INDEMNIFICATION OBLIGATIONS), NEITHER PARTY SHALL BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR PUNITIVE DAMAGES, INCLUDING, LIMITED THEREOF, LOSS OF PROFITS, TURNOVER, DATA OR BUSINESS, EVEN IF IT HAS BEEN INFORMED OF THE POSSIBILITY OF SUCH DAMAGES.
+11.2 Exceptions to limitations
+The limitations of liability DO NOT apply to the following: - Infringement of intellectual property - Gross negligence or willful misconduct - Fraud or fraudulent misrepresentation - Death or personal injury caused by negligence - Compensation obligations - Violations of applicable law that cannot be waived by contract
+ARTICLE 12 – CONFIDENTIALITY AND DATA PROTECTION
+12.1 Applicable privacy laws
+the Platform complies with the following provisions: - General Data Protection Regulation (GDPR) (for all artists/clients) 
+12.2 Rights of artists relating to their data
+The artist has the following rights: - Access personal data held by Platform - Rectify inaccurate data - Request deletion of data (subject to legal retention obligations) - Unsubscribe from marketing communications - Export data in a portable format - Revoke consent (if applicable)
+12.3 Data collection and use
+Platform collects: - Account data: name, email, address, tax identification number - Transaction data: sales history, payment information - Usage data: analytics, page views, engagement indicators - Communication data: support tickets, messages
+Platform uses this data to: - Operate and improve the Platform - Process payments and comply with tax legislation - Communicate about sales and platform updates - Prevent fraud and ensure security - Comply with legal obligations
+12.4 Data sharing
+Platform shares artist data with: - Payment providers (Stripe, PayPal, etc.) - Blockchain networks (for public NFT transactions) - Tax authorities (in accordance with legal requirements) - Service providers (hosting, analytics, customer service)
+Platform does NOT sell artist data to third parties.
+12.5 Data retention
+• Data relating to active artists: retained as long as the account is active
+• Transaction history: retained for 7 years for tax and legal compliance purposes
+• Marketing data: deleted when an Artist who wishes to unsubscribe from the Platform sends us this request by email
+• Blockchain data: permanently stored on public blockchains (cannot be deleted)
+12.6 Notification of security breach
+In the event of a data breach affecting the Artist's information, the Platform will inform the Artist within 72 hours of discovery, specifying: - the nature of the violation; - the data potentially concerned; - the measures taken to limit the damage; - the measures that the Artist must take.
+
+ARTICLE 13 – DURATION AND TERMINATION
+13.1 Duration
+This Agreement takes effect on the Effective Date and remains in effect until terminated by either party.
+
+13.2 Termination by the Artist
+The Artist may terminate this Agreement:
+(a) At its discretion: upon 30 days' written notice, for any or no reason;
+(b) For valid reason (immediate termination): if Platform:
+• Commits a material breach of this Agreement and fails to cure such breach within 15 days of written notice;
+• Files for bankruptcy or becomes insolvent;
+• Ceases its activities;
+• commits fraud or is grossly negligent.
+13.3 Termination by the Platform 
+The Platform may terminate this Agreement:
+(a) Voluntarily: upon 60 days’ written notice, for any reason whatsoever;
+(b) For valid reason (immediate termination): if the Artist:
+• commits a material violation of this Agreement (3 violations in the last 12 months);
+• uploads prohibited content after receiving a warning;
+• Engages in fraud, money laundering or illegal activities;
+• Repeatedly infringes the intellectual property rights of third parties (three strikes policy);
+• Attempts to circumvent payment systems.
+Termination for cause requires written notice specifying the violation and allowing 10 days to remedy the violation, except in the case of illegal activity (immediate termination).
+13.4 Effects of termination
+In the event of termination:
+(a) Unsold works: the artist may request their withdrawal within 30 days; the platform will comply with it within 14 days;
+(b) Works sold: licenses granted to buyers remain valid; the platform keeps archive copies;
+(c) Pending Payments: All amounts due, collected but not paid, will be paid within 30 days;
+(d) Sales in progress: transactions in progress will be completed; final payment will be made within 60 days;
+(e) Export of data: the artist can export all data within 90 days;
+(f) Promotional materials: the Platform will terminate any new promotions but may retain previous materials for archiving purposes.
+13.5 Continuation in force
+The following provisions remain in effect after termination: - Section 4.5 (Intellectual Property Rights after Termination) - Section 6.7 (Pending Payments) - Section 10 (Indemnification) - Section 11 (Limitation of Liability) - Section 16 (Confidentiality)
+ARTICLE 14 – FORCE MAJEURE
+14.1 Exemption from execution
+Neither party shall be liable for failure to comply with its obligations due to causes beyond its reasonable control, including, but not limited to: - natural disasters (earthquakes, floods, fires, pandemics); - war, terrorism, civil unrest; - government measures or regulations; - Internet outages or cyberattacks; - failures of the blockchain network; - failures of third-party service providers; - strikes or social conflicts.
+14.2 Prolonged force majeure
+If the force majeure event continues for more than 90 consecutive days, either party may terminate this Agreement without penalty upon 10 days' written notice.
+ARTICLE 15 – CONFIDENTIALITY
+15.1 Confidential information
+“Confidential information” includes: - financial terms, payment amounts and sales data; - technical infrastructure and security measures; - commercial strategies and marketing plans; - data and analyzes relating to users; - exclusive algorithms and processes.
+15.2 Confidentiality Obligations
+Each party undertakes to: - Maintain the confidentiality of the confidential information of the other party - Use the confidential information only for the purposes of this contract - Not disclose it to third parties without prior written consent - Protect it with the same degree of care as its own confidential information (at least with reasonable care)
+15.3 Exceptions
+Confidentiality obligations do NOT apply to information that: - Is or becomes publicly available without breach of this Agreement - Was rightfully possessed prior to disclosure - Was independently developed without use of confidential information - Must be disclosed by law or court order (with immediate notice to the disclosing party)
+
+ARTICLE 16 – GENERAL PROVISIONS
+16.1 Entire Agreement
+This Agreement constitutes the entire agreement between the parties and supersedes all prior or concurrent agreements, representations, warranties and understandings, whether written or oral, relating to the subject matter hereof.
+16.2 Modifications
+This Agreement may only be modified by a written document signed by both parties. Platform may update Platform policies (e.g., Acceptable Use Policy, Privacy Policy) upon 30 days’ notice, but any material changes to this Agreement require the mutual consent of the parties.
+16.3 Transfer
+The Artist: may not assign this Contract without the prior written consent of the Platform (which may not be refused without valid reason).
+Platform: may assign this Agreement to: - a parent company, a subsidiary or an affiliated company; - a successor entity in the context of a merger, acquisition or transfer of substantially all of the assets.
+The Artist will receive 60 days’ notice in the event of transfer by Platform.
+16.4 Waiver
+Failure to enforce any provision shall not constitute a waiver of that or any other provision. Waivers must be in writing and signed by the waiving party.
+16.5 Relations between the parties
+This Agreement does not create a partnership, joint venture, employment or agency relationship. Neither party can bind the other or make commitments on behalf of the other.
+16.6 Third party beneficiaries
+This Agreement is entered into for the sole benefit of the parties and does not confer any rights on any third party, except for the license rights of buyers, which are enforceable as intended third party beneficiaries.
+16.7 Copies
+This Agreement may be executed in multiple counterparts, each of which will be considered an original and which together will constitute one and the same instrument. Electronic signatures will have the same force and effect as original signatures.
+16.8 Titles
+Section titles are for convenience only and do not affect interpretation.
+16.9 Interpretation
+This Agreement will be construed fairly, without regard to which party drafted it.
+
+ARTICLE 17 – SPECIFIC PROVISIONS
+17.1 Conditions specific to NFTs
+For Works of art sold in the form of NFT:
+(a) Smart contract code: the Platform allows the Artist to consult the smart contract code governing royalties and transfers;
+(b) Choice of blockchain: the Artist can choose between Ethereum (increased security, higher fees) and Polygon (lower fees, faster transactions);
+(c) Responsibility for Gas Charges: See Section 6.5 for the allocation of Gas Charges;
+(d) Application of fees: the Platform implements the EIP-2981 fee standard where supported, but cannot guarantee its application on all platforms;
+(e) Editable metadata: the Artist can update the metadata of the work of art (description, external URL), but not the fundamental data of the NFT (token identifier, contract address);
+(f) Transferability: the artist may transfer ownership of the NFT contract upon 30 days’ notice to the Platform.
+17.2 Collaborative works
+For artwork created in collaboration with other artists:
+(a) Artist warrants that he or she has the authority to license the Collaborative Works;
+(b) The artist is responsible for sharing income with his collaborators (if mutual agreement);
+(c) The artist must disclose the identity of the co-creators upon request;
+(d) The Platform is not responsible for payment disputes between artists.
+SIGNATURE PAGE
+BY SIGNING BELOW, BOTH PARTIES ACKNOWLEDGE HAVING READ AND UNDERSTOOD THE TERMS OF THIS AGREEMENT AND AGREE TO BE BOUND BY THEM.
+
+
+Make it Art:
+Signature: _________________________________
+Name in capital letters: Iness BEN AISSA
+Position: CEO of Make it Art
+Date: 02/07/2026
+
+ARTIST:
+Legal name: ________________________________
+Signature: _________________________________
+Artist name/pseudonym: _____________________
+Date: _____________________________________

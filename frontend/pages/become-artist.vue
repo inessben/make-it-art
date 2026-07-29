@@ -409,6 +409,18 @@
                 </p>
               </div>
 
+              <label class="grid gap-2 text-sm text-slate-300">
+                <span class="font-medium">Agreement language</span>
+                <select
+                  v-model="form.contractLanguage"
+                  class="min-h-11 rounded-2xl border border-slate-700 bg-slate-950 px-4 text-sm font-semibold text-white focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  aria-label="Agreement language"
+                >
+                  <option value="en">EN - English</option>
+                  <option value="fr">FR - Français</option>
+                </select>
+              </label>
+
               <button
                 type="button"
                 class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-800 bg-slate-850 px-5 text-sm font-semibold text-slate-100 transition hover:bg-slate-750"
@@ -580,6 +592,7 @@ const form = reactive({
   postalCode: "",
   country: "France",
   taxId: "",
+  contractLanguage: "en",
   termsAccepted: false,
   commissionAccepted: false
 });
@@ -646,6 +659,18 @@ watch(step, () => {
   queueDraftSave();
 });
 
+watch(
+  () => form.contractLanguage,
+  async () => {
+    contractAccepted.value = false;
+    signatureDataUrl.value = "";
+
+    if (step.value === 4) {
+      await ensureContractPreview(true);
+    }
+  }
+);
+
 function prefillFromUser() {
   const fullName = user.value?.username || "";
   const [firstName = "", ...lastNameParts] = fullName.split(" ");
@@ -673,6 +698,7 @@ function buildDraftPayload() {
     postalCode: form.postalCode,
     country: form.country,
     taxId: form.taxId,
+    contractLanguage: form.contractLanguage,
     termsAccepted: form.termsAccepted,
     commissionAccepted: form.commissionAccepted
   };
@@ -703,6 +729,7 @@ function applyDraftPayload(payload) {
   form.postalCode = typeof payload.postalCode === "string" ? payload.postalCode : form.postalCode;
   form.country = typeof payload.country === "string" ? payload.country : form.country;
   form.taxId = typeof payload.taxId === "string" ? payload.taxId : form.taxId;
+  form.contractLanguage = payload.contractLanguage === "fr" ? "fr" : "en";
   form.termsAccepted = Boolean(payload.termsAccepted);
   form.commissionAccepted = Boolean(payload.commissionAccepted);
 }

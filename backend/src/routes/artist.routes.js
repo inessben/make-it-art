@@ -167,6 +167,7 @@ function normalizeArtistApplicationPayload(input = {}) {
     postalCode: normalizeText(input.postalCode),
     country: normalizeText(input.country),
     taxId: normalizeText(input.taxId),
+    contractLanguage: normalizeText(input.contractLanguage).toLowerCase() === "fr" ? "fr" : "en",
     termsAccepted: Boolean(input.termsAccepted),
     commissionAccepted: Boolean(input.commissionAccepted)
   };
