@@ -76,6 +76,28 @@ Useful local URLs:
 - Backend health: `http://localhost:4000/health`
 - Mailpit inbox: `http://localhost:8025`
 
+## Tests E2E
+
+Les scénarios end-to-end couvrent les parcours principaux de chaque rôle :
+
+- Visiteur : accès à la page d'accueil et consultation d'une œuvre publique
+- Collector : connexion, ajout au panier et passage au checkout
+- Artiste : connexion et accès au dashboard artiste
+- Admin : connexion et accès au dashboard admin
+
+Après un pull, exécuter depuis la racine du projet :
+
+```bash
+npm install --workspaces=false
+npm run e2e:install
+npm run e2e
+```
+
+## Sécurité et documentation API
+
+- Sécurité renforcée : la plateforme applique déjà une Content Security Policy (CSP), HSTS en production et des en-têtes de sécurité complémentaires.
+- Swagger / documentation API : l'interface Swagger UI est disponible sur `/api/docs` et le document OpenAPI 3.1 sur `/api/docs/openapi.json`.
+
 ## Google OAuth login
 
 To enable Google sign-in, create OAuth2 credentials in Google Cloud Console and set:
@@ -465,6 +487,5 @@ Use pull requests to merge into `develop`, then `main`.
 
 ## Team documentation
 
-- Activity log: `docs/TEAM_LOG.md`
-- Entry template: `docs/TEAM_LOG_TEMPLATE.md`
+- Git commit history: `docs/GIT_HISTORY.txt`
 - Technical decisions: `docs/DECISIONS.md`

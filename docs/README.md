@@ -4,19 +4,17 @@ Ce dossier centralise tout ce qui a ete mis en place sur le projet.
 
 ## Fichiers
 
-- `docs/TEAM_LOG.md`: journal des changements (obligatoire apres chaque session)
-- `docs/TEAM_LOG_TEMPLATE.md`: template d'entree a copier
+- `docs/GIT_HISTORY.txt`: historique complet des commits Git exporte depuis le depot
 - `docs/DECISIONS.md`: decisions techniques et conventions
 - `docs/USER_STORIES_PAIEMENT_STRIPE.md`: epic, US et criteres d'acceptation du paiement Stripe
 
-## Regle simple
+## Historique Git
 
-Apres chaque session de travail:
+Pour regenerer le fichier depuis la racine du projet:
 
-1. Ajoute une entree dans `docs/TEAM_LOG.md`
-2. Indique les fichiers modifies
-3. Indique comment tu as verifie
-4. Indique la prochaine etape et les blocages
+```bash
+git log --all --decorate=short --date=iso-strict --pretty=format:"%H | %ad | %an | %D | %s" > docs/GIT_HISTORY.txt
+```
 
 ## Automatisation en place
 
