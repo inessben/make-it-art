@@ -115,6 +115,28 @@ npm run prod:build       # construire les images de production
 
 Les scénarios Stripe détaillés sont centralisés dans [le guide QA Stripe](docs/GUIDE_QA_STRIPE_PAS_A_PAS.md). Les procédures de passage en production se trouvent dans [la checklist paiements](docs/PAYMENT_GO_LIVE_CHECKLIST.md) et [le guide wallet](docs/blockchain/README.md).
 
+## Tests E2E
+
+La suite Playwright couvre les parcours principaux de chaque rôle :
+
+- Visiteur : accès à la page d'accueil et consultation d'une œuvre publique ;
+- Collector : connexion, ajout au panier et passage au checkout ;
+- Artiste : connexion et accès au dashboard artiste ;
+- Admin : connexion et accès au dashboard admin.
+
+Après un pull, exécuter depuis la racine du projet :
+
+```bash
+npm install --workspaces=false
+npm run e2e:install
+npm run e2e
+```
+
+## Sécurité et documentation API
+
+- Sécurité renforcée : la plateforme applique une Content Security Policy (CSP), HSTS en production et des en-têtes de sécurité complémentaires.
+- Swagger / documentation API : l'interface Swagger UI est disponible sur `/api/docs` et le document OpenAPI 3.1 sur `/api/docs/openapi.json`.
+
 ## Qualité et état de validation
 
 Au 29 juillet 2026, la validation complète réalisée sur la branche de travail comprenait :
@@ -146,7 +168,6 @@ Avant une mise en production :
 Le socle demandé dans [`tmp_sujet_web.txt`](tmp_sujet_web.txt) est couvert par Nuxt, Tailwind, Node.js, PostgreSQL, OAuth 2.0, Docker, CI/CD, tests, accessibilité, consentement RGPD et analytics. Les points qui nécessitent encore une preuve ou une finalisation avant soutenance sont suivis dans [`REQUIREMENTS_DOCUMENT.md`](REQUIREMENTS_DOCUMENT.md), notamment :
 
 - confirmer ou implémenter un véritable second facteur TOTP si cette modalité exacte reste obligatoire ;
-- formaliser des tests E2E navigateur reproductibles ;
 - joindre les preuves de durcissement, sauvegarde et restauration du VPS ;
 - réaliser les dernières validations Stripe et Coinbase CDP dans l’environnement réel.
 
@@ -156,7 +177,7 @@ Le point d’entrée documentaire est [`docs/README.md`](docs/README.md). Les do
 
 - [`REQUIREMENTS_DOCUMENT.md`](REQUIREMENTS_DOCUMENT.md) : exigences et état de conformité ;
 - [`ROADMAP_TRELLO.md`](ROADMAP_TRELLO.md) : roadmap exploitable dans Trello ;
-- [`docs/TEAM_LOG.md`](docs/TEAM_LOG.md) : journal synthétique des branches et contributions ;
+- [`docs/GIT_HISTORY.txt`](docs/GIT_HISTORY.txt) : historique complet des commits Git exporté depuis le dépôt ;
 - [`docs/DECISIONS.md`](docs/DECISIONS.md) : décisions d’architecture ;
 - [`docs/blockchain/README.md`](docs/blockchain/README.md) : architecture et exploitation du wallet ;
 - [`docs/GUIDE_QA_STRIPE_PAS_A_PAS.md`](docs/GUIDE_QA_STRIPE_PAS_A_PAS.md) : validation des paiements.

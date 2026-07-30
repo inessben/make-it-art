@@ -162,7 +162,7 @@ Mettre à jour le document canonique correspondant au changement :
 - priorité ou jalon : `ROADMAP_TRELLO.md` ;
 - décision structurante : `docs/DECISIONS.md` ;
 - procédure QA/opérationnelle : document spécialisé sous `docs/` ;
-- contribution de branche : `docs/TEAM_LOG.md`.
+- historique des contributions : `docs/GIT_HISTORY.txt`.
 
 Ne créez pas un nouveau document si une section existante peut devenir la source de vérité.
 

@@ -1,0 +1,347 @@
+8f7e634ba9aa61c941d9595fbf750a200e7d4627 | 2026-07-29T22:22:56+02:00 | Ethan | HEAD -> fix/detail-read-me, origin/fix/detail-read-me | docs: document e2e and replace team log
+6bfb7019ce5c5d770023f73d84d0aaae626dc649 | 2026-07-29T15:39:35+02:00 | Théa | origin/develop | fix screenshot retardement
+3547631d0e298d9485f1093a674fb21108b59bf1 | 2026-07-29T15:09:30+02:00 | Théa |  | Merge branch 'tests-unit' into develop
+b107cc3eec215d66ce0e6374eef7a5d635897b52 | 2026-07-29T14:38:43+02:00 | Théa |  | Merge branch 'develop' of https://github.com/inessben/make-it-art into develop
+b2848e602e7bebcfc2df91cfef9538b8f8fd3fac | 2026-07-29T14:38:27+02:00 | Théa |  | Merge branch 'fix/login' into develop
+f5aeef94b29e8432e3cef047c10ff08174f83260 | 2026-07-29T14:32:32+02:00 | Iness Ben aïssa |  | fix error
+aba56e35a4ace3510d6b2c4e5f981c141284477e | 2026-07-29T11:40:12+02:00 | Iness Ben aïssa |  | fix :  e2e errors
+59a10b621427831e5de8285e06503d9f2738af34 | 2026-07-29T09:23:41+02:00 | Iness Ben aïssa |  | fix :  e2e errors
+7774544c000e26f3f7741b9bf54bed8f01388205 | 2026-07-29T06:05:50+02:00 | Iness Ben aïssa |  | Merge pull request #84 from inessben/feature/LastFrontFix
+98a8d6560f669e1bceaf4ebed0f7194b19356f4f | 2026-07-29T05:59:41+02:00 | Iness Ben aïssa |  | feature : fix lightouse  and front feat
+1f55cb56b50901edda5dcb95996fba56f2322a94 | 2026-07-29T05:41:40+02:00 | BouhassouneMariam |  | TEST E2E
+4cb2c7f2799890cfad1a2c7f3e00bea487e0e3ed | 2026-07-29T05:24:28+02:00 | Iness Ben aïssa |  | Merge remote-tracking branch 'origin/develop' into feature/agreementArtist
+b95a5af74cad939af9cb4b3cc43cfdf219a302b5 | 2026-07-29T04:54:26+02:00 | Iness Ben aïssa |  | feature : fix agreements last errors
+717c44691c5489138fd63c9d52d2a4ae2187c50f | 2026-07-29T04:19:49+02:00 | BouhassouneMariam |  | FRONT
+07d284043e8f747f7d8fc4d99b4a19e62b5b9711 | 2026-07-29T04:12:50+02:00 | BouhassouneMariam |  | FRONT add artwork
+6d24f69b0b9bc59c720400e2052c89ea9c10c146 | 2026-07-29T03:50:11+02:00 | BouhassouneMariam |  | Correction erreur
+4e93588b1bf86aceffa8f8406b527a67ae7a8a86 | 2026-07-29T03:45:06+02:00 | BouhassouneMariam |  | Correction erreur
+b89ff9d7e1f767e12e4c724ff30eaad89e052eea | 2026-07-29T03:35:07+02:00 | BouhassouneMariam |  | Merge pull request #81 from inessben/feature-fixerreur
+6b1070385bbdd1ba65af04995a15b91f78833d41 | 2026-07-29T03:34:31+02:00 | BouhassouneMariam |  | Correction categorie
+4545126bca846616243b0a9c95123a58780bd798 | 2026-07-29T03:23:26+02:00 | Iness Ben aïssa |  | Merge remote-tracking branch 'origin/develop' into feature/agreementArtist
+c0ce8fb3b625ea06f6761fd927094e6a475faaf2 | 2026-07-29T03:21:14+02:00 | Iness Ben aïssa |  | Merge remote-tracking branch 'origin/main' into feature/agreementArtist
+f181e96e414b9ec064fa1be5648e9d986422a34a | 2026-07-29T03:16:35+02:00 | Iness Ben aïssa |  | Merge pull request #79 from inessben/docs
+8fd789ce130c85dc8e3bc7262b0d8eaedb3b6f6d | 2026-07-29T03:14:36+02:00 | BouhassouneMariam |  | Merge pull request #78 from inessben/feature-fixerreur
+b8792e1b54be4d09ebb1b63e361e839fb78408b6 | 2026-07-29T03:13:49+02:00 | BouhassouneMariam |  | Correction bouton 2 marketplace
+4bba6ed1e0240ce8a13749940c029d34ea3c3c76 | 2026-07-29T03:07:50+02:00 | Iness Ben aïssa |  | feature: update agreemen files
+a5fe6e6c0e1d6c3fa5b31943af9d810adca26d8a | 2026-07-29T02:36:09+02:00 | BouhassouneMariam | develop | Merge pull request #77 from inessben/feature-fixerreur
+55f522c4437c6c60abcff49e2b68a22579fb73bb | 2026-07-29T02:34:04+02:00 | BouhassouneMariam | origin/feature-fixerreur | Correction ralentissement image
+83900f1a78bc869b201df473ad1012ba22d206c3 | 2026-07-29T02:33:28+02:00 | Théa | origin/fix/login | fix
+e52d496311147427981bfa6374b5158b5def17f1 | 2026-07-29T02:23:41+02:00 | BouhassouneMariam |  | Merge pull request #76 from inessben/feature-fixerreur
+adacd4b0b4de136b8a440dfc5809fbd4cf1175d0 | 2026-07-29T02:23:15+02:00 | BouhassouneMariam |  | telechargement HD on retire le bouton si t'as pas acheté l'oeuvre ou si t’es pas l’artiste de l’oeuvre
+26975d55fcd4d2bf568bd7ca0221dfa4dcd287f4 | 2026-07-29T02:14:31+02:00 | Théa |  | fix 30 day connexion
+0f7ace10456d2920cdea1950e7fa22eddcbe20a2 | 2026-07-29T02:04:33+02:00 | CoeurdeTaxi |  | Merge pull request #75 from inessben/fix/not-authentified
+2fc8d9e6ca7312caa552e14a220bb923817ec11c | 2026-07-29T01:59:47+02:00 | Ethan | origin/fix/not-authentified, fix/not-authentified | fix(ci): restore artwork pipeline checks
+9f17e3e8830f8abbc297494f9a17d63e26d21913 | 2026-07-29T01:34:07+02:00 | Iness Ben aïssa | origin/docs | docs : update .md files
+28a94a40a52bfde5f14fa4d61be9fe7148eddfc0 | 2026-07-29T01:32:51+02:00 | Ethan |  | fix(artwork): refresh session before publication
+5115261378b9041ec5d07f774bff908fa01d31f8 | 2026-07-29T01:31:56+02:00 | BouhassouneMariam |  | Merge pull request #74 from inessben/feature-fixerreur
+6c1b1e21fd494ca3ec86d399525c2b16b91a0602 | 2026-07-29T01:31:28+02:00 | BouhassouneMariam |  | mettre le nom de l'artiste plutot que make it art en watermark
+72d826b9a0f3b8950e8adb51673b1691eaf6124e | 2026-07-29T01:19:47+02:00 | Théa | origin/tests-unit, tests-unit | add all tests !!!
+7c52b27b007d16d21a49267a760e76fc204062a7 | 2026-07-29T00:43:53+02:00 | CoeurdeTaxi |  | Merge pull request #73 from inessben/feature/download-bill
+38092a948ad3b5dc875386f0274357018fc990f3 | 2026-07-29T00:35:18+02:00 | Ethan | origin/feature/download-bill, feature/download-bill | feat(certificate): expose PDF download to collectors
+c2736ab6a5e2aa05c608d64dd81a09db5a7e29df | 2026-07-29T00:33:37+02:00 | Ethan |  | feat(certificate): add collector PDF download endpoint
+ab5940c28b49609c269d55fab1934c9d906b50c8 | 2026-07-29T00:10:03+02:00 | BouhassouneMariam | origin/main, origin/HEAD | Merge pull request #72 from inessben/develop
+37b364ded5ed52eefd30b6f8d5c235e47823b6df | 2026-07-29T00:07:36+02:00 | BouhassouneMariam |  | corretion wallet
+5c44a8c18c3c44a04386c1644535d02ea8a16612 | 2026-07-28T23:54:56+02:00 | Théa |  | fix price artwork
+369ba9d27a8d29f33f0cb91893c5b3c91a4cccf6 | 2026-07-28T23:38:26+02:00 | Iness Ben aïssa |  | Merge pull request #71 from inessben/develop
+9f5d4c3575bfbba3a63486bb4e940558890b9a33 | 2026-07-28T23:17:22+02:00 | Iness Ben aïssa |  | fix CD conflicts
+3e21d24268347eca4d64fde21b9df3f3c25f4186 | 2026-07-28T23:16:06+02:00 | CoeurdeTaxi |  | Merge pull request #68 from inessben/fix/small-fixes
+b08f92f34dfce7d61c2da266217c1fef7b28bdef | 2026-07-28T22:07:28+02:00 | Ethan | origin/fix/small-fixes, fix/small-fixes | fix(api): align protected media contracts
+1e75b8d71162720bfc157d53463e22a3de3be6d4 | 2026-07-28T18:54:46+02:00 | Ethan |  | feat(auth): preserve onboarding through registration
+e8db3235bfb96cc3aa6e53a41dd6c6124a4a48c5 | 2026-07-28T18:18:27+02:00 | Ethan |  | feat(auth): restore requested page after sign-in
+8ed6678f0aa19accd177987a899d8e4e4f36b26a | 2026-07-28T18:04:21+02:00 | Ethan |  | feat(account): remove artist onboarding from collector dashboard
+09a78f04ce366053eca06c5c3a835198fda4d21d | 2026-07-28T15:51:50+02:00 | Ethan |  | fix(auth): prevent guest header flash
+1ab190a511ace51eb05839db00d53f6f11a58b2b | 2026-07-28T22:45:00+02:00 | Iness Ben aïssa |  | Merge pull request #70 from inessben/develop
+daefa04832e9676abfffafbf449c45b81a9a4659 | 2026-07-28T22:41:43+02:00 | Iness Ben aïssa |  | Merge pull request #69 from inessben/feature/WGAC
+1944b3a650c057be894c8e8d351c60865e0c3d42 | 2026-07-28T22:39:55+02:00 | Iness Ben aïssa |  | resolve conflicts
+208dc23654966c8ee09017cd9bc96367e1652160 | 2026-07-28T21:56:36+02:00 | Iness Ben aïssa |  | feature : Accesibilty friendly (contrat, navigation, alt,...)
+6cd49db670a6675b15fe7f3e3c181cf03c8df18c | 2026-07-28T20:58:02+02:00 | Théa |  | fix bug protection IA (jenémare)
+b6c601bf9497b604d2eadbb1a4cec3fa5e426ee1 | 2026-07-28T20:01:10+02:00 | Théa |  | fix bug de con
+7ae1674dcff0d79a4085d506b60d3b62107c74bc | 2026-07-28T18:08:56+02:00 | Théa | origin/art-protection | update security with metadata + fix other page security
+599a4ebe3ff4c71b0aea5a08cd1222d0c2f26bda | 2026-07-28T16:28:47+02:00 | Théa |  | fix bug random
+5b217b6a6786024d9e0b37c3230dcbb0a114d827 | 2026-07-28T16:06:56+02:00 | Théa |  | Merge branch 'art-protection' into develop
+677897765c32caf4a0566cbe4ce8c65649820a49 | 2026-07-28T14:29:25+02:00 | CoeurdeTaxi |  | Merge pull request #67 from inessben/feat/modify-artwork
+b2f4d43facbfb4e11425cf5d7643bd4abadbff4c | 2026-07-28T13:48:31+02:00 | Ethan | origin/feat/modify-artwork, feat/modify-artwork | style(artwork): simplify unavailable purchase state
+abc2d33989ae9a9ad07f623781b3e96d0486390d | 2026-07-28T13:47:31+02:00 | Ethan |  | fix(artwork): prefill edit category reliably
+56211d7d2a33ba032b59d58c6d91b9e022180c83 | 2026-07-28T01:10:20+02:00 | Ethan |  | fix(auth): resync artwork owner capabilities
+cb5b1359e6d2cd026dc6cd8c12316d63b647cd4d | 2026-07-28T00:49:31+02:00 | Ethan |  | fix(artwork): restore edit page navigation
+450ae1f6a47d562681498a630cab77b0ea680014 | 2026-07-28T00:27:27+02:00 | Ethan |  | style(artwork): compact owner management panel
+3b39857e51f80a1a419ff3fbdcb1fdb80286f2ef | 2026-07-27T22:27:24+02:00 | Ethan |  | feat(artwork): audit and serialize management mutations
+de545b9b4ff7cb05ada9888fa1e58ec43857b5d0 | 2026-07-27T22:11:49+02:00 | Ethan |  | feat(orders): preserve buyer access after artwork withdrawal
+2cc8eebe695d0ad7d1d2bee5a86c453ca27cf0b4 | 2026-07-27T22:04:26+02:00 | Ethan |  | feat(artwork): filter artist workspace by lifecycle
+efac94154a53b0fdfd0bc5cd759a1a9aabba642c | 2026-07-27T21:55:08+02:00 | Ethan |  | feat(artwork): restore archives as hidden
+f1c4a6eca0bd52ca1e6e41793844d5a002aac93e | 2026-07-27T21:49:54+02:00 | Ethan |  | feat(artwork): archive artworks with history
+09563efceca67fc4783e5e1706aab4d86c75cd3b | 2026-07-27T21:44:14+02:00 | Ethan |  | feat(artwork): republish approved hidden artworks
+8e6665359819a609332ef752a8b5470042ad808f | 2026-07-27T21:39:20+02:00 | Ethan |  | feat(artwork): hide artworks from new sales
+71e928a01be0f3cfb88f546802a975413477423d | 2026-07-27T21:29:11+02:00 | Ethan |  | feat(artwork): delete unpurchased artworks safely
+6f44fc49898b9b077a85c4ef59294935c97f6563 | 2026-07-27T21:18:00+02:00 | Ethan |  | feat(artwork): edit unpurchased artworks safely
+1e1452f004b6709a91640546fb76ed4bbb16cbb9 | 2026-07-27T21:08:24+02:00 | Ethan |  | feat(artwork): expose owner management capabilities
+e6f72bad58178d44fa6bbe3b2d2895162b7d4461 | 2026-07-28T07:47:58+02:00 | Iness Ben aïssa |  | Merge pull request #65 from inessben/develop
+96cedb2c1749d9f7b994e9094dc35371acc96613 | 2026-07-28T07:44:22+02:00 | Iness Ben aïssa |  | Merge pull request #64 from inessben/feature/blockchain
+490319e27736d7aefcdd523ba93dafab7dd2945c | 2026-07-28T07:38:32+02:00 | Iness Ben aïssa |  | last step : generation wallet blockchain
+2696f1375a403e6cf46c672f3c461f47825934de | 2026-07-28T05:24:10+02:00 | BouhassouneMariam |  | Merge pull request #63 from inessben/develop
+59f7db52c125b41956b89be65c156327cfea8caf | 2026-07-28T05:22:46+02:00 | BouhassouneMariam |  | correction erreur
+2c8359ede35fe66a881ec15b01def0d782bdb342 | 2026-07-28T05:09:57+02:00 | BouhassouneMariam |  | notif follow
+cf8c652a383f84d8809e2cccb17ea120cde3df72 | 2026-07-28T04:09:43+02:00 | BouhassouneMariam |  | Merge pull request #62 from inessben/develop
+ef9747624001d5a924eed06e9d8e0a3250103428 | 2026-07-28T04:07:57+02:00 | BouhassouneMariam |  | Correction erreur
+8c2081c9a112ddf950d8b579fc8ea26848f0a2b9 | 2026-07-28T03:30:41+02:00 | BouhassouneMariam |  | Merge pull request #61 from inessben/develop
+434cacc867182e7466de17674a440bd17decb3a4 | 2026-07-28T03:29:16+02:00 | BouhassouneMariam |  | Update index.vue
+8e56e2431827cbb571628aef2814123c0e6bcfa2 | 2026-07-28T03:25:07+02:00 | BouhassouneMariam |  | Correction categorie
+1219a796ad3126421568ae8ddd3f8f502f46b58b | 2026-07-28T02:48:49+02:00 | BouhassouneMariam |  | Correction dans artworks la liste Recently added
+7877707bcd020646092edb853de7f808b3e1d6ac | 2026-07-28T02:41:40+02:00 | BouhassouneMariam |  | SIRET pas obligatoire
+549a4a1722b85c1f63d53df09c9912a2a870d135 | 2026-07-28T02:26:36+02:00 | BouhassouneMariam |  | Correction dans la page collection dans filtre retirer generativeet ajouter photographies
+2c4a8c4d51a7fca40242f64246f060c781bb0dba | 2026-07-28T02:19:51+02:00 | BouhassouneMariam |  | Correction erreur de upload
+b219d667510383ae7edd32e9062eb2f6a0b2122c | 2026-07-28T01:25:51+02:00 | BouhassouneMariam |  | Correction erreur Footer
+f63e9c16bc5c617cc83e00992aac48320dd7614e | 2026-07-28T00:22:09+02:00 | BouhassouneMariam |  | Merge pull request #60 from inessben/develop
+84703df1765de663f614b302e63d7ed231b669cd | 2026-07-28T00:19:18+02:00 | BouhassouneMariam |  | Merge pull request #59 from inessben/feature-suitefront
+ce4cbae66b2059c0a27baca635b3ec6e6a4636f4 | 2026-07-28T00:18:27+02:00 | BouhassouneMariam | origin/feature-suitefront | Front dashboard + correction erreur
+58162ae71da3878f2fb423893189a326d5b16b13 | 2026-07-27T23:59:52+02:00 | Théa |  | add other watermark (webtoon inspired)
+a85581a25d5ce42fb6383df13e3af4741844809e | 2026-07-27T23:44:44+02:00 | Théa |  | add watermark with id
+216eecbfa51f5fdfac2e6d054e657479f017cd40 | 2026-07-27T23:44:11+02:00 | BouhassouneMariam |  | Merge pull request #58 from inessben/develop
+5bd06393b9b2276d129d976eaebf4c38a2055c88 | 2026-07-27T23:37:49+02:00 | BouhassouneMariam |  | Merge pull request #57 from inessben/feature-suitefront
+1b8ad2b4ff5fa7d90fd525d2faaee8b88ff5a504 | 2026-07-27T23:36:32+02:00 | BouhassouneMariam |  | Correction merge
+3c27f653cb7f2296c751dcabbc915c5f700b47d5 | 2026-07-27T23:31:46+02:00 | BouhassouneMariam |  | FRONT CHECKOUT
+2436c6a69f7d1b35523b3fe7eff3ce5ce99a2ca7 | 2026-07-27T23:22:07+02:00 | BouhassouneMariam |  | Merge pull request #56 from inessben/feature-suitefront
+cc7ecb01e8ab08f0dceb556681dfef57c8fa0698 | 2026-07-27T23:21:44+02:00 | BouhassouneMariam |  | FRONT PANIER
+13c61ff7f9a9917d73f17a26f037f3e8018fd5c2 | 2026-07-27T23:06:49+02:00 | BouhassouneMariam |  | Merge pull request #55 from inessben/feature-suitefront
+dae62d883266323861b0d4f73ffb6f26b60eccd5 | 2026-07-27T23:06:15+02:00 | BouhassouneMariam |  | Front collection
+cab432605c025528104e9042c18d6d934c3ca3c1 | 2026-07-27T22:40:05+02:00 | BouhassouneMariam |  | Correction erreur
+00f928660ea3f4254e74fec61a0b1f4b70aafaf9 | 2026-07-27T22:06:55+02:00 | BouhassouneMariam |  | Merge pull request #54 from inessben/feature-front
+e2ea13d6c3de33d5538a89f04895523c5645bc92 | 2026-07-27T22:06:44+02:00 | BouhassouneMariam | origin/feature-front | Merge branch 'develop' into feature-front
+b23ae94d9eb3d39b2c5993bd2967564cbe5b0106 | 2026-07-27T21:26:38+02:00 | BouhassouneMariam |  | Correction errreur Front
+74e3041f9784c9193fb273a602743785950c5a4b | 2026-07-27T21:15:45+02:00 | BouhassouneMariam |  | FRONT artworks
+91a8d6d8ff0a1b5729de7ec5b12dbb8179d0de5e | 2026-07-27T21:05:10+02:00 | Théa |  | protection over screenshot
+5b13fbb85914bf863bb6512704815db65a95ddeb | 2026-07-27T20:46:02+02:00 | Théa |  | fix bug random
+1e9b8cf9e6c59510adcce2f839b7aaa51c69fdc0 | 2026-07-27T20:31:30+02:00 | CoeurdeTaxi |  | Merge pull request #53 from inessben/feat/licence-type
+6a731cfe55a263b94486f11e66112447a4e5cef9 | 2026-07-27T20:23:46+02:00 | BouhassouneMariam |  | FRONT page artsit + bouton add artwork
+7a1e62c882c024d19b5133d4ced9ff2eb5f82c49 | 2026-07-27T20:22:47+02:00 | Ethan | origin/feat/licence-type, feat/licence-type | docs(qa): document artwork licence validation
+752e622510b6db2e42168f5dddb97029ffd21cfc | 2026-07-27T20:22:15+02:00 | Ethan |  | chore(git): ignore generated artwork media
+c3b1b83cff82745b19aebd6e29113da8a93e7f4c | 2026-07-27T20:18:33+02:00 | Ethan |  | style(backend): format merged marketplace files
+204e1c27e91007b60e7ddcdad237a2f823350381 | 2026-07-27T20:17:57+02:00 | Ethan |  | test(artwork): add end-to-end licence QA suite
+ed0eacc624b35c10d5613ff82a1b60a6c1f937cc | 2026-07-27T20:17:16+02:00 | Ethan |  | feat(artwork): require commercial licence usage terms
+28dcf932ecdc9181797718f4bcbc8eeaf8b5678e | 2026-07-27T18:14:54+02:00 | Ethan |  | feat(checkout): release abandoned exclusive reservations
+67884db203e6e13b8bb6b9c9718a1e4e4c9bbae5 | 2026-07-27T18:08:36+02:00 | Ethan |  | feat(payment): finalize exclusive sale exactly once
+4bcce0867f3ad0b73be34b7e6d1bd1f149632ad9 | 2026-07-27T18:03:42+02:00 | Ethan |  | feat(checkout): reserve exclusive artwork atomically
+44f7cf005c7defb3d0c63f0568109b7970b48af7 | 2026-07-27T18:00:34+02:00 | Ethan |  | feat(artwork): expose exclusive availability states
+a6ca71fbbcde6a27aeb93a5aee483e41edf10142 | 2026-07-27T17:56:10+02:00 | Ethan |  | feat(artwork): allow unlimited standard licence sales
+7faceaf2a0d9277ee58ba17a1683480cca50b8b0 | 2026-07-27T17:22:10+02:00 | Ethan |  | feat(artwork): add licence type at publication
+91d2b89d49baa78714e0ef69f72459cf7efcd4ff | 2026-07-27T19:30:05+02:00 | BouhassouneMariam |  | Merge pull request #52 from inessben/feature-front
+3a342540c0b7e62d92146924c7fbbb7b1c7d6668 | 2026-07-27T19:29:20+02:00 | BouhassouneMariam |  | Front marktplace
+1034b4f9b19abe4407a71cee205f2c4fb1905d66 | 2026-07-27T18:51:07+02:00 | BouhassouneMariam |  | Merge pull request #51 from inessben/feature-front
+bdc73863bd8020b4b42fdaf9cdce07510d0130d7 | 2026-07-27T18:50:13+02:00 | BouhassouneMariam |  | Home front + add profile picture + categorie pict
+66a140d1a5b6a80a5453ce4c311d5b795e0eef37 | 2026-07-27T18:23:45+02:00 | Théa |  | Merge branch 'main' into art-protection
+657ee63efc764fa796c0a51036d9a479487e4bbb | 2026-07-27T18:03:15+02:00 | Iness Ben aïssa |  | feature : first step of blockchain generated wallet
+6bf233334517e794219ce3064357302f7996cb31 | 2026-07-27T17:16:41+02:00 | Théa |  | Merge branch 'develop' into art-protection
+f5e2b65d62614dfadde8170473f96274e7d541d0 | 2026-07-27T16:13:06+02:00 | BouhassouneMariam |  | Merge pull request #50 from inessben/develop
+a336c9d1815a090fd89cb3dd367854f93322ef48 | 2026-07-27T04:36:20+02:00 | CoeurdeTaxi |  | Merge pull request #49 from inessben/feat/payment-method
+b47ee126705df87e8e961e596260f2a5b680d92d | 2026-07-27T04:23:02+02:00 | Ethan | origin/feat/payment-method, feat/payment-method | test(payment): harden saved card QA workflow
+47a18f820e1bc799795ae768c04f80f92577ec5c | 2026-07-27T03:09:47+02:00 | Ethan |  | docs(payment): update Stripe implementation stories
+8da3b31c5d712e946a639d9cba20954be4e1a170 | 2026-07-27T03:07:44+02:00 | Ethan |  | feat(payment): support saved Stripe cards
+be24c57c43a4da44a7bec4f968311588c56f4895 | 2026-07-27T04:13:07+02:00 | BouhassouneMariam |  | Merge pull request #48 from inessben/develop
+b2c1399c22243b3c3de3aac07a31b30e3cf7214a | 2026-07-27T04:11:44+02:00 | BouhassouneMariam |  | correction erreur merge
+195baeb17cd2d5bdea5494a2dcb64c780693c945 | 2026-07-27T04:09:29+02:00 | BouhassouneMariam |  | correctin erreur
+7e3d0ef81a158bd458982f4e0cb7a19e9e8d0b96 | 2026-07-27T03:48:31+02:00 | BouhassouneMariam |  | Correction erreur + finilisation notif upload gain
+e995465c100521cbf09efa25a16a4604b3e33f29 | 2026-07-27T02:27:21+02:00 | BouhassouneMariam |  | correction erreur
+b04aec79ca3fa348735a3f3f9ac460df90cbe46f | 2026-07-27T02:08:55+02:00 | BouhassouneMariam |  | Merge pull request #47 from inessben/feature/artistfinalisation
+6db6527a0a1aca61f60bebdc34597b4a3d3f9bb5 | 2026-07-27T02:01:08+02:00 | Théa |  | Merge branch 'fix/artwork' into develop
+438efd1e50a64d40eb72b1cb5e73a8074cd804df | 2026-07-27T02:00:37+02:00 | Théa | origin/fix/artwork | add upload HP + filigrane
+4dea815dbbcee252dc2955ad6ed3006e9831bcf8 | 2026-07-27T01:46:14+02:00 | Théa |  | fix profil artiste
+39e70588172d97505b488bfa44c0505d1c23cf7c | 2026-07-27T00:51:21+02:00 | BouhassouneMariam |  | Merge pull request #46 from inessben/feature-doc
+3f17b6752694a2367662bf1da874eb0ad79c928b | 2026-07-27T00:50:56+02:00 | BouhassouneMariam | origin/feature-doc | Swagger / doc API métier
+244fd55b1ab9a03c614a1e9336f45506af6908c6 | 2026-07-27T00:11:11+02:00 | Théa |  | add protection
+0b00bd553133e77d7b0eefd453950c76d3a226c8 | 2026-07-26T23:48:19+02:00 | BouhassouneMariam | origin/feature/artistfinalisation | Vrai dashboard artiste métier Il manque surtout ventes revenus performances historique clair notifications de vente commissions visibles retraits/gains
+991d0cc8ce925751b18cb022b130fdcd4f5ca547 | 2026-07-26T22:28:07+02:00 | CoeurdeTaxi |  | Merge pull request #45 from inessben/fix/register
+e503ed9a46aa1758e753243641d977a111ee66aa | 2026-07-26T21:59:42+02:00 | Ethan | origin/fix/register, fix/register | fix(ci): restore lint and formatting checks
+c86818fa5f8f4cad89423bf63c5f50964f896710 | 2026-07-26T21:49:21+02:00 | Ethan |  | feat(auth): strengthen password security
+9c62c0b527baa350072835ba1c3049b529c02511 | 2026-07-25T23:16:15+02:00 | Ethan |  | fix(auth): hide forms after successful submissions
+602b55da333b9877b9e159029149061ab075e677 | 2026-07-26T21:03:45+02:00 | BouhassouneMariam |  | Correction erreur
+c0b7f7866d42bd4bd5713b51a9715c11c586a003 | 2026-07-26T20:30:04+02:00 | Théa |  | Merge branch 'artwork' into develop
+31644b97b8c5a850d8c6be814c9a1572099617f7 | 2026-07-26T05:14:38+02:00 | BouhassouneMariam |  | Merge pull request #44 from inessben/develop
+13234b68c2438b562e081a527bd0940447032e72 | 2026-07-26T05:12:56+02:00 | BouhassouneMariam |  | Correction erreur prod
+787ae4c7ed338841eb7e2dda314483cda1db9814 | 2026-07-26T04:29:38+02:00 | BouhassouneMariam |  | Merge pull request #43 from inessben/develop
+02a459de39922102cc4a6efe828027e8a91c36e1 | 2026-07-26T03:44:31+02:00 | BouhassouneMariam |  | Merge pull request #42 from inessben/feature/adminfinalisation
+8cfd2cf5d857d17f8bf26964b08d6e028e347396 | 2026-07-26T03:43:05+02:00 | BouhassouneMariam | origin/feature/adminfinalisation | correction erreur
+eef196be867f8f07b208154b80b97def5ff5249c | 2026-07-26T03:40:37+02:00 | BouhassouneMariam |  |  correction erreur
+87f4055aed1e45bc0101e05606921892fef691d6 | 2026-07-26T03:38:18+02:00 | BouhassouneMariam |  | Correction erreur
+80eaed05ffe26fa44ec9cba0865a86e9ff53b890 | 2026-07-26T03:04:30+02:00 | BouhassouneMariam |  | correction
+1b758abb426a4beb0bf6d68ebd4bb68c1d2f3d36 | 2026-07-26T02:46:48+02:00 | BouhassouneMariam |  | correctin erreur
+d017da29612c774482245215a5f175fab75a84d1 | 2026-07-26T02:43:53+02:00 | BouhassouneMariam |  | correction erreur
+e05f82ee0cd2f1622599e19ee7bd9d472912885f | 2026-07-26T02:37:52+02:00 | BouhassouneMariam |  | Correction merge
+ad8a28a83936c13c291ad460f66741679062ac12 | 2026-07-26T02:24:16+02:00 | BouhassouneMariam |  | Correction merge
+6bb886a43e9887a13444f816da4757791d243632 | 2026-07-26T02:12:45+02:00 | BouhassouneMariam |  | Correcction merge
+78ade46d0359470d544aa8d3b12f599d0a4cf344 | 2026-07-26T01:17:38+02:00 | BouhassouneMariam |  | Correction merge
+e97712f1ae7a257d1982cc0704968af9e7349e58 | 2026-07-26T01:11:43+02:00 | BouhassouneMariam |  | correction
+396d84a77e7bd7a00e72df3009e48423bcdc3192 | 2026-07-26T01:05:51+02:00 | BouhassouneMariam |  | ajouter les remboursements en attente dans la supervision admin existante
+7d3a1366a5b32014ebc2911325229ed93215d921 | 2026-07-26T00:47:38+02:00 | BouhassouneMariam |  | Audit log admin : enregistrer qui a fait quoi, quand, sur quelle œuvre/commande/utilisateur.
+bce68ac4f23c894ad328a34ea37834179aa52147 | 2026-07-26T00:16:29+02:00 | BouhassouneMariam |  | Fiches détail admin : vraie page détail pour un user, un artiste, une commande et un paiement avec tout l’historique lié
+35028694bb6062be185d664e989181f3374dcace | 2026-07-25T23:16:11+02:00 | BouhassouneMariam |  | Correction remborssement
+d05ee626a9959e91119dc004e1f6eb7f9facc1e6 | 2026-07-25T23:03:46+02:00 | BouhassouneMariam |  | Gestion complète des comptes : suspendre/réactiver un utilisateur, bloquer un compte, retirer le rôle admin, retirer le rôle super admin.
+aae7212b3377826c59a2fbe831f9dea8440789e8 | 2026-07-25T22:07:44+02:00 | CoeurdeTaxi |  | Merge pull request #41 from inessben/feature/stripe
+c8f81f616864d736c522848cebe2aee423a91472 | 2026-07-25T22:07:36+02:00 | CoeurdeTaxi | origin/feature/stripe | Merge branch 'develop' into feature/stripe
+3fbd4a5413d5457066a66b6a44e601a176f0e8d5 | 2026-07-25T21:36:52+02:00 | Ethan | feature/stripe | fix(payment): prevent artist self-purchases
+355e0efef0e47fb291e682fd391c4f9c42e4a747 | 2026-07-25T20:30:56+02:00 | BouhassouneMariam |  | Update package-lock.json
+98c700b097c9d17670a9cb672b80262ef8dd7c8f | 2026-07-25T19:55:49+02:00 | BouhassouneMariam |  | Update .gitignore
+8b0f17ea9b2495239dfa0614b5b653d8d392b8a1 | 2026-07-25T19:40:21+02:00 | CoeurdeTaxi |  | Merge pull request #40 from inessben/feature/stripe
+7c4770b937d16ff9fc88118ee5b8c5589513efde | 2026-07-25T19:08:16+02:00 | Ethan |  | docs(payment): document Stripe QA and operations
+e6ec33c1c01fe9ad793a5dfd7c3ddd7e25a69cb7 | 2026-07-25T19:07:16+02:00 | Ethan |  | chore(payment): configure Stripe runtime operations
+fd3c5c573258fec53c1fe3795a6e6fe084e177f1 | 2026-07-25T19:05:45+02:00 | Ethan |  | feat(frontend): complete Stripe checkout and payment operations
+5b45b7d16e2ea9ef3f1aa1a6c38b820836496db8 | 2026-07-25T19:01:19+02:00 | Ethan |  | feat(payment): complete Stripe commerce operations
+68cdc811418c008036e94e95b7eb341988f32ac0 | 2026-07-19T00:52:03+02:00 | Ethan |  | qa
+dece61657506b1d981fa3c2ad8b42a877d00b1c7 | 2026-07-18T21:54:28+02:00 | Ethan |  | fix(payment): reconcile develop after Stripe cherry-pick
+8ff82b526485027a73a3780d88b3c2e78bfede57 | 2026-07-18T20:26:52+02:00 | Ethan |  | docs(payment): add end-to-end sandbox test paths
+fd815ebf1cd1c0dfe197a6140e02e79aa6235342 | 2026-07-18T19:34:51+02:00 | Ethan |  | feat(payment): control Stripe refunds securely
+15ca6dd0114fee29df0d3f5fb1d8b5309e536bb3 | 2026-07-18T19:15:59+02:00 | Ethan |  | feat(payment): add secure go-live gate
+4b517dc5123ff39da702b67d27b2ed88af562966 | 2026-07-18T19:04:00+02:00 | Ethan |  | feat(payment): harden production payment operations
+93ff2c5fec384f48c452bc5cbab6917932adfdaa | 2026-07-18T18:58:40+02:00 | Ethan |  | feat(payment): resume and expire checkout safely
+6ee237813272b1bc3a3f366f20b132621ae58b81 | 2026-07-18T18:47:12+02:00 | Ethan |  | feat(payment): show private verified order status
+9360cb646d9394f3e5abb48926cb6b5e93e24ea4 | 2026-07-18T18:40:42+02:00 | Ethan |  | feat(payment): finalize paid orders exactly once
+165007929d1daf7182b58d90a64cb6625919ce46 | 2026-07-18T18:31:03+02:00 | Ethan |  | feat(payment): receive signed Stripe webhooks
+57d1bac791235ebce1ac1c7004b24756a27b56c5 | 2026-07-18T18:23:53+02:00 | Ethan |  | feat(payment): implement PAY-US-01 through PAY-US-04
+056ddcbb6fcca8e59d5d87f2371287fa85f49bb1 | 2026-07-25T17:47:24+02:00 | Iness Ben aïssa |  | Merge pull request #39 from inessben/feauture/analytics
+cc058aee617d7f90f0eea470143c75fff362e1f0 | 2026-07-25T17:44:22+02:00 | Iness Ben aïssa |  | fix CI frontend error
+8ab676be1f23f47b0d9a5f3b4e65b4563eec93d5 | 2026-07-25T17:30:38+02:00 | Iness Ben aïssa |  | fix CI frontend error
+964ea3275a28ccb25f4470736b7720b091419449 | 2026-07-25T17:28:23+02:00 | Iness Ben aïssa |  | Merge remote-tracking branch 'origin/develop' into feauture/analytics
+fa0d0e1575ebd201fd91c9bab5998256e4f5be2d | 2026-07-25T07:10:29+02:00 | Iness Ben aïssa |  | style: fix prettier formatting issues found by CI
+a612da1466ada731b8980c195c43cf839e07743e | 2026-07-25T06:56:16+02:00 | Iness Ben aïssa |  | Merge pull request #37 from inessben/feature/SEO
+0952f31d7e5911865461aaa482095834bf64c3e1 | 2026-07-25T06:50:07+02:00 | BouhassouneMariam |  | attacher collection oeuvre a artist
+61fb8cec7a81b07f6c8c8bdd6adb0090dff34b79 | 2026-07-25T06:46:37+02:00 | Iness Ben aïssa |  | feature : add umami analytics on admin dashboard tab
+4ca2608c282948f4dad11115db8f7b3cb402e53d | 2026-07-25T06:37:34+02:00 | BouhassouneMariam |  | home page branchement de artiste
+6db5f857862876dfec5072f5ad14db372b877fef | 2026-07-25T06:04:28+02:00 | BouhassouneMariam |  | become artsit correction
+8598c8d4b04db9167c44654b9f86f4cf762f8fa9 | 2026-07-25T05:51:24+02:00 | BouhassouneMariam |  | Correction front Follow self
+0debd5ee9df4fe39e72f562c4d982d7623f4a207 | 2026-07-25T05:41:25+02:00 | BouhassouneMariam |  | modération artwork
+fc2822759907a564941b9dfe2ab1ba6f2563d595 | 2026-07-25T05:34:10+02:00 | BouhassouneMariam |  | Ajout creation admin
+49fcdab7c3415146183dc5bb43b9de3c185b61d7 | 2026-07-25T05:05:29+02:00 | Iness Ben aïssa |  | feature: added some seo referencement
+7188749dfff9597bb72d5548a5955f387406c5b8 | 2026-07-25T04:26:22+02:00 | Iness Ben aïssa |  | fix: wire AppHomeButton directly in app.vue after merge
+16999a03278cac4fae1162b81e86e5fd72fc765c | 2026-07-25T04:22:26+02:00 | Iness Ben aïssa |  | Merge branch 'feature/onlyFrontEnd' into develop
+254ad13448bbc9bc7d95f2e0729a2a48f7ef4b1d | 2026-07-25T04:16:14+02:00 | BouhassouneMariam | origin/develop2 | Merge pull request #35 from inessben/feature/onlyFrontEnd
+9d6383616863a1d1ac9408b09e159b9bc6e82a37 | 2026-07-25T04:09:11+02:00 | Iness Ben aïssa |  | fix merge conflict
+ab9793f440ec7ea49300a7b8f1ca43c7dc469920 | 2026-07-25T04:02:55+02:00 | Iness Ben aïssa |  | fix home page front + add cookies policy
+92b435db2cb808e9f9855c829b32fbf6bdcd8da0 | 2026-07-25T04:00:57+02:00 | BouhassouneMariam |  | Merge pull request #32 from inessben/develop
+ddbf1728b0a605f029f6d22db0a711b88d225273 | 2026-07-25T03:59:11+02:00 | BouhassouneMariam |  | Correction format:check
+0177f0e3c6705a3fb1e8adafebe8e4be4361e435 | 2026-07-25T03:55:59+02:00 | BouhassouneMariam |  | Correction moderation admin
+a085a68e8c8e1bf7afa122c7eef1a6c567622a17 | 2026-07-25T03:47:33+02:00 | BouhassouneMariam |  | Correction Follow self
+ab64e4ec4ba60a4b5a90c0baa8414c967ca38c4e | 2026-07-25T03:44:25+02:00 | BouhassouneMariam |  | Correction erreur profil artiste
+d8c03eb2e4931b97f920e1086832312dac27f26a | 2026-07-25T01:58:27+02:00 | BouhassouneMariam |  | Correction erreur remember me
+b13af8dbe5723bffc45929b3fb2159e8ca08dd6b | 2026-07-25T01:51:53+02:00 | BouhassouneMariam |  | Ajout Creation d'admin par un sup admin
+4ddea72411f48db7c902a48e083edcfc87bd65d6 | 2026-07-25T01:33:55+02:00 | BouhassouneMariam |  | Merge pull request #31 from inessben/develop
+aa15ebf2ca8dca4e2a8f5eedf70dac04ea373045 | 2026-07-25T01:11:41+02:00 | BouhassouneMariam |  | Correction Erreur artiste + become artist
+87e27fd377d26a7ae39b7c3675e80a705b690dbc | 2026-07-25T00:17:47+02:00 | BouhassouneMariam |  | Merge pull request #30 from inessben/develop
+cc4fb8bc21535df64d1b46ff9901004b97573610 | 2026-07-25T00:17:17+02:00 | BouhassouneMariam |  | Correction CD prod
+ad25002cacf80d9661c57029b5ab280570a99c91 | 2026-07-25T00:13:31+02:00 | BouhassouneMariam |  | Merge pull request #29 from inessben/develop
+3864fe383cb37e38c1597171cac7ca54af3f4d83 | 2026-07-25T00:12:46+02:00 | BouhassouneMariam |  | Correction erreur
+b51ce580ee4a9a6e181094340d1dab8013e30847 | 2026-07-25T00:09:53+02:00 | BouhassouneMariam |  | Correction erreur
+37e07493770be4ad0861f931c6dc3c6b3cc931a5 | 2026-07-25T00:06:21+02:00 | BouhassouneMariam |  | Correction erreur
+ca2e63bc5fffb125038ac932101e1450c170c7d8 | 2026-07-24T23:41:57+02:00 | BouhassouneMariam |  | Correction errreur back front
+9deade23e82c83a97b7c1a1aeea94705e9b1ac71 | 2026-07-24T22:44:04+02:00 | BouhassouneMariam |  | Merge pull request #28 from inessben/develop
+56d3dc0ed7e24b86d33be083e1645750fe78b6fb | 2026-07-24T22:43:10+02:00 | BouhassouneMariam |  | Add a blank line to README.md
+3104cc1d051bad0bc63fb1222b082d1b38a3efdd | 2026-07-20T14:52:27+02:00 | BouhassouneMariam |  | Merge pull request #27 from inessben/develop
+b4dd80d0aa00abed835e254e4df2170cb42bc2a4 | 2026-07-20T14:50:00+02:00 | Théa |  | Merge pull request #26 from inessben/feature/onlyFrontEnd
+c9e1192d313360a12b92a698d2d1b4bd5a96ca88 | 2026-07-20T14:47:58+02:00 | Théa |  | Merge branch 'develop' into feature/onlyFrontEnd
+23c5c4b62e940ca2554584ab9600fb110060ec85 | 2026-07-20T14:35:06+02:00 | Théa | origin/artwork | fux bug
+5a1b7ee4c7b35588eb36f006f672d86dbe6e8d18 | 2026-07-20T09:54:11+02:00 | Théa |  | add transaction notifications
+0e77e2932611620e8943afb9b8d7694cfbb742c7 | 2026-07-18T20:26:52+02:00 | Ethan | feature/stripe-svg | docs(payment): add end-to-end sandbox test paths
+938111e39679fc7a28ee4615efe592128d04b84c | 2026-07-18T19:34:51+02:00 | Ethan |  | feat(payment): control Stripe refunds securely
+b60aa41291bbb27e63dc8c44788193d132817879 | 2026-07-18T19:15:59+02:00 | Ethan |  | feat(payment): add secure go-live gate
+3dd9b66ab2123c76473b3bc63b940d08a8431273 | 2026-07-18T19:04:00+02:00 | Ethan |  | feat(payment): harden production payment operations
+99db44e03fbd056867c35f0e6af2a3e4d085bf41 | 2026-07-18T18:58:40+02:00 | Ethan |  | feat(payment): resume and expire checkout safely
+090a0556e6f9eaf47ef26cccea17509e8b6dce01 | 2026-07-18T18:47:12+02:00 | Ethan |  | feat(payment): show private verified order status
+3df06429edda747790b52be39d7e3c33fc27c32c | 2026-07-18T18:40:42+02:00 | Ethan |  | feat(payment): finalize paid orders exactly once
+8ac1180b3b6f7020d5878e49a4ce910b79c1dbb9 | 2026-07-18T18:31:03+02:00 | Ethan |  | feat(payment): receive signed Stripe webhooks
+7f44d92faeb2b11cd52e47a32535bbbdc8fd4c32 | 2026-07-18T18:23:53+02:00 | Ethan |  | feat(payment): implement PAY-US-01 through PAY-US-04
+db3c3e221649ed9f9eebdc9648fc31665650ac6c | 2026-07-15T05:18:45+02:00 | Iness Ben aïssa |  | Merge pull request #23 from inessben/feature/onlyFrontEnd
+d0065a65489fd95db015ec0395648add9ef18d42 | 2026-07-15T05:18:10+02:00 | Iness Ben aïssa |  | Merge branch 'main' into feature/onlyFrontEnd
+18b88c9292587f889f00026dd25f4362ac66dc4a | 2026-07-15T05:14:54+02:00 | Iness Ben aïssa |  | feature : add some front end based on figma prototype
+a0517978deef60f40b3f72a80f976946dff9d9f3 | 2026-07-15T05:07:30+02:00 | Iness Ben aïssa |  | feature : add some front end based on figma prototype
+e0e6ec21dd9dbe076406fb285b468092646b58ff | 2026-07-14T15:28:14+02:00 | Iness Ben aïssa |  | feature : add some front end based on figma prototype
+5696b646c83c4458aa92ee939e41322cf49ff3cc | 2026-07-14T15:20:45+02:00 | Iness Ben aïssa |  | git commit -m
+ba2670987b6248156c5758ff6b497cac086dc02c | 2026-07-14T14:51:41+02:00 | Théa |  | update artworks and dashboard
+c6557ae806c6ac4c79d9fdc7d8cea4fef135c87b | 2026-07-14T14:29:32+02:00 | Théa |  | Merge pull request #22 from inessben/artwork
+d73f7738c9d79e016cc113b38153863553edb43f | 2026-07-14T12:54:35+02:00 | Théa |  | fixe profile and artwork features
+e7368a6fdc034e7dc147745188cfe20fbf5622fc | 2026-07-14T02:06:27+02:00 | Iness Ben aïssa |  | Merge branch 'feature/onlyFrontEnd' of https://github.com/inessben/make-it-art into feature/onlyFrontEnd
+256ff86b2036a966197d96cfb67091b80ddce1f4 | 2026-07-14T02:06:06+02:00 | Iness Ben aïssa |  | feature : add some front end based on figma prototype
+9149276ecfbf1b44c436ea5cecc80c4e41fb75bf | 2026-07-14T02:00:44+02:00 | Iness Ben aïssa |  | Merge pull request #21 from inessben/feature/onlyFrontEnd
+c5b366fecb89f2003f62bb64aad5de6712591695 | 2026-07-14T02:00:29+02:00 | Iness Ben aïssa |  | Merge branch 'main' into feature/onlyFrontEnd
+2feda50d57ccb6ba3d66ef1de70de77da03bbb9d | 2026-07-14T01:52:07+02:00 | Iness Ben aïssa |  | feature : add some front end based on figma prototype
+c53edeb1478520d315f76b61bec91ffec4d9325d | 2026-07-14T01:25:07+02:00 | Iness Ben aïssa |  | feature : add some front end based on figma prototype
+a20c0868fac2d781c97da90cd296bb3b3360eccc | 2026-07-12T20:54:37+02:00 | Théa |  | add truc artwork j'ai oublié
+6a0e31df1e823b8c601f5b7928f11eff1c0e2691 | 2026-07-08T10:13:07+02:00 | Théa |  | Merge pull request #20 from inessben/feature/profil
+688d0db8761fffb711624c537534a95d7eb44c01 | 2026-07-08T09:37:56+02:00 | Théa |  | Merge branch 'develop' into feature/profil
+36c49afc1b97273ae51aa54afdfec45543dc4781 | 2026-07-04T03:29:28+02:00 | BouhassouneMariam |  | Merge pull request #19 from inessben/feature-contrat
+4b38aa87ae0a1494a967226b5ed4a7006fda8a30 | 2026-07-04T03:28:58+02:00 | BouhassouneMariam | origin/feature-contrat | Redirection vers / apres connexion
+fdfc16bfc0a1a949fb409dd32003dc6b96b259f6 | 2026-07-04T03:11:25+02:00 | BouhassouneMariam |  | Merge pull request #18 from inessben/feature-contrat
+7c952b3c570702aa87ce2b7880239db6185220c7 | 2026-07-04T03:11:05+02:00 | BouhassouneMariam |  | Correction erreur
+8b95ebcfa3932ff5384271f6d144e970113f46bc | 2026-07-04T03:05:42+02:00 | BouhassouneMariam |  | Collectionneur / experience produit
+0e609aa512ae120f6eca93201be1dff032e3d8ed | 2026-07-04T02:05:23+02:00 | BouhassouneMariam |  | Merge pull request #17 from inessben/feature-contrat
+7a16808c2961cf5b20b944fbb986bce6e88ac38e | 2026-07-04T02:04:57+02:00 | BouhassouneMariam |  | contrat coté artiste
+6bb21a5a027b79f8d1dcab2acad2e2345af21949 | 2026-07-04T01:54:27+02:00 | BouhassouneMariam |  | Merge pull request #16 from inessben/feature-contrat
+5d42da11e1384fea20bcd621b9543a7b1cb25af5 | 2026-07-04T01:53:58+02:00 | BouhassouneMariam |  | Contrat + signature + validation admin
+59187c9fe5a858d5d1a4d1ccf31a89fb5eeede12 | 2026-06-28T15:00:58+02:00 | CoeurdeTaxi |  | Merge pull request #15 from inessben/feature/better-login
+434bc4106f1423d629d2637cae69c0a04ed862c0 | 2026-06-28T14:58:47+02:00 | Ethan | origin/feature/better-login, feature/better-login | feature/better-login
+29efcaa313cb7733d2ad26017cf664df4ae57f13 | 2026-06-28T14:13:39+02:00 | Théa |  | add profil icons
+bcc1470793114ee77aad4ad51669796b08c2a8fb | 2026-06-28T13:29:51+02:00 | Théa |  | Merge branch 'develop' into feature/profil
+131f1bb8bc70567492a6cdc02ca154561f58bec1 | 2026-06-28T13:23:35+02:00 | Théa |  | Disable artiste config button in profil if user is not artist
+f674b73a65a367ebb6c64644e9fca77c57f89896 | 2026-06-27T18:07:45+02:00 | Ethan |  | feature/better-login
+096ce76fe92239423097b7955f534dfdaec19d33 | 2026-06-20T21:53:03+02:00 | CoeurdeTaxi |  | Merge pull request #14 from inessben/feature/become-artist
+00b05df0d4e5f24688b11fb784303bc786c87138 | 2026-06-20T21:51:54+02:00 | Ethan | origin/feature/become-artist, feature/become-artist | feature/become-artist
+546bb178326037d29e2985c43429827832c35919 | 2026-06-20T17:29:10+02:00 | BouhassouneMariam |  | Merge pull request #13 from inessben/feature/admin
+2ba80e2c4fe0968b28cb8423608d68486ab9a75b | 2026-06-20T17:28:26+02:00 | Mariam Bouhassoune | origin/feature/admin | interface admin
+7aee286aacc8df47c14348269b2266c1f37b0083 | 2026-06-08T12:50:55+02:00 | MariamBouhassoune |  | doc
+491eed2287f8bb50f2e991a576650ac6b48db60b | 2026-06-08T12:41:58+02:00 | BouhassouneMariam |  | Merge pull request #12 from inessben/develop
+405fbe517c3c63dafc1e50d1b300035a6e20e7df | 2026-06-08T12:40:27+02:00 | MariamBouhassoune |  | Merge branch 'develop' of https://github.com/inessben/make-it-art into develop
+390359e36d1df94d7b6f0382de6d238477c91d5d | 2026-06-08T12:36:06+02:00 | MariamBouhassoune |  | Correction CI CD
+572b6f8b993a3721c1f318d11c666a05b883734b | 2026-06-08T12:17:51+02:00 | BouhassouneMariam |  | Merge pull request #11 from inessben/develop
+9e90691c5deaafba4a885a1151c3474005160a79 | 2026-06-08T12:17:01+02:00 | BouhassouneMariam |  | Merge pull request #9 from inessben/feature/env-prod
+3e5bc66f40ee80f2e9d357f635b2fd0842d5af43 | 2026-06-08T12:16:00+02:00 | BouhassouneMariam |  | Merge pull request #10 from inessben/develop
+65e3c93181e30b93889a190bc606c05021539f6a | 2026-06-08T12:05:23+02:00 | MariamBouhassoune | origin/feature/env-prod | CI/CD workflow
+8c7c3d21ad8531aab6fa6c709687f15fc6f90d25 | 2026-06-07T20:08:33+02:00 | Théa |  | develop pages artist and orders
+31dc52e287c7ca62f56be5044ac386ef4f3f2302 | 2026-06-07T18:43:26+02:00 | Théa |  | Merge pull request #8 from inessben/feature/profil
+bc9850c6a60bbe17f776fe41123f39079638f58c | 2026-06-07T18:19:16+02:00 | Théa |  | add section vue
+a48ff1374f02401f205c96457c100f07384fa5b3 | 2026-06-07T18:18:34+02:00 | Théa |  | Create wishlist vue
+56aee05911ec799b236f86a92661a557fe3a208e | 2026-06-07T18:18:26+02:00 | Théa |  | Create wallet vue
+e471f8fa35510234011262d440e2227ab4409820 | 2026-06-07T18:18:10+02:00 | Théa |  | create settings vue
+472c776b102d0a09636997f57011fb07233883e4 | 2026-06-07T18:17:55+02:00 | Théa |  | update profile vue
+cb27323d98330c2d998045c8b2fc20e57c789e62 | 2026-06-07T18:17:21+02:00 | Théa |  | Create payment methods vue
+501888e3bed141d1870d5672a3a27448dedaa14a | 2026-06-07T18:16:03+02:00 | Théa |  | create orders vue
+8baeedccbb310d84e7e5c85ca8bdf0920d37169b | 2026-06-07T18:15:48+02:00 | Théa |  | create notifications vue
+56d1fa8b137fabcfeaf3bd98491ea0f3627f5265 | 2026-06-07T18:15:18+02:00 | Théa |  | create artist profile vue
+2ec614ccf6a9401cba624177d4f8b2f4a88818bf | 2026-06-07T18:15:04+02:00 | Théa |  | create addresses vue
+08100bda68062b6a4e59cdc1684de2c4db49d5b3 | 2026-06-07T18:14:46+02:00 | Théa |  | create account settings vue
+125f3bf8d8087704c0c904008cedf7143410a9e7 | 2026-06-04T01:04:17+02:00 | CoeurdeTaxi |  | Merge pull request #7 from inessben/feature/redirect-to-profile
+4f027bef1ecc058f2160e115362d8691e3c2a1a8 | 2026-06-04T01:01:37+02:00 | Ethan | origin/feature/redirect-to-profile, feature/redirect-to-profile | feature/redirect-to-profile
+a1278ffd7a16a9be6210c45f340c27e37a7ade2a | 2026-06-04T00:00:02+02:00 | Théa |  | add button navigate
+4786a6d6ac09381533671d01b5c2f771ea4a3aff | 2026-06-03T23:52:53+02:00 | Théa |  | password changes save
+ff22ebb694378bb648684b62efa8a2b428240aa1 | 2026-06-03T23:14:12+02:00 | Théa |  | update profile changes save
+3cfca0cb9319b303ebedcbcdeefd8b172697291d | 2026-06-03T00:23:14+02:00 | BouhassouneMariam |  | Merge pull request #6 from inessben/feature/env-prod
+fa5736de1dfd192365cf05632504df9e616d7ab1 | 2026-06-03T00:17:28+02:00 | MariamBouhassoune |  | Correction erreur
+1568613bddcb935989ec3dd112af4f64ff993727 | 2026-06-03T00:02:31+02:00 | MariamBouhassoune |  | Prod
+c7a7fffcd78ea023a17d6f9d8bd2980e07125d6d | 2026-06-02T23:02:47+02:00 | MariamBouhassoune |  | README
+431facb2df3702d2b0828e84c894ccb40267458d | 2026-06-02T22:00:20+02:00 | Théa |  | create profil user front page
+7b2fbb607b7033933c87570b0a7b5228e5eb90ed | 2026-06-01T23:07:03+02:00 | Théa |  | Merge pull request #5 from inessben/feature/profil
+f260e53ebf799dde0986c2859ad47443356627c7 | 2026-06-01T23:05:24+02:00 | Théa |  | fix registred and login
+ef7883521f1c679ab20205edef89adeb62c3aaf7 | 2026-05-31T23:50:49+02:00 | Théa |  | try to fix
+3d47acfaf0fce0b0db3c6869046769612754e6b1 | 2026-05-21T17:16:18+02:00 | Théa |  | fix register
+10373a03e7f91ecbf21151461f655ac173a97344 | 2026-05-21T14:20:04+02:00 | Ethan | origin/feature/login, feature/login | feature/login
+53ffd1c024077afd5a7a343d6dff3fa8440ad49a | 2026-05-21T12:43:32+02:00 | Ethan |  | feature/login
+18f2832521bc7479a804c524d120fe3e261b9d0b | 2026-05-16T20:32:40+02:00 | CoeurdeTaxi | origin/feature/profile | Merge pull request #4 from inessben/feature/login
+960bb97f5e4efc559db9ff7b116bb0739e4cd3b1 | 2026-05-16T20:31:31+02:00 | Ethan |  | feature/login
+b61935c34d605062a33d7528360a1ff206db27b1 | 2026-05-03T20:53:22+02:00 | CoeurdeTaxi |  | Merge pull request #3 from inessben/feature/login
+a2baf7a494e7bfcbe699a7f2209e3c842e65e232 | 2026-05-03T20:52:28+02:00 | Ethan |  | feature/login
+ca9531a2a8fa2d5cc87d979acac1d521980feb9c | 2026-04-15T00:04:11+02:00 | CoeurdeTaxi |  | Merge pull request #2 from inessben/feature/ORM
+936a5fbba46e726ed9ce795ea17d5252ee422c83 | 2026-04-15T00:02:53+02:00 | Ethan | origin/feature/ORM, feature/ORM | feature/prisma
+14ae6706f254b739eeac8a52e655cc27557d6ab6 | 2026-03-15T16:13:08+01:00 | BouhassouneMariam | main | Merge pull request #1 from inessben/develop
+1a730172a108049f1ca5c1ea5068a232fd29b909 | 2026-03-15T04:06:19+01:00 | MariamBouhassoune |  | remove local root file dependency from frontend
+5b8663b92bcf4e25173f37dbd30f6be8b844e31b | 2026-03-15T03:49:03+01:00 | MariamBouhassoune |  | run staging/production workflows manually only
+b9a73f9ed8768510b57f07e4181e87d79685062e | 2026-03-15T03:40:06+01:00 | MariamBouhassoune |  | remove local file deps and disable lifecycle scripts in install jobs
+1c20dee40c917aeb393957ea1494ea34de179566 | 2026-03-15T03:33:45+01:00 | MariamBouhassoune |  | frontend typescript + ci install/env fixes
+544a90b2ce7f50d3cf80700f9ad9f69bafb7ac8b | 2026-03-15T03:25:27+01:00 | MariamBouhassoune |  |  isolate workspace installs and compose env setup
+2edc42d2c9a5b2ec0c82d5240f552f0bd72282e4 | 2026-03-15T03:00:33+01:00 | MariamBouhassoune |  |  finaliser la base du monorepo (docker/nginx, ci, eslint/prettier, documentation)
+ca9621db22edbed4e4769212a392b2abb8afbd83 | 2026-03-15T01:43:22+01:00 | MariamBouhassoune |  | Doc Team config
+fc38f8ed8af2345772a31a87ebc2839d5ceb0084 | 2026-03-15T01:36:10+01:00 | MariamBouhassoune |  | initialisation du monorepo et de l'infrastructure de dev
+3af83a76faf1145b96d510da5eeb09fa05121276 | 2026-01-30T11:15:57+01:00 | iness |  | ✨
+5d1c620563b9f0ae0d031b04f900786bb940344d | 2026-01-29T14:22:00+01:00 | iness |  | ✨
+761509a2ff3bee3033b37b9c35947ef2202071f4 | 2026-01-12T20:10:46+01:00 | iness |  | Make It Art
+b05367ceaf7ae301f78cf1a4f59b1eccf1d953c5 | 2025-12-18T18:36:46+01:00 | iness |  | DOCS: Ajout du .\REQUIREMENTS_DOCUMENT.md et du .\ROADMAP_TRELLO.md
+8b503765733959c3fe0a4a0b4823a80ab0751544 | 2025-12-18T16:45:52+01:00 | iness |  | ✨ add the ./REQUIREMENTS_DOCUMENT.md
+975e65f67902b9a19e1efae403f758b2a73e2e80 | 2025-10-31T17:22:04+01:00 | iness |  | ✨
+dcca684e7eb0e9572d1eabe3a5f67b6635106083 | 2025-10-31T17:20:32+01:00 | iness |  | ✨
+8a1014ac3a8ff321a9cbf0d1f56a1a4ffe862c58 | 2025-10-31T17:17:27+01:00 | iness |  | docs: ajout CONTRIBUTING.md + structure projet complète (backend, frontend, contracts)
+cd2c1617d267824aa99e029985df0fb2d2d5c779 | 2025-10-31T15:09:26+01:00 | Iness Ben aïssa |  | Initial commit

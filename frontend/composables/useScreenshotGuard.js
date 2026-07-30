@@ -20,6 +20,7 @@ let clipboardClearTimer = null;
 let safetyLoopId = 0;
 
 const PULSE_MS = 2000;
+const SAFETY_LOOP_MS = 80;
 
 function pageIsHidden() {
   if (import.meta.server) return false;
@@ -35,6 +36,43 @@ function isTypingTarget(target) {
   return target.isContentEditable || tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
+function isMetaOrWinKey(event) {
+  const key = String(event.key || "").toLowerCase();
+  const code = String(event.code || "");
+  return (
+    key === "meta" ||
+    key === "os" ||
+    code === "MetaLeft" ||
+    code === "MetaRight" ||
+    code === "OSLeft" ||
+    code === "OSRight"
+  );
+}
+
+function isShiftKey(event) {
+  const key = String(event.key || "").toLowerCase();
+  const code = String(event.code || "");
+  return key === "shift" || code === "ShiftLeft" || code === "ShiftRight";
+}
+
+/**
+ * Win+Shift+S is often handled by the OS before "S" reaches the page — react on Win+Shift chords.
+ */
+function isSnippingToolChord(event) {
+  if (!event.shiftKey || !event.metaKey) {
+    return false;
+  }
+
+  const key = String(event.key || "").toLowerCase();
+  const code = String(event.code || "");
+
+  if (key === "s" || code === "KeyS") {
+    return true;
+  }
+
+  return isMetaOrWinKey(event) || isShiftKey(event);
+}
+
 function isCaptureShortcut(event) {
   const key = String(event.key || "").toLowerCase();
   const code = String(event.code || "");
@@ -43,7 +81,11 @@ function isCaptureShortcut(event) {
     return true;
   }
 
-  // Win+Shift+S: Win key often not exposed — Shift+S outside inputs ≈ capture tool.
+  if (isSnippingToolChord(event)) {
+    return true;
+  }
+
+  // Win+Shift+S fallback when metaKey is not reported on S (Shift+S outside inputs).
   if (event.shiftKey && (key === "s" || code === "KeyS")) {
     return true;
   }
@@ -189,7 +231,7 @@ function startSafetyLoop() {
       return;
     }
     syncDocumentGuardClass(isContentHidden());
-  }, 400);
+  }, SAFETY_LOOP_MS);
 }
 
 function stopSafetyLoop() {

@@ -124,6 +124,7 @@ html.mia-screenshot-guard-active .mia-protected-media {
 html.mia-screenshot-guard-active .mia-protected-media__image,
 html.mia-screenshot-guard-active .mia-protected-media__watermark,
 html.mia-screenshot-guard-active .mia-protected-media__viewer-badge {
+  display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
 }

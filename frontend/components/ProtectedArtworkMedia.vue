@@ -63,8 +63,12 @@
     />
 
     <div
-      class="mia-protected-media__blackout absolute inset-0 z-[3] grid place-items-center bg-black px-4 transition-opacity duration-100"
-      :class="isBlackedOut ? 'opacity-100' : 'pointer-events-none opacity-0'"
+      class="mia-protected-media__blackout absolute inset-0 z-[3] grid place-items-center bg-black px-4"
+      :class="
+        isBlackedOut
+          ? 'opacity-100'
+          : 'pointer-events-none opacity-0 transition-opacity duration-100'
+      "
     >
       <div v-show="isBlackedOut" class="max-w-sm text-center">
         <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">
