@@ -5,7 +5,8 @@ const { ARTIST_WITHDRAWAL_STATUS } = require("../src/constants/artist-withdrawal
 
 const servicePath = require.resolve("../src/services/artist-withdrawal.service");
 const envPath = require.resolve("../src/config/env");
-const withdrawalRepositoryPath = require.resolve("../src/repositories/artist-withdrawal.repository");
+const withdrawalRepositoryPath =
+  require.resolve("../src/repositories/artist-withdrawal.repository");
 const notificationRepositoryPath = require.resolve("../src/repositories/notification.repository");
 const analyticsServicePath = require.resolve("../src/services/artist-analytics.service");
 const mailServicePath = require.resolve("../src/services/mail.service");

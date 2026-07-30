@@ -93,7 +93,10 @@ function createInMemoryCommerceDb() {
     clearCart(userId) {
       const cart = carts.get(userId);
       if (!cart) {
-        return buildCartSummary({ version: 1, updatedAt: null, items: [] }, { buyerUserId: userId });
+        return buildCartSummary(
+          { version: 1, updatedAt: null, items: [] },
+          { buyerUserId: userId }
+        );
       }
       if (cart.items.size > 0) {
         cart.items.clear();

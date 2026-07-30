@@ -36,7 +36,9 @@ async function startWalletApp(t, { user = authUser, serviceOverrides = {} } = {}
     [authRequiredPath]: {
       authRequired(req, _res, next) {
         if (!user) {
-          return _res.status(401).json({ message: "Authentication required", code: "UNAUTHORIZED" });
+          return _res
+            .status(401)
+            .json({ message: "Authentication required", code: "UNAUTHORIZED" });
         }
         req.user = user;
         return next();

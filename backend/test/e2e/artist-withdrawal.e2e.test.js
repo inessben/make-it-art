@@ -12,29 +12,22 @@ const artistRequiredPath = require.resolve("../../src/middlewares/artist-require
 const csrfPath = require.resolve("../../src/middlewares/csrf.middleware");
 const rateLimitPath = require.resolve("../../src/middlewares/rate-limit.middleware");
 const adminRequiredPath = require.resolve("../../src/middlewares/admin-required.middleware");
-const applicationRepositoryPath = require.resolve(
-  "../../src/repositories/artist-application-draft.repository"
-);
+const applicationRepositoryPath =
+  require.resolve("../../src/repositories/artist-application-draft.repository");
 const artistRepositoryPath = require.resolve("../../src/repositories/artist.repository");
 const artworkRepositoryPath = require.resolve("../../src/repositories/artwork.repository");
 const categoryRepositoryPath = require.resolve("../../src/repositories/category.repository");
 const userRepositoryPath = require.resolve("../../src/repositories/user.repository");
 const contractServicePath = require.resolve("../../src/services/artist-contract.service");
 const serializeAuthUserPath = require.resolve("../../src/utils/serialize-auth-user");
-const uploadArtworkMiddlewarePath = require.resolve(
-  "../../src/middlewares/upload-artwork.middleware"
-);
-const uploadImageMiddlewarePath = require.resolve(
-  "../../src/middlewares/upload-image.middleware"
-);
-const artworkMediaPipelinePath = require.resolve(
-  "../../src/services/artwork-media-pipeline.service"
-);
+const uploadArtworkMiddlewarePath =
+  require.resolve("../../src/middlewares/upload-artwork.middleware");
+const uploadImageMiddlewarePath = require.resolve("../../src/middlewares/upload-image.middleware");
+const artworkMediaPipelinePath =
+  require.resolve("../../src/services/artwork-media-pipeline.service");
 const uploadedImageServicePath = require.resolve("../../src/services/uploaded-image.service");
 const analyticsServicePath = require.resolve("../../src/services/artist-analytics.service");
-const artistWithdrawalServicePath = require.resolve(
-  "../../src/services/artist-withdrawal.service"
-);
+const artistWithdrawalServicePath = require.resolve("../../src/services/artist-withdrawal.service");
 const prismaPath = require.resolve("../../src/lib/prisma");
 const serializeMarketplacePath = require.resolve("../../src/utils/serialize-marketplace");
 

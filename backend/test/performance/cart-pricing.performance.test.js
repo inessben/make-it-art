@@ -42,7 +42,10 @@ test("buildCartSummary stays within a latency budget for large carts", () => {
     const startedAt = performance.now();
     const summary = buildCartSummary(cart, { buyerUserId: 1 });
     durations.push(performance.now() - startedAt);
-    assert.equal(summary.itemCount, cart.items.reduce((total, item) => total + item.quantity, 0));
+    assert.equal(
+      summary.itemCount,
+      cart.items.reduce((total, item) => total + item.quantity, 0)
+    );
     assert.equal(summary.payable, true);
     assert.match(summary.pricingFingerprint, /^[a-f0-9]{64}$/);
   }
